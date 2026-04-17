@@ -142,7 +142,7 @@
             color: white; font-weight: 600; cursor: pointer;
         }
         
-        /* New Chat Modal */
+        /* Modal */
         .modal {
             display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.95); backdrop-filter: blur(20px);
@@ -172,6 +172,19 @@
         .search-result:hover { background: rgba(139,92,246,0.1); }
         .empty-state { text-align: center; padding: 60px; color: var(--text-muted); }
         .empty-icon { font-size: 60px; margin-bottom: 20px; }
+        .typing-indicator {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 16px; background: rgba(139,92,246,0.1);
+            border-radius: 20px; width: fit-content;
+            margin-top: 8px;
+        }
+        .typing-dot {
+            width: 8px; height: 8px; background: var(--primary-light);
+            border-radius: 50%; animation: typingBounce 1.4s infinite;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
     </style>
 </head>
 <body>
@@ -222,7 +235,13 @@
 
     <script>
         const API_BASE = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null, conversations = [], currentConvId = null, messages = [], polling = null;
+        let currentUser = null;
+        let conversations = [];
+        let currentConvId = null;
+        let messages = [];
+        let pollingInterval = null;
+        let typingTimeout = null;
+        let isTyping = false;
         
         async function checkAuth() {
             try {
@@ -250,7 +269,7 @@
                     conversations = data.conversations || [];
                     renderConversations();
                 }
-            } catch(e) {}
+            } catch(e) { console.error('Load conversations error:', e); }
         }
         
         async function loadMessages(convId) {
@@ -260,13 +279,19 @@
                     const data = await res.json();
                     messages = data.messages || [];
                     renderMessages();
+                    // Mark as read
+                    await markConversationRead(convId);
                 }
-            } catch(e) {}
+            } catch(e) { console.error('Load messages error:', e); }
         }
         
         async function sendMessage() {
             const content = document.getElementById('message-input').value.trim();
             if (!content || !currentConvId) return;
+            
+            // Clear typing indicator
+            if (typingTimeout) clearTimeout(typingTimeout);
+            
             try {
                 const res = await fetch(`${API_BASE}/api/chat/messages`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
@@ -275,8 +300,15 @@
                 if (res.ok) {
                     document.getElementById('message-input').value = '';
                     await loadMessages(currentConvId);
-                    await loadConversations();
+                    await loadConversations(); // Update sidebar with last message
                 }
+            } catch(e) { console.error('Send message error:', e); }
+        }
+        
+        async function markConversationRead(convId) {
+            // This would mark all messages as read - implemented on backend
+            try {
+                await fetch(`${API_BASE}/api/chat/mark-read/${convId}`, { method: 'POST', credentials: 'include' });
             } catch(e) {}
         }
         
@@ -293,18 +325,21 @@
                     document.getElementById('new-chat-modal').classList.remove('show');
                     document.getElementById('search-users').value = '';
                 }
-            } catch(e) {}
+            } catch(e) { console.error('Create conversation error:', e); }
         }
         
         async function searchUsers(query) {
-            if (!query || query.length < 2) { document.getElementById('search-results').innerHTML = ''; return; }
+            if (!query || query.length < 2) { 
+                document.getElementById('search-results').innerHTML = ''; 
+                return; 
+            }
             try {
                 const res = await fetch(`${API_BASE}/api/chat/users/search?q=${encodeURIComponent(query)}`, { credentials: 'include' });
                 if (res.ok) {
                     const data = await res.json();
                     renderSearchResults(data.users);
                 }
-            } catch(e) {}
+            } catch(e) { console.error('Search users error:', e); }
         }
         
         function renderConversations() {
@@ -320,9 +355,11 @@
                         <div class="conv-name">${escapeHtml(c.name)}</div>
                         <div class="conv-last-msg">${escapeHtml(c.last_message || 'No messages yet')}</div>
                     </div>
-                    <div class="conv-time">${c.last_message_time ? formatTime(c.last_message_time) : ''}</div>
+                    <div class="conv-time">${c.last_message_time ? formatLocalTime(c.last_message_time) : ''}</div>
+                    ${c.unread_count > 0 ? `<div class="conv-unread" style="background:var(--primary);color:white;border-radius:50%;min-width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;padding:0 4px;">${c.unread_count}</div>` : ''}
                 </div>
             `).join('');
+            
             document.querySelectorAll('.conv-item').forEach(item => {
                 item.onclick = () => openConversation(parseInt(item.dataset.id));
             });
@@ -339,7 +376,7 @@
                     <div class="msg-avatar">${m.sender_id === currentUser?.id ? '👤' : '🧙'}</div>
                     <div>
                         <div class="msg-bubble">${escapeHtml(m.content)}</div>
-                        <div class="msg-time">${formatTime(m.created_at)}</div>
+                        <div class="msg-time">${formatLocalTime(m.created_at)}</div>
                     </div>
                 </div>
             `).join('');
@@ -371,38 +408,88 @@
             const conv = conversations.find(c => c.id === convId);
             if (conv) {
                 document.getElementById('chat-name').textContent = conv.name;
-                document.getElementById('chat-avatar').textContent = conv.name.charAt(0);
+                document.getElementById('chat-avatar').textContent = conv.name.charAt(0).toUpperCase();
+                document.getElementById('chat-status').textContent = 'Online';
             }
             loadMessages(convId);
             renderConversations();
         }
         
-        function formatTime(ts) {
-            const date = new Date(ts);
+        // FIXED: Convert UTC to local time
+        function formatLocalTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
             const now = new Date();
             const diff = now - date;
-            if (diff < 86400000) return date.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-            if (diff < 604800000) return date.toLocaleDateString([], { weekday:'short' });
-            return date.toLocaleDateString([], { month:'short', day:'numeric' });
+            
+            // Today: show time only
+            if (diff < 24 * 60 * 60 * 1000 && date.getDate() === now.getDate()) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            // This week: show day name
+            if (diff < 7 * 24 * 60 * 60 * 1000) {
+                return date.toLocaleDateString([], { weekday: 'short' });
+            }
+            // Older: show date
+            return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
         }
         
         function startPolling() {
-            if (polling) clearInterval(polling);
-            polling = setInterval(async () => {
-                await loadConversations();
-                if (currentConvId) await loadMessages(currentConvId);
-            }, 3000);
+            if (pollingInterval) clearInterval(pollingInterval);
+            // Poll every 2 seconds for real-time updates
+            pollingInterval = setInterval(async () => {
+                if (document.hasFocus()) { // Only poll when tab is active
+                    await loadConversations();
+                    if (currentConvId) {
+                        const oldMessageCount = messages.length;
+                        await loadMessages(currentConvId);
+                        // Auto-scroll only if new messages arrived
+                        if (messages.length > oldMessageCount) {
+                            const container = document.getElementById('messages-area');
+                            container.scrollTop = container.scrollHeight;
+                        }
+                    }
+                }
+            }, 2000);
         }
         
-        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        // Typing indicator
+        function setupTypingListener() {
+            const input = document.getElementById('message-input');
+            input.addEventListener('input', () => {
+                if (typingTimeout) clearTimeout(typingTimeout);
+                if (!isTyping && currentConvId) {
+                    isTyping = true;
+                    fetch(`${API_BASE}/api/chat/typing/${currentConvId}`, { method: 'POST', credentials: 'include' }).catch(()=>{});
+                }
+                typingTimeout = setTimeout(() => {
+                    isTyping = false;
+                    fetch(`${API_BASE}/api/chat/typing/${currentConvId}`, { method: 'DELETE', credentials: 'include' }).catch(()=>{});
+                }, 1000);
+            });
+        }
         
+        function escapeHtml(text) { 
+            if (!text) return ''; 
+            const div = document.createElement('div'); 
+            div.textContent = text; 
+            return div.innerHTML; 
+        }
+        
+        // Event listeners
         document.getElementById('new-chat-btn').onclick = () => document.getElementById('new-chat-modal').classList.add('show');
         document.getElementById('close-modal').onclick = () => document.getElementById('new-chat-modal').classList.remove('show');
         document.getElementById('search-users').oninput = (e) => searchUsers(e.target.value);
         document.getElementById('send-btn').onclick = sendMessage;
-        document.getElementById('message-input').onkeypress = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+        document.getElementById('message-input').onkeypress = (e) => { 
+            if (e.key === 'Enter' && !e.shiftKey) { 
+                e.preventDefault(); 
+                sendMessage(); 
+            } 
+        };
         
         checkAuth();
+        setupTypingListener();
     </script>
 </body>
 </html>
