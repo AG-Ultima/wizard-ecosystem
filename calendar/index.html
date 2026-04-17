@@ -6,23 +6,25 @@
     <title>🧙 Wizard Calendar</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
         :root {
-            --bg-primary: #0f0f1a;
-            --bg-secondary: #16162a;
-            --bg-card: rgba(22,22,42,0.9);
-            --text-primary: #f0f0ff;
-            --text-secondary: #c8c4e0;
-            --text-muted: #8a84a4;
-            --border: rgba(139,92,246,0.25);
-            --primary: #9b6df6;
+            --bg-primary: #0a0a14;
+            --bg-secondary: #0f0f1c;
+            --bg-card: rgba(18,18,35,0.95);
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0ff;
+            --text-muted: #a0a0c0;
+            --border: rgba(139,92,246,0.3);
+            --primary: #a855f7;
             --primary-dark: #7c3aed;
-            --primary-light: #b89efd;
-            --primary-glow: rgba(155,109,246,0.3);
+            --primary-light: #c084fc;
             --success: #10b981;
             --danger: #ef4444;
+            --event-purple: #a855f7;
+            --event-blue: #3b82f6;
+            --event-green: #10b981;
+            --event-red: #ef4444;
+            --event-yellow: #f59e0b;
         }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-primary);
@@ -30,34 +32,20 @@
             height: 100vh;
             overflow: hidden;
         }
-        
         .calendar-container { display: flex; height: 100vh; }
         
-        /* Sidebar */
+        /* Sidebar - Month Navigation */
         .sidebar {
-            width: 300px;
+            width: 320px;
             background: var(--bg-secondary);
             border-right: 1px solid var(--border);
             padding: 24px;
             display: flex;
             flex-direction: column;
         }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-        }
+        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
         .logo-icon { font-size: 36px; }
-        .logo h1 {
-            font-size: 22px;
-            background: linear-gradient(135deg, var(--primary-light), var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .logo h1 { font-size: 22px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
         .user-info {
             background: rgba(139,92,246,0.1);
@@ -65,37 +53,80 @@
             padding: 16px;
             margin-bottom: 24px;
         }
-        .user-avatar {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            margin-bottom: 12px;
-        }
-        .user-email { font-size: 12px; color: var(--primary-light); }
+        .user-avatar { width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px; }
+        .user-email { font-size: 12px; color: var(--primary-light); word-break: break-all; }
         
-        .mini-calendar {
+        /* Month Navigator */
+        .month-navigator {
             background: rgba(0,0,0,0.3);
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 20px;
         }
-        .mini-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
-        .mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        .month-nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .month-nav-header button {
+            background: rgba(139,92,246,0.2);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .month-nav-header button:hover { background: rgba(139,92,246,0.4); }
+        .current-month-display {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-light);
+        }
+        
+        /* Mini Calendar Grid */
+        .mini-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+        }
+        .mini-weekday {
+            font-size: 11px;
+            color: var(--text-muted);
+            padding: 6px;
+            font-weight: 500;
+        }
         .mini-day {
             padding: 8px 4px;
-            font-size: 12px;
-            border-radius: 8px;
+            font-size: 13px;
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
+            position: relative;
         }
         .mini-day:hover { background: rgba(139,92,246,0.2); }
-        .mini-day.today { background: var(--primary); color: white; }
-        .mini-day.has-event { background: rgba(155,109,246,0.3); font-weight: bold; }
+        .mini-day.today {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        .mini-day.has-event {
+            background: rgba(168,85,247,0.3);
+            font-weight: bold;
+            position: relative;
+        }
+        .mini-day.has-event::after {
+            content: '●';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 6px;
+            color: var(--primary-light);
+        }
+        .mini-day.other-month { opacity: 0.4; }
         
         .create-btn {
             width: 100%;
@@ -106,84 +137,106 @@
             color: white;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            margin-top: 20px;
         }
-        .create-btn:hover { transform: translateY(-2px); box-shadow: 0 0 20px var(--primary-glow); }
+        .create-btn:hover { transform: translateY(-2px); box-shadow: 0 0 15px var(--primary-glow); }
         
-        /* Main Calendar */
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .header {
+        /* Main Calendar Area - Month View */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .calendar-header {
             padding: 20px 24px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .month-nav { display: flex; gap: 16px; align-items: center; }
-        .month-nav button {
-            background: rgba(139,92,246,0.2);
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            color: white;
+        .view-buttons { display: flex; gap: 8px; }
+        .view-btn {
+            background: rgba(139,92,246,0.15);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 16px;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 13px;
         }
-        .month-nav h2 { font-size: 24px; }
+        .view-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-color: transparent;
+        }
         
-        .calendar-grid {
+        /* Month View Grid */
+        .month-view {
             flex: 1;
             display: grid;
-            grid-template-columns: 80px repeat(7, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             overflow: auto;
         }
-        .time-col { border-right: 1px solid var(--border); }
-        .time-slot {
-            height: 60px;
-            padding: 8px;
-            font-size: 12px;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border);
-        }
-        .day-col { border-right: 1px solid var(--border); position: relative; }
-        .day-header {
-            height: 40px;
-            padding: 8px;
+        .month-day-header {
             text-align: center;
-            font-weight: 500;
+            padding: 12px;
+            font-weight: 600;
+            color: var(--primary-light);
             border-bottom: 1px solid var(--border);
         }
-        .hour-cell {
-            height: 60px;
+        .month-day-cell {
+            min-height: 100px;
+            padding: 8px;
             border-bottom: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            vertical-align: top;
             cursor: pointer;
             transition: all 0.2s;
         }
-        .hour-cell:hover { background: rgba(139,92,246,0.05); }
-        
-        .event {
-            position: absolute;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-size: 11px;
-            overflow: hidden;
-            cursor: pointer;
-            left: 2px;
-            right: 2px;
-            z-index: 10;
-            white-space: nowrap;
-            text-overflow: ellipsis;
+        .month-day-cell:hover { background: rgba(139,92,246,0.05); }
+        .month-day-cell.today { background: rgba(168,85,247,0.1); }
+        .day-number {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 20px;
         }
+        .month-day-cell.today .day-number {
+            background: var(--primary);
+            color: white;
+        }
+        .event-in-month {
+            background: rgba(168,85,247,0.2);
+            border-radius: 6px;
+            padding: 3px 6px;
+            margin-bottom: 3px;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .event-in-month:hover { background: rgba(168,85,247,0.4); }
+        
+        /* Week View */
+        .week-view {
+            flex: 1;
+            display: none;
+            grid-template-columns: 80px repeat(7, 1fr);
+            overflow: auto;
+        }
+        .week-view.active { display: grid; }
+        .time-slot { height: 60px; border-bottom: 1px solid var(--border); padding: 4px; font-size: 11px; color: var(--text-muted); }
+        .week-day-col { border-right: 1px solid var(--border); }
+        .week-hour-cell { height: 60px; border-bottom: 1px solid var(--border); position: relative; cursor: pointer; }
+        .week-hour-cell:hover { background: rgba(139,92,246,0.05); }
         
         /* Modal */
         .modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.95);
             backdrop-filter: blur(20px);
             z-index: 2000;
@@ -191,28 +244,21 @@
             justify-content: center;
         }
         .modal.show { display: flex; }
-        
         .modal-card {
             background: var(--bg-secondary);
             border-radius: 24px;
             padding: 32px;
             width: 450px;
-            max-width: 90%;
             border: 1px solid var(--border);
         }
-        .modal-card h3 {
-            background: linear-gradient(135deg, var(--primary-light), var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-        }
+        .modal-card h3 { margin-bottom: 20px; color: var(--primary-light); }
         .modal-card input, .modal-card textarea, .modal-card select {
             width: 100%;
             background: rgba(0,0,0,0.3);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 12px;
-            color: var(--text-primary);
+            color: white;
             margin-bottom: 16px;
         }
         .modal-card textarea { height: 100px; resize: vertical; }
@@ -226,39 +272,44 @@
             cursor: pointer;
             width: 100%;
         }
-        
+        .event-details { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
         .loading { text-align: center; padding: 60px; color: var(--text-muted); }
     </style>
 </head>
 <body>
     <div class="calendar-container">
         <div class="sidebar">
-            <div class="logo">
-                <span class="logo-icon">📅</span>
-                <h1>Wizard Calendar</h1>
+            <div class="logo"><span class="logo-icon">📅</span><h1>Wizard Calendar</h1></div>
+            <div class="user-info"><div class="user-avatar">🧙</div><div id="user-email" class="user-email">Loading...</div></div>
+            
+            <!-- Month Navigator -->
+            <div class="month-navigator">
+                <div class="month-nav-header">
+                    <button id="mini-prev-month">←</button>
+                    <span id="mini-current-month" class="current-month-display">April 2026</span>
+                    <button id="mini-next-month">→</button>
+                </div>
+                <div class="mini-calendar-grid" id="mini-calendar-grid"></div>
             </div>
             
-            <div class="user-info">
-                <div class="user-avatar">🧙</div>
-                <div id="user-email" class="user-email">Loading...</div>
-            </div>
-            
-            <div class="mini-calendar" id="mini-calendar"></div>
             <button class="create-btn" id="create-btn">+ Create Event</button>
         </div>
         
         <div class="main">
-            <div class="header">
+            <div class="calendar-header">
                 <div class="month-nav">
                     <button id="prev-month">←</button>
-                    <h2 id="current-month">March 2026</h2>
+                    <h2 id="current-month">April 2026</h2>
                     <button id="next-month">→</button>
+                </div>
+                <div class="view-buttons">
+                    <button class="view-btn active" data-view="month">Month</button>
+                    <button class="view-btn" data-view="week">Week</button>
                 </div>
             </div>
             
-            <div id="calendar-grid" class="calendar-grid">
-                <div class="loading">Loading calendar...</div>
-            </div>
+            <div id="month-view" class="month-view"></div>
+            <div id="week-view" class="week-view"></div>
         </div>
     </div>
     
@@ -284,10 +335,7 @@
 
     <script>
         const API_BASE = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null;
-        let events = [];
-        let currentDate = new Date();
-        let editingId = null;
+        let currentUser = null, events = [], currentDate = new Date(), currentView = 'month', editingId = null;
         
         async function checkAuth() {
             try {
@@ -298,13 +346,12 @@
                         currentUser = data.user;
                         document.getElementById('user-email').textContent = currentUser.email;
                         await loadEvents();
-                        renderCalendar();
-                        renderMiniCalendar();
+                        renderAll();
                         return;
                     }
                 }
             } catch(e) {}
-            window.location.href = 'https://wizardai.dpdns.org';
+            window.location.href = 'https://wizardecosystem.dpdns.org';
         }
         
         async function loadEvents() {
@@ -313,8 +360,7 @@
                 if (res.ok) {
                     const data = await res.json();
                     events = data.events || [];
-                    renderCalendar();
-                    renderMiniCalendar();
+                    renderAll();
                 }
             } catch(e) {}
         }
@@ -323,10 +369,7 @@
             const method = editingId ? 'PUT' : 'POST';
             const url = editingId ? `${API_BASE}/api/calendar/events/${editingId}` : `${API_BASE}/api/calendar/events`;
             try {
-                const res = await fetch(url, {
-                    method, headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify(eventData)
-                });
+                const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(eventData) });
                 if (res.ok) { await loadEvents(); return true; }
             } catch(e) {}
             return false;
@@ -342,75 +385,90 @@
             return false;
         }
         
-        function renderCalendar() {
+        function renderAll() {
+            renderMonthView();
+            renderMiniCalendar();
+            document.getElementById('current-month').textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+        }
+        
+        function renderMonthView() {
             const year = currentDate.getFullYear(), month = currentDate.getMonth();
-            document.getElementById('current-month').textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
             
-            let html = `<div class="time-col"><div class="day-header"></div>`;
-            for (let h = 0; h < 24; h++) html += `<div class="time-slot">${h}:00</div>`;
-            html += `</div>`;
+            let html = '';
+            const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            weekdays.forEach(d => { html += `<div class="month-day-header">${d}</div>`; });
             
-            for (let d = 0; d < 7; d++) {
-                html += `<div class="day-col"><div class="day-header">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]}</div>`;
-                for (let h = 0; h < 24; h++) html += `<div class="hour-cell" data-day="${d}" data-hour="${h}"></div>`;
+            for (let i = 0; i < firstDay; i++) { html += `<div class="month-day-cell other-month"></div>`; }
+            
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(year, month, d);
+                const isToday = date.toDateString() === today.toDateString();
+                const dayEvents = events.filter(e => new Date(e.start).toDateString() === date.toDateString());
+                
+                html += `<div class="month-day-cell ${isToday ? 'today' : ''}" data-year="${year}" data-month="${month}" data-day="${d}">
+                    <span class="day-number">${d}</span>`;
+                dayEvents.forEach(event => {
+                    html += `<div class="event-in-month" data-event-id="${event.id}" style="border-left: 3px solid ${getColor(event.color)};">
+                        ${escapeHtml(event.title)}
+                    </div>`;
+                });
                 html += `</div>`;
             }
-            document.getElementById('calendar-grid').innerHTML = html;
             
-            for (let i = 0; i < daysInMonth; i++) {
-                const dayOfWeek = (firstDay + i) % 7;
-                const date = new Date(year, month, i + 1);
-                const dayEvents = events.filter(e => new Date(e.start).toDateString() === date.toDateString());
-                dayEvents.forEach(event => {
-                    const hour = new Date(event.start).getHours();
-                    const cell = document.querySelector(`.day-col:nth-child(${dayOfWeek + 2}) .hour-cell[data-hour="${hour}"]`);
-                    if (cell && cell.parentElement) {
-                        const eventDiv = document.createElement('div');
-                        eventDiv.className = 'event';
-                        eventDiv.textContent = event.title;
-                        eventDiv.style.background = getColor(event.color);
-                        eventDiv.onclick = (e) => { e.stopPropagation(); openEditModal(event.id); };
-                        cell.parentElement.appendChild(eventDiv);
+            const remaining = (42 - (firstDay + daysInMonth));
+            for (let i = 0; i < remaining; i++) { html += `<div class="month-day-cell other-month"></div>`; }
+            
+            document.getElementById('month-view').innerHTML = html;
+            
+            document.querySelectorAll('.month-day-cell').forEach(cell => {
+                cell.onclick = (e) => {
+                    if (!e.target.classList.contains('event-in-month')) {
+                        const year = parseInt(cell.dataset.year);
+                        const month = parseInt(cell.dataset.month);
+                        const day = parseInt(cell.dataset.day);
+                        if (year && month && day) openCreateModal(new Date(year, month, day), 9);
                     }
-                });
-            }
-            
-            document.querySelectorAll('.hour-cell').forEach(cell => {
-                cell.onclick = () => {
-                    const day = parseInt(cell.dataset.day), hour = parseInt(cell.dataset.hour);
-                    const firstDayOfMonth = new Date(year, month, 1).getDay();
-                    let dayNum = 1 + (day - firstDayOfMonth);
-                    if (dayNum < 1) dayNum = new Date(year, month, 0).getDate() + dayNum;
-                    if (dayNum > daysInMonth) dayNum = dayNum - daysInMonth;
-                    const date = new Date(year, month, dayNum);
-                    openCreateModal(date, hour);
                 };
+            });
+            document.querySelectorAll('.event-in-month').forEach(el => {
+                el.onclick = (e) => { e.stopPropagation(); openEditModal(parseInt(el.dataset.eventId)); };
             });
         }
         
         function renderMiniCalendar() {
-            const now = new Date();
-            const year = now.getFullYear(), month = now.getMonth();
+            const year = currentDate.getFullYear(), month = currentDate.getMonth();
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
-            let html = `<div class="mini-header"><span>${now.toLocaleString('default', { month: 'long' })} ${year}</span></div><div class="mini-grid">${['S','M','T','W','T','F','S'].map(d => `<div>${d}</div>`).join('')}`;
-            for (let i = 0; i < firstDay; i++) html += `<div></div>`;
+            const today = new Date();
+            
+            let html = `<div class="mini-calendar-grid">`;
+            ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(d => { html += `<div class="mini-weekday">${d}</div>`; });
+            
+            for (let i = 0; i < firstDay; i++) { html += `<div class="mini-day other-month"></div>`; }
+            
             for (let d = 1; d <= daysInMonth; d++) {
-                const hasEvent = events.some(e => new Date(e.start).toDateString() === new Date(year, month, d).toDateString());
-                const isToday = d === now.getDate();
+                const date = new Date(year, month, d);
+                const isToday = date.toDateString() === today.toDateString();
+                const hasEvent = events.some(e => new Date(e.start).toDateString() === date.toDateString());
                 html += `<div class="mini-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}" data-day="${d}">${d}</div>`;
             }
             html += `</div>`;
-            document.getElementById('mini-calendar').innerHTML = html;
+            document.getElementById('mini-calendar-grid').innerHTML = html;
+            document.getElementById('mini-current-month').textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            
             document.querySelectorAll('.mini-day[data-day]').forEach(day => {
-                day.onclick = () => { currentDate = new Date(year, month, parseInt(day.dataset.day)); renderCalendar(); };
+                day.onclick = () => {
+                    currentDate = new Date(year, month, parseInt(day.dataset.day));
+                    renderAll();
+                };
             });
         }
         
         function getColor(color) {
-            const colors = { purple: '#9b6df6', blue: '#60a5fa', green: '#34d399', red: '#f87171', yellow: '#fbbf24' };
+            const colors = { purple: '#a855f7', blue: '#3b82f6', green: '#10b981', red: '#ef4444', yellow: '#f59e0b' };
             return colors[color] || colors.purple;
         }
         
@@ -442,8 +500,12 @@
             document.getElementById('event-modal').classList.add('show');
         }
         
-        document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); };
-        document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); };
+        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        
+        document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderAll(); };
+        document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderAll(); };
+        document.getElementById('mini-prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderAll(); };
+        document.getElementById('mini-next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderAll(); };
         document.getElementById('create-btn').onclick = () => openCreateModal(new Date(), 9);
         document.getElementById('save-event').onclick = async () => {
             const eventData = {
@@ -459,6 +521,21 @@
         };
         document.getElementById('delete-event').onclick = async () => { if (await deleteEvent()) document.getElementById('event-modal').classList.remove('show'); };
         document.getElementById('close-modal').onclick = () => document.getElementById('event-modal').classList.remove('show');
+        
+        document.querySelectorAll('.view-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentView = btn.dataset.view;
+                if (currentView === 'month') {
+                    document.getElementById('month-view').style.display = 'grid';
+                    document.getElementById('week-view').classList.remove('active');
+                } else {
+                    document.getElementById('month-view').style.display = 'none';
+                    document.getElementById('week-view').classList.add('active');
+                }
+            };
+        });
         
         checkAuth();
     </script>
