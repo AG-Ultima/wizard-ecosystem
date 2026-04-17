@@ -6,19 +6,23 @@
     <title>🧙 Wizard Mail</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         :root {
-            --bg-primary: #0f0f1a;
-            --bg-secondary: #16162a;
-            --text-primary: #f0f0ff;
-            --text-secondary: #c8c4e0;
-            --text-muted: #8a84a4;
-            --border: rgba(139,92,246,0.25);
-            --primary: #9b6df6;
+            --bg-primary: #0a0a14;
+            --bg-secondary: #0f0f1c;
+            --bg-card: rgba(18,18,35,0.95);
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0ff;
+            --text-muted: #a0a0c0;
+            --border: rgba(139,92,246,0.3);
+            --primary: #a855f7;
             --primary-dark: #7c3aed;
-            --primary-light: #b89efd;
+            --primary-light: #c084fc;
             --success: #10b981;
+            --danger: #ef4444;
             --warning: #f59e0b;
         }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-primary);
@@ -26,27 +30,41 @@
             height: 100vh;
             overflow: hidden;
         }
-        .container { display: flex; height: 100vh; }
+        
+        .mail-container { display: flex; height: 100vh; }
+        
+        /* Sidebar */
         .sidebar {
-            width: 300px;
+            width: 280px;
             background: var(--bg-secondary);
             border-right: 1px solid var(--border);
-            padding: 24px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
         }
+        
         .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo-icon { font-size: 36px; }
-        .logo h1 { font-size: 22px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-icon { font-size: 32px; }
+        .logo h1 { font-size: 20px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
         .user-info {
             background: rgba(139,92,246,0.1);
             border-radius: 16px;
             padding: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
         .user-avatar { width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px; }
         .user-email { font-size: 12px; color: var(--primary-light); word-break: break-all; }
-        .connect-btn {
+        .alias-badge {
+            background: rgba(168,85,247,0.2);
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 10px;
+            margin-top: 8px;
+            display: inline-block;
+        }
+        
+        .compose-btn {
             width: 100%;
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border: none;
@@ -57,50 +75,142 @@
             cursor: pointer;
             margin-bottom: 20px;
         }
-        .compose-btn {
-            width: 100%;
-            background: rgba(139,92,246,0.15);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 12px;
-            color: var(--text-primary);
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
+        
         .folder-list { list-style: none; flex: 1; }
         .folder-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px;
+            padding: 10px 12px;
             border-radius: 12px;
             cursor: pointer;
             margin-bottom: 4px;
         }
         .folder-item:hover { background: rgba(139,92,246,0.1); }
-        .folder-item.active { background: rgba(139,92,246,0.2); border-left: 3px solid var(--primary); }
-        .folder-icon { font-size: 20px; }
-        .folder-name { flex: 1; }
-        .folder-count { background: rgba(139,92,246,0.3); padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+        .folder-item.active {
+            background: rgba(139,92,246,0.2);
+            border-left: 3px solid var(--primary);
+        }
+        .folder-icon { font-size: 18px; }
+        .folder-name { flex: 1; font-size: 14px; }
+        .folder-count {
+            background: rgba(139,92,246,0.3);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        
+        /* Main Content */
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .search-box { display: flex; gap: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 40px; padding: 8px 16px; width: 280px; }
-        .search-box input { flex: 1; background: none; border: none; color: var(--text-primary); outline: none; }
+        .toolbar {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 8px 16px;
+            width: 280px;
+        }
+        .search-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            outline: none;
+            font-size: 14px;
+        }
+        
+        /* Email List */
         .email-list { flex: 1; overflow-y: auto; }
         .email-item {
             display: flex;
             align-items: center;
             gap: 16px;
-            padding: 16px 24px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border);
             cursor: pointer;
+            transition: all 0.2s;
         }
         .email-item:hover { background: rgba(139,92,246,0.05); }
-        .email-from { width: 200px; font-weight: 500; }
-        .email-subject { flex: 1; }
-        .email-date { width: 100px; font-size: 12px; color: var(--text-muted); }
-        .loading { text-align: center; padding: 60px; color: var(--text-muted); }
+        .email-star {
+            font-size: 18px;
+            background: none;
+            border: none;
+            color: #f59e0b;
+            cursor: pointer;
+            width: 28px;
+        }
+        .email-from { width: 220px; font-weight: 500; font-size: 14px; }
+        .email-subject { flex: 1; font-size: 14px; }
+        .email-date { width: 100px; font-size: 12px; color: var(--text-muted); text-align: right; }
+        .email-snippet { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        
+        /* Email View */
+        .email-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+        .email-view.show { display: flex; }
+        .email-view-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .email-subject-large { font-size: 24px; margin-bottom: 16px; }
+        .email-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+        .email-body {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            line-height: 1.6;
+            font-size: 15px;
+            white-space: pre-wrap;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        
+        /* AI Assistant Bar */
+        .ai-bar {
+            background: rgba(168,85,247,0.1);
+            border-top: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .ai-input {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 10px 16px;
+            color: white;
+            font-size: 13px;
+        }
+        .ai-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 24px;
+            padding: 8px 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
@@ -122,7 +232,7 @@
             width: 450px;
             border: 1px solid var(--border);
         }
-        .modal-card h3 { margin-bottom: 20px; }
+        .modal-card h3 { margin-bottom: 20px; color: var(--primary-light); }
         .modal-card input, .modal-card textarea {
             width: 100%;
             background: rgba(0,0,0,0.3);
@@ -131,6 +241,7 @@
             padding: 12px;
             color: white;
             margin-bottom: 16px;
+            font-size: 14px;
         }
         .modal-card textarea { height: 150px; resize: vertical; }
         .modal-card button {
@@ -162,43 +273,116 @@
             color: var(--success);
             margin-bottom: 20px;
         }
+        
+        .loading { text-align: center; padding: 60px; color: var(--text-muted); }
+        .ai-response {
+            background: rgba(168,85,247,0.15);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 8px;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="mail-container">
         <div class="sidebar">
             <div class="logo"><span class="logo-icon">📧</span><h1>Wizard Mail</h1></div>
-            <div class="user-info"><div class="user-avatar">🧙</div><div id="user-email" class="user-email">Loading...</div></div>
+            <div class="user-info">
+                <div class="user-avatar">🧙</div>
+                <div>
+                    <div id="user-email" class="user-email">Loading...</div>
+                    <div id="alias-display" class="alias-badge"></div>
+                </div>
+            </div>
             <div id="connection-status"></div>
             <button class="compose-btn" id="compose-btn">✏️ Compose</button>
+            
             <ul class="folder-list">
-                <li class="folder-item active" data-folder="INBOX"><span class="folder-icon">📥</span><span class="folder-name">Inbox</span><span class="folder-count" id="inbox-count">0</span></li>
+                <li class="folder-item active" data-folder="INBOX">
+                    <span class="folder-icon">📥</span>
+                    <span class="folder-name">Inbox</span>
+                    <span class="folder-count" id="inbox-count">0</span>
+                </li>
+                <li class="folder-item" data-folder="STARRED">
+                    <span class="folder-icon">⭐</span>
+                    <span class="folder-name">Starred</span>
+                </li>
+                <li class="folder-item" data-folder="SENT">
+                    <span class="folder-icon">📤</span>
+                    <span class="folder-name">Sent</span>
+                </li>
+                <li class="folder-item" data-folder="SPAM">
+                    <span class="folder-icon">⚠️</span>
+                    <span class="folder-name">Spam</span>
+                </li>
+                <li class="folder-item" data-folder="TRASH">
+                    <span class="folder-icon">🗑️</span>
+                    <span class="folder-name">Trash</span>
+                </li>
             </ul>
         </div>
+        
         <div class="main">
-            <div class="header"><h2>Inbox</h2><div class="search-box"><span>🔍</span><input type="text" id="search-input" placeholder="Search..."></div></div>
-            <div id="email-list" class="email-list"><div class="loading">✨ Connect your Gmail</div></div>
+            <div class="toolbar">
+                <h2 id="folder-title">Inbox</h2>
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="search-input" placeholder="Search emails...">
+                </div>
+            </div>
+            
+            <div id="email-list" class="email-list">
+                <div class="loading">✨ Connect your email to get started</div>
+            </div>
+            
+            <div id="email-view" class="email-view">
+                <div class="email-view-header">
+                    <button class="back-btn" id="back-to-list">← Back to Inbox</button>
+                    <h2 id="email-subject" class="email-subject-large"></h2>
+                    <div class="email-meta"><strong id="email-from"></strong></div>
+                    <div class="email-meta" id="email-date"></div>
+                </div>
+                <div id="email-body" class="email-body"></div>
+                <div class="ai-bar">
+                    <input type="text" id="ai-question" class="ai-input" placeholder="Ask AI about this email...">
+                    <button id="ai-ask-btn" class="ai-btn">Ask AI</button>
+                </div>
+                <div id="ai-response" class="ai-response" style="display: none;"></div>
+            </div>
         </div>
     </div>
     
+    <!-- Connect Modal -->
     <div id="connect-modal" class="modal">
         <div class="modal-card">
-            <h3>🔗 Connect Gmail</h3>
-            <input type="email" id="connect-email" placeholder="Gmail address">
-            <input type="password" id="connect-password" placeholder="App Password">
+            <h3>🔗 Connect Email Account</h3>
+            <input type="email" id="connect-real-email" placeholder="Your real email address (e.g., you@gmail.com)">
+            <input type="text" id="connect-alias" placeholder="Alias email (e.g., you@wizardecosystem.dpdns.org)">
+            <input type="password" id="connect-password" placeholder="Password or App Password">
             <button id="connect-submit">Connect</button>
-            <div class="app-pass-note">🔐 <strong>Gmail requires an App Password</strong><br>1. Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--primary-light);">Google App Passwords</a><br>2. Select "Mail" → "Other" → Name it "Wizard Browser"<br>3. Copy the 16-character password here</div>
+            <div class="app-pass-note">
+                🔐 <strong>Gmail requires an App Password</strong><br>
+                1. Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--primary-light);">Google App Passwords</a><br>
+                2. Select "Mail" → "Other" → Name it "Wizard Browser"<br>
+                3. Copy the 16-character password here
+            </div>
             <button id="close-connect" style="margin-top: 12px; background: rgba(139,92,246,0.2);">Cancel</button>
         </div>
     </div>
     
+    <!-- Compose Modal -->
     <div id="compose-modal" class="modal">
         <div class="modal-card">
             <h3>✏️ New Message</h3>
             <input type="email" id="compose-to" placeholder="To">
             <input type="text" id="compose-subject" placeholder="Subject">
             <textarea id="compose-body" placeholder="Write your message..."></textarea>
-            <button id="send-btn">Send</button>
+            <div class="ai-bar" style="margin-top: 12px; padding: 0;">
+                <input type="text" id="compose-ai-prompt" class="ai-input" placeholder="Ask AI to write or improve...">
+                <button id="compose-ai-btn" class="ai-btn">Enhance</button>
+            </div>
+            <button id="send-btn" style="margin-top: 16px;">Send</button>
             <button id="close-compose" style="margin-top: 12px; background: rgba(139,92,246,0.2);">Cancel</button>
         </div>
     </div>
@@ -207,6 +391,9 @@
         const API_BASE = 'https://arnav0928.pythonanywhere.com';
         let currentUser = null;
         let currentEmails = [];
+        let currentEmailBody = '';
+        let currentEmailSubject = '';
+        let aliasEmail = '';
         
         async function checkAuth() {
             try {
@@ -221,44 +408,56 @@
                     }
                 }
             } catch(e) {}
-            // Not logged in - redirect to ecosystem
             window.location.href = 'https://wizardecosystem.dpdns.org';
         }
         
         async function checkConnection() {
             try {
-                const res = await fetch(`${API_BASE}/api/mail/emails`, { credentials: 'include' });
+                const res = await fetch(`${API_BASE}/api/mail/status`, { credentials: 'include' });
                 if (res.ok) {
-                    document.getElementById('connection-status').innerHTML = '<div class="connected-badge">✅ Connected to Gmail</div>';
-                    await loadEmails();
-                } else {
-                    document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn">🔗 Connect Gmail</button>';
-                    document.getElementById('connect-btn').onclick = () => document.getElementById('connect-modal').classList.add('show');
+                    const data = await res.json();
+                    if (data.connected) {
+                        aliasEmail = data.alias;
+                        document.getElementById('alias-display').textContent = `✨ ${data.alias}`;
+                        document.getElementById('connection-status').innerHTML = '<div class="connected-badge">✅ Connected to ' + data.alias + '</div>';
+                        await loadEmails();
+                    } else {
+                        document.getElementById('connection-status').innerHTML = '<button class="compose-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
+                        document.getElementById('connect-btn').onclick = () => document.getElementById('connect-modal').classList.add('show');
+                    }
                 }
             } catch(e) {
-                document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn">🔗 Connect Gmail</button>';
-                const btn = document.getElementById('connect-btn');
-                if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
+                document.getElementById('connection-status').innerHTML = '<button class="compose-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
+                if (document.getElementById('connect-btn')) {
+                    document.getElementById('connect-btn').onclick = () => document.getElementById('connect-modal').classList.add('show');
+                }
             }
         }
         
         async function connectEmail() {
-            const email = document.getElementById('connect-email').value;
+            const realEmail = document.getElementById('connect-real-email').value;
+            const alias = document.getElementById('connect-alias').value;
             const password = document.getElementById('connect-password').value;
-            if (!email || !password) { alert('Please enter email and app password'); return; }
+            
+            if (!realEmail || !password) { alert('Please enter email and password'); return; }
+            
+            const finalAlias = alias || realEmail;
+            
             try {
                 const res = await fetch(`${API_BASE}/api/mail/connect`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email: realEmail, alias: finalAlias, password })
                 });
                 if (res.ok) {
+                    const data = await res.json();
                     document.getElementById('connect-modal').classList.remove('show');
-                    document.getElementById('connect-email').value = '';
+                    document.getElementById('connect-real-email').value = '';
+                    document.getElementById('connect-alias').value = '';
                     document.getElementById('connect-password').value = '';
                     await checkConnection();
                 } else {
                     const err = await res.json();
-                    alert(err.error || 'Connection failed. Make sure you\'re using an App Password.');
+                    alert(err.error || 'Connection failed. Make sure you\'re using an App Password for Gmail.');
                 }
             } catch(e) { alert('Connection failed'); }
         }
@@ -269,9 +468,10 @@
                 if (res.ok) {
                     const data = await res.json();
                     currentEmails = data.emails || [];
+                    if (data.alias) aliasEmail = data.alias;
                     renderEmailList();
                 }
-            } catch(e) {}
+            } catch(e) { console.error('Failed to load emails:', e); }
         }
         
         function renderEmailList() {
@@ -281,14 +481,50 @@
                 document.getElementById('inbox-count').textContent = '0';
                 return;
             }
+            
             container.innerHTML = currentEmails.map(email => `
                 <div class="email-item" data-id="${email.id}">
+                    <button class="email-star">☆</button>
                     <div class="email-from">${escapeHtml(email.from)}</div>
-                    <div class="email-subject">${escapeHtml(email.subject)}</div>
+                    <div style="flex:1;">
+                        <div class="email-subject">${escapeHtml(email.subject)}</div>
+                        <div class="email-snippet">${escapeHtml(email.snippet)}</div>
+                    </div>
                     <div class="email-date">${formatDate(email.date)}</div>
                 </div>
             `).join('');
+            
             document.getElementById('inbox-count').textContent = currentEmails.length;
+            
+            document.querySelectorAll('.email-item').forEach(item => {
+                item.onclick = (e) => {
+                    if (!e.target.classList.contains('email-star')) {
+                        viewEmail(item.dataset.id);
+                    }
+                };
+                const starBtn = item.querySelector('.email-star');
+                if (starBtn) {
+                    starBtn.onclick = (e) => { e.stopPropagation(); toggleStar(item.dataset.id); };
+                }
+            });
+        }
+        
+        async function viewEmail(emailId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/mail/email/${emailId}`, { credentials: 'include' });
+                if (res.ok) {
+                    const email = await res.json();
+                    currentEmailBody = email.body;
+                    currentEmailSubject = email.subject;
+                    document.getElementById('email-subject').textContent = email.subject;
+                    document.getElementById('email-from').textContent = `From: ${email.from}`;
+                    document.getElementById('email-date').textContent = new Date(email.date).toLocaleString();
+                    document.getElementById('email-body').innerHTML = email.body.replace(/\n/g, '<br>');
+                    document.getElementById('email-list').style.display = 'none';
+                    document.getElementById('email-view').classList.add('show');
+                    document.getElementById('ai-response').style.display = 'none';
+                }
+            } catch(e) {}
         }
         
         async function sendEmail() {
@@ -296,6 +532,7 @@
             const subject = document.getElementById('compose-subject').value;
             const body = document.getElementById('compose-body').value;
             if (!to || !subject || !body) { alert('Please fill in all fields'); return; }
+            
             try {
                 const res = await fetch(`${API_BASE}/api/mail/send`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
@@ -307,8 +544,66 @@
                     document.getElementById('compose-to').value = '';
                     document.getElementById('compose-subject').value = '';
                     document.getElementById('compose-body').value = '';
+                    await loadEmails();
                 } else { alert('Failed to send email'); }
             } catch(e) { alert('Failed to send email'); }
+        }
+        
+        async function askAI() {
+            const question = document.getElementById('ai-question').value;
+            if (!question) return;
+            
+            const responseDiv = document.getElementById('ai-response');
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div class="loading">🧙 Wizard is thinking...</div>';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/chat/simple`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                    body: JSON.stringify({ 
+                        prompt: `Email Subject: ${currentEmailSubject}\nEmail Content: ${currentEmailBody}\n\nUser Question: ${question}\n\nAnswer based on the email content.`,
+                        mode: 'Fast'
+                    })
+                });
+                const data = await res.json();
+                responseDiv.innerHTML = `<strong>🧙 AI Response:</strong><br>${escapeHtml(data.response || 'No response')}`;
+            } catch(e) {
+                responseDiv.innerHTML = 'Error getting AI response';
+            }
+            
+            document.getElementById('ai-question').value = '';
+        }
+        
+        async function enhanceEmail() {
+            const prompt = document.getElementById('compose-ai-prompt').value;
+            const currentBody = document.getElementById('compose-body').value;
+            if (!prompt && !currentBody) return;
+            
+            const instruction = prompt ? `Enhance/improve this email based on: ${prompt}` : 'Improve this email to be more professional and clear';
+            const emailText = currentBody || 'Write a professional email';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/chat/simple`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                    body: JSON.stringify({ 
+                        prompt: `${instruction}\n\nEmail: ${emailText}\n\nProvide ONLY the improved email text, no explanations.`,
+                        mode: 'Fast'
+                    })
+                });
+                const data = await res.json();
+                if (data.response) {
+                    document.getElementById('compose-body').value = data.response;
+                }
+            } catch(e) {}
+            
+            document.getElementById('compose-ai-prompt').value = '';
+        }
+        
+        async function toggleStar(emailId) {
+            try {
+                await fetch(`${API_BASE}/api/mail/star/${emailId}`, { method: 'POST', credentials: 'include' });
+                await loadEmails();
+            } catch(e) {}
         }
         
         function formatDate(dateStr) {
@@ -323,11 +618,29 @@
         
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         
+        // Event listeners
         document.getElementById('compose-btn').onclick = () => document.getElementById('compose-modal').classList.add('show');
         document.getElementById('close-compose').onclick = () => document.getElementById('compose-modal').classList.remove('show');
         document.getElementById('send-btn').onclick = sendEmail;
+        document.getElementById('back-to-list').onclick = () => {
+            document.getElementById('email-list').style.display = 'block';
+            document.getElementById('email-view').classList.remove('show');
+            loadEmails();
+        };
         document.getElementById('connect-submit').onclick = connectEmail;
         document.getElementById('close-connect').onclick = () => document.getElementById('connect-modal').classList.remove('show');
+        document.getElementById('ai-ask-btn').onclick = askAI;
+        document.getElementById('compose-ai-btn').onclick = enhanceEmail;
+        document.getElementById('ai-question').onkeypress = (e) => { if (e.key === 'Enter') askAI(); };
+        
+        document.querySelectorAll('.folder-item').forEach(folder => {
+            folder.onclick = () => {
+                document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
+                folder.classList.add('active');
+                document.getElementById('folder-title').textContent = folder.dataset.folder === 'INBOX' ? 'Inbox' : folder.dataset.folder;
+                loadEmails();
+            };
+        });
         
         checkAuth();
     </script>
