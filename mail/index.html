@@ -33,7 +33,6 @@
         
         .mail-container { display: flex; height: 100vh; }
         
-        /* Sidebar */
         .sidebar {
             width: 280px;
             background: var(--bg-secondary);
@@ -100,7 +99,6 @@
             font-size: 11px;
         }
         
-        /* Main Content */
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .toolbar {
             padding: 12px 20px;
@@ -127,7 +125,6 @@
             font-size: 14px;
         }
         
-        /* Email List */
         .email-list { flex: 1; overflow-y: auto; }
         .email-item {
             display: flex;
@@ -148,12 +145,10 @@
             cursor: pointer;
             width: 28px;
         }
-        .email-from { width: 200px; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .email-from { width: 220px; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .email-subject { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .email-date { width: 100px; font-size: 12px; color: var(--text-muted); text-align: right; }
-        .email-attachment { margin-left: 8px; font-size: 12px; }
         
-        /* Email View */
         .email-view {
             display: none;
             flex-direction: column;
@@ -172,7 +167,6 @@
             overflow-y: auto;
             line-height: 1.6;
             font-size: 15px;
-            white-space: pre-wrap;
         }
         .back-btn {
             background: none;
@@ -192,7 +186,6 @@
             font-size: 13px;
         }
         
-        /* Compose Modal - Rich Editor */
         .modal {
             display: none;
             position: fixed;
@@ -211,7 +204,7 @@
             background: var(--bg-secondary);
             border-radius: 24px;
             padding: 24px;
-            width: 600px;
+            width: 550px;
             max-width: 90%;
             max-height: 85vh;
             overflow-y: auto;
@@ -229,25 +222,6 @@
             font-size: 14px;
         }
         .modal-card textarea { height: 200px; resize: vertical; font-family: inherit; }
-        
-        .rich-toolbar {
-            display: flex;
-            gap: 8px;
-            padding: 8px 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-        .rich-btn {
-            background: rgba(139,92,246,0.2);
-            border: none;
-            border-radius: 8px;
-            padding: 6px 10px;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .rich-btn:hover { background: rgba(139,92,246,0.4); }
         
         .ai-bar {
             background: rgba(168,85,247,0.1);
@@ -275,15 +249,6 @@
             color: white;
             cursor: pointer;
             font-size: 13px;
-        }
-        
-        .modal-card button.primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            margin-top: 16px;
-        }
-        .modal-card button.secondary {
-            background: rgba(139,92,246,0.2);
-            margin-top: 12px;
         }
         
         .app-pass-note {
@@ -332,6 +297,14 @@
             cursor: pointer;
             font-size: 12px;
         }
+        
+        /* Markdown styling */
+        .email-body h1 { font-size: 24px; margin: 16px 0 8px; }
+        .email-body h2 { font-size: 20px; margin: 14px 0 6px; }
+        .email-body strong { font-weight: bold; }
+        .email-body em { font-style: italic; }
+        .email-body ul, .email-body ol { margin: 8px 0 8px 24px; }
+        .email-body li { margin: 4px 0; }
     </style>
 </head>
 <body>
@@ -387,7 +360,6 @@
                 <span id="selected-count">0 selected</span>
                 <button class="batch-btn" id="batch-delete">🗑️ Delete</button>
                 <button class="batch-btn" id="batch-star">⭐ Star</button>
-                <button class="batch-btn" id="batch-mark-read">📖 Mark Read</button>
             </div>
             
             <div id="email-list" class="email-list">
@@ -421,45 +393,30 @@
             <input type="email" id="connect-real-email" placeholder="Your real email address (e.g., you@gmail.com)">
             <input type="text" id="connect-alias" placeholder="Alias email (e.g., you@wizardecosystem.dpdns.org)">
             <input type="password" id="connect-password" placeholder="Password or App Password">
-            <button id="connect-submit" class="primary">Connect</button>
+            <button id="connect-submit">Connect</button>
             <div class="app-pass-note">
                 🔐 <strong>Gmail requires an App Password</strong><br>
                 1. Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--primary-light);">Google App Passwords</a><br>
                 2. Select "Mail" → "Other" → Name it "Wizard Browser"<br>
                 3. Copy the 16-character password here
             </div>
-            <button id="close-connect" class="secondary">Cancel</button>
+            <button id="close-connect" style="margin-top: 12px; background: rgba(139,92,246,0.2);">Cancel</button>
         </div>
     </div>
     
-    <!-- Compose Modal with Rich Editor -->
+    <!-- Compose Modal -->
     <div id="compose-modal" class="modal">
         <div class="modal-card">
             <h3>✏️ New Message</h3>
             <input type="email" id="compose-to" placeholder="To">
             <input type="text" id="compose-subject" placeholder="Subject">
-            
-            <div class="rich-toolbar">
-                <button class="rich-btn" data-action="bold"><b>B</b></button>
-                <button class="rich-btn" data-action="italic"><i>I</i></button>
-                <button class="rich-btn" data-action="underline"><u>U</u></button>
-                <span style="width:1px; background:var(--border); margin:0 4px;"></span>
-                <button class="rich-btn" data-action="h1">H1</button>
-                <button class="rich-btn" data-action="h2">H2</button>
-                <span style="width:1px; background:var(--border); margin:0 4px;"></span>
-                <button class="rich-btn" data-action="ul">• List</button>
-                <button class="rich-btn" data-action="ol">1. List</button>
-            </div>
-            
             <textarea id="compose-body" placeholder="Write your message..."></textarea>
-            
             <div class="ai-bar" style="margin: 16px 0;">
                 <input type="text" id="compose-ai-prompt" class="ai-input" placeholder="Ask AI to write, improve, or fix grammar...">
                 <button id="compose-ai-btn" class="ai-btn">Enhance</button>
             </div>
-            
-            <button id="send-btn" class="primary">Send</button>
-            <button id="close-compose" class="secondary">Cancel</button>
+            <button id="send-btn">Send</button>
+            <button id="close-compose" style="margin-top: 12px; background: rgba(139,92,246,0.2);">Cancel</button>
         </div>
     </div>
 
@@ -473,6 +430,28 @@
         let aliasEmail = '';
         let currentFolder = 'INBOX';
         let selectedEmails = new Set();
+        
+        // Markdown to HTML converter
+        function markdownToHtml(text) {
+            if (!text) return '';
+            let html = text;
+            // Bold
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            // Italic
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            // Underline
+            html = html.replace(/__(.+?)__/g, '<u>$1</u>');
+            // Headers
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            // Lists
+            html = html.replace(/^• (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            // Line breaks
+            html = html.replace(/\n/g, '<br>');
+            return html;
+        }
         
         async function checkAuth() {
             try {
@@ -517,9 +496,7 @@
             const realEmail = document.getElementById('connect-real-email').value;
             const alias = document.getElementById('connect-alias').value;
             const password = document.getElementById('connect-password').value;
-            
             if (!realEmail || !password) { alert('Please enter email and password'); return; }
-            
             const finalAlias = alias || realEmail;
             
             try {
@@ -528,7 +505,6 @@
                     body: JSON.stringify({ email: realEmail, alias: finalAlias, password })
                 });
                 if (res.ok) {
-                    const data = await res.json();
                     document.getElementById('connect-modal').classList.remove('show');
                     document.getElementById('connect-real-email').value = '';
                     document.getElementById('connect-alias').value = '';
@@ -543,13 +519,14 @@
         
         async function loadEmails() {
             try {
-                const res = await fetch(`${API_BASE}/api/mail/emails`, { credentials: 'include' });
+                const url = `${API_BASE}/api/mail/emails?folder=${currentFolder}`;
+                const res = await fetch(url, { credentials: 'include' });
                 if (res.ok) {
                     const data = await res.json();
                     currentEmails = data.emails || [];
                     if (data.alias) aliasEmail = data.alias;
                     renderEmailList();
-                    document.getElementById('inbox-count').textContent = currentEmails.filter(e => e.folder === 'INBOX').length;
+                    document.getElementById('inbox-count').textContent = currentEmails.length;
                 }
             } catch(e) { console.error('Failed to load emails:', e); }
         }
@@ -557,13 +534,18 @@
         async function deleteEmail(emailId) {
             if (!confirm('Delete this email?')) return;
             try {
-                const res = await fetch(`${API_BASE}/api/mail/delete/${emailId}`, { method: 'DELETE', credentials: 'include' });
+                const url = `${API_BASE}/api/mail/delete/${emailId}?folder=${currentFolder}`;
+                const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
                 if (res.ok) {
                     await loadEmails();
                     if (currentEmailId === emailId) {
                         document.getElementById('email-view').classList.remove('show');
                         document.getElementById('email-list').style.display = 'block';
+                        currentEmailId = null;
                     }
+                    showNotification('Email deleted');
+                } else {
+                    alert('Failed to delete email');
                 }
             } catch(e) { alert('Failed to delete email'); }
         }
@@ -573,11 +555,20 @@
             if (!confirm(`Delete ${selectedEmails.size} email(s)?`)) return;
             
             for (const id of selectedEmails) {
-                await fetch(`${API_BASE}/api/mail/delete/${id}`, { method: 'DELETE', credentials: 'include' });
+                await fetch(`${API_BASE}/api/mail/delete/${id}?folder=${currentFolder}`, { method: 'DELETE', credentials: 'include' });
             }
             selectedEmails.clear();
             await loadEmails();
             document.getElementById('batch-actions').style.display = 'none';
+            showNotification(`${selectedEmails.size} emails deleted`);
+        }
+        
+        function showNotification(msg) {
+            const n = document.createElement('div');
+            n.textContent = msg;
+            n.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:50px;padding:10px 20px;color:white;z-index:10000;';
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 2000);
         }
         
         function renderEmailList() {
@@ -594,11 +585,9 @@
                     <div class="email-from">${escapeHtml(email.from)}</div>
                     <div class="email-subject">${escapeHtml(email.subject)}</div>
                     <div class="email-date">${formatDate(email.date)}</div>
-                    ${email.has_attachment ? '<span class="email-attachment">📎</span>' : ''}
                 </div>
             `).join('');
             
-            // Email click to view
             document.querySelectorAll('.email-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     if (!e.target.classList.contains('email-checkbox') && !e.target.classList.contains('email-star')) {
@@ -607,12 +596,10 @@
                 });
             });
             
-            // Star buttons
             document.querySelectorAll('.email-star').forEach(btn => {
                 btn.onclick = (e) => { e.stopPropagation(); toggleStar(btn.dataset.id); };
             });
             
-            // Checkbox selection
             document.querySelectorAll('.email-checkbox').forEach(cb => {
                 cb.onclick = (e) => { e.stopPropagation(); toggleSelect(cb.dataset.id, cb.checked); };
             });
@@ -628,6 +615,7 @@
             if (selectedEmails.size > 0) {
                 batchActions.style.display = 'flex';
                 document.getElementById('selected-count').textContent = `${selectedEmails.size} selected`;
+                document.getElementById('select-all').checked = selectedEmails.size === currentEmails.length;
             } else {
                 batchActions.style.display = 'none';
             }
@@ -636,7 +624,8 @@
         async function viewEmail(emailId) {
             currentEmailId = emailId;
             try {
-                const res = await fetch(`${API_BASE}/api/mail/email/${emailId}`, { credentials: 'include' });
+                const url = `${API_BASE}/api/mail/email/${emailId}?folder=${currentFolder}`;
+                const res = await fetch(url, { credentials: 'include' });
                 if (res.ok) {
                     const email = await res.json();
                     currentEmailBody = email.body;
@@ -644,7 +633,7 @@
                     document.getElementById('email-subject').textContent = email.subject;
                     document.getElementById('email-from').textContent = `From: ${email.from}`;
                     document.getElementById('email-date').textContent = new Date(email.date).toLocaleString();
-                    document.getElementById('email-body').innerHTML = email.body.replace(/\n/g, '<br>');
+                    document.getElementById('email-body').innerHTML = markdownToHtml(email.body);
                     document.getElementById('email-list').style.display = 'none';
                     document.getElementById('email-view').classList.add('show');
                     document.getElementById('ai-response').style.display = 'none';
@@ -653,11 +642,12 @@
         }
         
         async function toggleStar(emailId) {
+            const email = currentEmails.find(e => e.id == emailId);
+            if (!email) return;
             try {
-                const res = await fetch(`${API_BASE}/api/mail/star/${emailId}`, { method: 'POST', credentials: 'include' });
-                if (res.ok) {
-                    await loadEmails();
-                }
+                const url = `${API_BASE}/api/mail/star/${emailId}?folder=${currentFolder}`;
+                await fetch(url, { method: 'POST', credentials: 'include', body: JSON.stringify({ starred: !email.is_starred }), headers: { 'Content-Type': 'application/json' } });
+                await loadEmails();
             } catch(e) {}
         }
         
@@ -745,29 +735,6 @@
         
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         
-        // Rich text editor actions
-        function applyFormat(action) {
-            const textarea = document.getElementById('compose-body');
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const selectedText = textarea.value.substring(start, end);
-            let wrapped = '';
-            
-            switch(action) {
-                case 'bold': wrapped = `**${selectedText}**`; break;
-                case 'italic': wrapped = `*${selectedText}*`; break;
-                case 'underline': wrapped = `__${selectedText}__`; break;
-                case 'h1': wrapped = `# ${selectedText}`; break;
-                case 'h2': wrapped = `## ${selectedText}`; break;
-                case 'ul': wrapped = selectedText.split('\n').map(l => `• ${l}`).join('\n'); break;
-                case 'ol': wrapped = selectedText.split('\n').map((l, i) => `${i+1}. ${l}`).join('\n'); break;
-                default: return;
-            }
-            
-            textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
-            textarea.focus();
-        }
-        
         // Event listeners
         document.getElementById('compose-btn').onclick = () => document.getElementById('compose-modal').classList.add('show');
         document.getElementById('close-compose').onclick = () => document.getElementById('compose-modal').classList.remove('show');
@@ -791,19 +758,15 @@
             });
         };
         
-        document.querySelectorAll('.rich-btn').forEach(btn => {
-            btn.onclick = () => applyFormat(btn.dataset.action);
-        });
-        
         document.querySelectorAll('.folder-item').forEach(folder => {
             folder.onclick = () => {
                 document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
                 folder.classList.add('active');
                 currentFolder = folder.dataset.folder;
-                document.getElementById('folder-title').textContent = folder.dataset.folder === 'INBOX' ? 'Inbox' : 
-                                                                   folder.dataset.folder === 'STARRED' ? 'Starred' :
-                                                                   folder.dataset.folder === 'SENT' ? 'Sent' :
-                                                                   folder.dataset.folder === 'SPAM' ? 'Spam' : 'Trash';
+                const titles = { INBOX: 'Inbox', STARRED: 'Starred', SENT: 'Sent', SPAM: 'Spam', TRASH: 'Trash' };
+                document.getElementById('folder-title').textContent = titles[currentFolder] || 'Inbox';
+                selectedEmails.clear();
+                document.getElementById('batch-actions').style.display = 'none';
                 loadEmails();
             };
         });
