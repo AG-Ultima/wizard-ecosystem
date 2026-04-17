@@ -132,13 +132,14 @@
         .email-item {
             display: flex;
             align-items: center;
-            gap: 16px;
-            padding: 16px 20px;
+            gap: 12px;
+            padding: 14px 20px;
             border-bottom: 1px solid var(--border);
             cursor: pointer;
             transition: all 0.2s;
         }
         .email-item:hover { background: rgba(139,92,246,0.05); }
+        .email-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
         .email-star {
             font-size: 18px;
             background: none;
@@ -147,10 +148,10 @@
             cursor: pointer;
             width: 28px;
         }
-        .email-from { width: 220px; font-weight: 500; font-size: 14px; }
-        .email-subject { flex: 1; font-size: 14px; }
+        .email-from { width: 200px; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .email-subject { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .email-date { width: 100px; font-size: 12px; color: var(--text-muted); text-align: right; }
-        .email-snippet { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .email-attachment { margin-left: 8px; font-size: 12px; }
         
         /* Email View */
         .email-view {
@@ -181,12 +182,78 @@
             margin-bottom: 16px;
             font-size: 14px;
         }
+        .delete-email-btn {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid var(--danger);
+            border-radius: 20px;
+            padding: 6px 16px;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 13px;
+        }
         
-        /* AI Assistant Bar */
+        /* Compose Modal - Rich Editor */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(20px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-card {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            padding: 24px;
+            width: 600px;
+            max-width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+        .modal-card h3 { margin-bottom: 20px; color: var(--primary-light); }
+        .modal-card input, .modal-card textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .modal-card textarea { height: 200px; resize: vertical; font-family: inherit; }
+        
+        .rich-toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .rich-btn {
+            background: rgba(139,92,246,0.2);
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .rich-btn:hover { background: rgba(139,92,246,0.4); }
+        
         .ai-bar {
             background: rgba(168,85,247,0.1);
-            border-top: 1px solid var(--border);
-            padding: 12px 20px;
+            border-radius: 12px;
+            padding: 12px;
+            margin: 16px 0;
             display: flex;
             gap: 12px;
             align-items: center;
@@ -210,50 +277,15 @@
             font-size: 13px;
         }
         
-        /* Modals */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(20px);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal.show { display: flex; }
-        .modal-card {
-            background: var(--bg-secondary);
-            border-radius: 24px;
-            padding: 32px;
-            width: 450px;
-            border: 1px solid var(--border);
-        }
-        .modal-card h3 { margin-bottom: 20px; color: var(--primary-light); }
-        .modal-card input, .modal-card textarea {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            color: white;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-        .modal-card textarea { height: 150px; resize: vertical; }
-        .modal-card button {
+        .modal-card button.primary {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border: none;
-            border-radius: 24px;
-            padding: 12px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
+            margin-top: 16px;
         }
+        .modal-card button.secondary {
+            background: rgba(139,92,246,0.2);
+            margin-top: 12px;
+        }
+        
         .app-pass-note {
             background: rgba(245,158,11,0.15);
             border: 1px solid var(--warning);
@@ -281,6 +313,24 @@
             padding: 12px;
             margin-top: 8px;
             font-size: 13px;
+        }
+        
+        .batch-actions {
+            padding: 8px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .batch-btn {
+            background: rgba(139,92,246,0.15);
+            border: none;
+            border-radius: 16px;
+            padding: 6px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -332,13 +382,24 @@
                 </div>
             </div>
             
+            <div class="batch-actions" id="batch-actions" style="display: none;">
+                <input type="checkbox" id="select-all" style="width: 18px;">
+                <span id="selected-count">0 selected</span>
+                <button class="batch-btn" id="batch-delete">🗑️ Delete</button>
+                <button class="batch-btn" id="batch-star">⭐ Star</button>
+                <button class="batch-btn" id="batch-mark-read">📖 Mark Read</button>
+            </div>
+            
             <div id="email-list" class="email-list">
                 <div class="loading">✨ Connect your email to get started</div>
             </div>
             
             <div id="email-view" class="email-view">
                 <div class="email-view-header">
-                    <button class="back-btn" id="back-to-list">← Back to Inbox</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <button class="back-btn" id="back-to-list">← Back to Inbox</button>
+                        <button class="delete-email-btn" id="delete-current-email">🗑️ Delete</button>
+                    </div>
                     <h2 id="email-subject" class="email-subject-large"></h2>
                     <div class="email-meta"><strong id="email-from"></strong></div>
                     <div class="email-meta" id="email-date"></div>
@@ -360,30 +421,45 @@
             <input type="email" id="connect-real-email" placeholder="Your real email address (e.g., you@gmail.com)">
             <input type="text" id="connect-alias" placeholder="Alias email (e.g., you@wizardecosystem.dpdns.org)">
             <input type="password" id="connect-password" placeholder="Password or App Password">
-            <button id="connect-submit">Connect</button>
+            <button id="connect-submit" class="primary">Connect</button>
             <div class="app-pass-note">
                 🔐 <strong>Gmail requires an App Password</strong><br>
                 1. Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--primary-light);">Google App Passwords</a><br>
                 2. Select "Mail" → "Other" → Name it "Wizard Browser"<br>
                 3. Copy the 16-character password here
             </div>
-            <button id="close-connect" style="margin-top: 12px; background: rgba(139,92,246,0.2);">Cancel</button>
+            <button id="close-connect" class="secondary">Cancel</button>
         </div>
     </div>
     
-    <!-- Compose Modal -->
+    <!-- Compose Modal with Rich Editor -->
     <div id="compose-modal" class="modal">
         <div class="modal-card">
             <h3>✏️ New Message</h3>
             <input type="email" id="compose-to" placeholder="To">
             <input type="text" id="compose-subject" placeholder="Subject">
+            
+            <div class="rich-toolbar">
+                <button class="rich-btn" data-action="bold"><b>B</b></button>
+                <button class="rich-btn" data-action="italic"><i>I</i></button>
+                <button class="rich-btn" data-action="underline"><u>U</u></button>
+                <span style="width:1px; background:var(--border); margin:0 4px;"></span>
+                <button class="rich-btn" data-action="h1">H1</button>
+                <button class="rich-btn" data-action="h2">H2</button>
+                <span style="width:1px; background:var(--border); margin:0 4px;"></span>
+                <button class="rich-btn" data-action="ul">• List</button>
+                <button class="rich-btn" data-action="ol">1. List</button>
+            </div>
+            
             <textarea id="compose-body" placeholder="Write your message..."></textarea>
-            <div class="ai-bar" style="margin-top: 12px; padding: 0;">
-                <input type="text" id="compose-ai-prompt" class="ai-input" placeholder="Ask AI to write or improve...">
+            
+            <div class="ai-bar" style="margin: 16px 0;">
+                <input type="text" id="compose-ai-prompt" class="ai-input" placeholder="Ask AI to write, improve, or fix grammar...">
                 <button id="compose-ai-btn" class="ai-btn">Enhance</button>
             </div>
-            <button id="send-btn" style="margin-top: 16px;">Send</button>
-            <button id="close-compose" style="margin-top: 12px; background: rgba(139,92,246,0.2);">Cancel</button>
+            
+            <button id="send-btn" class="primary">Send</button>
+            <button id="close-compose" class="secondary">Cancel</button>
         </div>
     </div>
 
@@ -393,7 +469,10 @@
         let currentEmails = [];
         let currentEmailBody = '';
         let currentEmailSubject = '';
+        let currentEmailId = null;
         let aliasEmail = '';
+        let currentFolder = 'INBOX';
+        let selectedEmails = new Set();
         
         async function checkAuth() {
             try {
@@ -470,46 +549,92 @@
                     currentEmails = data.emails || [];
                     if (data.alias) aliasEmail = data.alias;
                     renderEmailList();
+                    document.getElementById('inbox-count').textContent = currentEmails.filter(e => e.folder === 'INBOX').length;
                 }
             } catch(e) { console.error('Failed to load emails:', e); }
+        }
+        
+        async function deleteEmail(emailId) {
+            if (!confirm('Delete this email?')) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/mail/delete/${emailId}`, { method: 'DELETE', credentials: 'include' });
+                if (res.ok) {
+                    await loadEmails();
+                    if (currentEmailId === emailId) {
+                        document.getElementById('email-view').classList.remove('show');
+                        document.getElementById('email-list').style.display = 'block';
+                    }
+                }
+            } catch(e) { alert('Failed to delete email'); }
+        }
+        
+        async function batchDelete() {
+            if (selectedEmails.size === 0) return;
+            if (!confirm(`Delete ${selectedEmails.size} email(s)?`)) return;
+            
+            for (const id of selectedEmails) {
+                await fetch(`${API_BASE}/api/mail/delete/${id}`, { method: 'DELETE', credentials: 'include' });
+            }
+            selectedEmails.clear();
+            await loadEmails();
+            document.getElementById('batch-actions').style.display = 'none';
         }
         
         function renderEmailList() {
             const container = document.getElementById('email-list');
             if (!currentEmails.length) {
                 container.innerHTML = '<div class="loading">📭 No emails found</div>';
-                document.getElementById('inbox-count').textContent = '0';
                 return;
             }
             
             container.innerHTML = currentEmails.map(email => `
-                <div class="email-item" data-id="${email.id}">
-                    <button class="email-star">☆</button>
+                <div class="email-item" data-id="${email.id}" data-folder="${email.folder}">
+                    <input type="checkbox" class="email-checkbox" data-id="${email.id}">
+                    <button class="email-star" data-id="${email.id}">${email.is_starred ? '⭐' : '☆'}</button>
                     <div class="email-from">${escapeHtml(email.from)}</div>
-                    <div style="flex:1;">
-                        <div class="email-subject">${escapeHtml(email.subject)}</div>
-                        <div class="email-snippet">${escapeHtml(email.snippet)}</div>
-                    </div>
+                    <div class="email-subject">${escapeHtml(email.subject)}</div>
                     <div class="email-date">${formatDate(email.date)}</div>
+                    ${email.has_attachment ? '<span class="email-attachment">📎</span>' : ''}
                 </div>
             `).join('');
             
-            document.getElementById('inbox-count').textContent = currentEmails.length;
-            
+            // Email click to view
             document.querySelectorAll('.email-item').forEach(item => {
-                item.onclick = (e) => {
-                    if (!e.target.classList.contains('email-star')) {
+                item.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('email-checkbox') && !e.target.classList.contains('email-star')) {
                         viewEmail(item.dataset.id);
                     }
-                };
-                const starBtn = item.querySelector('.email-star');
-                if (starBtn) {
-                    starBtn.onclick = (e) => { e.stopPropagation(); toggleStar(item.dataset.id); };
-                }
+                });
+            });
+            
+            // Star buttons
+            document.querySelectorAll('.email-star').forEach(btn => {
+                btn.onclick = (e) => { e.stopPropagation(); toggleStar(btn.dataset.id); };
+            });
+            
+            // Checkbox selection
+            document.querySelectorAll('.email-checkbox').forEach(cb => {
+                cb.onclick = (e) => { e.stopPropagation(); toggleSelect(cb.dataset.id, cb.checked); };
             });
         }
         
+        function toggleSelect(emailId, checked) {
+            if (checked) {
+                selectedEmails.add(emailId);
+            } else {
+                selectedEmails.delete(emailId);
+            }
+            const batchActions = document.getElementById('batch-actions');
+            if (selectedEmails.size > 0) {
+                batchActions.style.display = 'flex';
+                document.getElementById('selected-count').textContent = `${selectedEmails.size} selected`;
+            } else {
+                batchActions.style.display = 'none';
+            }
+        }
+        
         async function viewEmail(emailId) {
+            currentEmailId = emailId;
             try {
                 const res = await fetch(`${API_BASE}/api/mail/email/${emailId}`, { credentials: 'include' });
                 if (res.ok) {
@@ -523,6 +648,15 @@
                     document.getElementById('email-list').style.display = 'none';
                     document.getElementById('email-view').classList.add('show');
                     document.getElementById('ai-response').style.display = 'none';
+                }
+            } catch(e) {}
+        }
+        
+        async function toggleStar(emailId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/mail/star/${emailId}`, { method: 'POST', credentials: 'include' });
+                if (res.ok) {
+                    await loadEmails();
                 }
             } catch(e) {}
         }
@@ -599,13 +733,6 @@
             document.getElementById('compose-ai-prompt').value = '';
         }
         
-        async function toggleStar(emailId) {
-            try {
-                await fetch(`${API_BASE}/api/mail/star/${emailId}`, { method: 'POST', credentials: 'include' });
-                await loadEmails();
-            } catch(e) {}
-        }
-        
         function formatDate(dateStr) {
             if (!dateStr) return '';
             const date = new Date(dateStr);
@@ -618,6 +745,29 @@
         
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         
+        // Rich text editor actions
+        function applyFormat(action) {
+            const textarea = document.getElementById('compose-body');
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            let wrapped = '';
+            
+            switch(action) {
+                case 'bold': wrapped = `**${selectedText}**`; break;
+                case 'italic': wrapped = `*${selectedText}*`; break;
+                case 'underline': wrapped = `__${selectedText}__`; break;
+                case 'h1': wrapped = `# ${selectedText}`; break;
+                case 'h2': wrapped = `## ${selectedText}`; break;
+                case 'ul': wrapped = selectedText.split('\n').map(l => `• ${l}`).join('\n'); break;
+                case 'ol': wrapped = selectedText.split('\n').map((l, i) => `${i+1}. ${l}`).join('\n'); break;
+                default: return;
+            }
+            
+            textarea.value = textarea.value.substring(0, start) + wrapped + textarea.value.substring(end);
+            textarea.focus();
+        }
+        
         // Event listeners
         document.getElementById('compose-btn').onclick = () => document.getElementById('compose-modal').classList.add('show');
         document.getElementById('close-compose').onclick = () => document.getElementById('compose-modal').classList.remove('show');
@@ -627,17 +777,33 @@
             document.getElementById('email-view').classList.remove('show');
             loadEmails();
         };
+        document.getElementById('delete-current-email').onclick = () => { if (currentEmailId) deleteEmail(currentEmailId); };
         document.getElementById('connect-submit').onclick = connectEmail;
         document.getElementById('close-connect').onclick = () => document.getElementById('connect-modal').classList.remove('show');
         document.getElementById('ai-ask-btn').onclick = askAI;
         document.getElementById('compose-ai-btn').onclick = enhanceEmail;
         document.getElementById('ai-question').onkeypress = (e) => { if (e.key === 'Enter') askAI(); };
+        document.getElementById('batch-delete').onclick = batchDelete;
+        document.getElementById('select-all').onchange = (e) => {
+            document.querySelectorAll('.email-checkbox').forEach(cb => {
+                cb.checked = e.target.checked;
+                toggleSelect(cb.dataset.id, cb.checked);
+            });
+        };
+        
+        document.querySelectorAll('.rich-btn').forEach(btn => {
+            btn.onclick = () => applyFormat(btn.dataset.action);
+        });
         
         document.querySelectorAll('.folder-item').forEach(folder => {
             folder.onclick = () => {
                 document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
                 folder.classList.add('active');
-                document.getElementById('folder-title').textContent = folder.dataset.folder === 'INBOX' ? 'Inbox' : folder.dataset.folder;
+                currentFolder = folder.dataset.folder;
+                document.getElementById('folder-title').textContent = folder.dataset.folder === 'INBOX' ? 'Inbox' : 
+                                                                   folder.dataset.folder === 'STARRED' ? 'Starred' :
+                                                                   folder.dataset.folder === 'SENT' ? 'Sent' :
+                                                                   folder.dataset.folder === 'SPAM' ? 'Spam' : 'Trash';
                 loadEmails();
             };
         });
