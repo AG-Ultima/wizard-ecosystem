@@ -33,6 +33,7 @@
         
         .mail-container { display: flex; height: 100vh; }
         
+        /* Sidebar */
         .sidebar {
             width: 280px;
             background: var(--bg-secondary);
@@ -99,6 +100,7 @@
             font-size: 11px;
         }
         
+        /* Main Content */
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .toolbar {
             padding: 12px 20px;
@@ -125,6 +127,7 @@
             font-size: 14px;
         }
         
+        /* Email List */
         .email-list { flex: 1; overflow-y: auto; }
         .email-item {
             display: flex;
@@ -149,6 +152,7 @@
         .email-subject { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .email-date { width: 100px; font-size: 12px; color: var(--text-muted); text-align: right; }
         
+        /* Email View */
         .email-view {
             display: none;
             flex-direction: column;
@@ -159,14 +163,16 @@
             padding: 20px;
             border-bottom: 1px solid var(--border);
         }
-        .email-subject-large { font-size: 24px; margin-bottom: 16px; }
-        .email-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+        .email-subject-large { font-size: 24px; margin-bottom: 16px; word-break: break-word; }
+        .email-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; word-break: break-all; }
         .email-body {
             flex: 1;
             padding: 24px;
             overflow-y: auto;
             line-height: 1.6;
             font-size: 15px;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
         .back-btn {
             background: none;
@@ -186,6 +192,44 @@
             font-size: 13px;
         }
         
+        /* Rich Editor Toolbar */
+        .rich-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .rich-btn {
+            background: rgba(139,92,246,0.2);
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .rich-btn:hover { background: rgba(139,92,246,0.4); }
+        .color-picker {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            background: white;
+        }
+        .font-size-select {
+            background: rgba(139,92,246,0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px 8px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        /* Modals */
         .modal {
             display: none;
             position: fixed;
@@ -204,7 +248,7 @@
             background: var(--bg-secondary);
             border-radius: 24px;
             padding: 24px;
-            width: 550px;
+            width: 600px;
             max-width: 90%;
             max-height: 85vh;
             overflow-y: auto;
@@ -221,7 +265,7 @@
             margin-bottom: 16px;
             font-size: 14px;
         }
-        .modal-card textarea { height: 200px; resize: vertical; font-family: inherit; }
+        .modal-card textarea { height: 250px; resize: vertical; font-family: inherit; }
         
         .ai-bar {
             background: rgba(168,85,247,0.1);
@@ -231,6 +275,7 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-wrap: wrap;
         }
         .ai-input {
             flex: 1;
@@ -297,14 +342,6 @@
             cursor: pointer;
             font-size: 12px;
         }
-        
-        /* Markdown styling */
-        .email-body h1 { font-size: 24px; margin: 16px 0 8px; }
-        .email-body h2 { font-size: 20px; margin: 14px 0 6px; }
-        .email-body strong { font-weight: bold; }
-        .email-body em { font-style: italic; }
-        .email-body ul, .email-body ol { margin: 8px 0 8px 24px; }
-        .email-body li { margin: 4px 0; }
     </style>
 </head>
 <body>
@@ -342,6 +379,10 @@
                 <li class="folder-item" data-folder="TRASH">
                     <span class="folder-icon">🗑️</span>
                     <span class="folder-name">Trash</span>
+                </li>
+                <li class="folder-item" data-folder="DRAFTS">
+                    <span class="folder-icon">📝</span>
+                    <span class="folder-name">Drafts</span>
                 </li>
             </ul>
         </div>
@@ -390,11 +431,11 @@
     <div id="connect-modal" class="modal">
         <div class="modal-card">
             <h3>🔗 Connect Email Account</h3>
-            <input type="email" id="connect-real-email" placeholder="Your real email address (e.g., you@gmail.com)">
-            <input type="text" id="connect-alias" placeholder="Alias email (e.g., you@wizardecosystem.dpdns.org)">
+            <input type="email" id="connect-email" placeholder="Your email address (e.g., you@gmail.com)">
+            <input type="text" id="connect-alias" placeholder="Display alias (e.g., you@wizardecosystem.dpdns.org)" value="">
             <input type="password" id="connect-password" placeholder="Password or App Password">
             <button id="connect-submit">Connect</button>
-            <div class="app-pass-note">
+            <div class="app-pass-note" id="gmail-note" style="display: none;">
                 🔐 <strong>Gmail requires an App Password</strong><br>
                 1. Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--primary-light);">Google App Passwords</a><br>
                 2. Select "Mail" → "Other" → Name it "Wizard Browser"<br>
@@ -404,17 +445,42 @@
         </div>
     </div>
     
-    <!-- Compose Modal -->
+    <!-- Compose Modal with Rich Editor -->
     <div id="compose-modal" class="modal">
         <div class="modal-card">
             <h3>✏️ New Message</h3>
             <input type="email" id="compose-to" placeholder="To">
             <input type="text" id="compose-subject" placeholder="Subject">
-            <textarea id="compose-body" placeholder="Write your message..."></textarea>
+            
+            <div class="rich-toolbar">
+                <button class="rich-btn" data-action="bold"><b>B</b></button>
+                <button class="rich-btn" data-action="italic"><i>I</i></button>
+                <button class="rich-btn" data-action="underline"><u>U</u></button>
+                <span style="width:1px; background:var(--border); margin:0 4px;"></span>
+                <button class="rich-btn" data-action="h1">H1</button>
+                <button class="rich-btn" data-action="h2">H2</button>
+                <span style="width:1px; background:var(--border); margin:0 4px;"></span>
+                <button class="rich-btn" data-action="ul">• List</button>
+                <button class="rich-btn" data-action="ol">1. List</button>
+                <span style="width:1px; background:var(--border); margin:0 4px;"></span>
+                <input type="color" id="text-color" class="color-picker" value="#ffffff">
+                <select id="font-size" class="font-size-select">
+                    <option value="12">12px</option>
+                    <option value="14" selected>14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                    <option value="24">24px</option>
+                </select>
+            </div>
+            
+            <div id="compose-body" contenteditable="true" style="min-height: 200px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; overflow-y: auto; font-size: 14px;"></div>
+            <textarea id="compose-body-text" style="display: none;"></textarea>
+            
             <div class="ai-bar" style="margin: 16px 0;">
                 <input type="text" id="compose-ai-prompt" class="ai-input" placeholder="Ask AI to write, improve, or fix grammar...">
                 <button id="compose-ai-btn" class="ai-btn">Enhance</button>
             </div>
+            
             <button id="send-btn">Send</button>
             <button id="close-compose" style="margin-top: 12px; background: rgba(139,92,246,0.2);">Cancel</button>
         </div>
@@ -427,30 +493,32 @@
         let currentEmailBody = '';
         let currentEmailSubject = '';
         let currentEmailId = null;
-        let aliasEmail = '';
+        let connectedEmail = '';
+        let connectedAlias = '';
         let currentFolder = 'INBOX';
         let selectedEmails = new Set();
         
-        // Markdown to HTML converter
-        function markdownToHtml(text) {
-            if (!text) return '';
-            let html = text;
-            // Bold
-            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            // Italic
-            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-            // Underline
-            html = html.replace(/__(.+?)__/g, '<u>$1</u>');
-            // Headers
-            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-            // Lists
-            html = html.replace(/^• (.+)$/gm, '<li>$1</li>');
-            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-            // Line breaks
-            html = html.replace(/\n/g, '<br>');
-            return html;
+        // Rich text helpers
+        function getSelectedHtml() {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const container = document.createElement('div');
+                container.appendChild(range.cloneContents());
+                return container.innerHTML;
+            }
+            return '';
+        }
+        
+        function applyFormat(command, value = null) {
+            document.execCommand(command, false, value);
+            document.getElementById('compose-body').focus();
+        }
+        
+        function updateTextarea() {
+            const editor = document.getElementById('compose-body');
+            const textarea = document.getElementById('compose-body-text');
+            textarea.value = editor.innerHTML;
         }
         
         async function checkAuth() {
@@ -475,9 +543,10 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data.connected) {
-                        aliasEmail = data.alias;
-                        document.getElementById('alias-display').textContent = `✨ ${data.alias}`;
-                        document.getElementById('connection-status').innerHTML = '<div class="connected-badge">✅ Connected to ' + data.alias + '</div>';
+                        connectedEmail = data.email;
+                        connectedAlias = data.alias;
+                        document.getElementById('alias-display').textContent = `✨ ${data.alias || data.email}`;
+                        document.getElementById('connection-status').innerHTML = '<div class="connected-badge">✅ Connected to ' + (data.alias || data.email) + '</div>';
                         await loadEmails();
                     } else {
                         document.getElementById('connection-status').innerHTML = '<button class="compose-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
@@ -493,26 +562,40 @@
         }
         
         async function connectEmail() {
-            const realEmail = document.getElementById('connect-real-email').value;
+            const email = document.getElementById('connect-email').value;
             const alias = document.getElementById('connect-alias').value;
             const password = document.getElementById('connect-password').value;
-            if (!realEmail || !password) { alert('Please enter email and password'); return; }
-            const finalAlias = alias || realEmail;
+            
+            if (!email || !password) { alert('Please enter email and password'); return; }
+            
+            // Show Gmail note if needed
+            if (email.includes('gmail.com')) {
+                document.getElementById('gmail-note').style.display = 'block';
+            } else {
+                document.getElementById('gmail-note').style.display = 'none';
+            }
             
             try {
                 const res = await fetch(`${API_BASE}/api/mail/connect`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ email: realEmail, alias: finalAlias, password })
+                    body: JSON.stringify({ email, password, alias: alias || email })
                 });
                 if (res.ok) {
+                    const data = await res.json();
                     document.getElementById('connect-modal').classList.remove('show');
-                    document.getElementById('connect-real-email').value = '';
+                    document.getElementById('connect-email').value = '';
                     document.getElementById('connect-alias').value = '';
                     document.getElementById('connect-password').value = '';
                     await checkConnection();
+                    showNotification(data.message || 'Connected successfully!');
                 } else {
                     const err = await res.json();
-                    alert(err.error || 'Connection failed. Make sure you\'re using an App Password for Gmail.');
+                    if (err.needs_app_password) {
+                        alert(err.error);
+                        document.getElementById('gmail-note').style.display = 'block';
+                    } else {
+                        alert(err.error || 'Connection failed');
+                    }
                 }
             } catch(e) { alert('Connection failed'); }
         }
@@ -524,9 +607,11 @@
                 if (res.ok) {
                     const data = await res.json();
                     currentEmails = data.emails || [];
-                    if (data.alias) aliasEmail = data.alias;
+                    if (data.alias) connectedAlias = data.alias;
                     renderEmailList();
                     document.getElementById('inbox-count').textContent = currentEmails.length;
+                } else if (res.status === 401) {
+                    document.getElementById('email-list').innerHTML = '<div class="loading">🔌 Connection lost. Please reconnect.</div>';
                 }
             } catch(e) { console.error('Failed to load emails:', e); }
         }
@@ -560,7 +645,7 @@
             selectedEmails.clear();
             await loadEmails();
             document.getElementById('batch-actions').style.display = 'none';
-            showNotification(`${selectedEmails.size} emails deleted`);
+            showNotification(`Deleted ${selectedEmails.size} emails`);
         }
         
         function showNotification(msg) {
@@ -568,7 +653,7 @@
             n.textContent = msg;
             n.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:50px;padding:10px 20px;color:white;z-index:10000;';
             document.body.appendChild(n);
-            setTimeout(() => n.remove(), 2000);
+            setTimeout(() => n.remove(), 3000);
         }
         
         function renderEmailList() {
@@ -579,7 +664,7 @@
             }
             
             container.innerHTML = currentEmails.map(email => `
-                <div class="email-item" data-id="${email.id}" data-folder="${email.folder}">
+                <div class="email-item" data-id="${email.id}">
                     <input type="checkbox" class="email-checkbox" data-id="${email.id}">
                     <button class="email-star" data-id="${email.id}">${email.is_starred ? '⭐' : '☆'}</button>
                     <div class="email-from">${escapeHtml(email.from)}</div>
@@ -597,7 +682,7 @@
             });
             
             document.querySelectorAll('.email-star').forEach(btn => {
-                btn.onclick = (e) => { e.stopPropagation(); toggleStar(btn.dataset.id); };
+                btn.onclick = (e) => { e.stopPropagation(); toggleStar(btn.dataset.id, btn.textContent === '☆'); };
             });
             
             document.querySelectorAll('.email-checkbox').forEach(cb => {
@@ -633,7 +718,7 @@
                     document.getElementById('email-subject').textContent = email.subject;
                     document.getElementById('email-from').textContent = `From: ${email.from}`;
                     document.getElementById('email-date').textContent = new Date(email.date).toLocaleString();
-                    document.getElementById('email-body').innerHTML = markdownToHtml(email.body);
+                    document.getElementById('email-body').innerHTML = escapeHtml(email.body).replace(/\n/g, '<br>');
                     document.getElementById('email-list').style.display = 'none';
                     document.getElementById('email-view').classList.add('show');
                     document.getElementById('ai-response').style.display = 'none';
@@ -641,12 +726,10 @@
             } catch(e) {}
         }
         
-        async function toggleStar(emailId) {
-            const email = currentEmails.find(e => e.id == emailId);
-            if (!email) return;
+        async function toggleStar(emailId, currentlyStarred) {
             try {
                 const url = `${API_BASE}/api/mail/star/${emailId}?folder=${currentFolder}`;
-                await fetch(url, { method: 'POST', credentials: 'include', body: JSON.stringify({ starred: !email.is_starred }), headers: { 'Content-Type': 'application/json' } });
+                await fetch(url, { method: 'POST', credentials: 'include', body: JSON.stringify({ starred: !currentlyStarred }), headers: { 'Content-Type': 'application/json' } });
                 await loadEmails();
             } catch(e) {}
         }
@@ -654,7 +737,9 @@
         async function sendEmail() {
             const to = document.getElementById('compose-to').value;
             const subject = document.getElementById('compose-subject').value;
-            const body = document.getElementById('compose-body').value;
+            const editor = document.getElementById('compose-body');
+            const body = editor.innerText || editor.textContent;
+            
             if (!to || !subject || !body) { alert('Please fill in all fields'); return; }
             
             try {
@@ -667,7 +752,7 @@
                     document.getElementById('compose-modal').classList.remove('show');
                     document.getElementById('compose-to').value = '';
                     document.getElementById('compose-subject').value = '';
-                    document.getElementById('compose-body').value = '';
+                    document.getElementById('compose-body').innerHTML = '';
                     await loadEmails();
                 } else { alert('Failed to send email'); }
             } catch(e) { alert('Failed to send email'); }
@@ -700,7 +785,9 @@
         
         async function enhanceEmail() {
             const prompt = document.getElementById('compose-ai-prompt').value;
-            const currentBody = document.getElementById('compose-body').value;
+            const editor = document.getElementById('compose-body');
+            const currentBody = editor.innerText || editor.textContent;
+            
             if (!prompt && !currentBody) return;
             
             const instruction = prompt ? `Enhance/improve this email based on: ${prompt}` : 'Improve this email to be more professional and clear';
@@ -716,7 +803,7 @@
                 });
                 const data = await res.json();
                 if (data.response) {
-                    document.getElementById('compose-body').value = data.response;
+                    editor.innerText = data.response;
                 }
             } catch(e) {}
             
@@ -758,12 +845,28 @@
             });
         };
         
+        // Rich text editor buttons
+        document.querySelectorAll('.rich-btn').forEach(btn => {
+            btn.onclick = () => applyFormat(btn.dataset.action);
+        });
+        document.getElementById('text-color').onchange = (e) => applyFormat('foreColor', e.target.value);
+        document.getElementById('font-size').onchange = (e) => applyFormat('fontSize', e.target.value);
+        
+        // Detect Gmail domain to show app password note
+        document.getElementById('connect-email').oninput = (e) => {
+            if (e.target.value.includes('gmail.com')) {
+                document.getElementById('gmail-note').style.display = 'block';
+            } else {
+                document.getElementById('gmail-note').style.display = 'none';
+            }
+        };
+        
         document.querySelectorAll('.folder-item').forEach(folder => {
             folder.onclick = () => {
                 document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
                 folder.classList.add('active');
                 currentFolder = folder.dataset.folder;
-                const titles = { INBOX: 'Inbox', STARRED: 'Starred', SENT: 'Sent', SPAM: 'Spam', TRASH: 'Trash' };
+                const titles = { INBOX: 'Inbox', STARRED: 'Starred', SENT: 'Sent', SPAM: 'Spam', TRASH: 'Trash', DRAFTS: 'Drafts' };
                 document.getElementById('folder-title').textContent = titles[currentFolder] || 'Inbox';
                 selectedEmails.clear();
                 document.getElementById('batch-actions').style.display = 'none';
