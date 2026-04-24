@@ -33,7 +33,6 @@
         
         .mail-container { display: flex; height: 100vh; }
         
-        /* Sidebar */
         .sidebar {
             width: 280px;
             background: var(--bg-secondary);
@@ -100,7 +99,6 @@
             font-size: 11px;
         }
         
-        /* Main Content */
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .toolbar {
             padding: 12px 20px;
@@ -127,7 +125,6 @@
             font-size: 14px;
         }
         
-        /* Email List - Fast loading (headers only) */
         .email-list { flex: 1; overflow-y: auto; }
         .email-item {
             display: flex;
@@ -152,7 +149,6 @@
         .email-subject { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .email-date { width: 100px; font-size: 12px; color: var(--text-muted); text-align: right; }
         
-        /* Email View - Loaded on demand */
         .email-view {
             display: none;
             flex-direction: column;
@@ -171,8 +167,8 @@
             overflow-y: auto;
             line-height: 1.6;
             font-size: 15px;
+            white-space: pre-wrap;
         }
-        .email-body img { max-width: 100%; }
         .back-btn {
             background: none;
             border: none;
@@ -191,7 +187,6 @@
             font-size: 13px;
         }
         
-        /* Rich Editor Toolbar */
         .rich-toolbar {
             display: flex;
             flex-wrap: wrap;
@@ -208,17 +203,9 @@
             color: white;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.2s;
         }
         .rich-btn:hover { background: rgba(139,92,246,0.4); }
-        .color-picker {
-            width: 32px;
-            height: 32px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            background: white;
-        }
+        .color-picker { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: white; }
         .font-size-select {
             background: rgba(139,92,246,0.2);
             border: 1px solid var(--border);
@@ -228,7 +215,6 @@
             cursor: pointer;
         }
         
-        /* Modals */
         .modal {
             display: none;
             position: fixed;
@@ -247,7 +233,7 @@
             background: var(--bg-secondary);
             border-radius: 24px;
             padding: 24px;
-            width: 650px;
+            width: 550px;
             max-width: 90%;
             max-height: 85vh;
             overflow-y: auto;
@@ -264,6 +250,7 @@
             margin-bottom: 16px;
             font-size: 14px;
         }
+        .modal-card textarea { height: 200px; resize: vertical; font-family: inherit; }
         
         .ai-bar {
             background: rgba(168,85,247,0.1);
@@ -361,6 +348,18 @@
             margin-right: 8px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .connect-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            border: none;
+            border-radius: 24px;
+            padding: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -423,7 +422,7 @@
             </div>
             
             <div id="email-list" class="email-list">
-                <div class="loading">✨ Connect your email to get started</div>
+                <div class="loading">✨ Click "Connect Email Account" to get started</div>
             </div>
             
             <div id="email-view" class="email-view">
@@ -453,7 +452,7 @@
             <input type="email" id="connect-email" placeholder="Your email address (e.g., you@gmail.com)">
             <input type="text" id="connect-alias" placeholder="Display alias (e.g., you@wizardecosystem.dpdns.org)" value="">
             <input type="password" id="connect-password" placeholder="Password or App Password">
-            <button id="connect-submit">Connect</button>
+            <button id="connect-submit" class="connect-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">Connect</button>
             
             <div class="app-pass-note" id="gmail-note" style="display: none;">
                 🔐 <strong>Gmail requires an App Password</strong><br>
@@ -463,18 +462,18 @@
             </div>
             
             <div class="alias-note" id="alias-note" style="display: none;">
-                📧 <strong>For alias to work in Gmail:</strong><br>
-                1. Go to Gmail Settings → Accounts → Send mail as<br>
-                2. Add your alias address (e.g., you@wizardecosystem.dpdns.org)<br>
-                3. Verify it (Gmail sends a verification email)<br>
-                4. Then Gmail allows sending from that address
+                📧 <strong>For alias to work:</strong><br>
+                1. After connecting, go to Gmail Settings → Accounts → "Send mail as"<br>
+                2. Add your alias address<br>
+                3. Gmail will send a verification link to your alias<br>
+                4. Cloudflare forwards it to your inbox → click to verify
             </div>
             
-            <button id="close-connect" style="margin-top: 12px; background: rgba(139,92,246,0.2);">Cancel</button>
+            <button id="close-connect" style="margin-top: 12px; background: rgba(139,92,246,0.2); width: 100%; padding: 12px; border-radius: 24px; color: white; cursor: pointer;">Cancel</button>
         </div>
     </div>
     
-    <!-- Compose Modal with Rich Editor -->
+    <!-- Compose Modal -->
     <div id="compose-modal" class="modal">
         <div class="modal-card">
             <h3>✏️ New Message</h3>
@@ -509,8 +508,8 @@
                 <button id="compose-ai-btn" class="ai-btn">Enhance</button>
             </div>
             
-            <button id="send-btn">Send</button>
-            <button id="close-compose" style="margin-top: 12px; background: rgba(139,92,246,0.2);">Cancel</button>
+            <button id="send-btn" class="connect-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">Send</button>
+            <button id="close-compose" style="margin-top: 12px; background: rgba(139,92,246,0.2); width: 100%; padding: 12px; border-radius: 24px; color: white; cursor: pointer;">Cancel</button>
         </div>
     </div>
 
@@ -525,7 +524,6 @@
         let selectedEmails = new Set();
         let isLoadingEmail = false;
         
-        // Helper functions
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         
         function showNotification(msg, isError = false) {
@@ -546,18 +544,15 @@
             return date.toLocaleDateString([], { month:'short', day:'numeric' });
         }
         
-        // Rich text editor helpers
         function applyFormat(command, value = null) {
             document.execCommand(command, false, value);
             document.getElementById('compose-body').focus();
         }
         
         function getHtmlContent() {
-            const editor = document.getElementById('compose-body');
-            return editor.innerHTML;
+            return document.getElementById('compose-body').innerHTML;
         }
         
-        // Auth and connection
         async function checkAuth() {
             try {
                 const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
@@ -586,13 +581,17 @@
                         document.getElementById('connection-status').innerHTML = '<div class="connected-badge">✅ Connected to ' + connectedAlias + '</div>';
                         await loadEmails();
                     } else {
-                        document.getElementById('connection-status').innerHTML = '<button class="compose-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
+                        document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
                         const btn = document.getElementById('connect-btn');
                         if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
                     }
+                } else {
+                    document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
+                    const btn = document.getElementById('connect-btn');
+                    if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
                 }
             } catch(e) {
-                document.getElementById('connection-status').innerHTML = '<button class="compose-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
+                document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
                 const btn = document.getElementById('connect-btn');
                 if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
             }
@@ -717,10 +716,7 @@
             isLoadingEmail = true;
             currentEmailId = emailId;
             
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'loading';
-            loadingDiv.innerHTML = '<div class="loading-spinner"></div> Loading email...';
-            document.getElementById('email-body').innerHTML = '';
+            document.getElementById('email-body').innerHTML = '<div class="loading"><div class="loading-spinner"></div> Loading email...</div>';
             document.getElementById('email-view').classList.add('show');
             document.getElementById('email-list').style.display = 'none';
             
@@ -887,14 +883,12 @@
             });
         };
         
-        // Rich text editor buttons
         document.querySelectorAll('.rich-btn').forEach(btn => {
             btn.onclick = () => applyFormat(btn.dataset.action);
         });
         document.getElementById('text-color').onchange = (e) => applyFormat('foreColor', e.target.value);
         document.getElementById('font-size').onchange = (e) => applyFormat('fontSize', e.target.value);
         
-        // Detect Gmail domain to show app password note
         document.getElementById('connect-email').oninput = (e) => {
             const email = e.target.value;
             const alias = document.getElementById('connect-alias').value;
@@ -939,7 +933,6 @@
             };
         });
         
-        // Auto-refresh every 30 seconds
         setInterval(() => {
             if (document.getElementById('email-list').style.display !== 'none') {
                 loadEmails();
