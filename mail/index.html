@@ -33,6 +33,7 @@
         
         .mail-container { display: flex; height: 100vh; }
         
+        /* Sidebar */
         .sidebar {
             width: 280px;
             background: var(--bg-secondary);
@@ -40,6 +41,7 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
+            overflow-y: auto;
         }
         
         .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
@@ -101,6 +103,7 @@
             border-radius: 12px;
             cursor: pointer;
             margin-bottom: 4px;
+            transition: all 0.2s;
         }
         .folder-item:hover { background: rgba(139,92,246,0.1); }
         .folder-item.active {
@@ -116,6 +119,7 @@
             font-size: 11px;
         }
         
+        /* Main Content */
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .toolbar {
             padding: 12px 20px;
@@ -124,6 +128,8 @@
             justify-content: space-between;
             align-items: center;
         }
+        .toolbar h2 { font-size: 20px; }
+        
         .search-box {
             display: flex;
             gap: 10px;
@@ -142,7 +148,12 @@
             font-size: 14px;
         }
         
-        .email-list { flex: 1; overflow-y: auto; }
+        /* Email List - Scrollable */
+        .email-list {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
         .email-item {
             display: flex;
             align-items: center;
@@ -162,14 +173,16 @@
             cursor: pointer;
             width: 28px;
         }
-        .email-from { width: 220px; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .email-from { width: 200px; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .email-subject { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .email-date { width: 100px; font-size: 12px; color: var(--text-muted); text-align: right; }
         
+        /* Email View */
         .email-view {
             display: none;
             flex-direction: column;
             height: 100%;
+            overflow: hidden;
         }
         .email-view.show { display: flex; }
         .email-view-header {
@@ -180,12 +193,12 @@
         .email-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; word-break: break-all; }
         .email-body {
             flex: 1;
-            padding: 24px;
+            padding: 20px;
             overflow-y: auto;
             line-height: 1.6;
             font-size: 15px;
-            white-space: pre-wrap;
         }
+        .email-body img { max-width: 100%; height: auto; }
         .back-btn {
             background: none;
             border: none;
@@ -250,7 +263,7 @@
             background: var(--bg-secondary);
             border-radius: 24px;
             padding: 24px;
-            width: 500px;
+            width: 550px;
             max-width: 90%;
             max-height: 85vh;
             overflow-y: auto;
@@ -268,34 +281,6 @@
             font-size: 14px;
         }
         .modal-card textarea { height: 200px; resize: vertical; font-family: inherit; }
-        
-        .alias-list {
-            margin-top: 20px;
-        }
-        .alias-item {
-            background: rgba(139,92,246,0.1);
-            border-radius: 16px;
-            padding: 12px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .alias-email { font-family: monospace; font-size: 13px; }
-        .alias-status {
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 20px;
-        }
-        .alias-status.active { background: rgba(16,185,129,0.2); color: var(--success); }
-        .alias-delete {
-            background: rgba(239,68,68,0.15);
-            border: none;
-            border-radius: 8px;
-            padding: 4px 12px;
-            color: var(--danger);
-            cursor: pointer;
-        }
         
         .ai-bar {
             background: rgba(168,85,247,0.1);
@@ -334,15 +319,6 @@
             margin-top: 16px;
             font-size: 12px;
             color: var(--warning);
-        }
-        .alias-note {
-            background: rgba(16,185,129,0.1);
-            border: 1px solid var(--success);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 16px;
-            font-size: 12px;
-            color: var(--success);
         }
         .connected-badge {
             background: rgba(16,185,129,0.15);
@@ -395,15 +371,22 @@
         
         .loading-spinner {
             display: inline-block;
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             border: 2px solid var(--primary);
             border-top-color: transparent;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin-right: 8px;
+            vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-light); }
     </style>
 </head>
 <body>
@@ -423,33 +406,35 @@
                 ✨ Get Free @wizardecosystem.dpdns.org Email
             </button>
             
-            <ul class="folder-list">
-                <li class="folder-item active" data-folder="INBOX">
+            <div class="folder-list">
+                <div class="folder-item active" data-folder="INBOX">
                     <span class="folder-icon">📥</span>
                     <span class="folder-name">Inbox</span>
                     <span class="folder-count" id="inbox-count">0</span>
-                </li>
-                <li class="folder-item" data-folder="STARRED">
-                    <span class="folder-icon">⭐</span>
-                    <span class="folder-name">Starred</span>
-                </li>
-                <li class="folder-item" data-folder="SENT">
+                </div>
+                <div class="folder-item" data-folder="SENT">
                     <span class="folder-icon">📤</span>
                     <span class="folder-name">Sent</span>
-                </li>
-                <li class="folder-item" data-folder="SPAM">
+                    <span class="folder-count" id="sent-count">0</span>
+                </div>
+                <div class="folder-item" data-folder="STARRED">
+                    <span class="folder-icon">⭐</span>
+                    <span class="folder-name">Starred</span>
+                    <span class="folder-count" id="starred-count">0</span>
+                </div>
+                <div class="folder-item" data-folder="SPAM">
                     <span class="folder-icon">⚠️</span>
                     <span class="folder-name">Spam</span>
-                </li>
-                <li class="folder-item" data-folder="TRASH">
+                </div>
+                <div class="folder-item" data-folder="TRASH">
                     <span class="folder-icon">🗑️</span>
                     <span class="folder-name">Trash</span>
-                </li>
-                <li class="folder-item" data-folder="DRAFTS">
+                </div>
+                <div class="folder-item" data-folder="DRAFTS">
                     <span class="folder-icon">📝</span>
                     <span class="folder-name">Drafts</span>
-                </li>
-            </ul>
+                </div>
+            </div>
         </div>
         
         <div class="main">
@@ -461,15 +446,8 @@
                 </div>
             </div>
             
-            <div class="batch-actions" id="batch-actions" style="display: none;">
-                <input type="checkbox" id="select-all" style="width: 18px;">
-                <span id="selected-count">0 selected</span>
-                <button class="batch-btn" id="batch-delete">🗑️ Delete</button>
-                <button class="batch-btn" id="batch-star">⭐ Star</button>
-            </div>
-            
             <div id="email-list" class="email-list">
-                <div class="loading">✨ Click "Connect Email Account" to get started</div>
+                <div class="loading">✨ Connect your email to get started</div>
             </div>
             
             <div id="email-view" class="email-view">
@@ -516,8 +494,8 @@
     <div id="alias-modal" class="modal">
         <div class="modal-card">
             <h3>✨ Get Your Free @wizardecosystem.dpdns.org Email</h3>
-            <div class="form-group">
-                <label>Choose your alias</label>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--primary-light);">Choose your alias</label>
                 <div style="display: flex; align-items: stretch; gap: 8px;">
                     <input type="text" id="alias-name" placeholder="yourname" style="flex: 2;">
                     <span style="white-space: nowrap; display: flex; align-items: center;">@wizardecosystem.dpdns.org</span>
@@ -525,13 +503,9 @@
                 <div id="alias-availability" style="font-size: 12px; margin-top: 8px;"></div>
             </div>
             
-            <div class="form-group">
-                <label>Forward to (where emails will be sent)</label>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; color: var(--primary-light);">Forward to (where emails will be sent)</label>
                 <input type="email" id="alias-target" placeholder="your-email@gmail.com">
-            </div>
-            
-            <div class="alias-note" id="alias-info-note" style="display: none;">
-                📧 <strong>Great choice!</strong> This alias will forward to your email instantly.
             </div>
             
             <button id="create-alias-btn" class="connect-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">Create Alias ✨</button>
@@ -592,8 +566,7 @@
         let connectedEmail = '';
         let connectedAlias = '';
         let currentFolder = 'INBOX';
-        let selectedEmails = new Set();
-        let isLoadingEmail = false;
+        let isLoading = false;
         let aliasCheckTimeout = null;
         
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
@@ -651,14 +624,13 @@
                         const container = document.getElementById('my-aliases-list');
                         if (container) {
                             container.innerHTML = data.aliases.map(a => `
-                                <div class="alias-item">
+                                <div style="background: rgba(139,92,246,0.1); border-radius: 12px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                                     <div>
-                                        <div class="alias-email">📧 ${escapeHtml(a.alias)}</div>
+                                        <div style="font-family: monospace;">📧 ${escapeHtml(a.alias)}</div>
                                         <div style="font-size: 11px; color: var(--text-muted);">→ ${escapeHtml(a.target_email)}</div>
                                     </div>
                                     <div>
-                                        <span class="alias-status active">active</span>
-                                        <button class="alias-delete" data-id="${a.id}" style="margin-left: 8px;">Delete</button>
+                                        <span style="background: rgba(16,185,129,0.2); padding: 2px 8px; border-radius: 20px; font-size: 11px;">active</span>
                                     </div>
                                 </div>
                             `).join('');
@@ -704,11 +676,16 @@
             
             if (!email || !password) { showNotification('Please enter email and password', true); return; }
             
+            const btn = document.getElementById('connect-submit');
+            btn.disabled = true;
+            btn.textContent = 'Connecting...';
+            
             try {
                 const res = await fetch(`${API_BASE}/api/mail/connect`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
                     body: JSON.stringify({ email, password, alias: alias || email })
                 });
+                const data = await res.json();
                 if (res.ok) {
                     document.getElementById('connect-modal').classList.remove('show');
                     document.getElementById('connect-email').value = '';
@@ -717,92 +694,22 @@
                     await checkConnection();
                     showNotification('Connected successfully!');
                 } else {
-                    const err = await res.json();
-                    showNotification(err.error || 'Connection failed', true);
-                    if (err.needs_app_password) {
+                    showNotification(data.error || 'Connection failed', true);
+                    if (data.needs_app_password) {
                         document.getElementById('gmail-note').style.display = 'block';
                     }
                 }
             } catch(e) { showNotification('Connection failed', true); }
-        }
-        
-        async function createAlias() {
-            const alias = document.getElementById('alias-name').value.trim().toLowerCase();
-            const targetEmail = document.getElementById('alias-target').value.trim();
-            
-            if (!alias) { showNotification('Please enter an alias name', true); return; }
-            if (alias.length < 3) { showNotification('Alias must be at least 3 characters', true); return; }
-            if (!/^[a-z0-9._-]+$/.test(alias)) { showNotification('Alias can only contain letters, numbers, dots, underscores, and hyphens', true); return; }
-            if (!targetEmail) { showNotification('Please enter a forwarding email', true); return; }
-            
-            const btn = document.getElementById('create-alias-btn');
-            btn.disabled = true;
-            btn.textContent = 'Creating...';
-            
-            try {
-                const res = await fetch(`${API_BASE}/api/alias/request`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ alias, target_email: targetEmail })
-                });
-                const data = await res.json();
-                
-                if (res.ok) {
-                    showNotification(`✨ ${data.message}`, false);
-                    document.getElementById('alias-name').value = '';
-                    document.getElementById('alias-target').value = '';
-                    document.getElementById('alias-modal').classList.remove('show');
-                    await loadMyAliases();
-                } else {
-                    showNotification(data.error || 'Failed to create alias', true);
-                }
-            } catch(e) {
-                showNotification('Connection error', true);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Create Alias ✨';
-            }
-        }
-        
-        async function deleteAlias(aliasId) {
-            if (!confirm('Delete this alias? It will stop forwarding emails.')) return;
-            try {
-                const res = await fetch(`${API_BASE}/api/alias/delete/${aliasId}`, { method: 'DELETE', credentials: 'include' });
-                if (res.ok) {
-                    showNotification('Alias deleted');
-                    await loadMyAliases();
-                } else {
-                    showNotification('Failed to delete', true);
-                }
-            } catch(e) { showNotification('Error', true); }
-        }
-        
-        async function checkAliasAvailability() {
-            const alias = document.getElementById('alias-name').value.trim().toLowerCase();
-            const availabilityDiv = document.getElementById('alias-availability');
-            const infoNote = document.getElementById('alias-info-note');
-            
-            if (alias.length < 3) {
-                availabilityDiv.innerHTML = '';
-                infoNote.style.display = 'none';
-                return;
-            }
-            
-            try {
-                const res = await fetch(`${API_BASE}/api/alias/check/${encodeURIComponent(alias)}`, { credentials: 'include' });
-                const data = await res.json();
-                if (data.available) {
-                    availabilityDiv.innerHTML = `<span style="color: var(--success);">✅ @${alias} is available!</span>`;
-                    infoNote.style.display = 'block';
-                } else {
-                    availabilityDiv.innerHTML = `<span style="color: var(--danger);">❌ @${alias} is already taken</span>`;
-                    infoNote.style.display = 'none';
-                }
-            } catch(e) {}
+            finally { btn.disabled = false; btn.textContent = 'Connect'; }
         }
         
         async function loadEmails() {
+            if (isLoading) return;
+            isLoading = true;
+            
+            const container = document.getElementById('email-list');
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div> Loading emails...</div>';
+            
             try {
                 const url = `${API_BASE}/api/mail/emails?folder=${currentFolder}&_=${Date.now()}`;
                 const res = await fetch(url, { credentials: 'include' });
@@ -810,13 +717,24 @@
                     const data = await res.json();
                     currentEmails = data.emails || [];
                     renderEmailList();
-                    document.getElementById('inbox-count').textContent = currentEmails.length;
+                    updateFolderCounts();
                 } else if (res.status === 401) {
-                    document.getElementById('email-list').innerHTML = '<div class="loading">🔌 Connection lost. <button id="reconnect-btn" style="background:var(--primary);border:none;border-radius:20px;padding:8px 16px;color:white;cursor:pointer;margin-top:16px;">Reconnect</button></div>';
+                    container.innerHTML = '<div class="loading">🔌 Connection lost. <button id="reconnect-btn" style="background:var(--primary);border:none;border-radius:20px;padding:8px 16px;color:white;cursor:pointer;margin-top:16px;">Reconnect</button></div>';
                     const reconnectBtn = document.getElementById('reconnect-btn');
                     if (reconnectBtn) reconnectBtn.onclick = () => document.getElementById('connect-modal').classList.add('show');
+                } else {
+                    container.innerHTML = '<div class="loading">Failed to load emails</div>';
                 }
-            } catch(e) { console.error('Failed to load emails:', e); }
+            } catch(e) { 
+                console.error('Failed to load emails:', e);
+                container.innerHTML = '<div class="loading">Error loading emails</div>';
+            } finally {
+                isLoading = false;
+            }
+        }
+        
+        function updateFolderCounts() {
+            document.getElementById('inbox-count').textContent = currentEmails.length;
         }
         
         function renderEmailList() {
@@ -836,6 +754,7 @@
                 </div>
             `).join('');
             
+            // Add click handlers
             document.querySelectorAll('.email-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     if (!e.target.classList.contains('email-checkbox') && !e.target.classList.contains('email-star')) {
@@ -845,38 +764,29 @@
             });
             
             document.querySelectorAll('.email-star').forEach(btn => {
-                btn.onclick = (e) => { e.stopPropagation(); toggleStar(btn.dataset.id, btn.textContent === '☆'); };
+                btn.onclick = async (e) => { 
+                    e.stopPropagation(); 
+                    const emailId = btn.dataset.id;
+                    const email = currentEmails.find(e => e.id == emailId);
+                    if (email) {
+                        await toggleStar(emailId, !email.is_starred);
+                    }
+                };
             });
             
             document.querySelectorAll('.email-checkbox').forEach(cb => {
-                cb.onclick = (e) => { e.stopPropagation(); toggleSelect(cb.dataset.id, cb.checked); };
+                cb.onclick = (e) => { e.stopPropagation(); };
             });
         }
         
-        function toggleSelect(emailId, checked) {
-            if (checked) {
-                selectedEmails.add(emailId);
-            } else {
-                selectedEmails.delete(emailId);
-            }
-            const batchActions = document.getElementById('batch-actions');
-            if (selectedEmails.size > 0) {
-                batchActions.style.display = 'flex';
-                document.getElementById('selected-count').textContent = `${selectedEmails.size} selected`;
-                document.getElementById('select-all').checked = selectedEmails.size === currentEmails.length;
-            } else {
-                batchActions.style.display = 'none';
-            }
-        }
-        
         async function viewEmail(emailId) {
-            if (isLoadingEmail) return;
-            isLoadingEmail = true;
-            currentEmailId = emailId;
+            const emailView = document.getElementById('email-view');
+            const emailList = document.getElementById('email-list');
+            const bodyDiv = document.getElementById('email-body');
             
-            document.getElementById('email-body').innerHTML = '<div class="loading"><div class="loading-spinner"></div> Loading email...</div>';
-            document.getElementById('email-view').classList.add('show');
-            document.getElementById('email-list').style.display = 'none';
+            emailList.style.display = 'none';
+            emailView.classList.add('show');
+            bodyDiv.innerHTML = '<div class="loading"><div class="loading-spinner"></div> Loading email content...</div>';
             
             try {
                 const url = `${API_BASE}/api/mail/email/${emailId}?folder=${currentFolder}`;
@@ -886,22 +796,30 @@
                     document.getElementById('email-subject').textContent = email.subject;
                     document.getElementById('email-from').textContent = `From: ${email.from}`;
                     document.getElementById('email-date').textContent = new Date(email.date).toLocaleString();
-                    document.getElementById('email-body').innerHTML = email.body || 'No content';
-                    document.getElementById('ai-response').style.display = 'none';
+                    bodyDiv.innerHTML = email.body || '<i>No content</i>';
+                    
+                    // Make links clickable
+                    bodyDiv.querySelectorAll('a').forEach(a => {
+                        a.setAttribute('target', '_blank');
+                        a.setAttribute('rel', 'noopener noreferrer');
+                    });
                 } else {
-                    document.getElementById('email-body').innerHTML = '<div class="loading">Failed to load email content</div>';
+                    bodyDiv.innerHTML = '<div class="loading">Failed to load email content</div>';
                 }
             } catch(e) {
-                document.getElementById('email-body').innerHTML = '<div class="loading">Error loading email</div>';
-            } finally {
-                isLoadingEmail = false;
+                bodyDiv.innerHTML = '<div class="loading">Error loading email</div>';
             }
         }
         
-        async function toggleStar(emailId, currentlyStarred) {
+        async function toggleStar(emailId, starred) {
             try {
                 const url = `${API_BASE}/api/mail/star/${emailId}?folder=${currentFolder}`;
-                await fetch(url, { method: 'POST', credentials: 'include', body: JSON.stringify({ starred: !currentlyStarred }), headers: { 'Content-Type': 'application/json' } });
+                await fetch(url, { 
+                    method: 'POST', 
+                    credentials: 'include', 
+                    body: JSON.stringify({ starred }), 
+                    headers: { 'Content-Type': 'application/json' } 
+                });
                 await loadEmails();
             } catch(e) {}
         }
@@ -925,25 +843,16 @@
             } catch(e) { showNotification('Failed to delete email', true); }
         }
         
-        async function batchDelete() {
-            if (selectedEmails.size === 0) return;
-            if (!confirm(`Delete ${selectedEmails.size} email(s)?`)) return;
-            
-            for (const id of selectedEmails) {
-                await fetch(`${API_BASE}/api/mail/delete/${id}?folder=${currentFolder}`, { method: 'DELETE', credentials: 'include' });
-            }
-            selectedEmails.clear();
-            await loadEmails();
-            document.getElementById('batch-actions').style.display = 'none';
-            showNotification(`Deleted ${selectedEmails.size} emails`);
-        }
-        
         async function sendEmail() {
             const to = document.getElementById('compose-to').value;
             const subject = document.getElementById('compose-subject').value;
             const body = getHtmlContent();
             
             if (!to || !subject || !body) { showNotification('Please fill in all fields', true); return; }
+            
+            const btn = document.getElementById('send-btn');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
             
             try {
                 const res = await fetch(`${API_BASE}/api/mail/send`, {
@@ -956,12 +865,12 @@
                     document.getElementById('compose-to').value = '';
                     document.getElementById('compose-subject').value = '';
                     document.getElementById('compose-body').innerHTML = '';
-                    await loadEmails();
                 } else {
                     const err = await res.json();
                     showNotification(err.error || 'Failed to send email', true);
                 }
             } catch(e) { showNotification('Failed to send email', true); }
+            finally { btn.disabled = false; btn.textContent = 'Send'; }
         }
         
         async function askAI() {
@@ -1018,7 +927,66 @@
             document.getElementById('compose-ai-prompt').value = '';
         }
         
-        // Event listeners
+        async function createAlias() {
+            const alias = document.getElementById('alias-name').value.trim().toLowerCase();
+            const targetEmail = document.getElementById('alias-target').value.trim();
+            
+            if (!alias) { showNotification('Please enter an alias name', true); return; }
+            if (alias.length < 3) { showNotification('Alias must be at least 3 characters', true); return; }
+            if (!/^[a-z0-9._-]+$/.test(alias)) { showNotification('Alias can only contain letters, numbers, dots, underscores, and hyphens', true); return; }
+            if (!targetEmail) { showNotification('Please enter a forwarding email', true); return; }
+            
+            const btn = document.getElementById('create-alias-btn');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/alias/request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ alias, target_email: targetEmail })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    showNotification(`✨ ${data.message}`, false);
+                    document.getElementById('alias-name').value = '';
+                    document.getElementById('alias-target').value = '';
+                    document.getElementById('alias-modal').classList.remove('show');
+                    await loadMyAliases();
+                } else {
+                    showNotification(data.error || 'Failed to create alias', true);
+                }
+            } catch(e) {
+                showNotification('Connection error', true);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Alias ✨';
+            }
+        }
+        
+        async function checkAliasAvailability() {
+            const alias = document.getElementById('alias-name').value.trim().toLowerCase();
+            const availabilityDiv = document.getElementById('alias-availability');
+            
+            if (alias.length < 3) {
+                availabilityDiv.innerHTML = '';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/alias/check/${encodeURIComponent(alias)}`, { credentials: 'include' });
+                const data = await res.json();
+                if (data.available) {
+                    availabilityDiv.innerHTML = `<span style="color: var(--success);">✅ @${alias} is available!</span>`;
+                } else {
+                    availabilityDiv.innerHTML = `<span style="color: var(--danger);">❌ @${alias} is already taken</span>`;
+                }
+            } catch(e) {}
+        }
+        
+        // Event Listeners
         document.getElementById('compose-btn').onclick = () => document.getElementById('compose-modal').classList.add('show');
         document.getElementById('close-compose').onclick = () => document.getElementById('compose-modal').classList.remove('show');
         document.getElementById('send-btn').onclick = sendEmail;
@@ -1027,19 +995,15 @@
             document.getElementById('email-view').classList.remove('show');
             loadEmails();
         };
-        document.getElementById('delete-current-email').onclick = () => { if (currentEmailId) deleteEmail(currentEmailId); };
+        document.getElementById('delete-current-email').onclick = () => { 
+            const currentId = document.querySelector('.email-view.show')?.dataset?.emailId;
+            if (currentId) deleteEmail(currentId); 
+        };
         document.getElementById('connect-submit').onclick = connectEmail;
         document.getElementById('close-connect').onclick = () => document.getElementById('connect-modal').classList.remove('show');
         document.getElementById('ai-ask-btn').onclick = askAI;
         document.getElementById('compose-ai-btn').onclick = enhanceEmail;
         document.getElementById('ai-question').onkeypress = (e) => { if (e.key === 'Enter') askAI(); };
-        document.getElementById('batch-delete').onclick = batchDelete;
-        document.getElementById('select-all').onchange = (e) => {
-            document.querySelectorAll('.email-checkbox').forEach(cb => {
-                cb.checked = e.target.checked;
-                toggleSelect(cb.dataset.id, cb.checked);
-            });
-        };
         
         document.getElementById('get-alias-btn').onclick = () => {
             document.getElementById('alias-name').value = '';
@@ -1054,35 +1018,37 @@
             aliasCheckTimeout = setTimeout(checkAliasAvailability, 500);
         };
         
+        // Folder switching
+        document.querySelectorAll('.folder-item').forEach(folder => {
+            folder.onclick = () => {
+                document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
+                folder.classList.add('active');
+                currentFolder = folder.dataset.folder;
+                const titles = { INBOX: 'Inbox', SENT: 'Sent', STARRED: 'Starred', SPAM: 'Spam', TRASH: 'Trash', DRAFTS: 'Drafts' };
+                document.getElementById('folder-title').textContent = titles[currentFolder] || 'Inbox';
+                loadEmails();
+            };
+        });
+        
+        // Rich text editor
         document.querySelectorAll('.rich-btn').forEach(btn => {
             btn.onclick = () => applyFormat(btn.dataset.action);
         });
         document.getElementById('text-color').onchange = (e) => applyFormat('foreColor', e.target.value);
         document.getElementById('font-size').onchange = (e) => applyFormat('fontSize', e.target.value);
         
-        document.querySelectorAll('.folder-item').forEach(folder => {
-            folder.onclick = () => {
-                document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
-                folder.classList.add('active');
-                currentFolder = folder.dataset.folder;
-                const titles = { INBOX: 'Inbox', STARRED: 'Starred', SENT: 'Sent', SPAM: 'Spam', TRASH: 'Trash', DRAFTS: 'Drafts' };
-                document.getElementById('folder-title').textContent = titles[currentFolder] || 'Inbox';
-                selectedEmails.clear();
-                document.getElementById('batch-actions').style.display = 'none';
-                loadEmails();
-            };
-        });
-        
-        // Delegate delete alias events
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('alias-delete')) {
-                const id = parseInt(e.target.dataset.id);
-                if (id) deleteAlias(id);
+        // Gmail app password note
+        document.getElementById('connect-email').oninput = (e) => {
+            if (e.target.value.includes('gmail.com')) {
+                document.getElementById('gmail-note').style.display = 'block';
+            } else {
+                document.getElementById('gmail-note').style.display = 'none';
             }
-        });
+        };
         
+        // Auto-refresh inbox every 30 seconds
         setInterval(() => {
-            if (document.getElementById('email-list').style.display !== 'none') {
+            if (currentFolder === 'INBOX' && document.getElementById('email-list').style.display !== 'none') {
                 loadEmails();
             }
         }, 30000);
