@@ -33,6 +33,7 @@
         
         .mail-container { display: flex; height: 100vh; }
         
+        /* Sidebar */
         .sidebar {
             width: 280px;
             background: var(--bg-secondary);
@@ -74,7 +75,9 @@
             font-weight: 600;
             cursor: pointer;
             margin-bottom: 20px;
+            transition: all 0.2s;
         }
+        .compose-btn:hover { transform: translateY(-2px); box-shadow: 0 0 15px var(--primary-glow); }
         
         .get-alias-btn {
             width: 100%;
@@ -90,6 +93,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            transition: all 0.2s;
         }
         .get-alias-btn:hover { background: rgba(168,85,247,0.3); }
         
@@ -102,6 +106,7 @@
             border-radius: 12px;
             cursor: pointer;
             margin-bottom: 4px;
+            transition: all 0.2s;
         }
         .folder-item:hover { background: rgba(139,92,246,0.1); }
         .folder-item.active {
@@ -117,6 +122,7 @@
             font-size: 11px;
         }
         
+        /* Main Content */
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         .toolbar {
             padding: 12px 20px;
@@ -124,6 +130,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .search-box {
             display: flex;
@@ -142,6 +150,17 @@
             outline: none;
             font-size: 14px;
         }
+        .refresh-btn {
+            background: rgba(139,92,246,0.15);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 18px;
+        }
+        .refresh-btn:hover { background: rgba(139,92,246,0.3); }
         
         .email-list { flex: 1; overflow-y: auto; }
         .email-item {
@@ -154,6 +173,7 @@
             transition: all 0.2s;
         }
         .email-item:hover { background: rgba(139,92,246,0.05); }
+        .email-item.unread { background: rgba(168,85,247,0.08); }
         .email-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
         .email-star {
             font-size: 18px;
@@ -162,11 +182,35 @@
             color: #f59e0b;
             cursor: pointer;
             width: 28px;
+            transition: transform 0.1s;
         }
+        .email-star:hover { transform: scale(1.1); }
         .email-from { width: 200px; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .email-subject { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .email-date { width: 100px; font-size: 12px; color: var(--text-muted); text-align: right; }
         
+        .batch-actions {
+            padding: 8px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .batch-btn {
+            background: rgba(139,92,246,0.15);
+            border: none;
+            border-radius: 16px;
+            padding: 6px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .batch-btn:hover { background: rgba(139,92,246,0.3); }
+        
+        /* Email View */
         .email-view {
             display: none;
             flex-direction: column;
@@ -187,15 +231,14 @@
             font-size: 15px;
         }
         .email-body img { max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px; }
-        .back-btn {
-            background: none;
-            border: none;
-            color: var(--primary);
-            cursor: pointer;
-            margin-bottom: 16px;
-            font-size: 14px;
+        .email-body blockquote {
+            border-left: 3px solid var(--primary);
+            padding-left: 16px;
+            margin: 16px 0;
+            color: var(--text-muted);
         }
-        .reply-btn, .reply-all-btn {
+        .action-buttons { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .action-btn {
             background: rgba(139,92,246,0.15);
             border: 1px solid var(--border);
             border-radius: 20px;
@@ -203,90 +246,25 @@
             color: var(--text-primary);
             cursor: pointer;
             font-size: 13px;
+            transition: all 0.2s;
         }
-        .delete-email-btn {
-            background: rgba(239,68,68,0.15);
-            border: 1px solid var(--danger);
-            border-radius: 20px;
-            padding: 6px 16px;
-            color: var(--danger);
-            cursor: pointer;
-            font-size: 13px;
-        }
-        
-        .action-buttons { display: flex; gap: 12px; margin-bottom: 20px; }
-        
-        .rich-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
-        }
-        .rich-btn {
-            background: rgba(139,92,246,0.2);
+        .action-btn:hover { background: rgba(139,92,246,0.3); }
+        .delete-btn { background: rgba(239,68,68,0.15); color: var(--danger); border-color: var(--danger); }
+        .delete-btn:hover { background: rgba(239,68,68,0.3); }
+        .back-btn {
+            background: none;
             border: none;
-            border-radius: 8px;
-            padding: 6px 12px;
-            color: white;
+            color: var(--primary);
             cursor: pointer;
             font-size: 14px;
         }
-        .rich-btn:hover { background: rgba(139,92,246,0.4); }
-        .color-picker { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: white; }
-        .font-size-select {
-            background: rgba(139,92,246,0.2);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 4px 8px;
-            color: white;
-            cursor: pointer;
-        }
         
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(20px);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal.show { display: flex; }
-        .modal-card {
-            background: var(--bg-secondary);
-            border-radius: 24px;
-            padding: 24px;
-            width: 600px;
-            max-width: 90%;
-            max-height: 85vh;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-        }
-        .modal-card h3 { margin-bottom: 20px; color: var(--primary-light); }
-        .modal-card input, .modal-card textarea {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            color: white;
-            margin-bottom: 16px;
-            font-size: 14px;
-            font-family: inherit;
-        }
-        .modal-card textarea { height: 200px; resize: vertical; }
-        
+        /* AI Bar */
         .ai-bar {
             background: rgba(168,85,247,0.1);
             border-radius: 12px;
             padding: 12px;
-            margin: 16px 0;
+            margin: 16px;
             display: flex;
             gap: 12px;
             align-items: center;
@@ -309,6 +287,97 @@
             color: white;
             cursor: pointer;
             font-size: 13px;
+        }
+        .ai-response {
+            background: rgba(168,85,247,0.15);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 0 16px 16px 16px;
+            font-size: 13px;
+        }
+        
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(20px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-card {
+            background: var(--bg-secondary);
+            border-radius: 24px;
+            padding: 24px;
+            width: 650px;
+            max-width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+        .modal-card h3 { margin-bottom: 20px; color: var(--primary-light); }
+        .modal-card input, .modal-card textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .modal-card textarea { height: 200px; resize: vertical; }
+        
+        .rich-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .rich-btn {
+            background: rgba(139,92,246,0.2);
+            border: none;
+            border-radius: 8px;
+            padding: 6px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .rich-btn:hover { background: rgba(139,92,246,0.4); }
+        .color-picker { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: white; }
+        .font-size-select {
+            background: rgba(139,92,246,0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px 8px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .modal-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 24px;
+            padding: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .modal-btn-secondary {
+            background: rgba(139,92,246,0.2);
+            margin-top: 12px;
         }
         
         .app-pass-note {
@@ -343,40 +412,15 @@
         }
         
         .loading { text-align: center; padding: 60px; color: var(--text-muted); }
-        .ai-response {
-            background: rgba(168,85,247,0.15);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 8px;
-            font-size: 13px;
-        }
-        
-        .batch-actions {
-            padding: 8px 20px;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        .batch-btn {
-            background: rgba(139,92,246,0.15);
-            border: none;
-            border-radius: 16px;
-            padding: 6px 12px;
-            color: white;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        
         .loading-spinner {
             display: inline-block;
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             border: 2px solid var(--primary);
             border-top-color: transparent;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+            vertical-align: middle;
             margin-right: 8px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -385,8 +429,8 @@
             background: rgba(239,68,68,0.15);
             border: 1px solid var(--danger);
             border-radius: 12px;
-            padding: 12px;
-            margin: 16px;
+            padding: 20px;
+            margin: 20px;
             text-align: center;
             color: var(--danger);
         }
@@ -394,11 +438,39 @@
             background: var(--primary);
             border: none;
             border-radius: 20px;
-            padding: 6px 16px;
+            padding: 8px 20px;
             color: white;
             cursor: pointer;
-            margin-top: 10px;
+            margin-top: 12px;
         }
+        
+        .attachment-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .attachment-item {
+            background: rgba(139,92,246,0.15);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .attachment-remove {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -451,9 +523,12 @@
         <div class="main">
             <div class="toolbar">
                 <h2 id="folder-title">Inbox</h2>
-                <div class="search-box">
-                    <span>🔍</span>
-                    <input type="text" id="search-input" placeholder="Search emails...">
+                <div style="display: flex; gap: 10px;">
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" id="search-input" placeholder="Search emails...">
+                    </div>
+                    <button class="refresh-btn" id="refresh-btn" title="Refresh">↻</button>
                 </div>
             </div>
             
@@ -470,12 +545,12 @@
             
             <div id="email-view" class="email-view">
                 <div class="email-view-header">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                         <button class="back-btn" id="back-to-list">← Back to Inbox</button>
                         <div class="action-buttons">
-                            <button class="reply-btn" id="reply-btn">↩️ Reply</button>
-                            <button class="reply-all-btn" id="reply-all-btn">↪️ Reply All</button>
-                            <button class="delete-email-btn" id="delete-current-email">🗑️ Delete</button>
+                            <button class="action-btn" id="reply-btn">↩️ Reply</button>
+                            <button class="action-btn" id="reply-all-btn">↪️ Reply All</button>
+                            <button class="action-btn delete-btn" id="delete-current-email">🗑️ Delete</button>
                         </div>
                     </div>
                     <h2 id="email-subject" class="email-subject-large"></h2>
@@ -498,16 +573,16 @@
         <div class="modal-card">
             <h3>🔗 Connect Email Account</h3>
             <input type="email" id="connect-email" placeholder="Your email address (e.g., you@gmail.com)">
-            <input type="text" id="connect-alias" placeholder="Display alias (e.g., you@wizardecosystem.dpdns.org)" value="">
+            <input type="text" id="connect-alias" placeholder="Display alias (e.g., you@wizardecosystem.dpdns.org)">
             <input type="password" id="connect-password" placeholder="Password or App Password">
-            <button id="connect-submit" class="connect-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">Connect</button>
+            <button id="connect-submit" class="modal-btn">Connect</button>
             <div class="app-pass-note" id="gmail-note" style="display: none;">
                 🔐 <strong>Gmail requires an App Password</strong><br>
                 1. Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--primary-light);">Google App Passwords</a><br>
                 2. Select "Mail" → "Other" → Name it "Wizard Browser"<br>
                 3. Copy the 16-character password here
             </div>
-            <button id="close-connect" style="margin-top: 12px; background: rgba(139,92,246,0.2); width: 100%; padding: 12px; border-radius: 24px; color: white; cursor: pointer;">Cancel</button>
+            <button id="close-connect" class="modal-btn-secondary modal-btn">Cancel</button>
         </div>
     </div>
     
@@ -529,17 +604,21 @@
                     <option value="16">16px</option>
                     <option value="18">18px</option>
                 </select>
+                <button class="rich-btn" id="image-upload-btn">🖼️</button>
             </div>
             
             <div id="compose-body" contenteditable="true" style="min-height: 200px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; overflow-y: auto; font-size: 14px;"></div>
+            
+            <div id="attachment-list" class="attachment-list"></div>
+            <input type="file" id="file-input" multiple style="display: none;">
             
             <div class="ai-bar" style="margin: 16px 0;">
                 <input type="text" id="compose-ai-prompt" class="ai-input" placeholder="Ask AI to write or improve...">
                 <button id="compose-ai-btn" class="ai-btn">Enhance</button>
             </div>
             
-            <button id="send-btn" class="connect-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">Send</button>
-            <button id="close-compose" style="margin-top: 12px; background: rgba(139,92,246,0.2); width: 100%; padding: 12px; border-radius: 24px; color: white; cursor: pointer;">Cancel</button>
+            <button id="send-btn" class="modal-btn">Send</button>
+            <button id="close-compose" class="modal-btn-secondary modal-btn">Cancel</button>
         </div>
     </div>
     
@@ -550,8 +629,8 @@
             <input type="text" id="alias-name" placeholder="yourname">
             <div id="alias-availability" style="font-size: 12px; margin-top: -8px; margin-bottom: 16px;"></div>
             <input type="email" id="alias-target" placeholder="Forward to (your real email)">
-            <button id="create-alias-btn" class="connect-btn" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">Create Alias ✨</button>
-            <button id="close-alias" style="margin-top: 12px; background: rgba(139,92,246,0.2); width: 100%; padding: 12px; border-radius: 24px; color: white; cursor: pointer;">Cancel</button>
+            <button id="create-alias-btn" class="modal-btn">Create Alias ✨</button>
+            <button id="close-alias" class="modal-btn-secondary modal-btn">Cancel</button>
             <div id="my-aliases-list" style="margin-top: 20px;"></div>
         </div>
     </div>
@@ -564,12 +643,16 @@
         let currentEmailFrom = '';
         let currentEmailSubject = '';
         let currentEmailTo = '';
+        let currentEmailCc = '';
+        let currentEmailMessageId = '';
+        let currentEmailReferences = '';
         let connectedAlias = '';
         let currentFolder = 'INBOX';
         let selectedEmails = new Set();
         let isLoading = false;
-        let retryCount = 0;
+        let attachments = [];
         
+        // Helper functions
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         
         function showNotification(msg, isError = false) {
@@ -595,10 +678,9 @@
             document.getElementById('compose-body').focus();
         }
         
-        function getHtmlContent() {
-            return document.getElementById('compose-body').innerHTML;
-        }
+        function getHtmlContent() { return document.getElementById('compose-body').innerHTML; }
         
+        // Auth
         async function checkAuth() {
             try {
                 const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
@@ -638,20 +720,20 @@
                     if (data.connected) {
                         connectedAlias = data.alias || data.email;
                         document.getElementById('alias-display').textContent = `✨ ${connectedAlias}`;
-                        document.getElementById('connection-status').innerHTML = '<div class="connected-badge">✅ Connected to ' + connectedAlias + '</div>';
+                        document.getElementById('connection-status').innerHTML = '<div class="connected-badge">✅ Connected to ' + escapeHtml(connectedAlias) + '</div>';
                         await loadEmails();
                     } else {
-                        document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
+                        document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn">🔗 Connect Email Account</button>';
                         const btn = document.getElementById('connect-btn');
                         if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
                     }
                 } else {
-                    document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
+                    document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn">🔗 Connect Email Account</button>';
                     const btn = document.getElementById('connect-btn');
                     if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
                 }
             } catch(e) {
-                document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn" style="background: linear-gradient(135deg, #4285f4, #34a853);">🔗 Connect Email Account</button>';
+                document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn">🔗 Connect Email Account</button>';
                 const btn = document.getElementById('connect-btn');
                 if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
             }
@@ -663,6 +745,10 @@
             const password = document.getElementById('connect-password').value;
             
             if (!email || !password) { showNotification('Please enter email and password', true); return; }
+            
+            const connectBtn = document.getElementById('connect-submit');
+            connectBtn.disabled = true;
+            connectBtn.textContent = 'Connecting...';
             
             try {
                 const res = await fetch(`${API_BASE}/api/mail/connect`, {
@@ -679,17 +765,17 @@
                 } else {
                     const err = await res.json();
                     showNotification(err.error || 'Connection failed', true);
-                    if (err.needs_app_password) {
+                    if (email.includes('gmail.com')) {
                         document.getElementById('gmail-note').style.display = 'block';
                     }
                 }
             } catch(e) { showNotification('Connection failed', true); }
+            finally { connectBtn.disabled = false; connectBtn.textContent = 'Connect'; }
         }
         
         async function loadEmails() {
             if (isLoading) return;
             isLoading = true;
-            retryCount = 0;
             
             const container = document.getElementById('email-list');
             container.innerHTML = '<div class="loading"><div class="loading-spinner"></div> Loading emails...</div>';
@@ -758,11 +844,9 @@
         }
         
         function toggleSelect(emailId, checked) {
-            if (checked) {
-                selectedEmails.add(emailId);
-            } else {
-                selectedEmails.delete(emailId);
-            }
+            if (checked) { selectedEmails.add(emailId); } 
+            else { selectedEmails.delete(emailId); }
+            
             const batchActions = document.getElementById('batch-actions');
             if (selectedEmails.size > 0) {
                 batchActions.style.display = 'flex';
@@ -795,6 +879,9 @@
                 if (res.ok) {
                     const data = await res.json();
                     currentEmailTo = data.to || '';
+                    currentEmailCc = data.cc || '';
+                    currentEmailMessageId = data.message_id || '';
+                    currentEmailReferences = data.references || '';
                     document.getElementById('email-to').textContent = `To: ${data.to || ''}`;
                     document.getElementById('email-body').innerHTML = data.body || 'No content';
                 } else {
@@ -839,11 +926,25 @@
             let to = currentEmailFrom.match(/<(.+?)>/)?.[1] || currentEmailFrom;
             if (isReplyAll) {
                 to = `${to}, ${currentEmailTo}`;
+                if (currentEmailCc) to += `, ${currentEmailCc}`;
             }
             document.getElementById('compose-to').value = to;
             document.getElementById('compose-subject').value = currentEmailSubject.startsWith('Re:') ? currentEmailSubject : `Re: ${currentEmailSubject}`;
-            document.getElementById('compose-body').innerHTML = `<br><br><hr><div style="color: var(--text-muted);">On ${new Date().toLocaleString()}, ${currentEmailFrom} wrote:<br>${document.getElementById('email-body').innerText.substring(0, 500)}</div>`;
+            
+            // Store reply headers as data attributes
+            const composeModal = document.getElementById('compose-modal');
+            composeModal.dataset.inReplyTo = currentEmailMessageId;
+            composeModal.dataset.references = currentEmailReferences ? `${currentEmailReferences} ${currentEmailMessageId}` : currentEmailMessageId;
+            
+            // Add quoted content
+            const bodyElement = document.getElementById('email-body');
+            const quotedContent = bodyElement.innerHTML;
+            const date = new Date().toLocaleString();
+            document.getElementById('compose-body').innerHTML = `<br><br><hr><div style="color: var(--text-muted);">On ${date}, ${escapeHtml(currentEmailFrom)} wrote:<br>${quotedContent}</div>`;
+            
             modal.classList.add('show');
+            attachments = [];
+            document.getElementById('attachment-list').innerHTML = '';
         }
         
         async function sendEmail() {
@@ -853,22 +954,51 @@
             
             if (!to || !subject || !body) { showNotification('Please fill in all fields', true); return; }
             
+            const composeModal = document.getElementById('compose-modal');
+            const inReplyTo = composeModal.dataset.inReplyTo;
+            const references = composeModal.dataset.references;
+            
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+            
             try {
-                const res = await fetch(`${API_BASE}/api/mail/send`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ to, subject, body, is_html: true })
-                });
+                let res;
+                if (attachments.length > 0) {
+                    const formData = new FormData();
+                    formData.append('to', to);
+                    formData.append('subject', subject);
+                    formData.append('body', body);
+                    if (inReplyTo) formData.append('in_reply_to', inReplyTo);
+                    if (references) formData.append('references', references);
+                    attachments.forEach(f => formData.append('attachments', f));
+                    res = await fetch(`${API_BASE}/api/mail/send-with-attachment`, {
+                        method: 'POST', credentials: 'include', body: formData
+                    });
+                } else {
+                    res = await fetch(`${API_BASE}/api/mail/send`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                        body: JSON.stringify({ to, subject, body, is_html: true, in_reply_to: inReplyTo, references: references })
+                    });
+                }
+                
                 if (res.ok) {
                     showNotification('Email sent!');
                     document.getElementById('compose-modal').classList.remove('show');
                     document.getElementById('compose-to').value = '';
                     document.getElementById('compose-subject').value = '';
                     document.getElementById('compose-body').innerHTML = '';
+                    attachments = [];
+                    document.getElementById('attachment-list').innerHTML = '';
+                    delete composeModal.dataset.inReplyTo;
+                    delete composeModal.dataset.references;
+                    await loadEmails();
                 } else {
                     const err = await res.json();
                     showNotification(err.error || 'Failed to send', true);
                 }
             } catch(e) { showNotification('Failed to send', true); }
+            finally { sendBtn.disabled = false; sendBtn.textContent = 'Send'; }
         }
         
         async function askAI() {
@@ -886,7 +1016,7 @@
                 const res = await fetch(`${API_BASE}/api/chat/simple`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
                     body: JSON.stringify({ 
-                        prompt: `Email Subject: ${subject}\nEmail Content: ${body.substring(0, 2000)}\n\nUser Question: ${question}\n\nAnswer based on the email content.`,
+                        prompt: `Email Subject: ${subject}\nEmail Content: ${body.substring(0, 3000)}\n\nUser Question: ${question}\n\nAnswer based on the email content.`,
                         mode: 'Fast'
                     })
                 });
@@ -895,7 +1025,6 @@
             } catch(e) {
                 responseDiv.innerHTML = 'Error getting AI response';
             }
-            
             document.getElementById('ai-question').value = '';
         }
         
@@ -906,7 +1035,7 @@
             
             if (!prompt && !plainText) return;
             
-            const instruction = prompt ? `Enhance/improve this email based on: ${prompt}` : 'Improve this email to be more professional';
+            const instruction = prompt ? `Enhance/improve this email based on: ${prompt}` : 'Improve this email to be more professional and clear';
             
             try {
                 const res = await fetch(`${API_BASE}/api/chat/simple`, {
@@ -921,7 +1050,6 @@
                     document.getElementById('compose-body').innerHTML = data.response.replace(/\n/g, '<br>');
                 }
             } catch(e) {}
-            
             document.getElementById('compose-ai-prompt').value = '';
         }
         
@@ -936,6 +1064,32 @@
             await loadEmails();
             document.getElementById('batch-actions').style.display = 'none';
             showNotification(`Deleted ${selectedEmails.size} emails`);
+        }
+        
+        // File attachments
+        function setupFileUpload() {
+            const fileInput = document.getElementById('file-input');
+            document.getElementById('image-upload-btn').onclick = () => fileInput.click();
+            
+            fileInput.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                files.forEach(file => {
+                    attachments.push(file);
+                    const div = document.createElement('div');
+                    div.className = 'attachment-item';
+                    div.innerHTML = `<span>📎 ${escapeHtml(file.name)} (${(file.size / 1024).toFixed(1)} KB)</span>
+                                    <button class="attachment-remove" data-name="${file.name}">✕</button>`;
+                    document.getElementById('attachment-list').appendChild(div);
+                });
+                document.querySelectorAll('.attachment-remove').forEach(btn => {
+                    btn.onclick = () => {
+                        const name = btn.dataset.name;
+                        attachments = attachments.filter(f => f.name !== name);
+                        btn.parentElement.remove();
+                    };
+                });
+                fileInput.value = '';
+            };
         }
         
         async function createAlias() {
@@ -973,15 +1127,11 @@
         async function checkAliasAvailability() {
             const alias = document.getElementById('alias-name').value.trim().toLowerCase();
             const div = document.getElementById('alias-availability');
-            
             if (alias.length < 3) { div.innerHTML = ''; return; }
-            
             try {
                 const res = await fetch(`${API_BASE}/api/alias/check/${encodeURIComponent(alias)}`, { credentials: 'include' });
                 const data = await res.json();
-                div.innerHTML = data.available ? 
-                    '<span style="color: var(--success);">✅ Available!</span>' : 
-                    '<span style="color: var(--danger);">❌ Already taken</span>';
+                div.innerHTML = data.available ? '<span style="color: var(--success);">✅ Available!</span>' : '<span style="color: var(--danger);">❌ Already taken</span>';
             } catch(e) {}
         }
         
@@ -991,6 +1141,10 @@
             document.getElementById('compose-to').value = '';
             document.getElementById('compose-subject').value = '';
             document.getElementById('compose-body').innerHTML = '';
+            attachments = [];
+            document.getElementById('attachment-list').innerHTML = '';
+            delete document.getElementById('compose-modal').dataset.inReplyTo;
+            delete document.getElementById('compose-modal').dataset.references;
             document.getElementById('compose-modal').classList.add('show');
         };
         document.getElementById('close-compose').onclick = () => document.getElementById('compose-modal').classList.remove('show');
@@ -1009,6 +1163,7 @@
         document.getElementById('compose-ai-btn').onclick = enhanceEmail;
         document.getElementById('ai-question').onkeypress = (e) => { if (e.key === 'Enter') askAI(); };
         document.getElementById('batch-delete').onclick = batchDelete;
+        document.getElementById('refresh-btn').onclick = () => loadEmails();
         document.getElementById('select-all').onchange = (e) => {
             document.querySelectorAll('.email-checkbox').forEach(cb => {
                 cb.checked = e.target.checked;
@@ -1027,10 +1182,14 @@
         document.getElementById('alias-name').oninput = checkAliasAvailability;
         
         document.querySelectorAll('.rich-btn').forEach(btn => {
-            btn.onclick = () => applyFormat(btn.dataset.action);
+            if (btn.id !== 'image-upload-btn') {
+                btn.onclick = () => applyFormat(btn.dataset.action);
+            }
         });
         document.getElementById('text-color').onchange = (e) => applyFormat('foreColor', e.target.value);
         document.getElementById('font-size').onchange = (e) => applyFormat('fontSize', e.target.value);
+        
+        setupFileUpload();
         
         document.querySelectorAll('.folder-item').forEach(folder => {
             folder.onclick = () => {
@@ -1047,7 +1206,7 @@
         
         // Auto-refresh every 30 seconds
         setInterval(() => {
-            if (document.getElementById('email-list').style.display !== 'none' && !isLoading) {
+            if (document.getElementById('email-list').style.display !== 'none' && !isLoading && currentFolder === 'INBOX') {
                 loadEmails();
             }
         }, 30000);
