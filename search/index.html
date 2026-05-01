@@ -53,8 +53,120 @@
             z-index: 10;
         }
         
-        /* Header */
+        /* ===== HEADER WITH ECOSYSTEM NAVIGATION ===== */
         .header {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 16px 24px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        
+        .logo-icon {
+            font-size: 32px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .ecosystem-nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-item {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .nav-item:hover {
+            background: rgba(139, 92, 246, 0.25);
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-color: transparent;
+        }
+        
+        .nav-icon {
+            font-size: 18px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(139, 92, 246, 0.15);
+            padding: 6px 16px;
+            border-radius: 40px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .user-email {
+            font-size: 12px;
+            color: var(--primary-light);
+        }
+        
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+        }
+        
+        .login-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 40px;
+            padding: 8px 20px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        /* ===== SEARCH HERO SECTION ===== */
+        .search-hero {
             text-align: center;
             padding: 40px 20px;
         }
@@ -85,7 +197,7 @@
             margin-bottom: 30px;
         }
         
-        /* Search Box */
+        /* ===== SEARCH BOX ===== */
         .search-container {
             max-width: 800px;
             margin: 0 auto 40px;
@@ -139,7 +251,7 @@
             box-shadow: 0 0 20px var(--primary-glow);
         }
         
-        /* Suggestions Dropdown */
+        /* ===== SUGGESTIONS ===== */
         .suggestions-dropdown {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
@@ -174,11 +286,7 @@
             font-size: 16px;
         }
         
-        .suggestion-text {
-            flex: 1;
-        }
-        
-        /* Results */
+        /* ===== RESULTS ===== */
         .results-area {
             animation: fadeIn 0.4s ease;
         }
@@ -234,7 +342,7 @@
             color: var(--primary-light);
         }
         
-        /* Loading State */
+        /* ===== LOADING ===== */
         .loading-spinner {
             text-align: center;
             padding: 60px;
@@ -266,7 +374,7 @@
             opacity: 0.5;
         }
         
-        /* Footer */
+        /* ===== FOOTER ===== */
         .footer {
             text-align: center;
             padding: 30px;
@@ -276,12 +384,67 @@
             font-size: 12px;
         }
         
-        /* Responsive */
+        /* ===== LOGIN MODAL ===== */
+        .login-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-modal.hidden {
+            display: none;
+        }
+        
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px;
+            width: 420px;
+            text-align: center;
+        }
+        
+        .login-card input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .login-card button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .switch-mode {
+            background: none !important;
+            color: var(--primary) !important;
+            margin-top: 15px;
+        }
+        
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             h1 { font-size: 32px; }
+            .header { flex-direction: column; text-align: center; }
+            .ecosystem-nav { justify-content: center; }
             .search-box { flex-wrap: wrap; }
             .search-btn { width: 100%; }
             .result-title { font-size: 16px; }
+            .login-card { width: 90%; padding: 30px; }
         }
     </style>
 </head>
@@ -289,12 +452,52 @@
     <div class="stars"></div>
     
     <div class="container">
+        <!-- Header with Ecosystem Navigation -->
         <div class="header">
+            <div class="logo" onclick="window.location.href='https://wizardecosystem.dpdns.org'">
+                <span class="logo-icon">🧙</span>
+                <span class="logo-text">Wizard Ecosystem</span>
+            </div>
+            
+            <div class="ecosystem-nav">
+                <div class="nav-item" onclick="window.location.href='https://wizardai.dpdns.org'">
+                    <span class="nav-icon">🧠</span>
+                    <span>Wizard AI</span>
+                </div>
+                <div class="nav-item active" onclick="window.location.href='https://wizardecosystem.dpdns.org/search'">
+                    <span class="nav-icon">🔍</span>
+                    <span>Search</span>
+                </div>
+                <div class="nav-item" onclick="window.location.href='https://wizardecosystem.dpdns.org/mail'">
+                    <span class="nav-icon">📧</span>
+                    <span>Mail</span>
+                </div>
+                <div class="nav-item" onclick="window.location.href='https://wizardecosystem.dpdns.org/calendar'">
+                    <span class="nav-icon">📅</span>
+                    <span>Calendar</span>
+                </div>
+                <div class="nav-item" onclick="window.location.href='https://wizardecosystem.dpdns.org/chat'">
+                    <span class="nav-icon">💬</span>
+                    <span>Chat</span>
+                </div>
+            </div>
+            
+            <div id="user-info" class="user-info" style="display: none;">
+                <div class="user-avatar">🧙</div>
+                <span id="user-email" class="user-email"></span>
+                <button id="logout-btn" class="logout-btn">🚪</button>
+            </div>
+            <button id="login-btn" class="login-btn" style="display: none;">Sign In</button>
+        </div>
+        
+        <!-- Hero Section -->
+        <div class="search-hero">
             <div class="wizard-icon">🧙</div>
             <h1>Wizard Search</h1>
             <p class="subtitle">AI-powered search with real, clickable results</p>
         </div>
         
+        <!-- Search Box -->
         <div class="search-container">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
@@ -304,20 +507,96 @@
             <div id="suggestions" class="suggestions-dropdown"></div>
         </div>
         
+        <!-- Results -->
         <div id="results" class="results-area"></div>
         
+        <!-- Footer -->
         <div class="footer">
             <p>🧙 Wizard Search • Real clickable results • Powered by Brave + DuckDuckGo</p>
             <p style="margin-top: 8px;">Search privately, get actual links</p>
         </div>
     </div>
+    
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal hidden">
+        <div class="login-card">
+            <div style="font-size: 60px; margin-bottom: 20px;">🧙</div>
+            <h2 style="margin-bottom: 20px;">Sign In</h2>
+            <input type="email" id="login-email" placeholder="Email">
+            <input type="password" id="login-password" placeholder="Password">
+            <div id="login-error" style="color: #ef4444; font-size: 12px; margin-bottom: 10px;"></div>
+            <button id="login-submit">Login</button>
+            <button id="show-signup" class="switch-mode">Create an account →</button>
+        </div>
+    </div>
 
     <script>
         const API_BASE = 'https://arnav0928.pythonanywhere.com';
+        let currentUser = null;
         let searchTimeout = null;
-        let currentQuery = '';
         
-        // Get query from URL
+        // ========== AUTH ==========
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.authenticated && data.user) {
+                        currentUser = data.user;
+                        document.getElementById('user-info').style.display = 'flex';
+                        document.getElementById('user-email').textContent = currentUser.email;
+                        document.getElementById('login-btn').style.display = 'none';
+                        return;
+                    }
+                }
+            } catch(e) {}
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('login-btn').style.display = 'block';
+        }
+        
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const errorDiv = document.getElementById('login-error');
+            
+            if (!email || !password) {
+                errorDiv.textContent = 'Email and password required';
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    currentUser = data.user;
+                    document.getElementById('login-modal').classList.add('hidden');
+                    document.getElementById('user-info').style.display = 'flex';
+                    document.getElementById('user-email').textContent = currentUser.email;
+                    document.getElementById('login-btn').style.display = 'none';
+                    document.getElementById('login-email').value = '';
+                    document.getElementById('login-password').value = '';
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                }
+            } catch(e) {
+                errorDiv.textContent = 'Connection error';
+            }
+        }
+        
+        async function handleLogout() {
+            await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' });
+            currentUser = null;
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('login-btn').style.display = 'block';
+        }
+        
+        // ========== SEARCH FUNCTIONS ==========
         function getQueryFromURL() {
             const params = new URLSearchParams(window.location.search);
             const q = params.get('q');
@@ -327,14 +606,10 @@
             }
         }
         
-        // Perform search via backend
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
             if (!query) return;
             
-            currentQuery = query;
-            
-            // Update URL without reload
             const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
             window.history.pushState({}, '', newUrl);
             
@@ -371,7 +646,6 @@
             }
         }
         
-        // Render search results
         function renderResults(data) {
             const resultsDiv = document.getElementById('results');
             
@@ -401,7 +675,6 @@
             resultsDiv.innerHTML = html;
         }
         
-        // Get search suggestions (via backend to avoid CORS)
         async function getSuggestions(query) {
             if (!query || query.length < 2) {
                 document.getElementById('suggestions').classList.remove('show');
@@ -419,13 +692,12 @@
                     suggestionsDiv.innerHTML = data.suggestions.map(s => `
                         <div class="suggestion-item" data-query="${escapeHtml(s)}">
                             <span class="suggestion-icon">🔍</span>
-                            <span class="suggestion-text">${escapeHtml(s)}</span>
+                            <span>${escapeHtml(s)}</span>
                         </div>
                     `).join('');
                     
                     suggestionsDiv.classList.add('show');
                     
-                    // Add click handlers
                     document.querySelectorAll('.suggestion-item').forEach(item => {
                         item.onclick = () => {
                             const query = item.dataset.query;
@@ -450,7 +722,7 @@
             return div.innerHTML;
         }
         
-        // Event listeners
+        // ========== EVENT LISTENERS ==========
         document.getElementById('search-input').addEventListener('input', (e) => {
             if (searchTimeout) clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => getSuggestions(e.target.value), 300);
@@ -468,14 +740,31 @@
             performSearch();
         });
         
-        // Close suggestions when clicking outside
+        document.getElementById('login-btn').addEventListener('click', () => {
+            document.getElementById('login-modal').classList.remove('hidden');
+        });
+        
+        document.getElementById('login-submit').addEventListener('click', handleLogin);
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+        
+        document.getElementById('show-signup').addEventListener('click', () => {
+            window.location.href = 'https://wizardecosystem.dpdns.org';
+        });
+        
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-box') && !e.target.closest('.suggestions-dropdown')) {
                 document.getElementById('suggestions').classList.remove('show');
             }
         });
         
-        // Initialize
+        document.getElementById('login-modal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('login-modal')) {
+                document.getElementById('login-modal').classList.add('hidden');
+            }
+        });
+        
+        // ========== INIT ==========
+        checkAuth();
         getQueryFromURL();
     </script>
 </body>
