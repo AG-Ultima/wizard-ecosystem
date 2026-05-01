@@ -30,13 +30,9 @@
             min-height: 100vh;
         }
         
-        /* Animated Background */
         .stars {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             background: radial-gradient(circle at 20% 30%, var(--primary-glow) 0%, transparent 50%);
             opacity: 0.3;
@@ -48,7 +44,6 @@
             50% { opacity: 0.4; transform: scale(1.05); }
         }
         
-        /* Header */
         .header {
             padding: 20px;
             border-bottom: 1px solid var(--border);
@@ -59,26 +54,12 @@
             gap: 15px;
         }
         
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-        }
+        .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .logo-icon { font-size: 32px; }
         .logo-text { font-size: 20px; font-weight: 600; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .nav-links {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-        .nav-link {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 14px;
-            transition: color 0.2s;
-        }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-link { color: var(--text-secondary); text-decoration: none; font-size: 14px; transition: color 0.2s; }
         .nav-link:hover { color: var(--primary-light); }
         
         .user-info {
@@ -93,23 +74,13 @@
         .user-email { font-size: 12px; }
         .logout-icon { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; margin-left: 8px; }
         
-        /* Main Search Area */
-        .search-container {
-            max-width: 800px;
-            margin: 60px auto;
-            padding: 0 20px;
-        }
-        
-        .search-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+        .search-container { max-width: 800px; margin: 60px auto; padding: 0 20px; }
+        .search-header { text-align: center; margin-bottom: 40px; }
         .wizard-icon { font-size: 80px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 30px var(--primary)); }
         @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         h1 { font-size: 48px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
         .subtitle { color: var(--text-muted); margin-bottom: 30px; }
         
-        /* Search Box */
         .search-box {
             display: flex;
             gap: 12px;
@@ -120,10 +91,7 @@
             margin-bottom: 30px;
             transition: all 0.3s ease;
         }
-        .search-box:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 0 25px var(--primary-glow);
-        }
+        .search-box:focus-within { border-color: var(--primary); box-shadow: 0 0 25px var(--primary-glow); }
         .search-icon { font-size: 20px; color: var(--text-muted); }
         .search-input {
             flex: 1;
@@ -146,7 +114,6 @@
         }
         .search-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--primary-glow); }
         
-        /* Search Suggestions */
         .suggestions {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -170,17 +137,9 @@
         .suggestion-icon { font-size: 16px; }
         .suggestion-text { flex: 1; }
         
-        /* Results Area */
-        .results-area {
-            margin-top: 40px;
-            animation: fadeIn 0.4s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .results-area { margin-top: 40px; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* AI Summary Card */
         .ai-summary {
             background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(0,0,0,0.2));
             border-radius: 20px;
@@ -188,17 +147,11 @@
             margin-bottom: 30px;
             border-left: 4px solid var(--primary);
         }
-        .summary-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
+        .summary-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
         .summary-icon { font-size: 28px; }
         .summary-title { font-size: 18px; font-weight: 600; color: var(--primary-light); }
         .summary-text { line-height: 1.7; color: var(--text-secondary); }
         
-        /* Search Result Card */
         .result-card {
             background: rgba(255,255,255,0.03);
             border-radius: 16px;
@@ -213,32 +166,13 @@
             transform: translateX(5px);
             border-color: var(--primary);
         }
-        .result-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--primary-light);
-            margin-bottom: 8px;
-        }
-        .result-url {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 10px;
-            word-break: break-all;
-        }
-        .result-snippet {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
+        .result-title { font-size: 18px; font-weight: 600; color: var(--primary-light); margin-bottom: 8px; }
+        .result-url { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; word-break: break-all; }
+        .result-snippet { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
         
-        /* Loading Spinner */
-        .loading-spinner {
-            text-align: center;
-            padding: 60px;
-        }
+        .loading-spinner { text-align: center; padding: 60px; }
         .spinner {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             border: 3px solid rgba(139,92,246,0.2);
             border-top-color: var(--primary);
             border-radius: 50%;
@@ -247,32 +181,15 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* No Results */
-        .no-results {
-            text-align: center;
-            padding: 60px;
-            color: var(--text-muted);
-        }
+        .no-results { text-align: center; padding: 60px; color: var(--text-muted); }
         .no-results-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
         
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 30px;
-            border-top: 1px solid var(--border);
-            margin-top: 60px;
-            color: var(--text-muted);
-            font-size: 12px;
-        }
+        .footer { text-align: center; padding: 30px; border-top: 1px solid var(--border); margin-top: 60px; color: var(--text-muted); font-size: 12px; }
         
-        /* Login Modal */
         .login-modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.95);
             backdrop-filter: blur(20px);
             z-index: 10000;
@@ -319,7 +236,6 @@
 <body>
     <div class="stars"></div>
     
-    <!-- Header -->
     <div class="header">
         <div class="logo" onclick="window.location.href='/'">
             <span class="logo-icon">🧙</span>
@@ -339,7 +255,6 @@
         </div>
     </div>
     
-    <!-- Main Search Area -->
     <div class="search-container">
         <div class="search-header">
             <div class="wizard-icon">🧙</div>
@@ -363,7 +278,6 @@
         <p style="margin-top: 8px;">Search privately, get intelligent answers</p>
     </div>
     
-    <!-- Login Modal -->
     <div id="login-modal" class="login-modal">
         <div class="login-card">
             <div class="wizard-icon" style="font-size: 60px;">🧙</div>
@@ -383,7 +297,6 @@
         let currentUser = null;
         let searchTimeout = null;
         
-        // ========== AUTH ==========
         async function checkAuth() {
             try {
                 const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
@@ -407,29 +320,18 @@
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
             const errorDiv = document.getElementById('login-error');
-            
-            if (!email || !password) {
-                errorDiv.textContent = 'Email and password required';
-                return;
-            }
-            
+            if (!email || !password) { errorDiv.textContent = 'Email and password required'; return; }
             try {
                 const res = await fetch(`${API_BASE}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
                     body: JSON.stringify({ email, password })
                 });
                 const data = await res.json();
                 if (res.ok) {
                     document.getElementById('login-modal').classList.remove('show');
                     await checkAuth();
-                } else {
-                    errorDiv.textContent = data.error || 'Login failed';
-                }
-            } catch(e) {
-                errorDiv.textContent = 'Connection error';
-            }
+                } else { errorDiv.textContent = data.error || 'Login failed'; }
+            } catch(e) { errorDiv.textContent = 'Connection error'; }
         }
         
         async function handleLogout() {
@@ -438,125 +340,109 @@
             await checkAuth();
         }
         
-        // ========== SEARCH SUGGESTIONS ==========
         async function getSuggestions(query) {
             if (!query || query.length < 2) {
                 document.getElementById('suggestions').classList.remove('show');
                 return;
             }
-            
             try {
                 const res = await fetch(`https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`);
                 const suggestions = await res.json();
                 const container = document.getElementById('suggestions');
-                
                 if (suggestions && suggestions.length > 0) {
-                    container.innerHTML = suggestions.map(s => `
-                        <div class="suggestion-item" data-query="${escapeHtml(s)}">
-                            <span class="suggestion-icon">🔍</span>
-                            <span class="suggestion-text">${escapeHtml(s)}</span>
-                        </div>
-                    `).join('');
+                    container.innerHTML = suggestions.map(s => `<div class="suggestion-item" data-query="${escapeHtml(s)}"><span class="suggestion-icon">🔍</span><span class="suggestion-text">${escapeHtml(s)}</span></div>`).join('');
                     container.classList.add('show');
-                    
                     document.querySelectorAll('.suggestion-item').forEach(item => {
                         item.onclick = () => {
                             document.getElementById('search-input').value = item.dataset.query;
                             performSearch();
                         };
                     });
-                } else {
-                    container.classList.remove('show');
-                }
-            } catch(e) {
-                document.getElementById('suggestions').classList.remove('show');
-            }
+                } else { container.classList.remove('show'); }
+            } catch(e) { document.getElementById('suggestions').classList.remove('show'); }
         }
         
-        // ========== SEARCH FUNCTION (Same as browser) ==========
-        async function duckDuckGoSearch(query) {
-            try {
-                const response = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
-                const data = await response.json();
-                
-                let results = [];
-                if (data.RelatedTopics) {
-                    results = data.RelatedTopics.filter(t => t.Text && t.FirstURL).slice(0, 15);
-                }
-                
-                // Extract actual URLs from DuckDuckGo redirects
-                const processedResults = [];
-                for (const result of results) {
-                    let title = result.Text ? result.Text.split(' - ')[0] : 'Result';
-                    let url = result.FirstURL || '#';
-                    const match = url.match(/uddg=([^&]+)/);
-                    if (match) url = decodeURIComponent(match[1]);
-                    let snippet = result.Text || '';
-                    
-                    processedResults.push({ title, url, snippet });
-                }
-                
-                return processedResults;
-            } catch (error) {
-                console.error('Search error:', error);
-                return [];
-            }
-        }
-        
+        // FIXED: Using DuckDuckGo HTML endpoint for clean results, extracting direct URLs
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
             if (!query) return;
             
-            // Update URL without reload
             const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
             window.history.pushState({}, '', newUrl);
             
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><div>🧙 Wizard is searching...</div></div>';
-            
-            // Close suggestions
             document.getElementById('suggestions').classList.remove('show');
             
             try {
-                // Get search results
-                const searchResults = await duckDuckGoSearch(query);
+                // Use DuckDuckGo HTML endpoint for better result parsing
+                const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(ddgUrl)}`;
+                
+                let searchResults = [];
+                let aiSummary = '';
                 
                 // Get AI summary
-                let aiSummary = '';
                 try {
                     const aiRes = await fetch(`${API_BASE}/api/chat/simple`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ 
-                            prompt: `Provide a helpful, informative summary about "${query}" in under 150 words. Be accurate and useful.`,
-                            mode: 'Fast' 
-                        })
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+                        body: JSON.stringify({ prompt: `Provide a helpful summary about "${query}" in under 150 words.`, mode: 'Fast' })
                     });
                     const aiData = await aiRes.json();
-                    aiSummary = aiData.response || `Here's what I found about "${query}".`;
-                } catch(e) { 
-                    aiSummary = `Search results for "${query}".`; 
+                    aiSummary = aiData.response || `Search results for "${query}".`;
+                } catch(e) { aiSummary = `Search results for "${query}".`; }
+                
+                // Try DuckDuckGo API for direct results
+                const apiRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
+                const apiData = await apiRes.json();
+                
+                if (apiData.RelatedTopics) {
+                    for (const topic of apiData.RelatedTopics) {
+                        if (topic.Text && topic.FirstURL) {
+                            let url = topic.FirstURL;
+                            // Extract actual URL from DuckDuckGo redirect
+                            const match = url.match(/uddg=([^&]+)/);
+                            if (match) url = decodeURIComponent(match[1]);
+                            let title = topic.Text.split(' - ')[0];
+                            let snippet = topic.Text;
+                            
+                            searchResults.push({ title, url, snippet });
+                            if (searchResults.length >= 15) break;
+                        }
+                    }
                 }
                 
-                let html = `
-                    <div class="ai-summary">
-                        <div class="summary-header">
-                            <span class="summary-icon">🧙</span>
-                            <span class="summary-title">AI Summary</span>
-                        </div>
-                        <div class="summary-text">${escapeHtml(aiSummary)}</div>
-                    </div>
-                `;
+                // If no results from API, fallback to manual parsing
+                if (searchResults.length === 0) {
+                    try {
+                        const htmlRes = await fetch(proxyUrl);
+                        const html = await htmlRes.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const links = doc.querySelectorAll('.result__a');
+                        
+                        for (const link of links) {
+                            const title = link.textContent;
+                            let url = link.getAttribute('href');
+                            if (url && url.startsWith('/')) {
+                                url = `https://duckduckgo.com${url}`;
+                            }
+                            const parent = link.closest('.result');
+                            const snippetEl = parent?.querySelector('.result__snippet');
+                            const snippet = snippetEl?.textContent || '';
+                            
+                            if (title && url && !searchResults.find(r => r.url === url)) {
+                                searchResults.push({ title, url, snippet });
+                                if (searchResults.length >= 15) break;
+                            }
+                        }
+                    } catch(e) { console.error('Fallback search failed:', e); }
+                }
+                
+                let html = `<div class="ai-summary"><div class="summary-header"><span class="summary-icon">🧙</span><span class="summary-title">AI Summary</span></div><div class="summary-text">${escapeHtml(aiSummary)}</div></div>`;
                 
                 if (!searchResults || searchResults.length === 0) {
-                    html += `
-                        <div class="no-results">
-                            <div class="no-results-icon">🔍</div>
-                            <h3>No results found</h3>
-                            <p>Try a different search term or check your spelling.</p>
-                        </div>
-                    `;
+                    html += `<div class="no-results"><div class="no-results-icon">🔍</div><h3>No results found</h3><p>Try a different search term.</p></div>`;
                 } else {
                     html += `<h3 style="color: var(--primary-light); margin-bottom: 20px;">📄 Search Results</h3>`;
                     for (const result of searchResults) {
@@ -573,14 +459,7 @@
                 resultsDiv.innerHTML = html;
                 
             } catch (error) {
-                resultsDiv.innerHTML = `
-                    <div class="no-results">
-                        <div class="no-results-icon">⚠️</div>
-                        <h3>Search Error</h3>
-                        <p>${error.message}</p>
-                        <button onclick="performSearch()" class="search-btn" style="margin-top: 20px;">Try Again</button>
-                    </div>
-                `;
+                resultsDiv.innerHTML = `<div class="no-results"><div class="no-results-icon">⚠️</div><h3>Search Error</h3><p>${error.message}</p><button onclick="performSearch()" class="search-btn" style="margin-top: 20px;">Try Again</button></div>`;
             }
         }
         
@@ -591,7 +470,6 @@
             return div.innerHTML;
         }
         
-        // ========== URL Parameter Handling ==========
         function getQueryFromURL() {
             const params = new URLSearchParams(window.location.search);
             const q = params.get('q');
@@ -601,36 +479,19 @@
             }
         }
         
-        // ========== Event Listeners ==========
         document.getElementById('search-input').addEventListener('input', (e) => {
             if (searchTimeout) clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => getSuggestions(e.target.value), 300);
         });
-        
-        document.getElementById('search-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') performSearch();
-        });
-        
+        document.getElementById('search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
         document.getElementById('search-btn').onclick = performSearch;
         document.getElementById('login-btn').onclick = () => document.getElementById('login-modal').classList.add('show');
         document.getElementById('modal-login-btn').onclick = handleLogin;
         document.getElementById('logout-btn').onclick = handleLogout;
         
-        // Close modal on click outside
-        document.getElementById('login-modal').onclick = (e) => {
-            if (e.target === document.getElementById('login-modal')) {
-                document.getElementById('login-modal').classList.remove('show');
-            }
-        };
+        document.getElementById('login-modal').onclick = (e) => { if (e.target === document.getElementById('login-modal')) document.getElementById('login-modal').classList.remove('show'); };
+        document.addEventListener('click', (e) => { if (!e.target.closest('.search-box') && !e.target.closest('.suggestions')) document.getElementById('suggestions').classList.remove('show'); });
         
-        // Close suggestions on click outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-box') && !e.target.closest('.suggestions')) {
-                document.getElementById('suggestions').classList.remove('show');
-            }
-        });
-        
-        // Initialize
         checkAuth();
         getQueryFromURL();
     </script>
