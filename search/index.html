@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧙 Wizard Search</title>
+    <title>🧙 Wizard Search - AI-Powered Search Engine</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -21,6 +21,7 @@
             --primary-glow: rgba(168,85,247,0.3);
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
         }
         
         body {
@@ -44,42 +45,51 @@
             50% { opacity: 0.4; transform: scale(1.05); }
         }
         
-        .header {
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
+            position: relative;
+            z-index: 10;
         }
         
-        .logo { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .logo-icon { font-size: 32px; }
-        .logo-text { font-size: 20px; font-weight: 600; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .nav-links { display: flex; gap: 20px; align-items: center; }
-        .nav-link { color: var(--text-secondary); text-decoration: none; font-size: 14px; transition: color 0.2s; }
-        .nav-link:hover { color: var(--primary-light); }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(139,92,246,0.1);
-            border-radius: 40px;
-            padding: 6px 16px 6px 12px;
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 20px;
         }
-        .user-avatar { width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-        .user-email { font-size: 12px; }
-        .logout-icon { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; margin-left: 8px; }
         
-        .search-container { max-width: 800px; margin: 60px auto; padding: 0 20px; }
-        .search-header { text-align: center; margin-bottom: 40px; }
-        .wizard-icon { font-size: 80px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 30px var(--primary)); }
-        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        h1 { font-size: 48px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
-        .subtitle { color: var(--text-muted); margin-bottom: 30px; }
+        .wizard-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px var(--primary));
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        h1 {
+            font-size: 48px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        
+        /* Search Box */
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
         
         .search-box {
             display: flex;
@@ -88,11 +98,21 @@
             border: 2px solid var(--border);
             border-radius: 60px;
             padding: 8px 8px 8px 24px;
-            margin-bottom: 30px;
             transition: all 0.3s ease;
         }
-        .search-box:focus-within { border-color: var(--primary); box-shadow: 0 0 25px var(--primary-glow); }
-        .search-icon { font-size: 20px; color: var(--text-muted); }
+        
+        .search-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 25px var(--primary-glow);
+        }
+        
+        .search-icon {
+            font-size: 20px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+        }
+        
         .search-input {
             flex: 1;
             background: none;
@@ -102,6 +122,7 @@
             font-size: 16px;
             outline: none;
         }
+        
         .search-btn {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border: none;
@@ -112,18 +133,28 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        .search-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--primary-glow); }
         
-        .suggestions {
+        .search-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+        
+        /* Suggestions Dropdown */
+        .suggestions-dropdown {
             background: var(--bg-card);
+            backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: 16px;
             margin-top: 8px;
-            max-height: 300px;
+            max-height: 350px;
             overflow-y: auto;
             display: none;
         }
-        .suggestions.show { display: block; }
+        
+        .suggestions-dropdown.show {
+            display: block;
+        }
+        
         .suggestion-item {
             padding: 12px 20px;
             cursor: pointer;
@@ -133,27 +164,32 @@
             border-bottom: 1px solid var(--border);
             transition: all 0.2s;
         }
-        .suggestion-item:hover { background: rgba(139,92,246,0.1); padding-left: 28px; }
-        .suggestion-icon { font-size: 16px; }
-        .suggestion-text { flex: 1; }
         
-        .results-area { margin-top: 40px; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .ai-summary {
-            background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(0,0,0,0.2));
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 30px;
-            border-left: 4px solid var(--primary);
+        .suggestion-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+            padding-left: 28px;
         }
-        .summary-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .summary-icon { font-size: 28px; }
-        .summary-title { font-size: 18px; font-weight: 600; color: var(--primary-light); }
-        .summary-text { line-height: 1.7; color: var(--text-secondary); }
+        
+        .suggestion-icon {
+            font-size: 16px;
+        }
+        
+        .suggestion-text {
+            flex: 1;
+        }
+        
+        /* Results */
+        .results-area {
+            animation: fadeIn 0.4s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         
         .result-card {
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 16px;
@@ -161,74 +197,90 @@
             transition: all 0.2s;
             border: 1px solid var(--border);
         }
+        
         .result-card:hover {
-            background: rgba(139,92,246,0.08);
+            background: rgba(139, 92, 246, 0.08);
             transform: translateX(5px);
             border-color: var(--primary);
         }
-        .result-title { font-size: 18px; font-weight: 600; color: var(--primary-light); margin-bottom: 8px; }
-        .result-url { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; word-break: break-all; }
-        .result-snippet { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
         
-        .loading-spinner { text-align: center; padding: 60px; }
+        .result-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-light);
+            margin-bottom: 8px;
+        }
+        
+        .result-url {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+        
+        .result-snippet {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .source-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(139, 92, 246, 0.15);
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 20px;
+            color: var(--primary-light);
+        }
+        
+        /* Loading State */
+        .loading-spinner {
+            text-align: center;
+            padding: 60px;
+        }
+        
         .spinner {
-            width: 50px; height: 50px;
-            border: 3px solid rgba(139,92,246,0.2);
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(139, 92, 246, 0.2);
             border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
         
-        .no-results { text-align: center; padding: 60px; color: var(--text-muted); }
-        .no-results-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
-        
-        .footer { text-align: center; padding: 30px; border-top: 1px solid var(--border); margin-top: 60px; color: var(--text-muted); font-size: 12px; }
-        
-        .login-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(20px);
-            z-index: 10000;
-            align-items: center;
-            justify-content: center;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
-        .login-modal.show { display: flex; }
-        .login-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 40px;
-            width: 400px;
+        
+        .no-results {
             text-align: center;
-        }
-        .login-card input {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            color: white;
-            margin-bottom: 16px;
-        }
-        .login-card button {
-            width: 100%;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border: none;
-            border-radius: 24px;
-            padding: 12px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
+            padding: 60px;
+            color: var(--text-muted);
         }
         
+        .no-results-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            border-top: 1px solid var(--border);
+            margin-top: 60px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
             h1 { font-size: 32px; }
-            .header { flex-direction: column; text-align: center; }
             .search-box { flex-wrap: wrap; }
+            .search-btn { width: 100%; }
             .result-title { font-size: 16px; }
         }
     </style>
@@ -236,137 +288,53 @@
 <body>
     <div class="stars"></div>
     
-    <div class="header">
-        <div class="logo" onclick="window.location.href='/'">
-            <span class="logo-icon">🧙</span>
-            <span class="logo-text">Wizard Ecosystem</span>
-        </div>
-        <div class="nav-links">
-            <a href="/mail" class="nav-link">📧 Mail</a>
-            <a href="/calendar" class="nav-link">📅 Calendar</a>
-            <a href="/chat" class="nav-link">💬 Chat</a>
-            <a href="https://wizardai.dpdns.org" class="nav-link">🧠 Wizard AI</a>
-            <div id="user-info" class="user-info" style="display: none;">
-                <div class="user-avatar">🧙</div>
-                <span id="user-email" class="user-email"></span>
-                <button id="logout-btn" class="logout-icon">🚪</button>
-            </div>
-            <button id="login-btn" class="nav-link" style="background: var(--primary); border: none; padding: 6px 16px; border-radius: 20px;">Sign In</button>
-        </div>
-    </div>
-    
-    <div class="search-container">
-        <div class="search-header">
+    <div class="container">
+        <div class="header">
             <div class="wizard-icon">🧙</div>
             <h1>Wizard Search</h1>
-            <p class="subtitle">AI-powered search with intelligent answers</p>
+            <p class="subtitle">AI-powered search with real, clickable results</p>
         </div>
         
-        <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="search-input" class="search-input" placeholder="Ask anything..." autocomplete="off">
-            <button id="search-btn" class="search-btn">Search</button>
+        <div class="search-container">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" class="search-input" placeholder="Search the web..." autocomplete="off">
+                <button id="search-btn" class="search-btn">Search</button>
+            </div>
+            <div id="suggestions" class="suggestions-dropdown"></div>
         </div>
-        
-        <div id="suggestions" class="suggestions"></div>
         
         <div id="results" class="results-area"></div>
-    </div>
-    
-    <div class="footer">
-        <p>🧙 Wizard Search • Powered by Brave Search + Wizard.AI</p>
-        <p style="margin-top: 8px;">Search privately, get intelligent answers</p>
-    </div>
-    
-    <div id="login-modal" class="login-modal">
-        <div class="login-card">
-            <div class="wizard-icon" style="font-size: 60px;">🧙</div>
-            <h2 style="margin-bottom: 20px;">Sign In</h2>
-            <input type="email" id="login-email" placeholder="Email">
-            <input type="password" id="login-password" placeholder="Password">
-            <div id="login-error" style="color: #ef4444; font-size: 12px; margin-bottom: 10px;"></div>
-            <button id="modal-login-btn">Login</button>
-            <p style="margin-top: 15px; font-size: 12px;">
-                <a href="https://wizardecosystem.dpdns.org" style="color: var(--primary-light);">Create an account →</a>
-            </p>
+        
+        <div class="footer">
+            <p>🧙 Wizard Search • Real clickable results • Powered by Brave + DuckDuckGo</p>
+            <p style="margin-top: 8px;">Search privately, get actual links</p>
         </div>
     </div>
 
     <script>
         const API_BASE = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null;
         let searchTimeout = null;
+        let currentQuery = '';
         
-        async function checkAuth() {
-            try {
-                const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated && data.user) {
-                        currentUser = data.user;
-                        document.getElementById('user-info').style.display = 'flex';
-                        document.getElementById('user-email').textContent = currentUser.email;
-                        document.getElementById('login-btn').style.display = 'none';
-                        return true;
-                    }
-                }
-            } catch(e) {}
-            document.getElementById('user-info').style.display = 'none';
-            document.getElementById('login-btn').style.display = 'block';
-            return false;
-        }
-        
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            const errorDiv = document.getElementById('login-error');
-            if (!email || !password) { errorDiv.textContent = 'Email and password required'; return; }
-            try {
-                const res = await fetch(`${API_BASE}/api/login`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    document.getElementById('login-modal').classList.remove('show');
-                    await checkAuth();
-                } else { errorDiv.textContent = data.error || 'Login failed'; }
-            } catch(e) { errorDiv.textContent = 'Connection error'; }
-        }
-        
-        async function handleLogout() {
-            await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' });
-            currentUser = null;
-            await checkAuth();
-        }
-        
-        async function getSuggestions(query) {
-            if (!query || query.length < 2) {
-                document.getElementById('suggestions').classList.remove('show');
-                return;
+        // Get query from URL
+        function getQueryFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const q = params.get('q');
+            if (q) {
+                document.getElementById('search-input').value = decodeURIComponent(q);
+                performSearch();
             }
-            try {
-                const res = await fetch(`https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`);
-                const suggestions = await res.json();
-                const container = document.getElementById('suggestions');
-                if (suggestions && suggestions.length > 0) {
-                    container.innerHTML = suggestions.map(s => `<div class="suggestion-item" data-query="${escapeHtml(s)}"><span class="suggestion-icon">🔍</span><span class="suggestion-text">${escapeHtml(s)}</span></div>`).join('');
-                    container.classList.add('show');
-                    document.querySelectorAll('.suggestion-item').forEach(item => {
-                        item.onclick = () => {
-                            document.getElementById('search-input').value = item.dataset.query;
-                            performSearch();
-                        };
-                    });
-                } else { container.classList.remove('show'); }
-            } catch(e) { document.getElementById('suggestions').classList.remove('show'); }
         }
         
-        // FIXED: Use Brave Search API (free, no key needed for basic) + fallback
+        // Perform search via backend
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
             if (!query) return;
             
+            currentQuery = query;
+            
+            // Update URL without reload
             const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
             window.history.pushState({}, '', newUrl);
             
@@ -375,101 +343,103 @@
             document.getElementById('suggestions').classList.remove('show');
             
             try {
-                let searchResults = [];
-                let aiSummary = '';
+                const response = await fetch(`${API_BASE}/api/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ query: query })
+                });
                 
-                // Get AI summary from Wizard.AI
-                try {
-                    const aiRes = await fetch(`${API_BASE}/api/chat/simple`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                        body: JSON.stringify({ prompt: `Provide a helpful summary about "${query}" in under 150 words.`, mode: 'Fast' })
-                    });
-                    const aiData = await aiRes.json();
-                    aiSummary = aiData.response || `Search results for "${query}".`;
-                } catch(e) { aiSummary = `Search results for "${query}".`; }
+                const data = await response.json();
                 
-                // Use Brave Search API (free tier, no key needed for limited usage)
-                // Fallback to DuckDuckGo HTML endpoint
-                try {
-                    // Try Brave Search first
-                    const braveUrl = `https://search.brave.com/search?q=${encodeURIComponent(query)}&source=web`;
-                    const braveRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(braveUrl)}`);
-                    const braveHtml = await braveRes.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(braveHtml, 'text/html');
-                    const results = doc.querySelectorAll('.snippet');
-                    
-                    for (const result of results) {
-                        const titleEl = result.querySelector('.snippet-title');
-                        const urlEl = result.querySelector('.snippet-url');
-                        const descEl = result.querySelector('.snippet-description');
-                        
-                        if (titleEl && urlEl) {
-                            let url = urlEl.textContent;
-                            if (!url.startsWith('http')) url = 'https://' + url;
-                            searchResults.push({
-                                title: titleEl.textContent,
-                                url: url,
-                                snippet: descEl?.textContent || ''
-                            });
-                            if (searchResults.length >= 15) break;
-                        }
-                    }
-                } catch(e) { console.log('Brave search failed, using fallback', e); }
-                
-                // Fallback: Use DuckDuckGo HTML endpoint (more reliable)
-                if (searchResults.length === 0) {
-                    try {
-                        const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-                        const proxyRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(ddgUrl)}`);
-                        const ddgHtml = await proxyRes.text();
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(ddgHtml, 'text/html');
-                        const links = doc.querySelectorAll('.result__a');
-                        
-                        for (const link of links) {
-                            let url = link.getAttribute('href');
-                            if (url && url.startsWith('/')) {
-                                url = `https://duckduckgo.com${url}`;
-                            }
-                            // Extract actual URL from DuckDuckGo redirect
-                            const match = url?.match(/uddg=([^&]+)/);
-                            if (match) url = decodeURIComponent(match[1]);
-                            
-                            const title = link.textContent;
-                            const parent = link.closest('.result');
-                            const snippetEl = parent?.querySelector('.result__snippet');
-                            const snippet = snippetEl?.textContent || '';
-                            
-                            if (title && url && url !== 'https://duckduckgo.com' && !searchResults.find(r => r.url === url)) {
-                                searchResults.push({ title, url, snippet });
-                                if (searchResults.length >= 15) break;
-                            }
-                        }
-                    } catch(e) { console.error('DuckDuckGo fallback failed:', e); }
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Search failed');
                 }
                 
-                let html = `<div class="ai-summary"><div class="summary-header"><span class="summary-icon">🧙</span><span class="summary-title">AI Summary</span></div><div class="summary-text">${escapeHtml(aiSummary)}</div></div>`;
-                
-                if (!searchResults || searchResults.length === 0) {
-                    html += `<div class="no-results"><div class="no-results-icon">🔍</div><h3>No results found for "${escapeHtml(query)}"</h3><p>Try a different search term.</p></div>`;
-                } else {
-                    html += `<h3 style="color: var(--primary-light); margin-bottom: 20px;">📄 Search Results</h3>`;
-                    for (const result of searchResults) {
-                        html += `
-                            <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
-                                <div class="result-title">${escapeHtml(result.title)}</div>
-                                <div class="result-url">${escapeHtml(result.url)}</div>
-                                <div class="result-snippet">${escapeHtml(result.snippet)}</div>
-                            </div>
-                        `;
-                    }
-                }
-                
-                resultsDiv.innerHTML = html;
+                renderResults(data);
                 
             } catch (error) {
-                resultsDiv.innerHTML = `<div class="no-results"><div class="no-results-icon">⚠️</div><h3>Search Error</h3><p>${error.message}</p><button onclick="performSearch()" class="search-btn" style="margin-top: 20px;">Try Again</button></div>`;
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">⚠️</div>
+                        <h3>Search Error</h3>
+                        <p>${escapeHtml(error.message)}</p>
+                        <button onclick="performSearch()" style="background: var(--primary); border: none; border-radius: 20px; padding: 10px 20px; color: white; margin-top: 20px; cursor: pointer;">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render search results
+        function renderResults(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!data.results || data.results.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <h3>No results found for "${escapeHtml(data.query)}"</h3>
+                        <p>Try a different search term.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `<div class="source-badge">✨ ${data.results.length} results from ${data.source}</div>`;
+            
+            for (const result of data.results) {
+                html += `
+                    <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
+                        <div class="result-title">${escapeHtml(result.title)}</div>
+                        <div class="result-url">${escapeHtml(result.url)}</div>
+                        <div class="result-snippet">${escapeHtml(result.snippet)}</div>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Get search suggestions (via backend to avoid CORS)
+        async function getSuggestions(query) {
+            if (!query || query.length < 2) {
+                document.getElementById('suggestions').classList.remove('show');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/search/suggest?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                const suggestionsDiv = document.getElementById('suggestions');
+                if (!suggestionsDiv) return;
+                
+                if (data.suggestions && data.suggestions.length > 0) {
+                    suggestionsDiv.innerHTML = data.suggestions.map(s => `
+                        <div class="suggestion-item" data-query="${escapeHtml(s)}">
+                            <span class="suggestion-icon">🔍</span>
+                            <span class="suggestion-text">${escapeHtml(s)}</span>
+                        </div>
+                    `).join('');
+                    
+                    suggestionsDiv.classList.add('show');
+                    
+                    // Add click handlers
+                    document.querySelectorAll('.suggestion-item').forEach(item => {
+                        item.onclick = () => {
+                            const query = item.dataset.query;
+                            document.getElementById('search-input').value = query;
+                            suggestionsDiv.classList.remove('show');
+                            performSearch();
+                        };
+                    });
+                } else {
+                    suggestionsDiv.classList.remove('show');
+                }
+            } catch (error) {
+                console.error('Suggestions error:', error);
+                document.getElementById('suggestions').classList.remove('show');
             }
         }
         
@@ -480,29 +450,32 @@
             return div.innerHTML;
         }
         
-        function getQueryFromURL() {
-            const params = new URLSearchParams(window.location.search);
-            const q = params.get('q');
-            if (q) {
-                document.getElementById('search-input').value = decodeURIComponent(q);
-                performSearch();
-            }
-        }
-        
+        // Event listeners
         document.getElementById('search-input').addEventListener('input', (e) => {
             if (searchTimeout) clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => getSuggestions(e.target.value), 300);
         });
-        document.getElementById('search-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
-        document.getElementById('search-btn').onclick = performSearch;
-        document.getElementById('login-btn').onclick = () => document.getElementById('login-modal').classList.add('show');
-        document.getElementById('modal-login-btn').onclick = handleLogin;
-        document.getElementById('logout-btn').onclick = handleLogout;
         
-        document.getElementById('login-modal').onclick = (e) => { if (e.target === document.getElementById('login-modal')) document.getElementById('login-modal').classList.remove('show'); };
-        document.addEventListener('click', (e) => { if (!e.target.closest('.search-box') && !e.target.closest('.suggestions')) document.getElementById('suggestions').classList.remove('show'); });
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('suggestions').classList.remove('show');
+                performSearch();
+            }
+        });
         
-        checkAuth();
+        document.getElementById('search-btn').addEventListener('click', () => {
+            document.getElementById('suggestions').classList.remove('show');
+            performSearch();
+        });
+        
+        // Close suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-box') && !e.target.closest('.suggestions-dropdown')) {
+                document.getElementById('suggestions').classList.remove('show');
+            }
+        });
+        
+        // Initialize
         getQueryFromURL();
     </script>
 </body>
