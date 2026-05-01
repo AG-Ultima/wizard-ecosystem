@@ -274,7 +274,7 @@
     </div>
     
     <div class="footer">
-        <p>🧙 Wizard Search • Powered by DuckDuckGo + Wizard.AI</p>
+        <p>🧙 Wizard Search • Powered by Brave Search + Wizard.AI</p>
         <p style="margin-top: 8px;">Search privately, get intelligent answers</p>
     </div>
     
@@ -362,7 +362,7 @@
             } catch(e) { document.getElementById('suggestions').classList.remove('show'); }
         }
         
-        // FIXED: Using DuckDuckGo HTML endpoint for clean results, extracting direct URLs
+        // FIXED: Use Brave Search API (free, no key needed for basic) + fallback
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
             if (!query) return;
@@ -375,14 +375,10 @@
             document.getElementById('suggestions').classList.remove('show');
             
             try {
-                // Use DuckDuckGo HTML endpoint for better result parsing
-                const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(ddgUrl)}`;
-                
                 let searchResults = [];
                 let aiSummary = '';
                 
-                // Get AI summary
+                // Get AI summary from Wizard.AI
                 try {
                     const aiRes = await fetch(`${API_BASE}/api/chat/simple`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
@@ -392,57 +388,71 @@
                     aiSummary = aiData.response || `Search results for "${query}".`;
                 } catch(e) { aiSummary = `Search results for "${query}".`; }
                 
-                // Try DuckDuckGo API for direct results
-                const apiRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
-                const apiData = await apiRes.json();
-                
-                if (apiData.RelatedTopics) {
-                    for (const topic of apiData.RelatedTopics) {
-                        if (topic.Text && topic.FirstURL) {
-                            let url = topic.FirstURL;
-                            // Extract actual URL from DuckDuckGo redirect
-                            const match = url.match(/uddg=([^&]+)/);
-                            if (match) url = decodeURIComponent(match[1]);
-                            let title = topic.Text.split(' - ')[0];
-                            let snippet = topic.Text;
-                            
-                            searchResults.push({ title, url, snippet });
+                // Use Brave Search API (free tier, no key needed for limited usage)
+                // Fallback to DuckDuckGo HTML endpoint
+                try {
+                    // Try Brave Search first
+                    const braveUrl = `https://search.brave.com/search?q=${encodeURIComponent(query)}&source=web`;
+                    const braveRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(braveUrl)}`);
+                    const braveHtml = await braveRes.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(braveHtml, 'text/html');
+                    const results = doc.querySelectorAll('.snippet');
+                    
+                    for (const result of results) {
+                        const titleEl = result.querySelector('.snippet-title');
+                        const urlEl = result.querySelector('.snippet-url');
+                        const descEl = result.querySelector('.snippet-description');
+                        
+                        if (titleEl && urlEl) {
+                            let url = urlEl.textContent;
+                            if (!url.startsWith('http')) url = 'https://' + url;
+                            searchResults.push({
+                                title: titleEl.textContent,
+                                url: url,
+                                snippet: descEl?.textContent || ''
+                            });
                             if (searchResults.length >= 15) break;
                         }
                     }
-                }
+                } catch(e) { console.log('Brave search failed, using fallback', e); }
                 
-                // If no results from API, fallback to manual parsing
+                // Fallback: Use DuckDuckGo HTML endpoint (more reliable)
                 if (searchResults.length === 0) {
                     try {
-                        const htmlRes = await fetch(proxyUrl);
-                        const html = await htmlRes.text();
+                        const ddgUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+                        const proxyRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(ddgUrl)}`);
+                        const ddgHtml = await proxyRes.text();
                         const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
+                        const doc = parser.parseFromString(ddgHtml, 'text/html');
                         const links = doc.querySelectorAll('.result__a');
                         
                         for (const link of links) {
-                            const title = link.textContent;
                             let url = link.getAttribute('href');
                             if (url && url.startsWith('/')) {
                                 url = `https://duckduckgo.com${url}`;
                             }
+                            // Extract actual URL from DuckDuckGo redirect
+                            const match = url?.match(/uddg=([^&]+)/);
+                            if (match) url = decodeURIComponent(match[1]);
+                            
+                            const title = link.textContent;
                             const parent = link.closest('.result');
                             const snippetEl = parent?.querySelector('.result__snippet');
                             const snippet = snippetEl?.textContent || '';
                             
-                            if (title && url && !searchResults.find(r => r.url === url)) {
+                            if (title && url && url !== 'https://duckduckgo.com' && !searchResults.find(r => r.url === url)) {
                                 searchResults.push({ title, url, snippet });
                                 if (searchResults.length >= 15) break;
                             }
                         }
-                    } catch(e) { console.error('Fallback search failed:', e); }
+                    } catch(e) { console.error('DuckDuckGo fallback failed:', e); }
                 }
                 
                 let html = `<div class="ai-summary"><div class="summary-header"><span class="summary-icon">🧙</span><span class="summary-title">AI Summary</span></div><div class="summary-text">${escapeHtml(aiSummary)}</div></div>`;
                 
                 if (!searchResults || searchResults.length === 0) {
-                    html += `<div class="no-results"><div class="no-results-icon">🔍</div><h3>No results found</h3><p>Try a different search term.</p></div>`;
+                    html += `<div class="no-results"><div class="no-results-icon">🔍</div><h3>No results found for "${escapeHtml(query)}"</h3><p>Try a different search term.</p></div>`;
                 } else {
                     html += `<h3 style="color: var(--primary-light); margin-bottom: 20px;">📄 Search Results</h3>`;
                     for (const result of searchResults) {
