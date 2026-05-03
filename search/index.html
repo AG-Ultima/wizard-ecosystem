@@ -198,7 +198,7 @@
         .suggestion-item:hover { background: rgba(139,92,246,0.1); padding-left: 28px; }
         .suggestion-icon { font-size: 16px; }
         
-        /* AI Summary */
+        /* AI Summary - ALWAYS VISIBLE */
         .ai-summary {
             background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(0,0,0,0.2));
             border-radius: 20px;
@@ -440,7 +440,7 @@
             document.getElementById('login-btn').style.display = 'block';
         }
         
-        // ========== SEARCH ==========
+        // ========== SEARCH - DIRECT FETCH FROM BACKEND ==========
         function getQueryFromURL() {
             const params = new URLSearchParams(window.location.search);
             const q = params.get('q');
@@ -462,6 +462,8 @@
             document.getElementById('suggestions').classList.remove('show');
             
             try {
+                console.log('🔍 Searching for:', query);
+                
                 const response = await fetch(`${API_BASE}/api/search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -470,19 +472,24 @@
                 });
                 
                 const data = await response.json();
+                console.log('Search response:', data);
                 
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || 'Search failed');
-                }
-                
+                // Always show results (even if empty) with AI summary
                 renderResults(data);
                 
             } catch (error) {
                 console.error('Search error:', error);
                 resultsDiv.innerHTML = `
+                    <div class="ai-summary">
+                        <div class="summary-header">
+                            <span class="summary-icon">🧙</span>
+                            <span class="summary-title">AI Summary</span>
+                        </div>
+                        <div class="summary-text">I'm having trouble connecting to the search service. Please check your internet connection and try again.</div>
+                    </div>
                     <div class="no-results">
                         <div class="no-results-icon">⚠️</div>
-                        <h3>Search Error</h3>
+                        <h3>Connection Error</h3>
                         <p>${escapeHtml(error.message)}</p>
                         <button onclick="performSearch()" style="background: var(--primary); border: none; border-radius: 20px; padding: 10px 20px; color: white; margin-top: 20px; cursor: pointer;">Try Again</button>
                     </div>
@@ -493,20 +500,9 @@
         function renderResults(data) {
             const resultsDiv = document.getElementById('results');
             
-            if (!data.results || data.results.length === 0) {
-                resultsDiv.innerHTML = `
-                    <div class="no-results">
-                        <div class="no-results-icon">🔍</div>
-                        <h3>No results found for "${escapeHtml(data.query)}"</h3>
-                        <p>Try a different search term.</p>
-                    </div>
-                `;
-                return;
-            }
-            
             let html = '';
             
-            // Add AI Summary
+            // ALWAYS show AI summary (even if no results)
             if (data.summary) {
                 html += `
                     <div class="ai-summary">
@@ -517,16 +513,39 @@
                         <div class="summary-text">${escapeHtml(data.summary)}</div>
                     </div>
                 `;
+            } else {
+                html += `
+                    <div class="ai-summary">
+                        <div class="summary-header">
+                            <span class="summary-icon">🧙</span>
+                            <span class="summary-title">AI Summary</span>
+                        </div>
+                        <div class="summary-text">Search results for "${escapeHtml(data.query || 'your query')}" are shown below.</div>
+                    </div>
+                `;
             }
             
-            html += `<div class="source-badge">✨ ${data.results.length} results from ${data.source}</div>`;
-            
-            for (const result of data.results) {
+            // Show results if any
+            if (data.results && data.results.length > 0) {
+                html += `<div class="source-badge">✨ ${data.results.length} results from ${data.source || 'web'}</div>`;
+                
+                for (const result of data.results) {
+                    html += `
+                        <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
+                            <div class="result-title">${escapeHtml(result.title)}</div>
+                            <div class="result-url">${escapeHtml(result.url)}</div>
+                            <div class="result-snippet">${escapeHtml(result.snippet)}</div>
+                        </div>
+                    `;
+                }
+            } else {
+                // No results - show helpful message but keep AI summary
                 html += `
-                    <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
-                        <div class="result-title">${escapeHtml(result.title)}</div>
-                        <div class="result-url">${escapeHtml(result.url)}</div>
-                        <div class="result-snippet">${escapeHtml(result.snippet)}</div>
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <h3>No results found for "${escapeHtml(data.query || 'your query')}"</h3>
+                        <p>Try a different search term or check your spelling.</p>
+                        <p style="margin-top: 10px; font-size: 12px;">💡 Tips: Use more specific keywords, or try searching for a phrase in quotes.</p>
                     </div>
                 `;
             }
@@ -622,6 +641,15 @@
         // ========== INIT ==========
         checkAuth();
         getQueryFromURL();
+        
+        // Test search on load if no query
+        setTimeout(() => {
+            const input = document.getElementById('search-input').value;
+            if (!input) {
+                // Optional: show default search or just wait for user
+                console.log('Wizard Search ready. Enter a search term!');
+            }
+        }, 1000);
     </script>
 </body>
 </html>
