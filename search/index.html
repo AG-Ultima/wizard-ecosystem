@@ -53,7 +53,6 @@
             z-index: 10;
         }
         
-        /* Header */
         .header {
             background: var(--bg-secondary);
             border-radius: 20px;
@@ -134,13 +133,11 @@
             font-weight: 600;
         }
         
-        /* Search Hero */
         .search-hero { text-align: center; padding: 40px 20px; }
         .wizard-icon { font-size: 80px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 30px var(--primary)); }
         h1 { font-size: 48px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
         .subtitle { color: var(--text-muted); font-size: 18px; margin-bottom: 30px; }
         
-        /* Search Box */
         .search-container { max-width: 800px; margin: 0 auto 40px; }
         .search-box {
             display: flex;
@@ -174,7 +171,6 @@
         }
         .search-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--primary-glow); }
         
-        /* Suggestions */
         .suggestions-dropdown {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
@@ -198,9 +194,8 @@
         .suggestion-item:hover { background: rgba(139,92,246,0.1); padding-left: 28px; }
         .suggestion-icon { font-size: 16px; }
         
-        /* AI Summary - ALWAYS VISIBLE */
         .ai-summary {
-            background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(0,0,0,0.2));
+            background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(0,0,0,0.3));
             border-radius: 20px;
             padding: 24px;
             margin-bottom: 30px;
@@ -209,9 +204,8 @@
         .summary-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
         .summary-icon { font-size: 28px; }
         .summary-title { font-size: 18px; font-weight: 600; color: var(--primary-light); }
-        .summary-text { line-height: 1.7; color: var(--text-secondary); }
+        .summary-text { line-height: 1.7; color: var(--text-secondary); font-size: 15px; }
         
-        /* Results */
         .results-area { animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -230,7 +224,6 @@
         .result-snippet { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
         .source-badge { display: inline-block; padding: 4px 12px; background: rgba(139,92,246,0.15); border-radius: 20px; font-size: 12px; margin-bottom: 20px; color: var(--primary-light); }
         
-        /* Loading */
         .loading-spinner { text-align: center; padding: 60px; }
         .spinner {
             width: 50px; height: 50px;
@@ -245,10 +238,8 @@
         .no-results { text-align: center; padding: 60px; color: var(--text-muted); }
         .no-results-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
         
-        /* Footer */
         .footer { text-align: center; padding: 30px; border-top: 1px solid var(--border); margin-top: 60px; color: var(--text-muted); font-size: 12px; }
         
-        /* Login Modal */
         .login-modal {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -304,7 +295,6 @@
     <div class="stars"></div>
     
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <div class="logo" onclick="window.location.href='https://wizardecosystem.dpdns.org'">
                 <span class="logo-icon">🧙</span>
@@ -342,14 +332,12 @@
             <button id="login-btn" class="login-btn" style="display: none;">Sign In</button>
         </div>
         
-        <!-- Hero -->
         <div class="search-hero">
             <div class="wizard-icon">🧙</div>
             <h1>Wizard Search</h1>
             <p class="subtitle">AI-powered search with real, clickable results</p>
         </div>
         
-        <!-- Search Box -->
         <div class="search-container">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
@@ -359,17 +347,14 @@
             <div id="suggestions" class="suggestions-dropdown"></div>
         </div>
         
-        <!-- Results -->
         <div id="results" class="results-area"></div>
         
-        <!-- Footer -->
         <div class="footer">
-            <p>🧙 Wizard Search • Real clickable results • Powered by Brave + DuckDuckGo</p>
-            <p style="margin-top: 8px;">Search privately, get actual links • AI summaries provided by Llama 4</p>
+            <p>🧙 Wizard Search • Real clickable results • Powered by DuckDuckGo + Brave</p>
+            <p style="margin-top: 8px;">AI summaries powered by Llama 4 • Search privately</p>
         </div>
     </div>
     
-    <!-- Login Modal -->
     <div id="login-modal" class="login-modal hidden">
         <div class="login-card">
             <div style="font-size: 60px; margin-bottom: 20px;">🧙</div>
@@ -387,7 +372,21 @@
         let currentUser = null;
         let searchTimeout = null;
         
-        // ========== AUTH ==========
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function showNotification(msg, isError = false) {
+            const n = document.createElement('div');
+            n.textContent = msg;
+            n.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:${isError ? '#ef4444' : 'linear-gradient(135deg, #a855f7, #7c3aed)'};border-radius:50px;padding:12px 24px;color:white;z-index:10000;`;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 3000);
+        }
+        
         async function checkAuth() {
             try {
                 const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
@@ -425,8 +424,7 @@
                     document.getElementById('user-info').style.display = 'flex';
                     document.getElementById('user-email').textContent = currentUser.email;
                     document.getElementById('login-btn').style.display = 'none';
-                    document.getElementById('login-email').value = '';
-                    document.getElementById('login-password').value = '';
+                    showNotification('Welcome back!');
                 } else {
                     errorDiv.textContent = data.error || 'Login failed';
                 }
@@ -438,9 +436,9 @@
             currentUser = null;
             document.getElementById('user-info').style.display = 'none';
             document.getElementById('login-btn').style.display = 'block';
+            showNotification('Logged out');
         }
         
-        // ========== SEARCH - DIRECT FETCH FROM BACKEND ==========
         function getQueryFromURL() {
             const params = new URLSearchParams(window.location.search);
             const q = params.get('q');
@@ -452,7 +450,10 @@
         
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
-            if (!query) return;
+            if (!query) {
+                showNotification('Please enter a search term', true);
+                return;
+            }
             
             const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
             window.history.pushState({}, '', newUrl);
@@ -461,9 +462,9 @@
             resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><div>🧙 Wizard is searching...</div></div>';
             document.getElementById('suggestions').classList.remove('show');
             
+            console.log('🔍 Searching for:', query);
+            
             try {
-                console.log('🔍 Searching for:', query);
-                
                 const response = await fetch(`${API_BASE}/api/search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -474,22 +475,18 @@
                 const data = await response.json();
                 console.log('Search response:', data);
                 
-                // Always show results (even if empty) with AI summary
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Search failed');
+                }
+                
                 renderResults(data);
                 
             } catch (error) {
                 console.error('Search error:', error);
                 resultsDiv.innerHTML = `
-                    <div class="ai-summary">
-                        <div class="summary-header">
-                            <span class="summary-icon">🧙</span>
-                            <span class="summary-title">AI Summary</span>
-                        </div>
-                        <div class="summary-text">I'm having trouble connecting to the search service. Please check your internet connection and try again.</div>
-                    </div>
                     <div class="no-results">
                         <div class="no-results-icon">⚠️</div>
-                        <h3>Connection Error</h3>
+                        <h3>Search Error</h3>
                         <p>${escapeHtml(error.message)}</p>
                         <button onclick="performSearch()" style="background: var(--primary); border: none; border-radius: 20px; padding: 10px 20px; color: white; margin-top: 20px; cursor: pointer;">Try Again</button>
                     </div>
@@ -502,50 +499,40 @@
             
             let html = '';
             
-            // ALWAYS show AI summary (even if no results)
+            // AI Summary of the QUERY (not results)
             if (data.summary) {
                 html += `
                     <div class="ai-summary">
                         <div class="summary-header">
                             <span class="summary-icon">🧙</span>
-                            <span class="summary-title">AI Summary</span>
+                            <span class="summary-title">About "${escapeHtml(data.query)}"</span>
                         </div>
                         <div class="summary-text">${escapeHtml(data.summary)}</div>
                     </div>
                 `;
-            } else {
-                html += `
-                    <div class="ai-summary">
-                        <div class="summary-header">
-                            <span class="summary-icon">🧙</span>
-                            <span class="summary-title">AI Summary</span>
-                        </div>
-                        <div class="summary-text">Search results for "${escapeHtml(data.query || 'your query')}" are shown below.</div>
-                    </div>
-                `;
             }
             
-            // Show results if any
-            if (data.results && data.results.length > 0) {
-                html += `<div class="source-badge">✨ ${data.results.length} results from ${data.source || 'web'}</div>`;
-                
-                for (const result of data.results) {
-                    html += `
-                        <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
-                            <div class="result-title">${escapeHtml(result.title)}</div>
-                            <div class="result-url">${escapeHtml(result.url)}</div>
-                            <div class="result-snippet">${escapeHtml(result.snippet)}</div>
-                        </div>
-                    `;
-                }
-            } else {
-                // No results - show helpful message but keep AI summary
+            if (!data.results || data.results.length === 0) {
                 html += `
                     <div class="no-results">
                         <div class="no-results-icon">🔍</div>
-                        <h3>No results found for "${escapeHtml(data.query || 'your query')}"</h3>
+                        <h3>No web results found for "${escapeHtml(data.query)}"</h3>
                         <p>Try a different search term or check your spelling.</p>
-                        <p style="margin-top: 10px; font-size: 12px;">💡 Tips: Use more specific keywords, or try searching for a phrase in quotes.</p>
+                        <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(data.query)}', '_blank')" style="background: var(--primary); border: none; border-radius: 20px; padding: 10px 20px; color: white; margin-top: 20px; cursor: pointer;">🔍 Search on DuckDuckGo</button>
+                    </div>
+                `;
+                resultsDiv.innerHTML = html;
+                return;
+            }
+            
+            html += `<div class="source-badge">✨ ${data.results.length} web results from ${data.source}</div>`;
+            
+            for (const result of data.results) {
+                html += `
+                    <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
+                        <div class="result-title">${escapeHtml(result.title)}</div>
+                        <div class="result-url">${escapeHtml(result.url)}</div>
+                        <div class="result-snippet">${escapeHtml(result.snippet)}</div>
                     </div>
                 `;
             }
@@ -591,14 +578,6 @@
             }
         }
         
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // ========== EVENT LISTENERS ==========
         document.getElementById('search-input').addEventListener('input', (e) => {
             if (searchTimeout) clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => getSuggestions(e.target.value), 300);
@@ -638,18 +617,8 @@
             }
         });
         
-        // ========== INIT ==========
         checkAuth();
         getQueryFromURL();
-        
-        // Test search on load if no query
-        setTimeout(() => {
-            const input = document.getElementById('search-input').value;
-            if (!input) {
-                // Optional: show default search or just wait for user
-                console.log('Wizard Search ready. Enter a search term!');
-            }
-        }, 1000);
     </script>
 </body>
 </html>
