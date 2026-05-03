@@ -341,7 +341,7 @@
         <div class="search-container">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" class="search-input" placeholder="Search the web..." autocomplete="off">
+                <input type="text" id="search-input" class="search-input" placeholder="Search the web..." autocomplete="off" value="hello ai">
                 <button id="search-btn" class="search-btn">Search</button>
             </div>
             <div id="suggestions" class="suggestions-dropdown"></div>
@@ -499,7 +499,7 @@
             
             let html = '';
             
-            // AI Summary of the QUERY (not results)
+            // AI Summary
             if (data.summary) {
                 html += `
                     <div class="ai-summary">
@@ -525,7 +525,7 @@
                 return;
             }
             
-            html += `<div class="source-badge">✨ ${data.results.length} web results from ${data.source}</div>`;
+            html += `<div class="source-badge">✨ ${data.results.length} results from ${data.source}</div>`;
             
             for (const result of data.results) {
                 html += `
@@ -578,6 +578,7 @@
             }
         }
         
+        // Event Listeners
         document.getElementById('search-input').addEventListener('input', (e) => {
             if (searchTimeout) clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => getSuggestions(e.target.value), 300);
@@ -617,8 +618,19 @@
             }
         });
         
+        // Auto-search on page load if query in URL
+        if (window.location.search.includes('q=')) {
+            getQueryFromURL();
+        } else {
+            // Default search for "hello ai" to demonstrate
+            setTimeout(() => {
+                if (document.getElementById('search-input').value === 'hello ai') {
+                    performSearch();
+                }
+            }, 500);
+        }
+        
         checkAuth();
-        getQueryFromURL();
     </script>
 </body>
 </html>
