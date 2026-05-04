@@ -415,244 +415,7 @@
             showNotification('Logged out');
         }
         
-        // ========== SEARCH FUNCTIONS (DDG Lite - No CORS) ==========
-        
-        // DuckDuckGo Lite - Works without CORS!
-        async function searchDDGLite(query) {
-            try {
-                const url = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}`;
-                console.log('Fetching DDG Lite:', url);
-                
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    console.log('DDG Lite returned:', response.status);
-                    return null;
-                }
-                
-                const html = await response.text();
-                const results = [];
-                
-                // Parse DDG Lite HTML - table-based format
-                // Each result is in a <tr> with class="result-snippet" or similar
-                const lines = html.split('\n');
-                let currentResult = {};
-                
-                for (let i = 0; i < lines.length; i++) {
-                    const line = lines[i];
-                    
-                    // Extract URL - href in <a> tags
-                    if (line.includes('<a href="') && line.includes('http')) {
-                        const urlMatch = line.match(/<a href="([^"]+)"/);
-                        if (urlMatch) {
-                            let rawUrl = urlMatch[1];
-                            // Clean DDG redirect URLs
-                            if (rawUrl.includes('/l/?') || rawUrl.includes('uddg=')) {
-                                const redirectMatch = rawUrl.match(/uddg=([^&]+)/);
-                                if (redirectMatch) {
-                                    rawUrl = decodeURIComponent(redirectMatch[1]);
-                                }
-                            }
-                            if (rawUrl.startsWith('http')) {
-                                currentResult.url = rawUrl;
-                            }
-                        }
-                    }
-                    
-                    // Extract title - <b> tags in result rows
-                    if (line.includes('<b>') && line.includes('</b>') && !line.includes('result')) {
-                        const titleMatch = line.match(/<b>(.*?)<\/b>/);
-                        if (titleMatch && titleMatch[1] && titleMatch[1].length > 2) {
-                            currentResult.title = titleMatch[1].replace(/<[^>]+>/g, '').trim();
-                        }
-                    }
-                    
-                    // Extract snippet - <td class="result-snippet">
-                    if (line.includes('class="result-snippet"')) {
-                        const snippetMatch = line.match(/class="result-snippet">(.*?)<\/td>/);
-                        if (snippetMatch) {
-                            currentResult.snippet = snippetMatch[1].replace(/<[^>]+>/g, '').trim();
-                        }
-                        // When we have url, title, and snippet, add to results
-                        if (currentResult.url && currentResult.title) {
-                            results.push({
-                                title: currentResult.title.substring(0, 150),
-                                url: currentResult.url,
-                                snippet: (currentResult.snippet || currentResult.title).substring(0, 400)
-                            });
-                            currentResult = {};
-                        }
-                    }
-                }
-                
-                // Also try alternative parsing for DDG Lite
-                if (results.length === 0) {
-                    // Fallback: find all table rows with links
-                    const rowPattern = /<tr>.*?<a href="([^"]+)".*?<b>(.*?)<\/b>.*?<td class="result-snippet">(.*?)<\/td>/gs;
-                    let match;
-                    while ((match = rowPattern.exec(html)) !== null) {
-                        let rawUrl = match[1];
-                        let title = match[2].replace(/<[^>]+>/g, '').trim();
-                        let snippet = match[3].replace(/<[^>]+>/g, '').trim();
-                        
-                        // Clean URL
-                        if (rawUrl.includes('/l/?') || rawUrl.includes('uddg=')) {
-                            const redirectMatch = rawUrl.match(/uddg=([^&]+)/);
-                            if (redirectMatch) {
-                                rawUrl = decodeURIComponent(redirectMatch[1]);
-                            }
-                        }
-                        
-                        if (rawUrl.startsWith('http') && title) {
-                            results.push({
-                                title: title.substring(0, 150),
-                                url: rawUrl,
-                                snippet: snippet.substring(0, 400)
-                            });
-                        }
-                        if (results.length >= 15) break;
-                    }
-                }
-                
-                console.log(`DDG Lite found ${results.length} results for "${query}"`);
-                return results.length > 0 ? results : null;
-                
-            } catch (error) {
-                console.error('DDG Lite error:', error);
-                return null;
-            }
-        }
-        
-        // Brave Search fallback (using their public search)
-        async function searchBrave(query) {
-            try {
-                const url = `https://search.brave.com/search?q=${encodeURIComponent(query)}&source=web`;
-                const response = await fetch(url);
-                
-                if (!response.ok) return null;
-                
-                const html = await response.text();
-                const results = [];
-                
-                // Parse Brave results
-                const resultPattern = /<a[^>]+class="[^"]*result-title[^"]*"[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>/gi;
-                const snippetPattern = /<div[^>]+class="[^"]*snippet-description[^"]*"[^>]*>([^<]+(?:<[^>]+>[^<]*<\/[^>]+>)*[^<]*)<\/div>/gi;
-                
-                const urls = [];
-                const titles = [];
-                let match;
-                
-                while ((match = resultPattern.exec(html)) !== null) {
-                    let urlMatch = match[1];
-                    let title = match[2].trim();
-                    
-                    if (urlMatch.includes('?q=')) {
-                        const qMatch = urlMatch.match(/q=([^&]+)/);
-                        if (qMatch) urlMatch = decodeURIComponent(qMatch[1]);
-                    }
-                    
-                    if (urlMatch.startsWith('http') && title && title.length > 2) {
-                        urls.push(urlMatch);
-                        titles.push(title);
-                    }
-                }
-                
-                const snippets = [];
-                while ((match = snippetPattern.exec(html)) !== null) {
-                    let snippet = match[1].replace(/<[^>]+>/g, '').trim();
-                    if (snippet) snippets.push(snippet);
-                }
-                
-                for (let i = 0; i < Math.min(urls.length, 15); i++) {
-                    results.push({
-                        title: titles[i] || 'Result',
-                        url: urls[i],
-                        snippet: snippets[i] || titles[i] || ''
-                    });
-                }
-                
-                return results.length > 0 ? results : null;
-            } catch (error) {
-                console.error('Brave error:', error);
-                return null;
-            }
-        }
-        
-        // Startpage fallback
-        async function searchStartpage(query) {
-            try {
-                const url = `https://www.startpage.com/sp/search?query=${encodeURIComponent(query)}`;
-                const response = await fetch(url);
-                
-                if (!response.ok) return null;
-                
-                const html = await response.text();
-                const results = [];
-                
-                // Parse Startpage results
-                const resultPattern = /<a[^>]+class="[^"]*result-title[^"]*"[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>/gi;
-                const snippetPattern = /<p[^>]+class="[^"]*result-snippet[^"]*"[^>]*>([^<]+(?:<[^>]+>[^<]*<\/[^>]+>)*[^<]*)<\/p>/gi;
-                
-                const urls = [];
-                const titles = [];
-                let match;
-                
-                while ((match = resultPattern.exec(html)) !== null) {
-                    let urlMatch = match[1];
-                    let title = match[2].trim();
-                    
-                    if (urlMatch.startsWith('/') && !urlMatch.startsWith('http')) {
-                        urlMatch = 'https://www.startpage.com' + urlMatch;
-                    }
-                    
-                    if (urlMatch.startsWith('http') && title && title.length > 2) {
-                        urls.push(urlMatch);
-                        titles.push(title);
-                    }
-                }
-                
-                const snippets = [];
-                while ((match = snippetPattern.exec(html)) !== null) {
-                    let snippet = match[1].replace(/<[^>]+>/g, '').trim();
-                    if (snippet) snippets.push(snippet);
-                }
-                
-                for (let i = 0; i < Math.min(urls.length, 15); i++) {
-                    results.push({
-                        title: titles[i] || 'Result',
-                        url: urls[i],
-                        snippet: snippets[i] || titles[i] || ''
-                    });
-                }
-                
-                return results.length > 0 ? results : null;
-            } catch (error) {
-                console.error('Startpage error:', error);
-                return null;
-            }
-        }
-        
-        // Get AI summary
-        async function getAISummary(query) {
-            try {
-                const response = await fetch(`${API_BASE}/api/chat/simple`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        prompt: `Explain what "${query}" means in 2-3 simple, friendly sentences. Make it educational and helpful. Be concise.`,
-                        mode: 'Fast'
-                    })
-                });
-                const data = await response.json();
-                return data.response || null;
-            } catch (e) {
-                console.log('AI summary error:', e);
-                return null;
-            }
-        }
-        
-        // Main search with fallback chain
+        // ========== SEARCH (Calls backend proxy - NO CORS) ==========
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
             if (!query) {
@@ -668,49 +431,65 @@
             
             console.log('🔍 Searching for:', query);
             
-            // Try DDG Lite first (no CORS issues)
-            let results = await searchDDGLite(query);
-            let source = 'DuckDuckGo Lite';
-            
-            // Fallback to Brave
-            if (!results || results.length === 0) {
-                console.log('DDG Lite failed, trying Brave...');
-                results = await searchBrave(query);
-                source = 'Brave Search';
-            }
-            
-            // Fallback to Startpage
-            if (!results || results.length === 0) {
-                console.log('Brave failed, trying Startpage...');
-                results = await searchStartpage(query);
-                source = 'Startpage';
-            }
-            
-            // Get AI summary
-            let summary = await getAISummary(query);
-            
-            // Render
-            let html = '';
-            
-            html += `
-                <div class="ai-summary">
-                    <div class="summary-header">
-                        <span class="summary-icon">🧙</span>
-                        <span class="summary-title">About "${escapeHtml(query)}"</span>
-                    </div>
-                    <div class="summary-text">${summary ? escapeHtml(summary) : '✨ Getting AI explanation...'}</div>
-                </div>
-            `;
-            
-            if (!results || results.length === 0) {
-                html += `
+            try {
+                const response = await fetch(`${API_BASE}/api/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ query: query })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Search failed');
+                }
+                
+                renderResults(data);
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = `
                     <div class="no-results">
-                        <div class="no-results-icon">🔍</div>
-                        <h3>No results found for "${escapeHtml(query)}"</h3>
-                        <p>Try a different search term or click below to search directly:</p>
+                        <div class="no-results-icon">⚠️</div>
+                        <h3>Search Error</h3>
+                        <p>${escapeHtml(error.message)}</p>
                         <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
                             <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
                             <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderResults(data) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = '';
+            
+            // AI Summary
+            if (data.summary) {
+                html += `
+                    <div class="ai-summary">
+                        <div class="summary-header">
+                            <span class="summary-icon">🧙</span>
+                            <span class="summary-title">About "${escapeHtml(data.query)}"</span>
+                        </div>
+                        <div class="summary-text">${escapeHtml(data.summary)}</div>
+                    </div>
+                `;
+            }
+            
+            if (!data.results || data.results.length === 0) {
+                html += `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <h3>No results found for "${escapeHtml(data.query)}"</h3>
+                        <p>Try a different search term or click below to search directly:</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
+                            <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(data.query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
+                            <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(data.query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
                         </div>
                     </div>
                 `;
@@ -718,9 +497,9 @@
                 return;
             }
             
-            html += `<div class="source-badge">✨ ${results.length} results from ${source}</div>`;
+            html += `<div class="source-badge">✨ ${data.results.length} results from ${data.source}</div>`;
             
-            for (const result of results) {
+            for (const result of data.results) {
                 html += `
                     <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
                         <div class="result-title">${escapeHtml(result.title)}</div>
