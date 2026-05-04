@@ -326,8 +326,8 @@
         <div id="results" class="results-area"></div>
         
         <div class="footer">
-            <p>🧙 Wizard Search • Real clickable results • Powered by DuckDuckGo + Brave</p>
-            <p style="margin-top: 8px;">AI summaries powered by Llama 4 • Instant search results</p>
+            <p>🧙 Wizard Search • Real clickable results • Powered by DDG Lite + Brave + Startpage</p>
+            <p style="margin-top: 8px;">AI summaries powered by Llama 4</p>
         </div>
     </div>
     
@@ -415,76 +415,115 @@
             showNotification('Logged out');
         }
         
-        // ========== DUCKDUCKGO HTML PARSING (WORKS RELIABLY) ==========
-        async function searchDuckDuckGo(query) {
+        // ========== SEARCH FUNCTIONS (DDG Lite - No CORS) ==========
+        
+        // DuckDuckGo Lite - Works without CORS!
+        async function searchDDGLite(query) {
             try {
-                const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
-                console.log('Fetching DuckDuckGo:', url);
+                const url = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(query)}`;
+                console.log('Fetching DDG Lite:', url);
                 
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    console.log('DuckDuckGo returned:', response.status);
+                    console.log('DDG Lite returned:', response.status);
                     return null;
                 }
                 
                 const html = await response.text();
                 const results = [];
                 
-                // Parse using regex - reliable method
-                // Find all result blocks
-                const resultPattern = /<a rel="nofollow" class="result__a" href="([^"]+)"[^>]*>([^<]+(?:<[^>]+>[^<]*<\/[^>]+>)*[^<]*)<\/a>/g;
-                const snippetPattern = /<a class="result__snippet"[^>]*>([^<]+(?:<[^>]+>[^<]*<\/[^>]+>)*[^<]*)<\/a>/g;
+                // Parse DDG Lite HTML - table-based format
+                // Each result is in a <tr> with class="result-snippet" or similar
+                const lines = html.split('\n');
+                let currentResult = {};
                 
-                const urls = [];
-                const titles = [];
-                let match;
-                
-                while ((match = resultPattern.exec(html)) !== null) {
-                    let rawUrl = match[1];
-                    let title = match[2].replace(/<[^>]+>/g, '').trim();
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
                     
-                    // Clean URL from DuckDuckGo redirect
-                    if (rawUrl.includes('uddg=')) {
-                        const urlMatch = rawUrl.match(/uddg=([^&]+)/);
+                    // Extract URL - href in <a> tags
+                    if (line.includes('<a href="') && line.includes('http')) {
+                        const urlMatch = line.match(/<a href="([^"]+)"/);
                         if (urlMatch) {
-                            rawUrl = decodeURIComponent(urlMatch[1]);
+                            let rawUrl = urlMatch[1];
+                            // Clean DDG redirect URLs
+                            if (rawUrl.includes('/l/?') || rawUrl.includes('uddg=')) {
+                                const redirectMatch = rawUrl.match(/uddg=([^&]+)/);
+                                if (redirectMatch) {
+                                    rawUrl = decodeURIComponent(redirectMatch[1]);
+                                }
+                            }
+                            if (rawUrl.startsWith('http')) {
+                                currentResult.url = rawUrl;
+                            }
                         }
                     }
                     
-                    if (rawUrl.startsWith('http') && title && title.length > 2) {
-                        urls.push(rawUrl);
-                        titles.push(title);
+                    // Extract title - <b> tags in result rows
+                    if (line.includes('<b>') && line.includes('</b>') && !line.includes('result')) {
+                        const titleMatch = line.match(/<b>(.*?)<\/b>/);
+                        if (titleMatch && titleMatch[1] && titleMatch[1].length > 2) {
+                            currentResult.title = titleMatch[1].replace(/<[^>]+>/g, '').trim();
+                        }
+                    }
+                    
+                    // Extract snippet - <td class="result-snippet">
+                    if (line.includes('class="result-snippet"')) {
+                        const snippetMatch = line.match(/class="result-snippet">(.*?)<\/td>/);
+                        if (snippetMatch) {
+                            currentResult.snippet = snippetMatch[1].replace(/<[^>]+>/g, '').trim();
+                        }
+                        // When we have url, title, and snippet, add to results
+                        if (currentResult.url && currentResult.title) {
+                            results.push({
+                                title: currentResult.title.substring(0, 150),
+                                url: currentResult.url,
+                                snippet: (currentResult.snippet || currentResult.title).substring(0, 400)
+                            });
+                            currentResult = {};
+                        }
                     }
                 }
                 
-                const snippets = [];
-                while ((match = snippetPattern.exec(html)) !== null) {
-                    let snippet = match[1].replace(/<[^>]+>/g, '').trim();
-                    if (snippet) {
-                        snippets.push(snippet);
+                // Also try alternative parsing for DDG Lite
+                if (results.length === 0) {
+                    // Fallback: find all table rows with links
+                    const rowPattern = /<tr>.*?<a href="([^"]+)".*?<b>(.*?)<\/b>.*?<td class="result-snippet">(.*?)<\/td>/gs;
+                    let match;
+                    while ((match = rowPattern.exec(html)) !== null) {
+                        let rawUrl = match[1];
+                        let title = match[2].replace(/<[^>]+>/g, '').trim();
+                        let snippet = match[3].replace(/<[^>]+>/g, '').trim();
+                        
+                        // Clean URL
+                        if (rawUrl.includes('/l/?') || rawUrl.includes('uddg=')) {
+                            const redirectMatch = rawUrl.match(/uddg=([^&]+)/);
+                            if (redirectMatch) {
+                                rawUrl = decodeURIComponent(redirectMatch[1]);
+                            }
+                        }
+                        
+                        if (rawUrl.startsWith('http') && title) {
+                            results.push({
+                                title: title.substring(0, 150),
+                                url: rawUrl,
+                                snippet: snippet.substring(0, 400)
+                            });
+                        }
+                        if (results.length >= 15) break;
                     }
                 }
                 
-                // Combine results
-                for (let i = 0; i < Math.min(urls.length, 15); i++) {
-                    results.push({
-                        title: titles[i] || 'Result',
-                        url: urls[i],
-                        snippet: snippets[i] || titles[i] || ''
-                    });
-                }
-                
-                console.log(`DuckDuckGo found ${results.length} results for "${query}"`);
+                console.log(`DDG Lite found ${results.length} results for "${query}"`);
                 return results.length > 0 ? results : null;
                 
             } catch (error) {
-                console.error('DuckDuckGo search error:', error);
+                console.error('DDG Lite error:', error);
                 return null;
             }
         }
         
-        // ========== BRAVE SEARCH FALLBACK ==========
+        // Brave Search fallback (using their public search)
         async function searchBrave(query) {
             try {
                 const url = `https://search.brave.com/search?q=${encodeURIComponent(query)}&source=web`;
@@ -504,16 +543,16 @@
                 let match;
                 
                 while ((match = resultPattern.exec(html)) !== null) {
-                    let url = match[1];
+                    let urlMatch = match[1];
                     let title = match[2].trim();
                     
-                    if (url.includes('?q=')) {
-                        const urlMatch = url.match(/q=([^&]+)/);
-                        if (urlMatch) url = decodeURIComponent(urlMatch[1]);
+                    if (urlMatch.includes('?q=')) {
+                        const qMatch = urlMatch.match(/q=([^&]+)/);
+                        if (qMatch) urlMatch = decodeURIComponent(qMatch[1]);
                     }
                     
-                    if (url.startsWith('http') && title && title.length > 2) {
-                        urls.push(url);
+                    if (urlMatch.startsWith('http') && title && title.length > 2) {
+                        urls.push(urlMatch);
                         titles.push(title);
                     }
                 }
@@ -534,12 +573,66 @@
                 
                 return results.length > 0 ? results : null;
             } catch (error) {
-                console.error('Brave search error:', error);
+                console.error('Brave error:', error);
                 return null;
             }
         }
         
-        // ========== AI SUMMARY ==========
+        // Startpage fallback
+        async function searchStartpage(query) {
+            try {
+                const url = `https://www.startpage.com/sp/search?query=${encodeURIComponent(query)}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) return null;
+                
+                const html = await response.text();
+                const results = [];
+                
+                // Parse Startpage results
+                const resultPattern = /<a[^>]+class="[^"]*result-title[^"]*"[^>]+href="([^"]+)"[^>]*>([^<]+)<\/a>/gi;
+                const snippetPattern = /<p[^>]+class="[^"]*result-snippet[^"]*"[^>]*>([^<]+(?:<[^>]+>[^<]*<\/[^>]+>)*[^<]*)<\/p>/gi;
+                
+                const urls = [];
+                const titles = [];
+                let match;
+                
+                while ((match = resultPattern.exec(html)) !== null) {
+                    let urlMatch = match[1];
+                    let title = match[2].trim();
+                    
+                    if (urlMatch.startsWith('/') && !urlMatch.startsWith('http')) {
+                        urlMatch = 'https://www.startpage.com' + urlMatch;
+                    }
+                    
+                    if (urlMatch.startsWith('http') && title && title.length > 2) {
+                        urls.push(urlMatch);
+                        titles.push(title);
+                    }
+                }
+                
+                const snippets = [];
+                while ((match = snippetPattern.exec(html)) !== null) {
+                    let snippet = match[1].replace(/<[^>]+>/g, '').trim();
+                    if (snippet) snippets.push(snippet);
+                }
+                
+                for (let i = 0; i < Math.min(urls.length, 15); i++) {
+                    results.push({
+                        title: titles[i] || 'Result',
+                        url: urls[i],
+                        snippet: snippets[i] || titles[i] || ''
+                    });
+                }
+                
+                return results.length > 0 ? results : null;
+            } catch (error) {
+                console.error('Startpage error:', error);
+                return null;
+            }
+        }
+        
+        // Get AI summary
         async function getAISummary(query) {
             try {
                 const response = await fetch(`${API_BASE}/api/chat/simple`, {
@@ -559,7 +652,7 @@
             }
         }
         
-        // ========== MAIN SEARCH ==========
+        // Main search with fallback chain
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
             if (!query) {
@@ -575,24 +668,30 @@
             
             console.log('🔍 Searching for:', query);
             
-            // Try DuckDuckGo first (reliable HTML parsing)
-            let results = await searchDuckDuckGo(query);
-            let source = 'DuckDuckGo';
+            // Try DDG Lite first (no CORS issues)
+            let results = await searchDDGLite(query);
+            let source = 'DuckDuckGo Lite';
             
-            // Fallback to Brave if DuckDuckGo fails
+            // Fallback to Brave
             if (!results || results.length === 0) {
-                console.log('DuckDuckGo failed, trying Brave...');
+                console.log('DDG Lite failed, trying Brave...');
                 results = await searchBrave(query);
                 source = 'Brave Search';
             }
             
-            // Get AI summary in background
+            // Fallback to Startpage
+            if (!results || results.length === 0) {
+                console.log('Brave failed, trying Startpage...');
+                results = await searchStartpage(query);
+                source = 'Startpage';
+            }
+            
+            // Get AI summary
             let summary = await getAISummary(query);
             
             // Render
             let html = '';
             
-            // AI Summary
             html += `
                 <div class="ai-summary">
                     <div class="summary-header">
