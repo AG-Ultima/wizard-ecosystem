@@ -326,8 +326,8 @@
         <div id="results" class="results-area"></div>
         
         <div class="footer">
-            <p>🧙 Wizard Search • Real clickable results • Powered by Brave Search</p>
-            <p style="margin-top: 8px;">AI summaries powered by Wizard.AI</p>
+            <p>🧙 Wizard Search • Real clickable results • Powered by Brave + DuckDuckGo</p>
+            <p style="margin-top: 8px;">AI summaries powered by Llama 4 • Instant search results</p>
         </div>
     </div>
     
@@ -415,7 +415,106 @@
             showNotification('Logged out');
         }
         
-        // ========== CLIENT-SIDE SEARCH (No backend needed, no suggestions) ==========
+        // ========== DIRECT SEARCH (No proxy - Brave JSON API) ==========
+        
+        // Brave Search API (unofficial but works - returns JSON)
+        async function searchBrave(query) {
+            try {
+                // Brave's internal search API (returns JSON)
+                const url = `https://search.brave.com/api/search?q=${encodeURIComponent(query)}&source=web&count=15`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                });
+                
+                if (!response.ok) return null;
+                
+                const data = await response.json();
+                const results = [];
+                
+                if (data && data.results) {
+                    for (const result of data.results) {
+                        if (result.url && result.title) {
+                            results.push({
+                                title: result.title,
+                                url: result.url,
+                                snippet: result.description || result.title
+                            });
+                        }
+                    }
+                }
+                
+                return results.length > 0 ? results : null;
+            } catch (e) {
+                console.log('Brave API error:', e);
+                return null;
+            }
+        }
+        
+        // DuckDuckGo Instant Answer API (returns JSON, no CORS issues)
+        async function searchDuckDuckGo(query) {
+            try {
+                const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+                const response = await fetch(url);
+                
+                if (!response.ok) return null;
+                
+                const data = await response.json();
+                const results = [];
+                
+                // Add Abstract if available
+                if (data.Abstract && data.AbstractURL) {
+                    results.push({
+                        title: data.Heading || data.Abstract,
+                        url: data.AbstractURL,
+                        snippet: data.Abstract
+                    });
+                }
+                
+                // Add Related Topics
+                if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+                    for (const topic of data.RelatedTopics) {
+                        if (topic.Text && topic.FirstURL) {
+                            results.push({
+                                title: topic.Text.split(' - ')[0] || topic.Text.substring(0, 100),
+                                url: topic.FirstURL,
+                                snippet: topic.Text
+                            });
+                        }
+                        if (results.length >= 12) break;
+                    }
+                }
+                
+                return results.length > 0 ? results : null;
+            } catch (e) {
+                console.log('DuckDuckGo API error:', e);
+                return null;
+            }
+        }
+        
+        // Get AI summary for the query
+        async function getAISummary(query) {
+            try {
+                const response = await fetch(`${API_BASE}/api/chat/simple`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        prompt: `Explain what "${query}" means in 2-3 simple, friendly sentences. Make it educational and helpful. Be concise.`,
+                        mode: 'Fast'
+                    })
+                });
+                const data = await response.json();
+                return data.response || null;
+            } catch (e) {
+                console.log('AI summary error:', e);
+                return null;
+            }
+        }
+        
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
             if (!query) {
@@ -427,117 +526,55 @@
             window.history.pushState({}, '', newUrl);
             
             const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><div>🧙 Wizard is searching...</div></div>';
+            resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><div>🧙 Searching the web...</div></div>';
             
             console.log('🔍 Searching for:', query);
             
-            try {
-                // Use Brave Search via CORS proxy
-                const braveUrl = `https://search.brave.com/search?q=${encodeURIComponent(query)}&source=web`;
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(braveUrl)}`;
-                
-                const response = await fetch(proxyUrl);
-                const html = await response.text();
-                
-                // Parse results
-                const results = [];
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Find result containers
-                const resultElements = doc.querySelectorAll('.snippet, .result, .web-result');
-                
-                for (const elem of resultElements) {
-                    const titleElem = elem.querySelector('.snippet-title, .result-title, h3, a');
-                    const urlElem = elem.querySelector('a[href]');
-                    const snippetElem = elem.querySelector('.snippet-description, .result-description, p');
-                    
-                    if (titleElem && urlElem) {
-                        let title = titleElem.textContent.trim();
-                        let rawUrl = urlElem.getAttribute('href');
-                        let snippet = snippetElem ? snippetElem.textContent.trim() : title;
-                        
-                        // Clean URL if it's a Brave redirect
-                        if (rawUrl && rawUrl.includes('?q=')) {
-                            const urlMatch = rawUrl.match(/q=([^&]+)/);
-                            if (urlMatch) {
-                                rawUrl = decodeURIComponent(urlMatch[1]);
-                            }
-                        }
-                        
-                        if (title && rawUrl && rawUrl.startsWith('http') && title.length > 3) {
-                            results.push({ title, url: rawUrl, snippet });
-                        }
-                        
-                        if (results.length >= 12) break;
+            // Get AI summary in background
+            let summary = null;
+            getAISummary(query).then(s => {
+                summary = s;
+                // Re-render if results are already showing
+                const currentResults = resultsDiv.querySelector('.source-badge');
+                if (currentResults && summary) {
+                    const summaryDiv = resultsDiv.querySelector('.ai-summary');
+                    if (summaryDiv) {
+                        summaryDiv.querySelector('.summary-text').innerHTML = escapeHtml(summary);
                     }
                 }
-                
-                // Get AI summary from backend
-                let summary = '';
-                try {
-                    const summaryRes = await fetch(`${API_BASE}/api/chat/simple`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ 
-                            prompt: `Explain what "${query}" means in 2-3 simple, friendly sentences. Make it educational.`,
-                            mode: 'Fast'
-                        })
-                    });
-                    const summaryData = await summaryRes.json();
-                    if (summaryData.response) {
-                        summary = summaryData.response;
-                    }
-                } catch(e) {
-                    console.log('Summary error:', e);
-                    summary = `Here are search results for "${query}".`;
-                }
-                
-                renderResults(query, results, summary);
-                
-            } catch (error) {
-                console.error('Search error:', error);
-                resultsDiv.innerHTML = `
-                    <div class="no-results">
-                        <div class="no-results-icon">🌐</div>
-                        <h3>Direct Search Links</h3>
-                        <p>Click below to search on your preferred search engine:</p>
-                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
-                            <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
-                            <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
-                            <button onclick="window.open('https://www.bing.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #008373; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">📘 Bing</button>
-                            <button onclick="window.open('https://search.brave.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #fb542b; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦁 Brave</button>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        
-        function renderResults(query, results, summary) {
-            const resultsDiv = document.getElementById('results');
+            });
             
+            // Try Brave Search first
+            let results = await searchBrave(query);
+            let source = 'Brave Search';
+            
+            // Fallback to DuckDuckGo if Brave fails
+            if (!results || results.length === 0) {
+                console.log('Brave failed, trying DuckDuckGo...');
+                results = await searchDuckDuckGo(query);
+                source = 'DuckDuckGo';
+            }
+            
+            // Render results
             let html = '';
             
-            // AI Summary
-            if (summary) {
-                html += `
-                    <div class="ai-summary">
-                        <div class="summary-header">
-                            <span class="summary-icon">🧙</span>
-                            <span class="summary-title">About "${escapeHtml(query)}"</span>
-                        </div>
-                        <div class="summary-text">${escapeHtml(summary)}</div>
+            // Add AI Summary placeholder (will update when available)
+            html += `
+                <div class="ai-summary">
+                    <div class="summary-header">
+                        <span class="summary-icon">🧙</span>
+                        <span class="summary-title">About "${escapeHtml(query)}"</span>
                     </div>
-                `;
-            }
+                    <div class="summary-text">${summary ? escapeHtml(summary) : '<span style="opacity: 0.7;">✨ Getting AI explanation...</span>'}</div>
+                </div>
+            `;
             
             if (!results || results.length === 0) {
                 html += `
                     <div class="no-results">
                         <div class="no-results-icon">🔍</div>
-                        <h3>No web results found for "${escapeHtml(query)}"</h3>
-                        <p>Try a different search term or click below to search directly:</p>
+                        <h3>No results found for "${escapeHtml(query)}"</h3>
+                        <p>Try a different search term.</p>
                         <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
                             <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
                             <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
@@ -548,7 +585,7 @@
                 return;
             }
             
-            html += `<div class="source-badge">✨ ${results.length} results from Brave Search</div>`;
+            html += `<div class="source-badge">✨ ${results.length} results from ${source}</div>`;
             
             for (const result of results) {
                 html += `
@@ -561,6 +598,36 @@
             }
             
             resultsDiv.innerHTML = html;
+            
+            // Update summary if it just arrived
+            if (summary) {
+                const summaryDiv = resultsDiv.querySelector('.ai-summary .summary-text');
+                if (summaryDiv && summaryDiv.innerHTML.includes('Getting AI explanation')) {
+                    summaryDiv.innerHTML = escapeHtml(summary);
+                }
+            } else {
+                // Poll for summary
+                const checkSummary = setInterval(async () => {
+                    if (summary) {
+                        const summaryDiv = resultsDiv.querySelector('.ai-summary .summary-text');
+                        if (summaryDiv) {
+                            summaryDiv.innerHTML = escapeHtml(summary);
+                            clearInterval(checkSummary);
+                        }
+                    } else if (!summary) {
+                        const newSummary = await getAISummary(query);
+                        if (newSummary) {
+                            summary = newSummary;
+                            const summaryDiv = resultsDiv.querySelector('.ai-summary .summary-text');
+                            if (summaryDiv) {
+                                summaryDiv.innerHTML = escapeHtml(summary);
+                                clearInterval(checkSummary);
+                            }
+                        }
+                    }
+                }, 500);
+                setTimeout(() => clearInterval(checkSummary), 10000);
+            }
         }
         
         function getQueryFromURL() {
