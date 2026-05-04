@@ -171,29 +171,6 @@
         }
         .search-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--primary-glow); }
         
-        .suggestions-dropdown {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            margin-top: 8px;
-            max-height: 350px;
-            overflow-y: auto;
-            display: none;
-        }
-        .suggestions-dropdown.show { display: block; }
-        .suggestion-item {
-            padding: 12px 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid var(--border);
-            transition: all 0.2s;
-        }
-        .suggestion-item:hover { background: rgba(139,92,246,0.1); padding-left: 28px; }
-        .suggestion-icon { font-size: 16px; }
-        
         .ai-summary {
             background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(0,0,0,0.3));
             border-radius: 20px;
@@ -344,14 +321,13 @@
                 <input type="text" id="search-input" class="search-input" placeholder="Search the web..." autocomplete="off">
                 <button id="search-btn" class="search-btn">Search</button>
             </div>
-            <div id="suggestions" class="suggestions-dropdown"></div>
         </div>
         
         <div id="results" class="results-area"></div>
         
         <div class="footer">
-            <p>🧙 Wizard Search • Client-side search powered by Brave Search API</p>
-            <p style="margin-top: 8px;">AI summaries powered by Wizard.AI • Private search</p>
+            <p>🧙 Wizard Search • Real clickable results • Powered by Brave Search</p>
+            <p style="margin-top: 8px;">AI summaries powered by Wizard.AI</p>
         </div>
     </div>
     
@@ -370,7 +346,6 @@
     <script>
         const API_BASE = 'https://arnav0928.pythonanywhere.com';
         let currentUser = null;
-        let searchTimeout = null;
         
         function escapeHtml(text) {
             if (!text) return '';
@@ -387,205 +362,7 @@
             setTimeout(() => n.remove(), 3000);
         }
         
-        // ========== CLIENT-SIDE SEARCH (No backend needed) ==========
-        async function performClientSearch(query) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><div>🧙 Wizard is searching...</div></div>';
-            
-            try {
-                // Use Brave Search API (free, no API key needed for basic)
-                const braveUrl = `https://search.brave.com/search?q=${encodeURIComponent(query)}&source=web`;
-                
-                // Use a CORS proxy to avoid blocking
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(braveUrl)}`;
-                
-                const response = await fetch(proxyUrl);
-                const html = await response.text();
-                
-                // Parse results
-                const results = [];
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Find result containers
-                const resultElements = doc.querySelectorAll('.snippet, .result, .web-result');
-                
-                for (const elem of resultElements) {
-                    const titleElem = elem.querySelector('.snippet-title, .result-title, h3, a');
-                    const urlElem = elem.querySelector('a[href]');
-                    const snippetElem = elem.querySelector('.snippet-description, .result-description, p');
-                    
-                    if (titleElem && urlElem) {
-                        let title = titleElem.textContent.trim();
-                        let rawUrl = urlElem.getAttribute('href');
-                        let snippet = snippetElem ? snippetElem.textContent.trim() : title;
-                        
-                        // Clean URL if it's a Brave redirect
-                        if (rawUrl && rawUrl.includes('?q=')) {
-                            const urlMatch = rawUrl.match(/q=([^&]+)/);
-                            if (urlMatch) {
-                                rawUrl = decodeURIComponent(urlMatch[1]);
-                            }
-                        }
-                        
-                        if (title && rawUrl && rawUrl.startsWith('http')) {
-                            results.push({ title, url: rawUrl, snippet });
-                        }
-                        
-                        if (results.length >= 12) break;
-                    }
-                }
-                
-                // Get AI summary from backend (just for the explanation, not search)
-                let summary = `Here's what you need to know about "${query}":`;
-                try {
-                    const summaryRes = await fetch(`${API_BASE}/api/chat/simple`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ 
-                            prompt: `Explain what "${query}" means in 2-3 simple, friendly sentences. Make it educational.`,
-                            mode: 'Fast'
-                        })
-                    });
-                    const summaryData = await summaryRes.json();
-                    if (summaryData.response) {
-                        summary = summaryData.response;
-                    }
-                } catch(e) {
-                    console.log('Summary error:', e);
-                }
-                
-                renderResults({ query, results, summary, source: 'Brave Search' });
-                
-            } catch (error) {
-                console.error('Search error:', error);
-                resultsDiv.innerHTML = `
-                    <div class="no-results">
-                        <div class="no-results-icon">🌐</div>
-                        <h3>Direct Search Links</h3>
-                        <p>Click below to search on your preferred search engine:</p>
-                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
-                            <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
-                            <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
-                            <button onclick="window.open('https://www.bing.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #008373; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">📘 Bing</button>
-                            <button onclick="window.open('https://search.brave.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #fb542b; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦁 Brave</button>
-                        </div>
-                    </div>
-                `;
-            }
-        }
-        
-        function renderResults(data) {
-            const resultsDiv = document.getElementById('results');
-            
-            let html = '';
-            
-            // AI Summary
-            if (data.summary) {
-                html += `
-                    <div class="ai-summary">
-                        <div class="summary-header">
-                            <span class="summary-icon">🧙</span>
-                            <span class="summary-title">About "${escapeHtml(data.query)}"</span>
-                        </div>
-                        <div class="summary-text">${escapeHtml(data.summary)}</div>
-                    </div>
-                `;
-            }
-            
-            if (!data.results || data.results.length === 0) {
-                html += `
-                    <div class="no-results">
-                        <div class="no-results-icon">🔍</div>
-                        <h3>No web results found</h3>
-                        <p>Try searching directly on:</p>
-                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
-                            <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(data.query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
-                            <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(data.query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
-                            <button onclick="window.open('https://www.bing.com/search?q=${encodeURIComponent(data.query)}', '_blank')" style="background: #008373; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">📘 Bing</button>
-                        </div>
-                    </div>
-                `;
-                resultsDiv.innerHTML = html;
-                return;
-            }
-            
-            html += `<div class="source-badge">✨ ${data.results.length} results from ${data.source}</div>`;
-            
-            for (const result of data.results) {
-                html += `
-                    <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
-                        <div class="result-title">${escapeHtml(result.title)}</div>
-                        <div class="result-url">${escapeHtml(result.url)}</div>
-                        <div class="result-snippet">${escapeHtml(result.snippet)}</div>
-                    </div>
-                `;
-            }
-            
-            resultsDiv.innerHTML = html;
-        }
-        
-        async function performSearch() {
-            const query = document.getElementById('search-input').value.trim();
-            if (!query) {
-                showNotification('Please enter a search term', true);
-                return;
-            }
-            
-            const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
-            window.history.pushState({}, '', newUrl);
-            document.getElementById('suggestions').classList.remove('show');
-            
-            // Use client-side search
-            await performClientSearch(query);
-        }
-        
-        async function getSuggestions(query) {
-            if (!query || query.length < 2) {
-                document.getElementById('suggestions').classList.remove('show');
-                return;
-            }
-            
-            try {
-                const response = await fetch(`https://duckduckgo.com/ac/?q=${encodeURIComponent(query)}&type=list`);
-                const suggestions = await response.json();
-                const suggestionsDiv = document.getElementById('suggestions');
-                
-                if (suggestions && suggestions.length > 0) {
-                    suggestionsDiv.innerHTML = suggestions.map(s => `
-                        <div class="suggestion-item" data-query="${escapeHtml(s)}">
-                            <span class="suggestion-icon">🔍</span>
-                            <span>${escapeHtml(s)}</span>
-                        </div>
-                    `).join('');
-                    suggestionsDiv.classList.add('show');
-                    
-                    document.querySelectorAll('.suggestion-item').forEach(item => {
-                        item.onclick = () => {
-                            document.getElementById('search-input').value = item.dataset.query;
-                            suggestionsDiv.classList.remove('show');
-                            performSearch();
-                        };
-                    });
-                } else {
-                    suggestionsDiv.classList.remove('show');
-                }
-            } catch (error) {
-                console.error('Suggestions error:', error);
-            }
-        }
-        
-        function getQueryFromURL() {
-            const params = new URLSearchParams(window.location.search);
-            const q = params.get('q');
-            if (q) {
-                document.getElementById('search-input').value = decodeURIComponent(q);
-                performSearch();
-            }
-        }
-        
-        // ========== AUTH (same as before) ==========
+        // ========== AUTH ==========
         async function checkAuth() {
             try {
                 const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
@@ -638,21 +415,171 @@
             showNotification('Logged out');
         }
         
-        // ========== EVENT LISTENERS ==========
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            if (searchTimeout) clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => getSuggestions(e.target.value), 300);
-        });
+        // ========== CLIENT-SIDE SEARCH (No backend needed, no suggestions) ==========
+        async function performSearch() {
+            const query = document.getElementById('search-input').value.trim();
+            if (!query) {
+                showNotification('Please enter a search term', true);
+                return;
+            }
+            
+            const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
+            window.history.pushState({}, '', newUrl);
+            
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><div>🧙 Wizard is searching...</div></div>';
+            
+            console.log('🔍 Searching for:', query);
+            
+            try {
+                // Use Brave Search via CORS proxy
+                const braveUrl = `https://search.brave.com/search?q=${encodeURIComponent(query)}&source=web`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(braveUrl)}`;
+                
+                const response = await fetch(proxyUrl);
+                const html = await response.text();
+                
+                // Parse results
+                const results = [];
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Find result containers
+                const resultElements = doc.querySelectorAll('.snippet, .result, .web-result');
+                
+                for (const elem of resultElements) {
+                    const titleElem = elem.querySelector('.snippet-title, .result-title, h3, a');
+                    const urlElem = elem.querySelector('a[href]');
+                    const snippetElem = elem.querySelector('.snippet-description, .result-description, p');
+                    
+                    if (titleElem && urlElem) {
+                        let title = titleElem.textContent.trim();
+                        let rawUrl = urlElem.getAttribute('href');
+                        let snippet = snippetElem ? snippetElem.textContent.trim() : title;
+                        
+                        // Clean URL if it's a Brave redirect
+                        if (rawUrl && rawUrl.includes('?q=')) {
+                            const urlMatch = rawUrl.match(/q=([^&]+)/);
+                            if (urlMatch) {
+                                rawUrl = decodeURIComponent(urlMatch[1]);
+                            }
+                        }
+                        
+                        if (title && rawUrl && rawUrl.startsWith('http') && title.length > 3) {
+                            results.push({ title, url: rawUrl, snippet });
+                        }
+                        
+                        if (results.length >= 12) break;
+                    }
+                }
+                
+                // Get AI summary from backend
+                let summary = '';
+                try {
+                    const summaryRes = await fetch(`${API_BASE}/api/chat/simple`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ 
+                            prompt: `Explain what "${query}" means in 2-3 simple, friendly sentences. Make it educational.`,
+                            mode: 'Fast'
+                        })
+                    });
+                    const summaryData = await summaryRes.json();
+                    if (summaryData.response) {
+                        summary = summaryData.response;
+                    }
+                } catch(e) {
+                    console.log('Summary error:', e);
+                    summary = `Here are search results for "${query}".`;
+                }
+                
+                renderResults(query, results, summary);
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-icon">🌐</div>
+                        <h3>Direct Search Links</h3>
+                        <p>Click below to search on your preferred search engine:</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
+                            <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
+                            <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
+                            <button onclick="window.open('https://www.bing.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #008373; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">📘 Bing</button>
+                            <button onclick="window.open('https://search.brave.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #fb542b; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦁 Brave</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
         
+        function renderResults(query, results, summary) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = '';
+            
+            // AI Summary
+            if (summary) {
+                html += `
+                    <div class="ai-summary">
+                        <div class="summary-header">
+                            <span class="summary-icon">🧙</span>
+                            <span class="summary-title">About "${escapeHtml(query)}"</span>
+                        </div>
+                        <div class="summary-text">${escapeHtml(summary)}</div>
+                    </div>
+                `;
+            }
+            
+            if (!results || results.length === 0) {
+                html += `
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <h3>No web results found for "${escapeHtml(query)}"</h3>
+                        <p>Try a different search term or click below to search directly:</p>
+                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
+                            <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
+                            <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
+                        </div>
+                    </div>
+                `;
+                resultsDiv.innerHTML = html;
+                return;
+            }
+            
+            html += `<div class="source-badge">✨ ${results.length} results from Brave Search</div>`;
+            
+            for (const result of results) {
+                html += `
+                    <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
+                        <div class="result-title">${escapeHtml(result.title)}</div>
+                        <div class="result-url">${escapeHtml(result.url)}</div>
+                        <div class="result-snippet">${escapeHtml(result.snippet)}</div>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        function getQueryFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const q = params.get('q');
+            if (q) {
+                document.getElementById('search-input').value = decodeURIComponent(q);
+                performSearch();
+            }
+        }
+        
+        // ========== EVENT LISTENERS ==========
         document.getElementById('search-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                document.getElementById('suggestions').classList.remove('show');
                 performSearch();
             }
         });
         
         document.getElementById('search-btn').addEventListener('click', () => {
-            document.getElementById('suggestions').classList.remove('show');
             performSearch();
         });
         
@@ -664,12 +591,6 @@
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
         document.getElementById('show-signup').addEventListener('click', () => {
             window.location.href = 'https://wizardecosystem.dpdns.org';
-        });
-        
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.search-box') && !e.target.closest('.suggestions-dropdown')) {
-                document.getElementById('suggestions').classList.remove('show');
-            }
         });
         
         document.getElementById('login-modal').addEventListener('click', (e) => {
