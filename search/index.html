@@ -3,391 +3,771 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧙 Wizard Search - AI-Powered Search Engine</title>
+    <meta name="description" content="Wizard Search — AI-powered web search with real, clickable results and intelligent summaries. Part of the Wizard Ecosystem by Arnav Gupta.">
+    <meta name="keywords" content="Wizard Search, AI search engine, web search, AI summary, Wizard Ecosystem">
+    <meta name="author" content="Arnav Gupta">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#080612">
+    <meta property="og:title" content="Wizard Search — AI-Powered Web Search">
+    <meta property="og:description" content="Real, clickable web results with AI-generated summaries. Part of the Wizard Ecosystem.">
+    <meta property="og:url" content="https://wizardecosystem.dpdns.org/search">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Wizard Search — AI-Powered Web Search">
+    <link rel="canonical" href="https://wizardecosystem.dpdns.org/search">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Wizard Search",
+      "url": "https://wizardecosystem.dpdns.org/search",
+      "description": "AI-powered web search with real clickable results and intelligent summaries.",
+      "applicationCategory": "SearchApplication",
+      "author": { "@type": "Person", "name": "Arnav Gupta" }
+    }
+    </script>
+
+    <title>Wizard Search — AI-Powered Web Search</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
         :root {
-            --bg-primary: #0a0a14;
-            --bg-secondary: #0f0f1c;
-            --bg-card: rgba(18,18,35,0.95);
-            --text-primary: #ffffff;
-            --text-secondary: #e0e0ff;
-            --text-muted: #a0a0c0;
-            --border: rgba(139,92,246,0.3);
-            --primary: #a855f7;
-            --primary-dark: #7c3aed;
-            --primary-light: #c084fc;
-            --primary-glow: rgba(168,85,247,0.3);
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
+            --ink:           #080612;
+            --ink-2:         #0e0b1e;
+            --ink-3:         #13102a;
+            --ink-4:         #1a1635;
+            --gold:          #c9a84c;
+            --gold-light:    #e8c97a;
+            --gold-dim:      rgba(201,168,76,0.12);
+            --gold-glow:     rgba(201,168,76,0.22);
+            --violet:        #7c5cbf;
+            --violet-dim:    rgba(124,92,191,0.2);
+            --silver:        #d4d0e8;
+            --silver-dim:    rgba(212,208,232,0.5);
+            --muted:         rgba(212,208,232,0.35);
+            --border:        rgba(201,168,76,0.16);
+            --border-strong: rgba(201,168,76,0.42);
         }
-        
+
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--silver);
             min-height: 100vh;
+            overflow-x: hidden;
         }
-        
-        .stars {
+
+        /* ── Canvas starfield ── */
+        #starfield {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            inset: 0;
             pointer-events: none;
-            background: radial-gradient(circle at 20% 30%, var(--primary-glow) 0%, transparent 50%);
-            opacity: 0.3;
-            animation: pulse 8s ease-in-out infinite;
+            z-index: 0;
         }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.2; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.05); }
+
+        /* ── Ambient blobs ── */
+        .amb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.35;
+            animation: drift 20s ease-in-out infinite alternate;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        .amb-1 { width: 600px; height: 600px; top: -200px; left: -200px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
+        .amb-2 { width: 500px; height: 500px; bottom: -100px; right: -100px; background: radial-gradient(circle, #5c3a1e, transparent 70%); animation-delay: -10s; }
+        @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,30px) scale(1.1); } }
+
+        /* ── Layout ── */
+        .shell {
             position: relative;
             z-index: 10;
-        }
-        
-        .header {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 16px 24px;
-            margin-bottom: 30px;
-            border: 1px solid var(--border);
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 24px 80px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        
+
+        /* ── Top Nav ── */
+        .topnav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 44px;
+            padding: 14px 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            backdrop-filter: blur(12px);
+        }
+
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             cursor: pointer;
+            text-decoration: none;
         }
-        
-        .logo-icon { font-size: 32px; animation: float 3s ease-in-out infinite; }
-        .logo-text {
-            font-size: 20px; font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+        .logo-glyph {
+            font-size: 28px;
+            animation: levitate 5s ease-in-out infinite;
+            filter: drop-shadow(0 0 12px rgba(201,168,76,0.4));
+        }
+        @keyframes levitate { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        .logo-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            letter-spacing: 0.01em;
         }
-        
-        @keyframes float {
-            0%,100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+
+        .app-nav {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
         }
-        
-        .ecosystem-nav { display: flex; gap: 8px; flex-wrap: wrap; }
-        
-        .nav-item {
-            background: rgba(139,92,246,0.1);
+        .nav-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 100px;
             border: 1px solid var(--border);
-            border-radius: 40px;
-            padding: 8px 16px;
+            background: transparent;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+        .nav-pill:hover { background: rgba(255,255,255,0.05); border-color: var(--border-strong); color: var(--silver); }
+        .nav-pill.active {
+            background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.06));
+            border-color: var(--border-strong);
+            color: var(--gold-light);
+        }
+        .nav-pill-icon { font-size: 15px; }
+
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+
+        .user-pill {
             display: flex;
             align-items: center;
             gap: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-        .nav-item:hover { background: rgba(139,92,246,0.25); transform: translateY(-2px); border-color: var(--primary); }
-        .nav-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-color: transparent; }
-        .nav-icon { font-size: 18px; }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: rgba(139,92,246,0.15);
-            padding: 6px 16px;
-            border-radius: 40px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 5px 14px 5px 6px;
         }
         .user-avatar {
-            width: 32px; height: 32px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            width: 28px; height: 28px;
+            background: linear-gradient(135deg, var(--violet), #3d2280);
             border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+        }
+        .user-email-txt { font-size: 12px; color: var(--silver-dim); }
+        .logout-btn {
+            background: none; border: none;
+            font-size: 13px; color: var(--muted);
+            cursor: pointer; margin-left: 4px;
+            transition: color 0.2s;
+        }
+        .logout-btn:hover { color: #e07070; }
+
+        .signin-btn {
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+            border: none;
+            border-radius: 100px;
+            padding: 8px 20px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ink);
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .signin-btn:hover { opacity: 0.85; }
+
+        /* ── Hero (search mode) ── */
+        .search-hero {
+            text-align: center;
+            padding: 40px 0 36px;
+        }
+        .hero-glyph {
+            font-size: 72px;
+            display: block;
+            margin-bottom: 18px;
+            animation: levitate 5s ease-in-out infinite;
+            filter: drop-shadow(0 0 40px rgba(201,168,76,0.3)) drop-shadow(0 0 80px rgba(124,92,191,0.2));
+        }
+        .hero-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(38px, 6vw, 64px);
+            font-weight: 300;
+            color: var(--silver);
+            letter-spacing: -0.02em;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        .hero-title em {
+            font-style: italic;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-sub {
+            font-size: 15px;
+            font-weight: 300;
+            color: var(--muted);
+            letter-spacing: 0.02em;
+        }
+
+        /* ── Search Bar ── */
+        .search-wrap {
+            max-width: 720px;
+            margin: 0 auto 50px;
+        }
+        .search-field {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 6px 6px 6px 22px;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
-        .user-email { font-size: 12px; color: var(--primary-light); }
-        .logout-btn { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; }
-        .login-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border: none;
-            border-radius: 40px;
-            padding: 8px 20px;
-            color: white;
-            cursor: pointer;
-            font-weight: 600;
+        .search-field:focus-within {
+            border-color: rgba(201,168,76,0.55);
+            box-shadow: 0 0 0 3px rgba(201,168,76,0.07), 0 8px 32px rgba(0,0,0,0.3);
         }
-        
-        .search-hero { text-align: center; padding: 40px 20px; }
-        .wizard-icon { font-size: 80px; margin-bottom: 20px; animation: float 3s ease-in-out infinite; filter: drop-shadow(0 0 30px var(--primary)); }
-        h1 { font-size: 48px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
-        .subtitle { color: var(--text-muted); font-size: 18px; margin-bottom: 30px; }
-        
-        .search-container { max-width: 800px; margin: 0 auto 40px; }
-        .search-box {
-            display: flex;
-            gap: 12px;
-            background: var(--bg-secondary);
-            border: 2px solid var(--border);
-            border-radius: 60px;
-            padding: 8px 8px 8px 24px;
-            transition: all 0.3s ease;
-        }
-        .search-box:focus-within { border-color: var(--primary); box-shadow: 0 0 25px var(--primary-glow); }
-        .search-icon { font-size: 20px; color: var(--text-muted); display: flex; align-items: center; }
-        .search-input {
+        .search-ico { font-size: 16px; margin-right: 10px; opacity: 0.45; flex-shrink: 0; }
+        .search-field input {
             flex: 1;
             background: none;
             border: none;
-            padding: 14px 0;
-            color: var(--text-primary);
-            font-size: 16px;
             outline: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 300;
+            color: var(--silver);
+            padding: 13px 0;
         }
-        .search-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        .search-field input::placeholder { color: var(--muted); }
+        .search-go {
+            background: linear-gradient(135deg, var(--gold), #a8751e);
             border: none;
-            border-radius: 50px;
-            padding: 12px 28px;
-            color: white;
-            font-weight: 600;
+            border-radius: 100px;
+            padding: 11px 26px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ink);
             cursor: pointer;
-            transition: all 0.3s ease;
+            letter-spacing: 0.03em;
+            transition: opacity 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
-        .search-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--primary-glow); }
-        
+        .search-go:hover { opacity: 0.88; box-shadow: 0 4px 20px rgba(201,168,76,0.35); }
+
+        /* ── Results ── */
+        .results-area {
+            flex: 1;
+            animation: fade-up 0.4s ease both;
+        }
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* AI Summary */
         .ai-summary {
-            background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(0,0,0,0.3));
-            border-radius: 20px;
-            padding: 24px;
-            margin-bottom: 30px;
-            border-left: 4px solid var(--primary);
-        }
-        .summary-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-        .summary-icon { font-size: 28px; }
-        .summary-title { font-size: 18px; font-weight: 600; color: var(--primary-light); }
-        .summary-text { line-height: 1.7; color: var(--text-secondary); font-size: 15px; }
-        
-        .results-area { animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .result-card {
-            background: rgba(255,255,255,0.03);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
+            background: linear-gradient(135deg, rgba(201,168,76,0.06), rgba(124,92,191,0.08));
             border: 1px solid var(--border);
+            border-left: 3px solid var(--gold);
+            border-radius: 20px;
+            padding: 26px 28px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
         }
-        .result-card:hover { background: rgba(139,92,246,0.08); transform: translateX(5px); border-color: var(--primary); }
-        .result-title { font-size: 18px; font-weight: 600; color: var(--primary-light); margin-bottom: 8px; }
-        .result-url { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; word-break: break-all; }
-        .result-snippet { font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
-        .source-badge { display: inline-block; padding: 4px 12px; background: rgba(139,92,246,0.15); border-radius: 20px; font-size: 12px; margin-bottom: 20px; color: var(--primary-light); }
-        
-        .loading-spinner { text-align: center; padding: 60px; }
-        .spinner {
-            width: 50px; height: 50px;
-            border: 3px solid rgba(139,92,246,0.2);
-            border-top-color: var(--primary);
+        .ai-summary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+            opacity: 0.4;
+        }
+        .summary-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .summary-icon { font-size: 22px; }
+        .summary-label {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gold-light);
+            letter-spacing: 0.01em;
+        }
+        .summary-text {
+            font-size: 14.5px;
+            font-weight: 300;
+            color: var(--silver-dim);
+            line-height: 1.75;
+        }
+
+        /* Source badge */
+        .source-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            background: var(--gold-dim);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--gold);
+            letter-spacing: 0.04em;
+            margin-bottom: 20px;
+        }
+
+        /* Result card */
+        .result-card {
+            background: rgba(255,255,255,0.025);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px 24px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), border-color 0.25s, background 0.25s, box-shadow 0.25s;
+        }
+        .result-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--gold), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .result-card:hover {
+            transform: translateX(6px);
+            border-color: var(--border-strong);
+            background: rgba(201,168,76,0.04);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .result-card:hover::before { opacity: 1; }
+
+        .result-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gold-light);
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+        .result-url {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 10px;
+            word-break: break-all;
+            opacity: 0.7;
+        }
+        .result-snippet {
+            font-size: 14px;
+            font-weight: 300;
+            color: var(--silver-dim);
+            line-height: 1.65;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .spinner-ring {
+            width: 48px; height: 48px;
+            border: 2px solid rgba(201,168,76,0.15);
+            border-top-color: var(--gold);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .no-results { text-align: center; padding: 60px; color: var(--text-muted); }
-        .no-results-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
-        
-        .footer { text-align: center; padding: 30px; border-top: 1px solid var(--border); margin-top: 60px; color: var(--text-muted); font-size: 12px; }
-        
-        .login-modal {
+        .loading-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 300;
+            font-style: italic;
+            color: var(--muted);
+        }
+
+        /* No results */
+        .no-results {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .no-results-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+            opacity: 0.4;
+            display: block;
+        }
+        .no-results h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 26px;
+            font-weight: 400;
+            color: var(--silver-dim);
+            margin-bottom: 10px;
+        }
+        .no-results p { font-size: 14px; font-weight: 300; color: var(--muted); margin-bottom: 24px; }
+        .fallback-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .fallback-btn {
+            border: none;
+            border-radius: 100px;
+            padding: 10px 22px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .fallback-btn:hover { opacity: 0.82; }
+        .fallback-google { background: #4285f4; }
+        .fallback-ddg    { background: #de5833; }
+
+        /* Error toast */
+        .toast {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(20px);
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ink);
             z-index: 10000;
-            display: flex;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.success { background: linear-gradient(135deg, var(--gold), #a8751e); }
+        .toast.error   { background: #c0444a; color: white; }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 30px;
+            margin-top: 60px;
+        }
+        .footer-brand {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 17px;
+            font-weight: 400;
+            color: rgba(212,208,232,0.3);
+            margin-bottom: 6px;
+        }
+        .footer-meta { font-size: 12px; color: var(--muted); }
+        .footer-meta a { color: var(--gold); text-decoration: none; opacity: 0.7; }
+        .footer-meta a:hover { opacity: 1; }
+
+        /* ── Auth Modal ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(5,3,14,0.93);
+            backdrop-filter: blur(18px);
+            z-index: 9999;
             align-items: center;
             justify-content: center;
         }
-        .login-modal.hidden { display: none; }
-        .login-card {
-            background: var(--bg-card);
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
             border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 48px;
-            width: 420px;
+            border-radius: 28px;
+            padding: 48px 44px;
+            width: 400px;
+            max-width: 92vw;
             text-align: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+            animation: modal-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
         }
-        .login-card input {
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.9) translateY(16px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-glyph { font-size: 48px; margin-bottom: 16px; display: block; }
+        .modal-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--silver);
+            margin-bottom: 26px;
+        }
+        .field {
             width: 100%;
             background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
-            padding: 14px;
-            color: white;
-            margin-bottom: 15px;
+            padding: 13px 16px;
+            color: var(--silver);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            margin-bottom: 12px;
+            outline: none;
+            transition: border-color 0.2s;
         }
-        .login-card button {
+        .field:focus { border-color: rgba(201,168,76,0.5); }
+        .field::placeholder { color: var(--muted); }
+        .btn-primary {
             width: 100%;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: linear-gradient(135deg, var(--gold), #a8751e);
             border: none;
-            border-radius: 12px;
-            padding: 14px;
-            color: white;
-            font-weight: 600;
+            border-radius: 14px;
+            padding: 13px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ink);
             cursor: pointer;
+            transition: opacity 0.2s, box-shadow 0.2s;
+            margin-top: 4px;
         }
-        .switch-mode { background: none !important; color: var(--primary) !important; margin-top: 15px; }
-        
-        @media (max-width: 768px) {
-            h1 { font-size: 32px; }
-            .header { flex-direction: column; text-align: center; }
-            .ecosystem-nav { justify-content: center; }
-            .search-box { flex-wrap: wrap; }
-            .search-btn { width: 100%; }
-            .result-title { font-size: 16px; }
-            .login-card { width: 90%; padding: 30px; }
+        .btn-primary:hover { opacity: 0.88; box-shadow: 0 6px 24px rgba(201,168,76,0.3); }
+        .btn-ghost {
+            background: none; border: none;
+            color: var(--gold);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 14px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            width: 100%;
+        }
+        .btn-ghost:hover { opacity: 1; }
+        .field-error { color: #e07070; font-size: 12px; margin-bottom: 10px; }
+
+        /* ── Responsive ── */
+        @media (max-width: 700px) {
+            .topnav { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .app-nav { flex-wrap: wrap; }
+            .search-field { flex-wrap: wrap; padding: 8px 12px; border-radius: 16px; }
+            .search-go { width: 100%; border-radius: 12px; margin-top: 8px; text-align: center; }
+            .result-title { font-size: 17px; }
         }
     </style>
 </head>
 <body>
-    <div class="stars"></div>
-    
-    <div class="container">
-        <div class="header">
-            <div class="logo" onclick="window.location.href='https://wizardecosystem.dpdns.org'">
-                <span class="logo-icon">🧙</span>
-                <span class="logo-text">Wizard Ecosystem</span>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="amb amb-1" aria-hidden="true"></div>
+    <div class="amb amb-2" aria-hidden="true"></div>
+
+    <div class="shell">
+        <!-- Top Nav -->
+        <nav class="topnav" aria-label="Wizard Ecosystem navigation">
+            <a class="logo" href="https://wizardecosystem.dpdns.org" aria-label="Wizard Ecosystem home">
+                <span class="logo-glyph" aria-hidden="true">🧙</span>
+                <span class="logo-name">Wizard Ecosystem</span>
+            </a>
+
+            <div class="app-nav" role="list">
+                <a class="nav-pill" href="https://wizardai.dpdns.org" role="listitem">
+                    <span class="nav-pill-icon" aria-hidden="true">🧠</span> AI
+                </a>
+                <a class="nav-pill active" href="https://wizardecosystem.dpdns.org/search" role="listitem" aria-current="page">
+                    <span class="nav-pill-icon" aria-hidden="true">🔍</span> Search
+                </a>
+                <a class="nav-pill" href="https://wizardecosystem.dpdns.org/mail" role="listitem">
+                    <span class="nav-pill-icon" aria-hidden="true">📧</span> Mail
+                </a>
+                <a class="nav-pill" href="https://wizardecosystem.dpdns.org/calendar" role="listitem">
+                    <span class="nav-pill-icon" aria-hidden="true">📅</span> Calendar
+                </a>
+                <a class="nav-pill" href="https://wizardecosystem.dpdns.org/chat" role="listitem">
+                    <span class="nav-pill-icon" aria-hidden="true">💬</span> Chat
+                </a>
             </div>
-            
-            <div class="ecosystem-nav">
-                <div class="nav-item" onclick="window.location.href='https://wizardai.dpdns.org'">
-                    <span class="nav-icon">🧠</span>
-                    <span>Wizard AI</span>
+
+            <div class="nav-right">
+                <div class="user-pill" id="user-pill" style="display:none;" role="status">
+                    <div class="user-avatar" aria-hidden="true">🧙</div>
+                    <span id="user-email-txt" class="user-email-txt"></span>
+                    <button id="logout-btn" class="logout-btn" aria-label="Sign out" title="Sign out">✕</button>
                 </div>
-                <div class="nav-item active" onclick="window.location.href='https://wizardecosystem.dpdns.org/search'">
-                    <span class="nav-icon">🔍</span>
-                    <span>Search</span>
-                </div>
-                <div class="nav-item" onclick="window.location.href='https://wizardecosystem.dpdns.org/mail'">
-                    <span class="nav-icon">📧</span>
-                    <span>Mail</span>
-                </div>
-                <div class="nav-item" onclick="window.location.href='https://wizardecosystem.dpdns.org/calendar'">
-                    <span class="nav-icon">📅</span>
-                    <span>Calendar</span>
-                </div>
-                <div class="nav-item" onclick="window.location.href='https://wizardecosystem.dpdns.org/chat'">
-                    <span class="nav-icon">💬</span>
-                    <span>Chat</span>
-                </div>
+                <button id="signin-btn" class="signin-btn" style="display:none;" aria-label="Sign in">Sign In</button>
             </div>
-            
-            <div id="user-info" class="user-info" style="display: none;">
-                <div class="user-avatar">🧙</div>
-                <span id="user-email" class="user-email"></span>
-                <button id="logout-btn" class="logout-btn">🚪</button>
-            </div>
-            <button id="login-btn" class="login-btn" style="display: none;">Sign In</button>
-        </div>
-        
-        <div class="search-hero">
-            <div class="wizard-icon">🧙</div>
-            <h1>Wizard Search</h1>
-            <p class="subtitle">AI-powered search with real, clickable results</p>
-        </div>
-        
-        <div class="search-container">
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" class="search-input" placeholder="Search the web..." autocomplete="off">
-                <button id="search-btn" class="search-btn">Search</button>
+        </nav>
+
+        <!-- Hero -->
+        <header class="search-hero" role="banner">
+            <span class="hero-glyph" aria-hidden="true">🔍</span>
+            <h1 class="hero-title">Wizard <em>Search</em></h1>
+            <p class="hero-sub">AI-powered results — real, clickable, and intelligent</p>
+        </header>
+
+        <!-- Search Bar -->
+        <div class="search-wrap" role="search">
+            <div class="search-field">
+                <span class="search-ico" aria-hidden="true">✦</span>
+                <input
+                    type="search"
+                    id="search-input"
+                    placeholder="Search the web…"
+                    aria-label="Search the web"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <button class="search-go" id="search-btn" aria-label="Submit search">Search</button>
             </div>
         </div>
-        
-        <div id="results" class="results-area"></div>
-        
-        <div class="footer">
-            <p>🧙 Wizard Search • Real clickable results • Powered by DDG Lite + Brave + Startpage</p>
-            <p style="margin-top: 8px;">AI summaries powered by Llama 4</p>
-        </div>
+
+        <!-- Results -->
+        <main id="results" class="results-area" aria-live="polite" aria-label="Search results"></main>
+
+        <!-- Footer -->
+        <footer role="contentinfo">
+            <p class="footer-brand">🧙 Wizard Search</p>
+            <p class="footer-meta">
+                Results via DDG · Brave · Startpage &nbsp;·&nbsp;
+                AI summaries by Llama 4 &nbsp;·&nbsp;
+                Built by <a href="https://wizardecosystem.dpdns.org" rel="author">Arnav Gupta</a>
+            </p>
+        </footer>
     </div>
-    
-    <div id="login-modal" class="login-modal hidden">
-        <div class="login-card">
-            <div style="font-size: 60px; margin-bottom: 20px;">🧙</div>
-            <h2 style="margin-bottom: 20px;">Sign In</h2>
-            <input type="email" id="login-email" placeholder="Email">
-            <input type="password" id="login-password" placeholder="Password">
-            <div id="login-error" style="color: #ef4444; font-size: 12px; margin-bottom: 10px;"></div>
-            <button id="login-submit">Login</button>
-            <button id="show-signup" class="switch-mode">Create an account →</button>
+
+    <!-- Toast -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- Auth Modal -->
+    <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-box">
+            <span class="modal-glyph" aria-hidden="true">🧙</span>
+            <h2 class="modal-title" id="modal-title">Sign In</h2>
+            <input class="field" type="email" id="login-email" placeholder="Email address" autocomplete="email">
+            <input class="field" type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+            <div id="login-error" class="field-error" role="alert"></div>
+            <button class="btn-primary" id="login-submit">Enter the Realm</button>
+            <button class="btn-ghost" id="show-signup">Create an account →</button>
         </div>
     </div>
 
     <script>
-        const API_BASE = 'https://arnav0928.pythonanywhere.com';
+        /* ── Starfield ── */
+        (function() {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+            let W, H;
+            const stars = Array.from({ length: 200 }, () => ({
+                x: Math.random(), y: Math.random(),
+                r: Math.random() * 1.3 + 0.2,
+                phase: Math.random() * Math.PI * 2,
+                speed: Math.random() * 0.8 + 0.3
+            }));
+            function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+            resize();
+            window.addEventListener('resize', resize);
+            (function draw() {
+                ctx.clearRect(0, 0, W, H);
+                const t = Date.now() / 1000;
+                stars.forEach(s => {
+                    const a = 0.25 + 0.5 * (Math.sin(t * s.speed + s.phase) * 0.5 + 0.5);
+                    ctx.beginPath();
+                    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(212,208,232,${a})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            })();
+        })();
+
+        /* ── App ── */
+        const API = 'https://arnav0928.pythonanywhere.com';
         let currentUser = null;
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+
+        /* Toast */
+        let toastTimer;
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast ${type} show`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
         }
-        
-        function showNotification(msg, isError = false) {
-            const n = document.createElement('div');
-            n.textContent = msg;
-            n.style.cssText = `position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:${isError ? '#ef4444' : 'linear-gradient(135deg, #a855f7, #7c3aed)'};border-radius:50px;padding:12px 24px;color:white;z-index:10000;`;
-            document.body.appendChild(n);
-            setTimeout(() => n.remove(), 3000);
+
+        /* Escape HTML */
+        function esc(str) {
+            if (!str) return '';
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
         }
-        
-        // ========== AUTH ==========
+
+        /* Auth */
         async function checkAuth() {
             try {
-                const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
+                const res = await fetch(`${API}/api/check-auth`, { credentials: 'include' });
                 if (res.ok) {
                     const data = await res.json();
                     if (data.authenticated && data.user) {
                         currentUser = data.user;
-                        document.getElementById('user-info').style.display = 'flex';
-                        document.getElementById('user-email').textContent = currentUser.email;
-                        document.getElementById('login-btn').style.display = 'none';
+                        showUserPill(data.user.email);
                         return;
                     }
                 }
             } catch(e) {}
-            document.getElementById('user-info').style.display = 'none';
-            document.getElementById('login-btn').style.display = 'block';
+            hideUserPill();
         }
-        
+
+        function showUserPill(email) {
+            document.getElementById('user-pill').style.display = 'flex';
+            document.getElementById('user-email-txt').textContent = email;
+            document.getElementById('signin-btn').style.display = 'none';
+        }
+        function hideUserPill() {
+            document.getElementById('user-pill').style.display = 'none';
+            document.getElementById('signin-btn').style.display = 'block';
+        }
+
         async function handleLogin() {
-            const email = document.getElementById('login-email').value.trim();
+            const email    = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value.trim();
-            const errorDiv = document.getElementById('login-error');
-            if (!email || !password) { errorDiv.textContent = 'Email and password required'; return; }
+            const errEl    = document.getElementById('login-error');
+            if (!email || !password) { errEl.textContent = 'Email and password required'; return; }
             try {
-                const res = await fetch(`${API_BASE}/api/login`, {
+                const res  = await fetch(`${API}/api/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -396,161 +776,131 @@
                 const data = await res.json();
                 if (res.ok) {
                     currentUser = data.user;
-                    document.getElementById('login-modal').classList.add('hidden');
-                    document.getElementById('user-info').style.display = 'flex';
-                    document.getElementById('user-email').textContent = currentUser.email;
-                    document.getElementById('login-btn').style.display = 'none';
-                    showNotification('Welcome back!');
+                    closeModal();
+                    showUserPill(data.user.email);
+                    showToast('Welcome back!');
                 } else {
-                    errorDiv.textContent = data.error || 'Login failed';
+                    errEl.textContent = data.error || 'Login failed';
                 }
-            } catch(e) { errorDiv.textContent = 'Connection error'; }
+            } catch(e) { errEl.textContent = 'Connection error'; }
         }
-        
+
         async function handleLogout() {
-            await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' });
+            await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'include' });
             currentUser = null;
-            document.getElementById('user-info').style.display = 'none';
-            document.getElementById('login-btn').style.display = 'block';
-            showNotification('Logged out');
+            hideUserPill();
+            showToast('Signed out');
         }
-        
-        // ========== SEARCH (Calls backend proxy - NO CORS) ==========
+
+        function openModal()  { document.getElementById('modal-overlay').classList.add('show'); }
+        function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
+
+        /* Search */
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
-            if (!query) {
-                showNotification('Please enter a search term', true);
-                return;
-            }
-            
-            const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
-            window.history.pushState({}, '', newUrl);
-            
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><div>🧙 Searching the web...</div></div>';
-            
-            console.log('🔍 Searching for:', query);
-            
+            if (!query) { showToast('Enter a search term', 'error'); return; }
+
+            window.history.pushState({}, '', `${location.pathname}?q=${encodeURIComponent(query)}`);
+
+            const area = document.getElementById('results');
+            area.innerHTML = `
+                <div class="loading-spinner">
+                    <div class="spinner-ring"></div>
+                    <p class="loading-text">Consulting the arcane archives…</p>
+                </div>`;
+
             try {
-                const response = await fetch(`${API_BASE}/api/search`, {
+                const res  = await fetch(`${API}/api/search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ query: query })
+                    body: JSON.stringify({ query })
                 });
-                
-                const data = await response.json();
-                
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || 'Search failed');
-                }
-                
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Search failed');
                 renderResults(data);
-                
-            } catch (error) {
-                console.error('Search error:', error);
-                resultsDiv.innerHTML = `
+            } catch(err) {
+                const q = encodeURIComponent(query);
+                area.innerHTML = `
                     <div class="no-results">
-                        <div class="no-results-icon">⚠️</div>
-                        <h3>Search Error</h3>
-                        <p>${escapeHtml(error.message)}</p>
-                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
-                            <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
-                            <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
+                        <span class="no-results-icon">⚠️</span>
+                        <h3>Search Interrupted</h3>
+                        <p>${esc(err.message)}</p>
+                        <div class="fallback-btns">
+                            <button class="fallback-btn fallback-google" onclick="window.open('https://www.google.com/search?q=${q}','_blank')">🔍 Google</button>
+                            <button class="fallback-btn fallback-ddg"    onclick="window.open('https://duckduckgo.com/?q=${q}','_blank')">🦆 DuckDuckGo</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }
         }
-        
+
         function renderResults(data) {
-            const resultsDiv = document.getElementById('results');
-            
+            const area = document.getElementById('results');
             let html = '';
-            
-            // AI Summary
+
             if (data.summary) {
                 html += `
-                    <div class="ai-summary">
+                    <div class="ai-summary" role="region" aria-label="AI Summary">
                         <div class="summary-header">
-                            <span class="summary-icon">🧙</span>
-                            <span class="summary-title">About "${escapeHtml(data.query)}"</span>
+                            <span class="summary-icon" aria-hidden="true">🧙</span>
+                            <span class="summary-label">About "${esc(data.query)}"</span>
                         </div>
-                        <div class="summary-text">${escapeHtml(data.summary)}</div>
-                    </div>
-                `;
+                        <p class="summary-text">${esc(data.summary)}</p>
+                    </div>`;
             }
-            
-            if (!data.results || data.results.length === 0) {
+
+            if (!data.results || !data.results.length) {
+                const q = encodeURIComponent(data.query);
                 html += `
                     <div class="no-results">
-                        <div class="no-results-icon">🔍</div>
-                        <h3>No results found for "${escapeHtml(data.query)}"</h3>
-                        <p>Try a different search term or click below to search directly:</p>
-                        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px;">
-                            <button onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(data.query)}', '_blank')" style="background: #4285f4; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🔍 Google</button>
-                            <button onclick="window.open('https://duckduckgo.com/?q=${encodeURIComponent(data.query)}', '_blank')" style="background: #de5833; border: none; border-radius: 20px; padding: 10px 20px; color: white; cursor: pointer;">🦆 DuckDuckGo</button>
+                        <span class="no-results-icon">🔍</span>
+                        <h3>No results for "${esc(data.query)}"</h3>
+                        <p>Try rephrasing your query, or search directly:</p>
+                        <div class="fallback-btns">
+                            <button class="fallback-btn fallback-google" onclick="window.open('https://www.google.com/search?q=${q}','_blank')">🔍 Google</button>
+                            <button class="fallback-btn fallback-ddg"    onclick="window.open('https://duckduckgo.com/?q=${q}','_blank')">🦆 DuckDuckGo</button>
                         </div>
-                    </div>
-                `;
-                resultsDiv.innerHTML = html;
+                    </div>`;
+                area.innerHTML = html;
                 return;
             }
-            
-            html += `<div class="source-badge">✨ ${data.results.length} results from ${data.source}</div>`;
-            
-            for (const result of data.results) {
+
+            html += `<div class="source-badge">✦ ${data.results.length} results · ${esc(data.source)}</div>`;
+
+            for (const r of data.results) {
                 html += `
-                    <div class="result-card" onclick="window.open('${escapeHtml(result.url)}', '_blank')">
-                        <div class="result-title">${escapeHtml(result.title)}</div>
-                        <div class="result-url">${escapeHtml(result.url)}</div>
-                        <div class="result-snippet">${escapeHtml(result.snippet)}</div>
-                    </div>
-                `;
+                    <article class="result-card" role="article" onclick="window.open('${esc(r.url)}','_blank')" tabindex="0"
+                        onkeydown="if(event.key==='Enter'||event.key===' '){window.open('${esc(r.url)}','_blank')}">
+                        <div class="result-title">${esc(r.title)}</div>
+                        <div class="result-url">${esc(r.url)}</div>
+                        <p class="result-snippet">${esc(r.snippet)}</p>
+                    </article>`;
             }
-            
-            resultsDiv.innerHTML = html;
+
+            area.innerHTML = html;
         }
-        
-        function getQueryFromURL() {
-            const params = new URLSearchParams(window.location.search);
-            const q = params.get('q');
+
+        function loadFromURL() {
+            const q = new URLSearchParams(location.search).get('q');
             if (q) {
                 document.getElementById('search-input').value = decodeURIComponent(q);
                 performSearch();
             }
         }
-        
-        // ========== EVENT LISTENERS ==========
-        document.getElementById('search-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                performSearch();
-            }
-        });
-        
-        document.getElementById('search-btn').addEventListener('click', () => {
-            performSearch();
-        });
-        
-        document.getElementById('login-btn').addEventListener('click', () => {
-            document.getElementById('login-modal').classList.remove('hidden');
-        });
-        
+
+        /* Events */
+        document.getElementById('search-btn').addEventListener('click', performSearch);
+        document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') performSearch(); });
+        document.getElementById('signin-btn').addEventListener('click', openModal);
         document.getElementById('login-submit').addEventListener('click', handleLogin);
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
-        document.getElementById('show-signup').addEventListener('click', () => {
-            window.location.href = 'https://wizardecosystem.dpdns.org';
-        });
-        
-        document.getElementById('login-modal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('login-modal')) {
-                document.getElementById('login-modal').classList.add('hidden');
-            }
-        });
-        
-        // Initialize
+        document.getElementById('show-signup').addEventListener('click', () => { window.location.href = 'https://wizardecosystem.dpdns.org'; });
+        document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === document.getElementById('modal-overlay')) closeModal(); });
+        document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+        document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
         checkAuth();
-        getQueryFromURL();
+        loadFromURL();
     </script>
 </body>
 </html>
