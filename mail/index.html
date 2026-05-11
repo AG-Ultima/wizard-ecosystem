@@ -1,693 +1,851 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧙 Wizard Mail</title>
+    <meta name="description" content="Wizard Mail — AI-powered email client supporting Gmail, Outlook, and any IMAP inbox. Part of the Wizard Ecosystem by Arnav Gupta.">
+    <meta name="author" content="Arnav Gupta">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#080612">
+    <link rel="canonical" href="https://wizardecosystem.dpdns.org/mail">
+    <title>Wizard Mail — Magical Email Client</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
         :root {
-            --bg-primary: #0a0a14;
-            --bg-secondary: #0f0f1c;
-            --bg-card: rgba(18,18,35,0.95);
-            --text-primary: #ffffff;
-            --text-secondary: #e0e0ff;
-            --text-muted: #a0a0c0;
-            --border: rgba(139,92,246,0.3);
-            --primary: #a855f7;
-            --primary-dark: #7c3aed;
-            --primary-light: #c084fc;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
+            --ink:           #080612;
+            --ink-2:         #0e0b1e;
+            --ink-3:         #13102a;
+            --ink-4:         #1a1635;
+            --gold:          #c9a84c;
+            --gold-light:    #e8c97a;
+            --gold-dim:      rgba(201,168,76,0.1);
+            --gold-glow:     rgba(201,168,76,0.2);
+            --violet:        #7c5cbf;
+            --silver:        #d4d0e8;
+            --silver-dim:    rgba(212,208,232,0.55);
+            --muted:         rgba(212,208,232,0.32);
+            --border:        rgba(201,168,76,0.14);
+            --border-strong: rgba(201,168,76,0.4);
+            --success:       #4ade80;
+            --danger:        #f87171;
+            --warning:       #fbbf24;
         }
-        
+
+        html, body { height: 100%; overflow: hidden; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            height: 100vh;
-            overflow: hidden;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--silver);
         }
-        
-        .mail-container { display: flex; height: 100vh; }
-        
-        /* Sidebar */
+
+        /* ── Starfield ── */
+        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .amb {
+            position: fixed; border-radius: 50%;
+            filter: blur(130px); pointer-events: none; z-index: 0;
+            opacity: 0.28; animation: drift 20s ease-in-out infinite alternate;
+        }
+        .amb-1 { width: 600px; height: 600px; top: -180px; left: -180px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
+        .amb-2 { width: 450px; height: 450px; bottom: -100px; right: -100px; background: radial-gradient(circle, #5c3a1e, transparent 70%); animation-delay: -10s; }
+        @keyframes drift { from { transform: translate(0,0); } to { transform: translate(35px,25px); } }
+
+        /* ── Layout ── */
+        .mail-shell { position: relative; z-index: 10; display: flex; height: 100vh; }
+
+        /* ─── SIDEBAR ─── */
         .sidebar {
-            width: 280px;
-            background: var(--bg-secondary);
+            width: 260px; flex-shrink: 0;
+            background: rgba(13,10,26,0.92);
             border-right: 1px solid var(--border);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
+            backdrop-filter: blur(20px);
             overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
         }
-        
-        .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
-        .logo-icon { font-size: 32px; }
-        .logo h1 { font-size: 20px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .user-info {
-            background: rgba(139,92,246,0.1);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 20px;
+        .sidebar::-webkit-scrollbar { width: 3px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+        .sidebar-head {
+            padding: 20px 18px 16px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
-        .user-avatar { width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 12px; }
-        .user-email { font-size: 12px; color: var(--primary-light); word-break: break-all; }
+
+        .logo {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; margin-bottom: 16px;
+        }
+        .logo-glyph {
+            font-size: 24px;
+            filter: drop-shadow(0 0 10px rgba(201,168,76,0.4));
+            animation: lev 5s ease-in-out infinite;
+        }
+        @keyframes lev { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .logo-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px; font-weight: 600;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* User card */
+        .user-card {
+            background: var(--gold-dim);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+        }
+        .user-email-txt {
+            font-size: 12px; color: var(--silver-dim);
+            word-break: break-all; margin-bottom: 6px;
+        }
         .alias-badge {
-            background: rgba(168,85,247,0.2);
-            border-radius: 12px;
-            padding: 4px 8px;
-            font-size: 10px;
-            margin-top: 8px;
             display: inline-block;
+            font-size: 10px; font-weight: 500;
+            color: var(--gold); letter-spacing: 0.04em;
+            background: rgba(201,168,76,0.08);
+            border: 1px solid rgba(201,168,76,0.2);
+            border-radius: 100px;
+            padding: 2px 8px;
         }
-        
+
+        /* Connection status */
+        .connected-badge {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(74,222,128,0.07);
+            border: 1px solid rgba(74,222,128,0.25);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 12px; color: var(--success);
+            margin-bottom: 14px;
+        }
+        .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; flex-shrink: 0; }
+
+        /* Buttons */
         .compose-btn {
             width: 100%;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border: none;
-            border-radius: 24px;
-            padding: 12px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 20px;
-            transition: all 0.2s;
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+            border: none; border-radius: 100px;
+            padding: 10px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 500;
+            color: var(--ink); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 7px;
+            margin-bottom: 8px;
+            transition: opacity 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.02em;
         }
-        .compose-btn:hover { transform: translateY(-2px); box-shadow: 0 0 15px var(--primary-glow); }
-        
-        .get-alias-btn {
+        .compose-btn:hover { opacity: 0.88; box-shadow: 0 4px 18px rgba(201,168,76,0.3); }
+
+        .alias-btn {
             width: 100%;
-            background: rgba(168,85,247,0.2);
-            border: 1px dashed var(--primary);
-            border-radius: 24px;
-            padding: 10px;
-            color: var(--primary-light);
-            font-weight: 500;
-            cursor: pointer;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
+            background: transparent;
+            border: 1px dashed rgba(201,168,76,0.3);
+            border-radius: 100px;
+            padding: 9px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px; font-weight: 400;
+            color: var(--gold); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-bottom: 16px;
+            transition: background 0.2s, border-color 0.2s;
         }
-        .get-alias-btn:hover { background: rgba(168,85,247,0.3); }
-        
-        .folder-list { list-style: none; flex: 1; }
+        .alias-btn:hover { background: var(--gold-dim); border-color: var(--border-strong); }
+
+        .connect-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3b6fd4, #2a9d5c);
+            border: none; border-radius: 100px;
+            padding: 10px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 500;
+            color: white; cursor: pointer;
+            margin-bottom: 14px;
+            transition: opacity 0.2s;
+        }
+        .connect-btn:hover { opacity: 0.88; }
+
+        /* Folder list */
+        .folder-section { padding: 0 10px 16px; }
+        .folder-label {
+            font-size: 10px; font-weight: 500; letter-spacing: 0.2em;
+            text-transform: uppercase; color: var(--muted);
+            padding: 10px 8px 6px;
+        }
         .folder-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border-radius: 12px;
-            cursor: pointer;
-            margin-bottom: 4px;
-            transition: all 0.2s;
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 10px; border-radius: 12px;
+            cursor: pointer; margin-bottom: 2px;
+            border: 1px solid transparent;
+            transition: background 0.2s, border-color 0.2s;
+            position: relative;
         }
-        .folder-item:hover { background: rgba(139,92,246,0.1); }
+        .folder-item:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
         .folder-item.active {
-            background: rgba(139,92,246,0.2);
-            border-left: 3px solid var(--primary);
+            background: var(--gold-dim); border-color: var(--border-strong);
         }
-        .folder-icon { font-size: 18px; }
-        .folder-name { flex: 1; font-size: 14px; }
+        .folder-item.active::before {
+            content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+            width: 2px; border-radius: 2px; background: var(--gold);
+        }
+        .folder-icon { font-size: 15px; width: 20px; text-align: center; }
+        .folder-name { flex: 1; font-size: 13px; font-weight: 400; color: var(--silver-dim); }
+        .folder-item.active .folder-name { color: var(--silver); }
         .folder-count {
-            background: rgba(139,92,246,0.3);
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 11px;
+            font-size: 10px; font-weight: 500;
+            background: var(--gold-dim);
+            border: 1px solid rgba(201,168,76,0.2);
+            color: var(--gold);
+            padding: 1px 7px; border-radius: 100px;
         }
-        
-        /* Main Content */
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* ─── MAIN ─── */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+        /* Toolbar */
         .toolbar {
             padding: 12px 20px;
             border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 10px;
+            background: rgba(13,10,26,0.7);
+            backdrop-filter: blur(12px);
+            flex-shrink: 0;
         }
-        .search-box {
-            display: flex;
-            gap: 10px;
-            background: rgba(0,0,0,0.3);
+        .folder-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px; font-weight: 600; color: var(--silver);
+        }
+        .toolbar-right { display: flex; gap: 8px; align-items: center; }
+        .search-wrap {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.04);
             border: 1px solid var(--border);
-            border-radius: 40px;
-            padding: 8px 16px;
-            width: 280px;
+            border-radius: 100px;
+            padding: 7px 14px;
+            transition: border-color 0.2s;
         }
-        .search-box input {
-            flex: 1;
-            background: none;
-            border: none;
-            color: var(--text-primary);
-            outline: none;
-            font-size: 14px;
+        .search-wrap:focus-within { border-color: var(--border-strong); }
+        .search-wrap input {
+            background: none; border: none; outline: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 300;
+            color: var(--silver); width: 200px;
         }
+        .search-wrap input::placeholder { color: var(--muted); }
+        .search-ico { font-size: 13px; opacity: 0.4; }
         .refresh-btn {
-            background: rgba(139,92,246,0.15);
-            border: none;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            cursor: pointer;
-            color: var(--text-primary);
-            font-size: 18px;
+            width: 34px; height: 34px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 50%; cursor: pointer;
+            color: var(--muted); font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, color 0.2s;
         }
-        .refresh-btn:hover { background: rgba(139,92,246,0.3); }
-        
-        .email-list { flex: 1; overflow-y: auto; }
-        .email-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .email-item:hover { background: rgba(139,92,246,0.05); }
-        .email-item.unread { background: rgba(168,85,247,0.08); }
-        .email-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
-        .email-star {
-            font-size: 18px;
-            background: none;
-            border: none;
-            color: #f59e0b;
-            cursor: pointer;
-            width: 28px;
-            transition: transform 0.1s;
-        }
-        .email-star:hover { transform: scale(1.1); }
-        .email-from { width: 200px; font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .email-subject { flex: 1; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .email-date { width: 100px; font-size: 12px; color: var(--text-muted); text-align: right; }
-        
-        .batch-actions {
+        .refresh-btn:hover { background: var(--gold-dim); color: var(--gold); }
+
+        /* Batch bar */
+        .batch-bar {
             padding: 8px 20px;
-            background: var(--bg-secondary);
+            background: rgba(201,168,76,0.06);
             border-bottom: 1px solid var(--border);
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+            flex-shrink: 0;
         }
         .batch-btn {
-            background: rgba(139,92,246,0.15);
-            border: none;
-            border-radius: 16px;
-            padding: 6px 12px;
-            color: white;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-        .batch-btn:hover { background: rgba(139,92,246,0.3); }
-        
-        /* Email View */
-        .email-view {
-            display: none;
-            flex-direction: column;
-            height: 100%;
-        }
-        .email-view.show { display: flex; }
-        .email-view-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-        }
-        .email-subject-large { font-size: 24px; margin-bottom: 16px; word-break: break-word; }
-        .email-meta { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; word-break: break-all; }
-        .email-body {
-            flex: 1;
-            padding: 24px;
-            overflow-y: auto;
-            line-height: 1.6;
-            font-size: 15px;
-        }
-        .email-body img { max-width: 100%; height: auto; margin: 10px 0; border-radius: 8px; }
-        .email-body blockquote {
-            border-left: 3px solid var(--primary);
-            padding-left: 16px;
-            margin: 16px 0;
-            color: var(--text-muted);
-        }
-        .action-buttons { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-        .action-btn {
-            background: rgba(139,92,246,0.15);
+            background: rgba(255,255,255,0.05);
             border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 6px 16px;
-            color: var(--text-primary);
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
+            border-radius: 100px; padding: 5px 14px;
+            color: var(--silver-dim); cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px; font-weight: 400;
+            transition: background 0.2s, border-color 0.2s;
         }
-        .action-btn:hover { background: rgba(139,92,246,0.3); }
-        .delete-btn { background: rgba(239,68,68,0.15); color: var(--danger); border-color: var(--danger); }
-        .delete-btn:hover { background: rgba(239,68,68,0.3); }
+        .batch-btn:hover { background: var(--gold-dim); border-color: var(--border-strong); color: var(--gold); }
+        .batch-count { font-size: 12px; color: var(--muted); }
+
+        /* Email list */
+        .email-list {
+            flex: 1; overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .email-list::-webkit-scrollbar { width: 4px; }
+        .email-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .email-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 13px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            cursor: pointer;
+            transition: background 0.18s;
+            position: relative;
+        }
+        .email-item:hover { background: rgba(255,255,255,0.03); }
+        .email-item.unread { background: rgba(201,168,76,0.04); }
+        .email-item.unread::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 2px; background: var(--gold);
+        }
+        .email-checkbox { width: 15px; height: 15px; cursor: pointer; accent-color: var(--gold); flex-shrink: 0; }
+        .email-star {
+            background: none; border: none;
+            font-size: 14px; cursor: pointer;
+            color: var(--muted);
+            transition: transform 0.15s, color 0.15s;
+            flex-shrink: 0;
+        }
+        .email-star.starred { color: var(--gold); }
+        .email-star:hover { transform: scale(1.2); }
+        .email-from {
+            width: 170px; flex-shrink: 0;
+            font-size: 13px; font-weight: 500; color: var(--silver);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .email-item.unread .email-from { color: var(--gold-light); }
+        .email-subject {
+            flex: 1; font-size: 13px; font-weight: 300; color: var(--silver-dim);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .email-item.unread .email-subject { color: var(--silver); font-weight: 400; }
+        .email-date { width: 80px; font-size: 11px; color: var(--muted); text-align: right; flex-shrink: 0; }
+
+        /* ─── EMAIL VIEW ─── */
+        .email-view { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+        .email-view.show { display: flex; }
+
+        .view-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(13,10,26,0.7);
+            backdrop-filter: blur(12px);
+            flex-shrink: 0;
+        }
+        .view-topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
+        }
         .back-btn {
-            background: none;
-            border: none;
-            color: var(--primary);
-            cursor: pointer;
-            font-size: 14px;
+            background: none; border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 400;
+            color: var(--gold); cursor: pointer;
+            display: flex; align-items: center; gap: 5px;
+            transition: opacity 0.2s;
         }
-        
-        /* AI Bar */
+        .back-btn:hover { opacity: 0.75; }
+        .view-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 100px; padding: 6px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 12px; color: var(--silver-dim);
+            cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .action-btn:hover { background: var(--gold-dim); color: var(--gold); border-color: var(--border-strong); }
+        .delete-action { border-color: rgba(248,113,113,0.3); color: var(--danger); }
+        .delete-action:hover { background: rgba(248,113,113,0.1); color: var(--danger); border-color: rgba(248,113,113,0.5); }
+
+        .email-subject-lg {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px; font-weight: 600;
+            color: var(--silver); line-height: 1.3;
+            margin-bottom: 10px; word-break: break-word;
+        }
+        .email-meta-row { font-size: 12px; font-weight: 300; color: var(--muted); margin-bottom: 3px; word-break: break-all; }
+
+        .email-body-area {
+            flex: 1; overflow-y: auto; padding: 24px;
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+        }
+        .email-body-area::-webkit-scrollbar { width: 4px; }
+        .email-body-area::-webkit-scrollbar-thumb { background: var(--border); }
+        .email-body-content {
+            font-size: 14px; font-weight: 300; line-height: 1.75;
+            color: var(--silver-dim);
+        }
+        .email-body-content img { max-width: 100%; border-radius: 10px; margin: 10px 0; }
+        .email-body-content blockquote {
+            border-left: 2px solid var(--gold);
+            padding-left: 14px; margin: 14px 0;
+            color: var(--muted); font-style: italic;
+        }
+        .email-body-content a { color: var(--gold-light); }
+
+        /* AI bar */
         .ai-bar {
-            background: rgba(168,85,247,0.1);
-            border-radius: 12px;
-            padding: 12px;
-            margin: 16px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
+            padding: 12px 18px;
+            border-top: 1px solid var(--border);
+            display: flex; gap: 10px; align-items: center;
+            background: rgba(13,10,26,0.7);
+            backdrop-filter: blur(12px);
+            flex-shrink: 0;
         }
         .ai-input {
-            flex: 1;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 10px 16px;
-            color: white;
-            font-size: 13px;
+            flex: 1; background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border); border-radius: 100px;
+            padding: 9px 16px; color: var(--silver);
+            font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 300;
+            outline: none; transition: border-color 0.2s;
         }
+        .ai-input:focus { border-color: var(--border-strong); }
+        .ai-input::placeholder { color: var(--muted); }
         .ai-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border: none;
-            border-radius: 24px;
-            padding: 8px 20px;
-            color: white;
-            cursor: pointer;
-            font-size: 13px;
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+            border: none; border-radius: 100px;
+            padding: 9px 20px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 500;
+            color: var(--ink); cursor: pointer;
+            transition: opacity 0.2s;
+            white-space: nowrap;
         }
-        .ai-response {
-            background: rgba(168,85,247,0.15);
-            border-radius: 12px;
-            padding: 12px;
-            margin: 0 16px 16px 16px;
-            font-size: 13px;
-        }
-        
-        /* Modals */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(20px);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal.show { display: flex; }
-        .modal-card {
-            background: var(--bg-secondary);
-            border-radius: 24px;
-            padding: 24px;
-            width: 650px;
-            max-width: 90%;
-            max-height: 85vh;
-            overflow-y: auto;
+        .ai-btn:hover { opacity: 0.88; }
+
+        .ai-response-box {
+            margin: 0 18px 14px;
+            background: linear-gradient(135deg, rgba(201,168,76,0.06), rgba(124,92,191,0.06));
             border: 1px solid var(--border);
+            border-left: 3px solid var(--gold);
+            border-radius: 14px; padding: 14px 16px;
+            font-size: 13px; font-weight: 300;
+            color: var(--silver-dim); line-height: 1.65;
         }
-        .modal-card h3 { margin-bottom: 20px; color: var(--primary-light); }
-        .modal-card input, .modal-card textarea {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            color: white;
-            margin-bottom: 16px;
-            font-size: 14px;
-            font-family: inherit;
+
+        /* ─── EMPTY / LOADING STATES ─── */
+        .state-box {
+            text-align: center; padding: 60px 20px; color: var(--muted);
         }
-        .modal-card textarea { height: 200px; resize: vertical; }
-        
-        .rich-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 16px;
+        .state-icon { font-size: 44px; margin-bottom: 12px; opacity: 0.35; display: block; }
+        .state-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px; font-weight: 400; font-style: italic;
+            color: var(--silver-dim); margin-bottom: 6px;
         }
-        .rich-btn {
-            background: rgba(139,92,246,0.2);
-            border: none;
-            border-radius: 8px;
-            padding: 6px 12px;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        .rich-btn:hover { background: rgba(139,92,246,0.4); }
-        .color-picker { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; background: white; }
-        .font-size-select {
-            background: rgba(139,92,246,0.2);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 4px 8px;
-            color: white;
-            cursor: pointer;
-        }
-        
-        .modal-btn {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border: none;
-            border-radius: 24px;
-            padding: 12px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 8px;
-        }
-        .modal-btn-secondary {
-            background: rgba(139,92,246,0.2);
-            margin-top: 12px;
-        }
-        
-        .app-pass-note {
-            background: rgba(245,158,11,0.15);
-            border: 1px solid var(--warning);
-            border-radius: 12px;
-            padding: 12px;
-            margin-top: 16px;
-            font-size: 12px;
-            color: var(--warning);
-        }
-        .connected-badge {
-            background: rgba(16,185,129,0.15);
-            border: 1px solid var(--success);
-            border-radius: 24px;
-            padding: 10px;
-            text-align: center;
-            font-size: 12px;
-            color: var(--success);
-            margin-bottom: 20px;
-        }
-        .connect-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #4285f4, #34a853);
-            border: none;
-            border-radius: 24px;
-            padding: 12px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-        
-        .loading { text-align: center; padding: 60px; color: var(--text-muted); }
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--primary);
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 8px;
+        .state-sub { font-size: 13px; font-weight: 300; }
+        .spinner-ring {
+            width: 36px; height: 36px;
+            border: 2px solid rgba(201,168,76,0.15);
+            border-top-color: var(--gold);
+            border-radius: 50%; animation: spin 1s linear infinite;
+            margin: 0 auto 14px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .error-message {
-            background: rgba(239,68,68,0.15);
-            border: 1px solid var(--danger);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px;
-            text-align: center;
-            color: var(--danger);
+
+        .error-box {
+            background: rgba(248,113,113,0.07);
+            border: 1px solid rgba(248,113,113,0.25);
+            border-radius: 14px; padding: 20px;
+            margin: 20px; text-align: center; color: var(--danger);
+            font-size: 13px;
         }
         .retry-btn {
-            background: var(--primary);
-            border: none;
-            border-radius: 20px;
-            padding: 8px 20px;
-            color: white;
-            cursor: pointer;
-            margin-top: 12px;
+            background: rgba(248,113,113,0.15);
+            border: 1px solid rgba(248,113,113,0.3);
+            border-radius: 100px; padding: 7px 18px;
+            color: var(--danger); cursor: pointer;
+            font-family: 'DM Sans', sans-serif; font-size: 12px;
+            margin-top: 10px; transition: background 0.2s;
         }
-        
-        .attachment-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 16px;
+        .retry-btn:hover { background: rgba(248,113,113,0.25); }
+
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 28px; left: 50%;
+            transform: translateX(-50%) translateY(12px);
+            padding: 10px 22px; border-radius: 100px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 500;
+            z-index: 10000; opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
         }
-        .attachment-item {
-            background: rgba(139,92,246,0.15);
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.ok  { background: linear-gradient(135deg, var(--gold), #a8751e); color: var(--ink); }
+        .toast.err { background: #b44; color: white; }
+
+        /* ─── MODALS ─── */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(5,3,14,0.93); backdrop-filter: blur(18px);
+            z-index: 9999; align-items: center; justify-content: center;
+            padding: 20px;
         }
-        .attachment-remove {
-            background: none;
-            border: none;
-            color: var(--danger);
-            cursor: pointer;
-            font-size: 14px;
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+            border: 1px solid var(--border); border-radius: 24px;
+            padding: 36px 32px; width: 620px; max-width: 100%;
+            max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+            animation: modal-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
         }
-        
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: var(--bg-primary); }
-        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+        .modal-box.narrow { width: 420px; }
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(0.9) translateY(16px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 26px; font-weight: 400;
+            color: var(--silver); margin-bottom: 22px;
+        }
+        .field {
+            width: 100%; background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px; padding: 12px 16px;
+            color: var(--silver); font-family: 'DM Sans', sans-serif;
+            font-size: 14px; font-weight: 300;
+            outline: none; margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .field:focus { border-color: rgba(201,168,76,0.5); }
+        .field::placeholder { color: var(--muted); }
+        textarea.field { resize: vertical; min-height: 180px; line-height: 1.6; }
+
+        /* Rich text toolbar */
+        .rich-bar {
+            display: flex; flex-wrap: wrap; gap: 5px;
+            padding: 8px 0; border-bottom: 1px solid var(--border);
+            margin-bottom: 12px;
+        }
+        .rich-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 5px 11px; color: var(--silver-dim);
+            cursor: pointer; font-size: 13px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .rich-btn:hover { background: var(--gold-dim); color: var(--gold); }
+        .color-picker {
+            width: 30px; height: 30px;
+            border: 1px solid var(--border); border-radius: 8px;
+            cursor: pointer; background: transparent; padding: 2px;
+        }
+        .font-select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border); border-radius: 8px;
+            padding: 4px 8px; color: var(--silver-dim);
+            font-family: 'DM Sans', sans-serif; font-size: 12px;
+            cursor: pointer; outline: none;
+        }
+        .compose-body-editable {
+            min-height: 180px;
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 12px; padding: 14px 16px;
+            color: var(--silver); font-size: 14px; font-weight: 300;
+            line-height: 1.7; outline: none; overflow-y: auto;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .compose-body-editable:focus { border-color: rgba(201,168,76,0.4); }
+
+        /* Attachment chips */
+        .attachment-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+        .att-chip {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--gold-dim); border: 1px solid var(--border);
+            border-radius: 100px; padding: 4px 12px;
+            font-size: 12px; color: var(--gold-light);
+        }
+        .att-remove {
+            background: none; border: none; color: var(--muted);
+            cursor: pointer; font-size: 12px; padding: 0;
+            transition: color 0.2s;
+        }
+        .att-remove:hover { color: var(--danger); }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+            border: none; border-radius: 14px; padding: 13px;
+            font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+            color: var(--ink); cursor: pointer;
+            transition: opacity 0.2s, box-shadow 0.2s; margin-top: 6px;
+        }
+        .btn-primary:hover { opacity: 0.88; box-shadow: 0 6px 24px rgba(201,168,76,0.3); }
+        .btn-secondary {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border); border-radius: 14px; padding: 11px;
+            font-family: 'DM Sans', sans-serif; font-size: 13px;
+            color: var(--muted); cursor: pointer; margin-top: 10px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.07); color: var(--silver); }
+
+        .warning-box {
+            background: rgba(251,191,36,0.07);
+            border: 1px solid rgba(251,191,36,0.25);
+            border-radius: 12px; padding: 12px 14px;
+            font-size: 12px; color: var(--warning);
+            line-height: 1.6; margin-top: 10px;
+        }
+        .warning-box a { color: var(--gold-light); }
+
+        .avail-ok  { font-size: 12px; color: var(--success); margin-bottom: 10px; margin-top: -6px; }
+        .avail-err { font-size: 12px; color: var(--danger);  margin-bottom: 10px; margin-top: -6px; }
+
+        .alias-chip {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--gold-dim); border: 1px solid var(--border);
+            border-radius: 12px; padding: 8px 12px;
+            font-size: 12px; margin-bottom: 6px; color: var(--silver-dim);
+        }
+
+        @media (max-width: 700px) {
+            .sidebar { width: 100%; position: absolute; z-index: 100; height: 100%; transform: translateX(-100%); transition: transform 0.3s; }
+            .sidebar.open { transform: translateX(0); }
+            .email-from { display: none; }
+        }
     </style>
 </head>
 <body>
-    <div class="mail-container">
-        <div class="sidebar">
-            <div class="logo"><span class="logo-icon">📧</span><h1>Wizard Mail</h1></div>
-            <div class="user-info">
-                <div class="user-avatar">🧙</div>
-                <div>
-                    <div id="user-email" class="user-email">Loading...</div>
-                    <div id="alias-display" class="alias-badge"></div>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="amb amb-1" aria-hidden="true"></div>
+    <div class="amb amb-2" aria-hidden="true"></div>
+
+    <div class="mail-shell">
+        <!-- ── Sidebar ── -->
+        <aside class="sidebar" aria-label="Mail sidebar">
+            <div class="sidebar-head">
+                <a class="logo" href="https://wizardecosystem.dpdns.org" aria-label="Wizard Ecosystem home">
+                    <span class="logo-glyph" aria-hidden="true">🧙</span>
+                    <span class="logo-name">Wizard Mail</span>
+                </a>
+                <div class="user-card">
+                    <div class="user-email-txt" id="user-email">Loading…</div>
+                    <span class="alias-badge" id="alias-display" style="display:none;"></span>
                 </div>
+                <div id="connection-status"></div>
+                <button class="compose-btn" id="compose-btn" aria-label="Compose new email">
+                    <span aria-hidden="true">✦</span> Compose
+                </button>
+                <button class="alias-btn" id="get-alias-btn" aria-label="Get free Wizard email alias">
+                    ✨ Free @wizardecosystem.dpdns.org alias
+                </button>
             </div>
-            <div id="connection-status"></div>
-            <button class="compose-btn" id="compose-btn">✏️ Compose</button>
-            <button class="get-alias-btn" id="get-alias-btn">
-                ✨ Get Free @wizardecosystem.dpdns.org Email
-            </button>
-            
-            <ul class="folder-list">
-                <li class="folder-item active" data-folder="INBOX">
-                    <span class="folder-icon">📥</span>
+
+            <div class="folder-section" role="navigation" aria-label="Mail folders">
+                <div class="folder-label">Folders</div>
+                <div class="folder-item active" data-folder="INBOX" tabindex="0" role="button" aria-label="Inbox">
+                    <span class="folder-icon" aria-hidden="true">📥</span>
                     <span class="folder-name">Inbox</span>
                     <span class="folder-count" id="inbox-count">0</span>
-                </li>
-                <li class="folder-item" data-folder="STARRED">
-                    <span class="folder-icon">⭐</span>
+                </div>
+                <div class="folder-item" data-folder="STARRED" tabindex="0" role="button" aria-label="Starred">
+                    <span class="folder-icon" aria-hidden="true">⭐</span>
                     <span class="folder-name">Starred</span>
                     <span class="folder-count" id="starred-count">0</span>
-                </li>
-                <li class="folder-item" data-folder="SENT">
-                    <span class="folder-icon">📤</span>
+                </div>
+                <div class="folder-item" data-folder="SENT" tabindex="0" role="button" aria-label="Sent">
+                    <span class="folder-icon" aria-hidden="true">📤</span>
                     <span class="folder-name">Sent</span>
-                </li>
-                <li class="folder-item" data-folder="SPAM">
-                    <span class="folder-icon">⚠️</span>
+                </div>
+                <div class="folder-item" data-folder="SPAM" tabindex="0" role="button" aria-label="Spam">
+                    <span class="folder-icon" aria-hidden="true">⚠️</span>
                     <span class="folder-name">Spam</span>
-                </li>
-                <li class="folder-item" data-folder="TRASH">
-                    <span class="folder-icon">🗑️</span>
+                </div>
+                <div class="folder-item" data-folder="TRASH" tabindex="0" role="button" aria-label="Trash">
+                    <span class="folder-icon" aria-hidden="true">🗑️</span>
                     <span class="folder-name">Trash</span>
-                </li>
-                <li class="folder-item" data-folder="DRAFTS">
-                    <span class="folder-icon">📝</span>
+                </div>
+                <div class="folder-item" data-folder="DRAFTS" tabindex="0" role="button" aria-label="Drafts">
+                    <span class="folder-icon" aria-hidden="true">📝</span>
                     <span class="folder-name">Drafts</span>
-                </li>
-            </ul>
-        </div>
-        
-        <div class="main">
-            <div class="toolbar">
-                <h2 id="folder-title">Inbox</h2>
-                <div style="display: flex; gap: 10px;">
-                    <div class="search-box">
-                        <span>🔍</span>
-                        <input type="text" id="search-input" placeholder="Search emails...">
-                    </div>
-                    <button class="refresh-btn" id="refresh-btn" title="Refresh">↻</button>
                 </div>
             </div>
-            
-            <div class="batch-actions" id="batch-actions" style="display: none;">
-                <input type="checkbox" id="select-all" style="width: 18px;">
-                <span id="selected-count">0 selected</span>
-                <button class="batch-btn" id="batch-delete">🗑️ Delete</button>
+        </aside>
+
+        <!-- ── Main ── -->
+        <main class="main" aria-label="Email content">
+            <div class="toolbar">
+                <h1 class="folder-title" id="folder-title">Inbox</h1>
+                <div class="toolbar-right">
+                    <div class="search-wrap" role="search">
+                        <span class="search-ico" aria-hidden="true">✦</span>
+                        <input type="search" id="search-input" placeholder="Search emails…" aria-label="Search emails" autocomplete="off">
+                    </div>
+                    <button class="refresh-btn" id="refresh-btn" aria-label="Refresh emails" title="Refresh">↻</button>
+                </div>
+            </div>
+
+            <div class="batch-bar" id="batch-bar" style="display:none;" role="toolbar" aria-label="Batch actions">
+                <input type="checkbox" id="select-all" aria-label="Select all emails">
+                <span class="batch-count" id="selected-count">0 selected</span>
+                <button class="batch-btn" id="batch-delete">🗑 Delete</button>
                 <button class="batch-btn" id="batch-star">⭐ Star</button>
             </div>
-            
-            <div id="email-list" class="email-list">
-                <div class="loading">✨ Connect your email to get started</div>
+
+            <div id="email-list" class="email-list" role="list" aria-label="Emails">
+                <div class="state-box">
+                    <span class="state-icon" aria-hidden="true">📧</span>
+                    <p class="state-title">Connect your email to begin</p>
+                    <p class="state-sub">Gmail, Outlook, or any IMAP inbox</p>
+                </div>
             </div>
-            
-            <div id="email-view" class="email-view">
-                <div class="email-view-header">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-                        <button class="back-btn" id="back-to-list">← Back to Inbox</button>
-                        <div class="action-buttons">
-                            <button class="action-btn" id="reply-btn">↩️ Reply</button>
-                            <button class="action-btn" id="reply-all-btn">↪️ Reply All</button>
-                            <button class="action-btn delete-btn" id="delete-current-email">🗑️ Delete</button>
+
+            <div id="email-view" class="email-view" role="region" aria-label="Email detail">
+                <div class="view-header">
+                    <div class="view-topbar">
+                        <button class="back-btn" id="back-to-list">← Back</button>
+                        <div class="view-actions">
+                            <button class="action-btn" id="reply-btn">↩ Reply</button>
+                            <button class="action-btn" id="reply-all-btn">↪ Reply All</button>
+                            <button class="action-btn delete-action" id="delete-current">🗑 Delete</button>
                         </div>
                     </div>
-                    <h2 id="email-subject" class="email-subject-large"></h2>
-                    <div class="email-meta"><strong id="email-from"></strong></div>
-                    <div class="email-meta" id="email-to"></div>
-                    <div class="email-meta" id="email-date"></div>
+                    <h2 class="email-subject-lg" id="email-subject"></h2>
+                    <div class="email-meta-row" id="email-from-row"></div>
+                    <div class="email-meta-row" id="email-to-row"></div>
+                    <div class="email-meta-row" id="email-date-row"></div>
                 </div>
-                <div id="email-body" class="email-body"></div>
+                <div class="email-body-area">
+                    <div id="email-body" class="email-body-content"></div>
+                </div>
+                <div id="ai-response-box" class="ai-response-box" style="display:none;"></div>
                 <div class="ai-bar">
-                    <input type="text" id="ai-question" class="ai-input" placeholder="Ask AI about this email...">
-                    <button id="ai-ask-btn" class="ai-btn">Ask AI</button>
+                    <input type="text" id="ai-question" class="ai-input" placeholder="Ask the wizard about this email…" aria-label="Ask AI about this email">
+                    <button id="ai-ask-btn" class="ai-btn">Ask</button>
                 </div>
-                <div id="ai-response" class="ai-response" style="display: none;"></div>
             </div>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <!-- ── Connect Modal ── -->
+    <div id="connect-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="connect-title">
+        <div class="modal-box narrow">
+            <h2 class="modal-title" id="connect-title">Connect Email Account</h2>
+            <input class="field" type="email" id="connect-email" placeholder="your@email.com" autocomplete="email">
+            <input class="field" type="text"  id="connect-alias" placeholder="Display alias (optional)">
+            <input class="field" type="password" id="connect-password" placeholder="Password or App Password" autocomplete="current-password">
+            <button class="btn-primary" id="connect-submit">Connect</button>
+            <div class="warning-box" id="gmail-note" style="display:none;">
+                🔐 <strong>Gmail requires an App Password.</strong><br>
+                Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">Google App Passwords</a>,
+                select Mail → Other → name it "Wizard Mail", then paste the 16-character code above.
+            </div>
+            <button class="btn-secondary" id="close-connect">Cancel</button>
         </div>
     </div>
-    
-    <!-- Connect Modal -->
-    <div id="connect-modal" class="modal">
-        <div class="modal-card">
-            <h3>🔗 Connect Email Account</h3>
-            <input type="email" id="connect-email" placeholder="Your email address (e.g., you@gmail.com)">
-            <input type="text" id="connect-alias" placeholder="Display alias (e.g., you@wizardecosystem.dpdns.org)">
-            <input type="password" id="connect-password" placeholder="Password or App Password">
-            <button id="connect-submit" class="modal-btn">Connect</button>
-            <div class="app-pass-note" id="gmail-note" style="display: none;">
-                🔐 <strong>Gmail requires an App Password</strong><br>
-                1. Go to <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color:var(--primary-light);">Google App Passwords</a><br>
-                2. Select "Mail" → "Other" → Name it "Wizard Browser"<br>
-                3. Copy the 16-character password here
-            </div>
-            <button id="close-connect" class="modal-btn-secondary modal-btn">Cancel</button>
-        </div>
-    </div>
-    
-    <!-- Compose/Reply Modal -->
-    <div id="compose-modal" class="modal">
-        <div class="modal-card">
-            <h3 id="compose-title">✏️ New Message</h3>
-            <input type="email" id="compose-to" placeholder="To">
-            <input type="text" id="compose-subject" placeholder="Subject">
-            
-            <div class="rich-toolbar">
+
+    <!-- ── Compose Modal ── -->
+    <div id="compose-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="compose-title">
+        <div class="modal-box">
+            <h2 class="modal-title" id="compose-title">New Message</h2>
+            <input class="field" type="email" id="compose-to"      placeholder="To"      autocomplete="off">
+            <input class="field" type="text"  id="compose-subject" placeholder="Subject">
+            <div class="rich-bar" role="toolbar" aria-label="Text formatting">
                 <button class="rich-btn" data-action="bold"><b>B</b></button>
                 <button class="rich-btn" data-action="italic"><i>I</i></button>
                 <button class="rich-btn" data-action="underline"><u>U</u></button>
-                <input type="color" id="text-color" class="color-picker" value="#ffffff">
-                <select id="font-size" class="font-size-select">
-                    <option value="12">12px</option>
-                    <option value="14" selected>14px</option>
-                    <option value="16">16px</option>
-                    <option value="18">18px</option>
+                <input type="color" id="text-color" class="color-picker" value="#d4d0e8" title="Text color">
+                <select id="font-size" class="font-select" aria-label="Font size">
+                    <option value="2">Small</option>
+                    <option value="3" selected>Normal</option>
+                    <option value="4">Large</option>
+                    <option value="5">X-Large</option>
                 </select>
-                <button class="rich-btn" id="image-upload-btn">🖼️</button>
+                <button class="rich-btn" id="attach-trigger" aria-label="Attach file">📎</button>
             </div>
-            
-            <div id="compose-body" contenteditable="true" style="min-height: 200px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; overflow-y: auto; font-size: 14px;"></div>
-            
+            <div id="compose-body" class="compose-body-editable" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Email body"></div>
             <div id="attachment-list" class="attachment-list"></div>
-            <input type="file" id="file-input" multiple style="display: none;">
-            
-            <div class="ai-bar" style="margin: 16px 0;">
-                <input type="text" id="compose-ai-prompt" class="ai-input" placeholder="Ask AI to write or improve...">
+            <input type="file" id="file-input" multiple style="display:none;" aria-hidden="true">
+            <div class="ai-bar" style="background:var(--gold-dim);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:14px;">
+                <input type="text" id="compose-ai-prompt" class="ai-input" style="background:transparent;border:none;padding:0;" placeholder="Ask AI to write or improve…" aria-label="AI compose prompt">
                 <button id="compose-ai-btn" class="ai-btn">Enhance</button>
             </div>
-            
-            <button id="send-btn" class="modal-btn">Send</button>
-            <button id="close-compose" class="modal-btn-secondary modal-btn">Cancel</button>
+            <button class="btn-primary" id="send-btn">Send Message</button>
+            <button class="btn-secondary" id="close-compose">Cancel</button>
         </div>
     </div>
-    
-    <!-- Alias Modal -->
-    <div id="alias-modal" class="modal">
-        <div class="modal-card">
-            <h3>✨ Get Free @wizardecosystem.dpdns.org Email</h3>
-            <input type="text" id="alias-name" placeholder="yourname">
-            <div id="alias-availability" style="font-size: 12px; margin-top: -8px; margin-bottom: 16px;"></div>
-            <input type="email" id="alias-target" placeholder="Forward to (your real email)">
-            <button id="create-alias-btn" class="modal-btn">Create Alias ✨</button>
-            <button id="close-alias" class="modal-btn-secondary modal-btn">Cancel</button>
-            <div id="my-aliases-list" style="margin-top: 20px;"></div>
+
+    <!-- ── Alias Modal ── -->
+    <div id="alias-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="alias-title">
+        <div class="modal-box narrow">
+            <h2 class="modal-title" id="alias-title">Free Wizard Email</h2>
+            <input class="field" type="text" id="alias-name" placeholder="yourname" autocomplete="off" aria-label="Desired alias name">
+            <div id="alias-availability"></div>
+            <input class="field" type="email" id="alias-target" placeholder="Forward to (your real email)" autocomplete="email">
+            <button class="btn-primary" id="create-alias-btn">Claim Alias ✨</button>
+            <button class="btn-secondary" id="close-alias">Cancel</button>
+            <div id="my-aliases-list" style="margin-top: 18px;"></div>
         </div>
     </div>
 
     <script>
-        const API_BASE = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null;
-        let currentEmails = [];
-        let currentEmailId = null;
-        let currentEmailFrom = '';
-        let currentEmailSubject = '';
-        let currentEmailTo = '';
-        let currentEmailCc = '';
-        let currentEmailMessageId = '';
-        let currentEmailReferences = '';
-        let connectedAlias = '';
-        let currentFolder = 'INBOX';
-        let selectedEmails = new Set();
-        let isLoading = false;
-        let attachments = [];
-        
-        // Helper functions
-        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-        
-        function showNotification(msg, isError = false) {
-            const n = document.createElement('div');
-            n.textContent = msg;
-            n.style.cssText = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:${isError ? 'var(--danger)' : 'linear-gradient(135deg,var(--primary),var(--primary-dark))'};border-radius:50px;padding:10px 20px;color:white;z-index:10000;`;
-            document.body.appendChild(n);
-            setTimeout(() => n.remove(), 3000);
+        /* ── Starfield ── */
+        (function() {
+            const c = document.getElementById('starfield'), ctx = c.getContext('2d');
+            let W, H;
+            const stars = Array.from({length: 180}, () => ({
+                x: Math.random(), y: Math.random(),
+                r: Math.random() * 1.2 + 0.2,
+                phase: Math.random() * Math.PI * 2,
+                speed: Math.random() * 0.8 + 0.3
+            }));
+            function resize() { W = c.width = innerWidth; H = c.height = innerHeight; }
+            resize(); window.addEventListener('resize', resize);
+            (function draw() {
+                ctx.clearRect(0,0,W,H);
+                const t = Date.now()/1000;
+                stars.forEach(s => {
+                    const a = 0.2 + 0.45*(Math.sin(t*s.speed+s.phase)*0.5+0.5);
+                    ctx.beginPath(); ctx.arc(s.x*W, s.y*H, s.r, 0, Math.PI*2);
+                    ctx.fillStyle = `rgba(212,208,232,${a})`; ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            })();
+        })();
+
+        /* ── App ── */
+        const API = 'https://arnav0928.pythonanywhere.com';
+        let currentUser = null, currentEmails = [], currentEmailId = null;
+        let currentEmailFrom = '', currentEmailSubject = '', currentEmailTo = '';
+        let currentEmailCc = '', currentEmailMessageId = '', currentEmailReferences = '';
+        let connectedAlias = '', currentFolder = 'INBOX';
+        let selectedEmails = new Set(), isLoading = false, attachments = [];
+
+        /* Helpers */
+        function esc(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+        let toastT;
+        function toast(msg, type = 'ok') {
+            const el = document.getElementById('toast');
+            el.textContent = msg; el.className = `toast ${type} show`;
+            clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 3000);
         }
-        
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            const date = new Date(dateStr);
-            const now = new Date();
-            const diff = now - date;
-            if (diff < 86400000) return date.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-            if (diff < 604800000) return date.toLocaleDateString([], { weekday:'short' });
-            return date.toLocaleDateString([], { month:'short', day:'numeric' });
+
+        function formatDate(s) {
+            if (!s) return '';
+            const d = new Date(s), now = new Date(), diff = now - d;
+            if (diff < 86400000 && d.getDate() === now.getDate()) return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+            if (diff < 604800000) return d.toLocaleDateString([], {weekday:'short'});
+            return d.toLocaleDateString([], {month:'short', day:'numeric'});
         }
-        
-        function applyFormat(command, value = null) {
-            document.execCommand(command, false, value);
-            document.getElementById('compose-body').focus();
-        }
-        
-        function getHtmlContent() { return document.getElementById('compose-body').innerHTML; }
-        
-        // Auth
+
+        /* Auth */
         async function checkAuth() {
             try {
-                const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
+                const res = await fetch(`${API}/api/check-auth`, {credentials:'include'});
                 if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated && data.user) {
-                        currentUser = data.user;
+                    const d = await res.json();
+                    if (d.authenticated && d.user) {
+                        currentUser = d.user;
                         document.getElementById('user-email').textContent = currentUser.email;
                         await checkConnection();
                         await loadMyAliases();
@@ -697,93 +855,61 @@
             } catch(e) {}
             window.location.href = 'https://wizardecosystem.dpdns.org';
         }
-        
-        async function loadMyAliases() {
-            try {
-                const res = await fetch(`${API_BASE}/api/alias/my-aliases`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.aliases && data.aliases.length > 0) {
-                        const container = document.getElementById('my-aliases-list');
-                        container.innerHTML = '<div style="margin-bottom: 12px; color: var(--primary-light);">📬 Your aliases:</div>' + 
-                            data.aliases.map(a => `<div style="background: rgba(139,92,246,0.1); border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; font-size: 13px;">📧 ${escapeHtml(a.alias)} → ${escapeHtml(a.target_email)}</div>`).join('');
-                    }
-                }
-            } catch(e) {}
-        }
-        
+
+        /* Connection */
         async function checkConnection() {
             try {
-                const res = await fetch(`${API_BASE}/api/mail/status`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.connected) {
-                        connectedAlias = data.alias || data.email;
-                        document.getElementById('alias-display').textContent = `✨ ${connectedAlias}`;
-                        document.getElementById('connection-status').innerHTML = '<div class="connected-badge">✅ Connected to ' + escapeHtml(connectedAlias) + '</div>';
-                        await loadEmails();
-                    } else {
-                        document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn">🔗 Connect Email Account</button>';
-                        const btn = document.getElementById('connect-btn');
-                        if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
-                    }
+                const res = await fetch(`${API}/api/mail/status`, {credentials:'include'});
+                const data = res.ok ? await res.json() : {connected: false};
+                const statusEl = document.getElementById('connection-status');
+                if (data.connected) {
+                    connectedAlias = data.alias || data.email;
+                    const ad = document.getElementById('alias-display');
+                    ad.textContent = connectedAlias; ad.style.display = 'inline-block';
+                    statusEl.innerHTML = `<div class="connected-badge"><span class="status-dot"></span>${esc(connectedAlias)}</div>`;
+                    await loadEmails();
                 } else {
-                    document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn">🔗 Connect Email Account</button>';
-                    const btn = document.getElementById('connect-btn');
-                    if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
+                    statusEl.innerHTML = `<button class="connect-btn" id="connect-trigger">🔗 Connect Email Account</button>`;
+                    document.getElementById('connect-trigger').onclick = () => document.getElementById('connect-modal').classList.add('show');
                 }
             } catch(e) {
-                document.getElementById('connection-status').innerHTML = '<button class="connect-btn" id="connect-btn">🔗 Connect Email Account</button>';
-                const btn = document.getElementById('connect-btn');
-                if (btn) btn.onclick = () => document.getElementById('connect-modal').classList.add('show');
+                document.getElementById('connection-status').innerHTML = `<button class="connect-btn" id="connect-trigger">🔗 Connect Email Account</button>`;
+                document.getElementById('connect-trigger').onclick = () => document.getElementById('connect-modal').classList.add('show');
             }
         }
-        
+
         async function connectEmail() {
             const email = document.getElementById('connect-email').value;
             const alias = document.getElementById('connect-alias').value;
             const password = document.getElementById('connect-password').value;
-            
-            if (!email || !password) { showNotification('Please enter email and password', true); return; }
-            
-            const connectBtn = document.getElementById('connect-submit');
-            connectBtn.disabled = true;
-            connectBtn.textContent = 'Connecting...';
-            
+            if (!email || !password) { toast('Email and password required', 'err'); return; }
+            const btn = document.getElementById('connect-submit');
+            btn.disabled = true; btn.textContent = 'Connecting…';
             try {
-                const res = await fetch(`${API_BASE}/api/mail/connect`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ email, password, alias: alias || email })
+                const res = await fetch(`${API}/api/mail/connect`, {
+                    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+                    body: JSON.stringify({email, password, alias: alias || email})
                 });
                 if (res.ok) {
                     document.getElementById('connect-modal').classList.remove('show');
-                    document.getElementById('connect-email').value = '';
-                    document.getElementById('connect-alias').value = '';
-                    document.getElementById('connect-password').value = '';
-                    await checkConnection();
-                    showNotification('Connected successfully!');
+                    await checkConnection(); toast('Connected successfully!');
                 } else {
                     const err = await res.json();
-                    showNotification(err.error || 'Connection failed', true);
-                    if (email.includes('gmail.com')) {
-                        document.getElementById('gmail-note').style.display = 'block';
-                    }
+                    toast(err.error || 'Connection failed', 'err');
+                    if (email.includes('gmail.com')) document.getElementById('gmail-note').style.display = 'block';
                 }
-            } catch(e) { showNotification('Connection failed', true); }
-            finally { connectBtn.disabled = false; connectBtn.textContent = 'Connect'; }
+            } catch(e) { toast('Connection failed', 'err'); }
+            finally { btn.disabled = false; btn.textContent = 'Connect'; }
         }
-        
+
+        /* Load Emails */
         async function loadEmails() {
             if (isLoading) return;
             isLoading = true;
-            
-            const container = document.getElementById('email-list');
-            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div> Loading emails...</div>';
-            
+            const el = document.getElementById('email-list');
+            el.innerHTML = `<div class="state-box"><div class="spinner-ring"></div><p class="state-title" style="font-style:italic;">Fetching your messages…</p></div>`;
             try {
-                const url = `${API_BASE}/api/mail/emails?folder=${currentFolder}&_=${Date.now()}`;
-                const res = await fetch(url, { credentials: 'include' });
-                
+                const res = await fetch(`${API}/api/mail/emails?folder=${currentFolder}&_=${Date.now()}`, {credentials:'include'});
                 if (res.ok) {
                     const data = await res.json();
                     currentEmails = data.emails || [];
@@ -791,426 +917,364 @@
                     document.getElementById('inbox-count').textContent = currentEmails.filter(e => e.folder === 'INBOX').length;
                     document.getElementById('starred-count').textContent = currentEmails.filter(e => e.is_starred).length;
                 } else if (res.status === 401) {
-                    container.innerHTML = '<div class="error-message">🔌 Connection lost. <button class="retry-btn" onclick="document.getElementById(\'connect-modal\').classList.add(\'show\')">Reconnect</button></div>';
-                } else {
-                    throw new Error('Failed to load');
-                }
+                    el.innerHTML = `<div class="error-box">Connection lost.<br><button class="retry-btn" onclick="document.getElementById('connect-modal').classList.add('show')">Reconnect</button></div>`;
+                } else throw new Error();
             } catch(e) {
-                container.innerHTML = '<div class="error-message">❌ Failed to load emails. <button class="retry-btn" onclick="loadEmails()">Try Again</button></div>';
-            } finally {
-                isLoading = false;
-            }
+                el.innerHTML = `<div class="error-box">Failed to load emails.<br><button class="retry-btn" onclick="loadEmails()">Try Again</button></div>`;
+            } finally { isLoading = false; }
         }
-        
+
         function renderEmailList() {
-            const container = document.getElementById('email-list');
+            const el = document.getElementById('email-list');
             if (!currentEmails.length) {
-                container.innerHTML = '<div class="loading">📭 No emails found</div>';
+                el.innerHTML = `<div class="state-box"><span class="state-icon">📭</span><p class="state-title">No messages found</p></div>`;
                 return;
             }
-            
-            container.innerHTML = currentEmails.map(email => `
-                <div class="email-item" data-id="${email.id}">
-                    <input type="checkbox" class="email-checkbox" data-id="${email.id}">
-                    <button class="email-star" data-id="${email.id}">${email.is_starred ? '⭐' : '☆'}</button>
-                    <div class="email-from">${escapeHtml(email.from)}</div>
-                    <div class="email-subject">${escapeHtml(email.subject)}</div>
+            el.innerHTML = currentEmails.map(email => `
+                <div class="email-item${email.unread ? ' unread' : ''}" data-id="${email.id}" role="listitem" tabindex="0" aria-label="Email from ${esc(email.from)}: ${esc(email.subject)}">
+                    <input type="checkbox" class="email-checkbox" data-id="${email.id}" aria-label="Select email">
+                    <button class="email-star${email.is_starred ? ' starred' : ''}" data-id="${email.id}" aria-label="${email.is_starred ? 'Unstar' : 'Star'} email">${email.is_starred ? '⭐' : '☆'}</button>
+                    <div class="email-from">${esc(email.from)}</div>
+                    <div class="email-subject">${esc(email.subject)}</div>
                     <div class="email-date">${formatDate(email.date)}</div>
-                </div>
-            `).join('');
-            
-            document.querySelectorAll('.email-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    if (!e.target.classList.contains('email-checkbox') && !e.target.classList.contains('email-star')) {
+                </div>`).join('');
+
+            el.querySelectorAll('.email-item').forEach(item => {
+                item.addEventListener('click', e => {
+                    if (!e.target.classList.contains('email-checkbox') && !e.target.classList.contains('email-star'))
                         viewEmail(item.dataset.id);
-                    }
+                });
+                item.addEventListener('keydown', e => { if (e.key === 'Enter') viewEmail(item.dataset.id); });
+            });
+            el.querySelectorAll('.email-star').forEach(btn => {
+                btn.addEventListener('click', async e => {
+                    e.stopPropagation();
+                    const em = currentEmails.find(x => x.id == btn.dataset.id);
+                    if (em) await toggleStar(btn.dataset.id, !em.is_starred);
                 });
             });
-            
-            document.querySelectorAll('.email-star').forEach(btn => {
-                btn.onclick = async (e) => {
-                    e.stopPropagation();
-                    const emailId = btn.dataset.id;
-                    const email = currentEmails.find(e => e.id == emailId);
-                    if (email) {
-                        await toggleStar(emailId, !email.is_starred);
-                    }
-                };
-            });
-            
-            document.querySelectorAll('.email-checkbox').forEach(cb => {
-                cb.onclick = (e) => { e.stopPropagation(); toggleSelect(cb.dataset.id, cb.checked); };
+            el.querySelectorAll('.email-checkbox').forEach(cb => {
+                cb.addEventListener('click', e => { e.stopPropagation(); toggleSelect(cb.dataset.id, cb.checked); });
             });
         }
-        
-        function toggleSelect(emailId, checked) {
-            if (checked) { selectedEmails.add(emailId); } 
-            else { selectedEmails.delete(emailId); }
-            
-            const batchActions = document.getElementById('batch-actions');
+
+        function toggleSelect(id, checked) {
+            checked ? selectedEmails.add(id) : selectedEmails.delete(id);
+            const bar = document.getElementById('batch-bar');
             if (selectedEmails.size > 0) {
-                batchActions.style.display = 'flex';
+                bar.style.display = 'flex';
                 document.getElementById('selected-count').textContent = `${selectedEmails.size} selected`;
                 document.getElementById('select-all').checked = selectedEmails.size === currentEmails.length;
             } else {
-                batchActions.style.display = 'none';
+                bar.style.display = 'none';
             }
         }
-        
+
         async function viewEmail(emailId) {
             const email = currentEmails.find(e => e.id == emailId);
             if (!email) return;
-            
             currentEmailId = emailId;
             currentEmailFrom = email.from;
             currentEmailSubject = email.subject;
-            
             document.getElementById('email-subject').textContent = email.subject;
-            document.getElementById('email-from').textContent = `From: ${email.from}`;
-            document.getElementById('email-date').textContent = formatDate(email.date);
-            document.getElementById('email-body').innerHTML = '<div class="loading"><div class="loading-spinner"></div> Loading content...</div>';
+            document.getElementById('email-from-row').textContent = `From: ${email.from}`;
+            document.getElementById('email-date-row').textContent = formatDate(email.date);
+            document.getElementById('email-body').innerHTML = `<div class="state-box"><div class="spinner-ring"></div></div>`;
             document.getElementById('email-view').classList.add('show');
             document.getElementById('email-list').style.display = 'none';
-            document.getElementById('ai-response').style.display = 'none';
-            
+            document.getElementById('ai-response-box').style.display = 'none';
             try {
-                const url = `${API_BASE}/api/mail/email/${emailId}?folder=${currentFolder}`;
-                const res = await fetch(url, { credentials: 'include' });
+                const res = await fetch(`${API}/api/mail/email/${emailId}?folder=${currentFolder}`, {credentials:'include'});
                 if (res.ok) {
-                    const data = await res.json();
-                    currentEmailTo = data.to || '';
-                    currentEmailCc = data.cc || '';
-                    currentEmailMessageId = data.message_id || '';
-                    currentEmailReferences = data.references || '';
-                    document.getElementById('email-to').textContent = `To: ${data.to || ''}`;
-                    document.getElementById('email-body').innerHTML = data.body || 'No content';
+                    const d = await res.json();
+                    currentEmailTo = d.to || ''; currentEmailCc = d.cc || '';
+                    currentEmailMessageId = d.message_id || ''; currentEmailReferences = d.references || '';
+                    document.getElementById('email-to-row').textContent = `To: ${d.to || ''}`;
+                    document.getElementById('email-body').innerHTML = d.body || 'No content';
                 } else {
-                    document.getElementById('email-body').innerHTML = '<div class="error-message">Failed to load email content</div>';
+                    document.getElementById('email-body').innerHTML = `<div class="error-box">Failed to load email</div>`;
                 }
             } catch(e) {
-                document.getElementById('email-body').innerHTML = '<div class="error-message">Error loading email</div>';
+                document.getElementById('email-body').innerHTML = `<div class="error-box">Error loading email</div>`;
             }
         }
-        
-        async function toggleStar(emailId, starred) {
+
+        async function toggleStar(id, starred) {
             try {
-                const url = `${API_BASE}/api/mail/star/${emailId}?folder=${currentFolder}`;
-                await fetch(url, { method: 'POST', credentials: 'include', body: JSON.stringify({ starred }), headers: { 'Content-Type': 'application/json' } });
+                await fetch(`${API}/api/mail/star/${id}?folder=${currentFolder}`, {
+                    method:'POST', credentials:'include',
+                    headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({starred})
+                });
                 await loadEmails();
             } catch(e) {}
         }
-        
-        async function deleteEmail(emailId) {
+
+        async function deleteEmail(id) {
             if (!confirm('Delete this email?')) return;
             try {
-                const url = `${API_BASE}/api/mail/delete/${emailId}?folder=${currentFolder}`;
-                const res = await fetch(url, { method: 'DELETE', credentials: 'include' });
+                const res = await fetch(`${API}/api/mail/delete/${id}?folder=${currentFolder}`, {method:'DELETE', credentials:'include'});
                 if (res.ok) {
-                    await loadEmails();
-                    if (currentEmailId === emailId) {
+                    toast('Deleted');
+                    if (currentEmailId == id) {
                         document.getElementById('email-view').classList.remove('show');
                         document.getElementById('email-list').style.display = 'block';
                         currentEmailId = null;
                     }
-                    showNotification('Email deleted');
-                } else {
-                    showNotification('Failed to delete', true);
-                }
-            } catch(e) { showNotification('Failed to delete', true); }
+                    await loadEmails();
+                } else toast('Failed to delete', 'err');
+            } catch(e) { toast('Failed to delete', 'err'); }
         }
-        
-        function openReply(isReplyAll = false) {
+
+        function openReply(all = false) {
             const modal = document.getElementById('compose-modal');
-            document.getElementById('compose-title').textContent = isReplyAll ? '↪️ Reply All' : '↩️ Reply';
-            
+            document.getElementById('compose-title').textContent = all ? 'Reply All' : 'Reply';
             let to = currentEmailFrom.match(/<(.+?)>/)?.[1] || currentEmailFrom;
-            if (isReplyAll) {
-                to = `${to}, ${currentEmailTo}`;
-                if (currentEmailCc) to += `, ${currentEmailCc}`;
-            }
+            if (all) { to += `, ${currentEmailTo}`; if (currentEmailCc) to += `, ${currentEmailCc}`; }
             document.getElementById('compose-to').value = to;
             document.getElementById('compose-subject').value = currentEmailSubject.startsWith('Re:') ? currentEmailSubject : `Re: ${currentEmailSubject}`;
-            
-            // Store reply headers as data attributes
-            const composeModal = document.getElementById('compose-modal');
-            composeModal.dataset.inReplyTo = currentEmailMessageId;
-            composeModal.dataset.references = currentEmailReferences ? `${currentEmailReferences} ${currentEmailMessageId}` : currentEmailMessageId;
-            
-            // Add quoted content
-            const bodyElement = document.getElementById('email-body');
-            const quotedContent = bodyElement.innerHTML;
-            const date = new Date().toLocaleString();
-            document.getElementById('compose-body').innerHTML = `<br><br><hr><div style="color: var(--text-muted);">On ${date}, ${escapeHtml(currentEmailFrom)} wrote:<br>${quotedContent}</div>`;
-            
+            modal.dataset.inReplyTo  = currentEmailMessageId;
+            modal.dataset.references = currentEmailReferences ? `${currentEmailReferences} ${currentEmailMessageId}` : currentEmailMessageId;
+            const quoted = document.getElementById('email-body').innerHTML;
+            document.getElementById('compose-body').innerHTML = `<br><br><hr><div style="color:var(--muted);font-size:13px;">${esc(currentEmailFrom)} wrote:<br>${quoted}</div>`;
+            attachments = []; document.getElementById('attachment-list').innerHTML = '';
             modal.classList.add('show');
-            attachments = [];
-            document.getElementById('attachment-list').innerHTML = '';
         }
-        
+
         async function sendEmail() {
             const to = document.getElementById('compose-to').value;
             const subject = document.getElementById('compose-subject').value;
-            const body = getHtmlContent();
-            
-            if (!to || !subject || !body) { showNotification('Please fill in all fields', true); return; }
-            
-            const composeModal = document.getElementById('compose-modal');
-            const inReplyTo = composeModal.dataset.inReplyTo;
-            const references = composeModal.dataset.references;
-            
-            const sendBtn = document.getElementById('send-btn');
-            sendBtn.disabled = true;
-            sendBtn.textContent = 'Sending...';
-            
+            const body = document.getElementById('compose-body').innerHTML;
+            if (!to || !subject || !body.trim()) { toast('Please fill all fields', 'err'); return; }
+            const modal = document.getElementById('compose-modal');
+            const btn = document.getElementById('send-btn');
+            btn.disabled = true; btn.textContent = 'Sending…';
             try {
                 let res;
-                if (attachments.length > 0) {
-                    const formData = new FormData();
-                    formData.append('to', to);
-                    formData.append('subject', subject);
-                    formData.append('body', body);
-                    if (inReplyTo) formData.append('in_reply_to', inReplyTo);
-                    if (references) formData.append('references', references);
-                    attachments.forEach(f => formData.append('attachments', f));
-                    res = await fetch(`${API_BASE}/api/mail/send-with-attachment`, {
-                        method: 'POST', credentials: 'include', body: formData
-                    });
+                if (attachments.length) {
+                    const fd = new FormData();
+                    fd.append('to', to); fd.append('subject', subject); fd.append('body', body);
+                    if (modal.dataset.inReplyTo)  fd.append('in_reply_to', modal.dataset.inReplyTo);
+                    if (modal.dataset.references) fd.append('references', modal.dataset.references);
+                    attachments.forEach(f => fd.append('attachments', f));
+                    res = await fetch(`${API}/api/mail/send-with-attachment`, {method:'POST', credentials:'include', body: fd});
                 } else {
-                    res = await fetch(`${API_BASE}/api/mail/send`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                        body: JSON.stringify({ to, subject, body, is_html: true, in_reply_to: inReplyTo, references: references })
+                    res = await fetch(`${API}/api/mail/send`, {
+                        method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+                        body: JSON.stringify({to, subject, body, is_html: true, in_reply_to: modal.dataset.inReplyTo, references: modal.dataset.references})
                     });
                 }
-                
                 if (res.ok) {
-                    showNotification('Email sent!');
-                    document.getElementById('compose-modal').classList.remove('show');
+                    toast('Message sent!');
+                    modal.classList.remove('show');
                     document.getElementById('compose-to').value = '';
                     document.getElementById('compose-subject').value = '';
                     document.getElementById('compose-body').innerHTML = '';
-                    attachments = [];
-                    document.getElementById('attachment-list').innerHTML = '';
-                    delete composeModal.dataset.inReplyTo;
-                    delete composeModal.dataset.references;
+                    attachments = []; document.getElementById('attachment-list').innerHTML = '';
+                    delete modal.dataset.inReplyTo; delete modal.dataset.references;
                     await loadEmails();
                 } else {
-                    const err = await res.json();
-                    showNotification(err.error || 'Failed to send', true);
+                    const err = await res.json(); toast(err.error || 'Send failed', 'err');
                 }
-            } catch(e) { showNotification('Failed to send', true); }
-            finally { sendBtn.disabled = false; sendBtn.textContent = 'Send'; }
+            } catch(e) { toast('Send failed', 'err'); }
+            finally { btn.disabled = false; btn.textContent = 'Send Message'; }
         }
-        
+
         async function askAI() {
-            const question = document.getElementById('ai-question').value;
-            if (!question) return;
-            
-            const responseDiv = document.getElementById('ai-response');
-            responseDiv.style.display = 'block';
-            responseDiv.innerHTML = '<div class="loading-spinner"></div> Wizard is thinking...';
-            
+            const q = document.getElementById('ai-question').value;
+            if (!q) return;
+            const box = document.getElementById('ai-response-box');
+            box.style.display = 'block';
+            box.innerHTML = `<div class="spinner-ring" style="margin:0 auto;"></div>`;
             const subject = document.getElementById('email-subject').textContent;
-            const body = document.getElementById('email-body').innerText;
-            
+            const bodyText = document.getElementById('email-body').innerText;
             try {
-                const res = await fetch(`${API_BASE}/api/chat/simple`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ 
-                        prompt: `Email Subject: ${subject}\nEmail Content: ${body.substring(0, 3000)}\n\nUser Question: ${question}\n\nAnswer based on the email content.`,
+                const res = await fetch(`${API}/api/chat/simple`, {
+                    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+                    body: JSON.stringify({
+                        prompt: `Email Subject: ${subject}\nEmail: ${bodyText.substring(0,3000)}\n\nQuestion: ${q}\n\nAnswer based on the email.`,
                         mode: 'Fast'
                     })
                 });
                 const data = await res.json();
-                responseDiv.innerHTML = `<strong>🧙 AI Response:</strong><br>${escapeHtml(data.response || 'No response')}`;
-            } catch(e) {
-                responseDiv.innerHTML = 'Error getting AI response';
-            }
+                box.innerHTML = `<strong style="color:var(--gold-light);">🧙 Wizard:</strong><br><br>${esc(data.response || 'No response')}`;
+            } catch(e) { box.innerHTML = 'Error getting response'; }
             document.getElementById('ai-question').value = '';
         }
-        
+
         async function enhanceEmail() {
             const prompt = document.getElementById('compose-ai-prompt').value;
-            const currentBody = getHtmlContent();
-            const plainText = currentBody.replace(/<[^>]+>/g, '');
-            
-            if (!prompt && !plainText) return;
-            
-            const instruction = prompt ? `Enhance/improve this email based on: ${prompt}` : 'Improve this email to be more professional and clear';
-            
+            const plain = document.getElementById('compose-body').innerText;
+            if (!prompt && !plain) return;
             try {
-                const res = await fetch(`${API_BASE}/api/chat/simple`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ 
-                        prompt: `${instruction}\n\nEmail: ${plainText}\n\nProvide ONLY the improved email text as HTML.`,
+                const res = await fetch(`${API}/api/chat/simple`, {
+                    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+                    body: JSON.stringify({
+                        prompt: `${prompt ? `Improve based on: ${prompt}` : 'Improve this email professionally'}\n\nEmail: ${plain}\n\nRespond with only the improved email as HTML.`,
                         mode: 'Fast'
                     })
                 });
                 const data = await res.json();
-                if (data.response) {
-                    document.getElementById('compose-body').innerHTML = data.response.replace(/\n/g, '<br>');
-                }
+                if (data.response) document.getElementById('compose-body').innerHTML = data.response.replace(/\n/g, '<br>');
             } catch(e) {}
             document.getElementById('compose-ai-prompt').value = '';
         }
-        
+
         async function batchDelete() {
-            if (selectedEmails.size === 0) return;
+            if (!selectedEmails.size) return;
             if (!confirm(`Delete ${selectedEmails.size} email(s)?`)) return;
-            
-            for (const id of selectedEmails) {
-                await fetch(`${API_BASE}/api/mail/delete/${id}?folder=${currentFolder}`, { method: 'DELETE', credentials: 'include' });
-            }
+            for (const id of selectedEmails)
+                await fetch(`${API}/api/mail/delete/${id}?folder=${currentFolder}`, {method:'DELETE', credentials:'include'}).catch(()=>{});
             selectedEmails.clear();
-            await loadEmails();
-            document.getElementById('batch-actions').style.display = 'none';
-            showNotification(`Deleted ${selectedEmails.size} emails`);
+            document.getElementById('batch-bar').style.display = 'none';
+            await loadEmails(); toast(`Deleted`);
         }
-        
-        // File attachments
-        function setupFileUpload() {
-            const fileInput = document.getElementById('file-input');
-            document.getElementById('image-upload-btn').onclick = () => fileInput.click();
-            
-            fileInput.onchange = (e) => {
-                const files = Array.from(e.target.files);
-                files.forEach(file => {
-                    attachments.push(file);
-                    const div = document.createElement('div');
-                    div.className = 'attachment-item';
-                    div.innerHTML = `<span>📎 ${escapeHtml(file.name)} (${(file.size / 1024).toFixed(1)} KB)</span>
-                                    <button class="attachment-remove" data-name="${file.name}">✕</button>`;
-                    document.getElementById('attachment-list').appendChild(div);
+
+        /* Aliases */
+        async function loadMyAliases() {
+            try {
+                const res = await fetch(`${API}/api/alias/my-aliases`, {credentials:'include'});
+                if (res.ok) {
+                    const data = await res.json();
+                    const el = document.getElementById('my-aliases-list');
+                    if (data.aliases?.length) {
+                        el.innerHTML = `<div style="font-size:12px;color:var(--gold);margin-bottom:10px;">Your aliases</div>` +
+                            data.aliases.map(a => `<div class="alias-chip">📧 ${esc(a.alias)} → ${esc(a.target_email)}</div>`).join('');
+                    }
+                }
+            } catch(e) {}
+        }
+
+        async function createAlias() {
+            const alias = document.getElementById('alias-name').value.trim().toLowerCase();
+            const target = document.getElementById('alias-target').value.trim();
+            if (!alias || alias.length < 3) { toast('Alias must be 3+ characters', 'err'); return; }
+            if (!target) { toast('Enter forwarding email', 'err'); return; }
+            const btn = document.getElementById('create-alias-btn');
+            btn.disabled = true; btn.textContent = 'Creating…';
+            try {
+                const res = await fetch(`${API}/api/alias/request`, {
+                    method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+                    body: JSON.stringify({alias, target_email: target})
                 });
-                document.querySelectorAll('.attachment-remove').forEach(btn => {
+                const data = await res.json();
+                if (res.ok) {
+                    toast(data.message || 'Alias created!');
+                    document.getElementById('alias-modal').classList.remove('show');
+                    document.getElementById('alias-name').value = '';
+                    document.getElementById('alias-target').value = '';
+                    await loadMyAliases();
+                } else toast(data.error || 'Failed', 'err');
+            } catch(e) { toast('Connection error', 'err'); }
+            finally { btn.disabled = false; btn.textContent = 'Claim Alias ✨'; }
+        }
+
+        async function checkAliasAvail() {
+            const alias = document.getElementById('alias-name').value.trim().toLowerCase();
+            const el = document.getElementById('alias-availability');
+            if (alias.length < 3) { el.innerHTML = ''; return; }
+            try {
+                const res = await fetch(`${API}/api/alias/check/${encodeURIComponent(alias)}`, {credentials:'include'});
+                const data = await res.json();
+                el.innerHTML = data.available
+                    ? '<p class="avail-ok">✅ Available!</p>'
+                    : '<p class="avail-err">❌ Already taken</p>';
+            } catch(e) {}
+        }
+
+        /* File attachment */
+        function setupAttachments() {
+            const fi = document.getElementById('file-input');
+            document.getElementById('attach-trigger').onclick = () => fi.click();
+            fi.onchange = e => {
+                Array.from(e.target.files).forEach(f => {
+                    attachments.push(f);
+                    const chip = document.createElement('div');
+                    chip.className = 'att-chip';
+                    chip.innerHTML = `<span>📎 ${esc(f.name)}</span><button class="att-remove" data-name="${esc(f.name)}">✕</button>`;
+                    document.getElementById('attachment-list').appendChild(chip);
+                });
+                document.querySelectorAll('.att-remove').forEach(btn => {
                     btn.onclick = () => {
-                        const name = btn.dataset.name;
-                        attachments = attachments.filter(f => f.name !== name);
+                        attachments = attachments.filter(x => x.name !== btn.dataset.name);
                         btn.parentElement.remove();
                     };
                 });
-                fileInput.value = '';
+                fi.value = '';
             };
         }
-        
-        async function createAlias() {
-            const alias = document.getElementById('alias-name').value.trim().toLowerCase();
-            const targetEmail = document.getElementById('alias-target').value.trim();
-            
-            if (!alias) { showNotification('Please enter an alias name', true); return; }
-            if (alias.length < 3) { showNotification('Alias must be at least 3 characters', true); return; }
-            if (!targetEmail) { showNotification('Please enter forwarding email', true); return; }
-            
-            const btn = document.getElementById('create-alias-btn');
-            btn.disabled = true;
-            btn.textContent = 'Creating...';
-            
-            try {
-                const res = await fetch(`${API_BASE}/api/alias/request`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ alias, target_email: targetEmail })
-                });
-                const data = await res.json();
-                
-                if (res.ok) {
-                    showNotification(`✨ ${data.message}`);
-                    document.getElementById('alias-name').value = '';
-                    document.getElementById('alias-target').value = '';
-                    document.getElementById('alias-modal').classList.remove('show');
-                    await loadMyAliases();
-                } else {
-                    showNotification(data.error || 'Failed to create alias', true);
-                }
-            } catch(e) { showNotification('Connection error', true); }
-            finally { btn.disabled = false; btn.textContent = 'Create Alias ✨'; }
-        }
-        
-        async function checkAliasAvailability() {
-            const alias = document.getElementById('alias-name').value.trim().toLowerCase();
-            const div = document.getElementById('alias-availability');
-            if (alias.length < 3) { div.innerHTML = ''; return; }
-            try {
-                const res = await fetch(`${API_BASE}/api/alias/check/${encodeURIComponent(alias)}`, { credentials: 'include' });
-                const data = await res.json();
-                div.innerHTML = data.available ? '<span style="color: var(--success);">✅ Available!</span>' : '<span style="color: var(--danger);">❌ Already taken</span>';
-            } catch(e) {}
-        }
-        
-        // Event listeners
+
+        /* Folder nav */
+        document.querySelectorAll('.folder-item').forEach(f => {
+            const activate = () => {
+                document.querySelectorAll('.folder-item').forEach(x => x.classList.remove('active'));
+                f.classList.add('active');
+                currentFolder = f.dataset.folder;
+                const titles = {INBOX:'Inbox', STARRED:'Starred', SENT:'Sent', SPAM:'Spam', TRASH:'Trash', DRAFTS:'Drafts'};
+                document.getElementById('folder-title').textContent = titles[currentFolder] || 'Inbox';
+                selectedEmails.clear(); document.getElementById('batch-bar').style.display = 'none';
+                loadEmails();
+            };
+            f.addEventListener('click', activate);
+            f.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') activate(); });
+        });
+
+        /* Rich text */
+        document.querySelectorAll('.rich-btn[data-action]').forEach(btn => {
+            btn.onclick = () => { document.execCommand(btn.dataset.action, false, null); document.getElementById('compose-body').focus(); };
+        });
+        document.getElementById('text-color').onchange = e => { document.execCommand('foreColor', false, e.target.value); document.getElementById('compose-body').focus(); };
+        document.getElementById('font-size').onchange  = e => { document.execCommand('fontSize', false, e.target.value); document.getElementById('compose-body').focus(); };
+
+        /* Events */
         document.getElementById('compose-btn').onclick = () => {
-            document.getElementById('compose-title').textContent = '✏️ New Message';
+            document.getElementById('compose-title').textContent = 'New Message';
             document.getElementById('compose-to').value = '';
             document.getElementById('compose-subject').value = '';
             document.getElementById('compose-body').innerHTML = '';
-            attachments = [];
-            document.getElementById('attachment-list').innerHTML = '';
-            delete document.getElementById('compose-modal').dataset.inReplyTo;
-            delete document.getElementById('compose-modal').dataset.references;
-            document.getElementById('compose-modal').classList.add('show');
+            attachments = []; document.getElementById('attachment-list').innerHTML = '';
+            const modal = document.getElementById('compose-modal');
+            delete modal.dataset.inReplyTo; delete modal.dataset.references;
+            modal.classList.add('show');
         };
-        document.getElementById('close-compose').onclick = () => document.getElementById('compose-modal').classList.remove('show');
-        document.getElementById('send-btn').onclick = sendEmail;
-        document.getElementById('back-to-list').onclick = () => {
+        document.getElementById('close-compose').onclick  = () => document.getElementById('compose-modal').classList.remove('show');
+        document.getElementById('send-btn').onclick        = sendEmail;
+        document.getElementById('back-to-list').onclick   = () => {
             document.getElementById('email-list').style.display = 'block';
             document.getElementById('email-view').classList.remove('show');
             loadEmails();
         };
-        document.getElementById('delete-current-email').onclick = () => { if (currentEmailId) deleteEmail(currentEmailId); };
-        document.getElementById('reply-btn').onclick = () => openReply(false);
-        document.getElementById('reply-all-btn').onclick = () => openReply(true);
-        document.getElementById('connect-submit').onclick = connectEmail;
-        document.getElementById('close-connect').onclick = () => document.getElementById('connect-modal').classList.remove('show');
-        document.getElementById('ai-ask-btn').onclick = askAI;
-        document.getElementById('compose-ai-btn').onclick = enhanceEmail;
-        document.getElementById('ai-question').onkeypress = (e) => { if (e.key === 'Enter') askAI(); };
-        document.getElementById('batch-delete').onclick = batchDelete;
-        document.getElementById('refresh-btn').onclick = () => loadEmails();
-        document.getElementById('select-all').onchange = (e) => {
-            document.querySelectorAll('.email-checkbox').forEach(cb => {
-                cb.checked = e.target.checked;
-                toggleSelect(cb.dataset.id, cb.checked);
-            });
+        document.getElementById('delete-current').onclick  = () => { if (currentEmailId) deleteEmail(currentEmailId); };
+        document.getElementById('reply-btn').onclick       = () => openReply(false);
+        document.getElementById('reply-all-btn').onclick   = () => openReply(true);
+        document.getElementById('connect-submit').onclick  = connectEmail;
+        document.getElementById('close-connect').onclick   = () => document.getElementById('connect-modal').classList.remove('show');
+        document.getElementById('ai-ask-btn').onclick      = askAI;
+        document.getElementById('ai-question').addEventListener('keydown', e => { if (e.key === 'Enter') askAI(); });
+        document.getElementById('compose-ai-btn').onclick  = enhanceEmail;
+        document.getElementById('batch-delete').onclick    = batchDelete;
+        document.getElementById('refresh-btn').onclick     = loadEmails;
+        document.getElementById('select-all').onchange     = e => {
+            document.querySelectorAll('.email-checkbox').forEach(cb => { cb.checked = e.target.checked; toggleSelect(cb.dataset.id, cb.checked); });
         };
-        
-        document.getElementById('get-alias-btn').onclick = () => {
-            document.getElementById('alias-name').value = '';
-            document.getElementById('alias-target').value = '';
-            document.getElementById('alias-availability').innerHTML = '';
-            document.getElementById('alias-modal').classList.add('show');
-        };
+        document.getElementById('get-alias-btn').onclick   = () => { document.getElementById('alias-name').value = ''; document.getElementById('alias-target').value = ''; document.getElementById('alias-availability').innerHTML = ''; document.getElementById('alias-modal').classList.add('show'); };
         document.getElementById('create-alias-btn').onclick = createAlias;
-        document.getElementById('close-alias').onclick = () => document.getElementById('alias-modal').classList.remove('show');
-        document.getElementById('alias-name').oninput = checkAliasAvailability;
-        
-        document.querySelectorAll('.rich-btn').forEach(btn => {
-            if (btn.id !== 'image-upload-btn') {
-                btn.onclick = () => applyFormat(btn.dataset.action);
-            }
+        document.getElementById('close-alias').onclick     = () => document.getElementById('alias-modal').classList.remove('show');
+        document.getElementById('alias-name').oninput      = checkAliasAvail;
+
+        // Close modals on backdrop
+        ['connect-modal','compose-modal','alias-modal'].forEach(id => {
+            document.getElementById(id).addEventListener('click', e => { if (e.target.id === id) document.getElementById(id).classList.remove('show'); });
         });
-        document.getElementById('text-color').onchange = (e) => applyFormat('foreColor', e.target.value);
-        document.getElementById('font-size').onchange = (e) => applyFormat('fontSize', e.target.value);
-        
-        setupFileUpload();
-        
-        document.querySelectorAll('.folder-item').forEach(folder => {
-            folder.onclick = () => {
-                document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
-                folder.classList.add('active');
-                currentFolder = folder.dataset.folder;
-                const titles = { INBOX: 'Inbox', STARRED: 'Starred', SENT: 'Sent', SPAM: 'Spam', TRASH: 'Trash', DRAFTS: 'Drafts' };
-                document.getElementById('folder-title').textContent = titles[currentFolder] || 'Inbox';
-                selectedEmails.clear();
-                document.getElementById('batch-actions').style.display = 'none';
-                loadEmails();
-            };
-        });
-        
-        // Auto-refresh every 30 seconds
+
+        setupAttachments();
+
+        // Auto-refresh every 30s when on inbox
         setInterval(() => {
-            if (document.getElementById('email-list').style.display !== 'none' && !isLoading && currentFolder === 'INBOX') {
+            if (document.getElementById('email-list').style.display !== 'none' && !isLoading && currentFolder === 'INBOX')
                 loadEmails();
-            }
         }, 30000);
-        
+
         checkAuth();
     </script>
 </body>
