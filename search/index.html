@@ -713,11 +713,12 @@
             })();
         })();
 
-        /* ── App ── */
+        /* ── REWRITTEN JAVASCRIPT ── */
         const API = 'https://arnav0928.pythonanywhere.com';
         let currentUser = null;
+        let searchTimeout = null;
 
-        /* Toast */
+        // Toast notification
         let toastTimer;
         function showToast(msg, type = 'success') {
             const t = document.getElementById('toast');
@@ -727,15 +728,15 @@
             toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
         }
 
-        /* Escape HTML */
+        // Escape HTML
         function esc(str) {
             if (!str) return '';
-            const d = document.createElement('div');
-            d.textContent = str;
-            return d.innerHTML;
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
 
-        /* Auth */
+        // ========== AUTHENTICATION ==========
         async function checkAuth() {
             try {
                 const res = await fetch(`${API}/api/check-auth`, { credentials: 'include' });
@@ -743,31 +744,24 @@
                     const data = await res.json();
                     if (data.authenticated && data.user) {
                         currentUser = data.user;
-                        showUserPill(data.user.email);
+                        document.getElementById('user-pill').style.display = 'flex';
+                        document.getElementById('user-email-txt').textContent = currentUser.email;
+                        document.getElementById('signin-btn').style.display = 'none';
                         return;
                     }
                 }
             } catch(e) {}
-            hideUserPill();
-        }
-
-        function showUserPill(email) {
-            document.getElementById('user-pill').style.display = 'flex';
-            document.getElementById('user-email-txt').textContent = email;
-            document.getElementById('signin-btn').style.display = 'none';
-        }
-        function hideUserPill() {
             document.getElementById('user-pill').style.display = 'none';
             document.getElementById('signin-btn').style.display = 'block';
         }
 
         async function handleLogin() {
-            const email    = document.getElementById('login-email').value.trim();
+            const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value.trim();
-            const errEl    = document.getElementById('login-error');
+            const errEl = document.getElementById('login-error');
             if (!email || !password) { errEl.textContent = 'Email and password required'; return; }
             try {
-                const res  = await fetch(`${API}/api/login`, {
+                const res = await fetch(`${API}/api/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -777,7 +771,9 @@
                 if (res.ok) {
                     currentUser = data.user;
                     closeModal();
-                    showUserPill(data.user.email);
+                    document.getElementById('user-pill').style.display = 'flex';
+                    document.getElementById('user-email-txt').textContent = currentUser.email;
+                    document.getElementById('signin-btn').style.display = 'none';
                     showToast('Welcome back!');
                 } else {
                     errEl.textContent = data.error || 'Login failed';
@@ -788,19 +784,41 @@
         async function handleLogout() {
             await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'include' });
             currentUser = null;
-            hideUserPill();
+            document.getElementById('user-pill').style.display = 'none';
+            document.getElementById('signin-btn').style.display = 'block';
             showToast('Signed out');
         }
 
-        function openModal()  { document.getElementById('modal-overlay').classList.add('show'); }
+        function openModal() { document.getElementById('modal-overlay').classList.add('show'); }
         function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
 
-        /* Search */
+        // ========== SEARCH SUGGESTIONS ==========
+        async function getSuggestions(query) {
+            if (!query || query.length < 2) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API}/api/search/suggest?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.suggestions && data.suggestions.length > 0) {
+                    console.log(`📝 Got ${data.suggestions.length} suggestions for "${query}"`);
+                    // Suggestions are handled by the backend via API call
+                }
+            } catch (error) {
+                console.error('Suggestions error:', error);
+            }
+        }
+
+        // ========== SEARCH ==========
         async function performSearch() {
             const query = document.getElementById('search-input').value.trim();
             if (!query) { showToast('Enter a search term', 'error'); return; }
 
-            window.history.pushState({}, '', `${location.pathname}?q=${encodeURIComponent(query)}`);
+            // Update URL
+            const newUrl = `${location.pathname}?q=${encodeURIComponent(query)}`;
+            window.history.pushState({}, '', newUrl);
 
             const area = document.getElementById('results');
             area.innerHTML = `
@@ -810,15 +828,20 @@
                 </div>`;
 
             try {
-                const res  = await fetch(`${API}/api/search`, {
+                const res = await fetch(`${API}/api/search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({ query })
                 });
                 const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.error || 'Search failed');
+                
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || 'Search failed');
+                }
+                
                 renderResults(data);
+                
             } catch(err) {
                 const q = encodeURIComponent(query);
                 area.innerHTML = `
@@ -828,7 +851,7 @@
                         <p>${esc(err.message)}</p>
                         <div class="fallback-btns">
                             <button class="fallback-btn fallback-google" onclick="window.open('https://www.google.com/search?q=${q}','_blank')">🔍 Google</button>
-                            <button class="fallback-btn fallback-ddg"    onclick="window.open('https://duckduckgo.com/?q=${q}','_blank')">🦆 DuckDuckGo</button>
+                            <button class="fallback-btn fallback-ddg" onclick="window.open('https://duckduckgo.com/?q=${q}','_blank')">🦆 DuckDuckGo</button>
                         </div>
                     </div>`;
             }
@@ -838,6 +861,7 @@
             const area = document.getElementById('results');
             let html = '';
 
+            // AI Summary - comes from Groq API via backend
             if (data.summary) {
                 html += `
                     <div class="ai-summary" role="region" aria-label="AI Summary">
@@ -858,7 +882,7 @@
                         <p>Try rephrasing your query, or search directly:</p>
                         <div class="fallback-btns">
                             <button class="fallback-btn fallback-google" onclick="window.open('https://www.google.com/search?q=${q}','_blank')">🔍 Google</button>
-                            <button class="fallback-btn fallback-ddg"    onclick="window.open('https://duckduckgo.com/?q=${q}','_blank')">🦆 DuckDuckGo</button>
+                            <button class="fallback-btn fallback-ddg" onclick="window.open('https://duckduckgo.com/?q=${q}','_blank')">🦆 DuckDuckGo</button>
                         </div>
                     </div>`;
                 area.innerHTML = html;
@@ -888,19 +912,40 @@
             }
         }
 
-        /* Events */
+        // Input event for suggestions (debounced)
+        function setupSearchInput() {
+            const input = document.getElementById('search-input');
+            input.addEventListener('input', (e) => {
+                if (searchTimeout) clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => getSuggestions(e.target.value), 300);
+            });
+        }
+
+        // ========== EVENT LISTENERS ==========
         document.getElementById('search-btn').addEventListener('click', performSearch);
         document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') performSearch(); });
         document.getElementById('signin-btn').addEventListener('click', openModal);
         document.getElementById('login-submit').addEventListener('click', handleLogin);
         document.getElementById('logout-btn').addEventListener('click', handleLogout);
         document.getElementById('show-signup').addEventListener('click', () => { window.location.href = 'https://wizardecosystem.dpdns.org'; });
-        document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target === document.getElementById('modal-overlay')) closeModal(); });
+        
+        // Close modal when clicking outside
+        document.getElementById('modal-overlay').addEventListener('click', e => { 
+            if (e.target === document.getElementById('modal-overlay')) closeModal(); 
+        });
+        
+        // Enter key in modal inputs
         document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
         document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
 
+        // Setup search suggestions
+        setupSearchInput();
+
+        // Initialize
         checkAuth();
         loadFromURL();
+        
+        console.log('🧙 Wizard Search ready!');
     </script>
 </body>
 </html>
