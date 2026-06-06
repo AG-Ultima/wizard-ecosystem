@@ -42,7 +42,6 @@
             color: var(--silver);
         }
 
-        /* Starfield */
         #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
         .amb {
             position: fixed; border-radius: 50%;
@@ -53,7 +52,6 @@
         .amb-2 { width: 450px; height: 450px; bottom: -100px; right: -100px; background: radial-gradient(circle, #5c3a1e, transparent 70%); animation-delay: -10s; }
         @keyframes drift { from { transform: translate(0,0); } to { transform: translate(35px,25px); } }
 
-        /* Layout */
         .notes-shell { position: relative; z-index: 10; display: flex; height: 100vh; }
 
         /* Sidebar */
@@ -103,7 +101,6 @@
         }
         .new-note-btn:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 4px 18px rgba(201,168,76,0.3); }
 
-        /* Folders */
         .folder-section { padding: 0 16px 16px; }
         .folder-label {
             font-size: 10px; font-weight: 500; letter-spacing: 0.2em;
@@ -130,7 +127,6 @@
             padding: 2px 8px; border-radius: 100px;
         }
 
-        /* Notes List */
         .notes-list {
             flex: 1; overflow-y: auto;
             padding: 8px 12px;
@@ -149,10 +145,18 @@
             background: var(--gold-dim);
             border-color: var(--border-strong);
         }
+        .shared-badge {
+            font-size: 10px;
+            color: var(--violet);
+            margin-left: 8px;
+        }
         .note-title {
             font-size: 14px; font-weight: 600;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .note-preview {
             font-size: 11px; color: var(--silver-dim);
@@ -174,7 +178,6 @@
             color: var(--gold-light);
         }
 
-        /* Tags Section */
         .tags-section {
             padding: 16px;
             border-top: 1px solid var(--border);
@@ -242,6 +245,13 @@
         .icon-btn:hover { background: var(--gold-dim); border-color: var(--border-strong); color: var(--gold); }
         .delete-btn:hover { background: rgba(248,113,113,0.15); color: var(--danger); border-color: var(--danger); }
         .favorite-btn.active { color: var(--gold); }
+        .shared-indicator {
+            background: var(--violet-dim);
+            border-radius: 100px;
+            padding: 4px 12px;
+            font-size: 11px;
+            color: var(--violet);
+        }
 
         .editor-body {
             flex: 1;
@@ -261,6 +271,10 @@
             outline: none;
         }
         .editor-content::placeholder { color: var(--muted); }
+        .editor-content:read-only {
+            opacity: 0.7;
+            cursor: default;
+        }
 
         /* AI Panel */
         .ai-panel {
@@ -417,6 +431,15 @@
             transition: all 0.2s;
         }
         .shared-item:hover { background: rgba(255,255,255,0.06); transform: translateX(4px); }
+        .permission-badge {
+            display: inline-block;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 100px;
+            margin-left: 8px;
+        }
+        .permission-edit { background: rgba(74,222,128,0.15); color: var(--success); }
+        .permission-view { background: rgba(201,168,76,0.15); color: var(--gold); }
 
         .toast {
             position: fixed; bottom: 30px; left: 50%;
@@ -434,7 +457,6 @@
         .toast.show { transform: translateX(-50%) translateY(0); }
         .toast.error { background: linear-gradient(135deg, var(--danger), #b44); color: white; }
 
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--gold), #a8751e); border-radius: 100px; }
@@ -483,6 +505,10 @@
                     <span class="folder-icon">🕐</span>
                     <span class="folder-name">Recent</span>
                 </div>
+                <div class="folder-item" data-folder="shared">
+                    <span class="folder-icon">📬</span>
+                    <span class="folder-name">Shared With Me</span>
+                </div>
             </div>
 
             <div class="notes-list" id="notes-list">
@@ -507,7 +533,9 @@
                     <button class="icon-btn delete-btn" id="delete-note-btn" title="Delete">🗑</button>
                 </div>
             </div>
-
+            <div id="shared-note-banner" class="shared-indicator" style="display:none; margin: 0 24px; padding: 8px 16px; background: rgba(124,92,191,0.15); border-radius: 12px;">
+                📬 This note was shared with you by <span id="shared-owner-name"></span> · <span id="shared-permission-text"></span>
+            </div>
             <div class="editor-body">
                 <textarea id="note-content" class="editor-content" placeholder="Start writing your note here..."></textarea>
             </div>
@@ -574,22 +602,17 @@
         </div>
     </div>
 
-    <!-- Shared Notes Modal -->
-    <div id="shared-modal" class="modal-overlay">
-        <div class="modal-box" style="width:500px;">
-            <h3>📬 Shared With Me</h3>
-            <div id="shared-list" style="max-height:400px; overflow-y:auto;"></div>
-            <button id="close-shared" class="modal-cancel" style="margin-top:20px; width:100%;">Close</button>
-        </div>
-    </div>
-
     <div id="toast" class="toast"></div>
 
     <script>
         const API = 'https://arnav0928.pythonanywhere.com';
         let currentUser = null;
         let notes = [];
+        let sharedNotes = [];
         let currentNoteId = null;
+        let currentSharedNoteData = null;
+        let isSharedNote = false;
+        let sharedPermission = null;
         let currentFolder = 'all';
         let currentTag = null;
         let saveTimeout = null;
@@ -613,6 +636,7 @@
                         currentUser = data.user;
                         document.getElementById('user-email').textContent = currentUser.email;
                         await loadNotes();
+                        await loadSharedNotesList();
                         return;
                     }
                 }
@@ -628,15 +652,112 @@
                     notes = data.notes || [];
                     renderNotesList();
                     renderTags();
-                    if (notes.length > 0 && !currentNoteId) {
+                    if (notes.length > 0 && !currentNoteId && !isSharedNote) {
                         selectNote(notes[0].id);
                     }
                 }
             } catch(e) { console.error('Load notes error:', e); }
         }
 
+        async function loadSharedNotesList() {
+            try {
+                const res = await fetch(`${API}/api/notes/shared`, { credentials: 'include' });
+                if (res.ok) {
+                    const data = await res.json();
+                    sharedNotes = data.shared_notes || [];
+                    if (currentFolder === 'shared') {
+                        renderSharedNotesList();
+                    }
+                }
+            } catch(e) { console.error('Load shared error:', e); }
+        }
+
+        function renderSharedNotesList() {
+            const container = document.getElementById('notes-list');
+            if (sharedNotes.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted);">📭 No notes shared with you</div>';
+                return;
+            }
+            container.innerHTML = sharedNotes.map(n => `
+                <div class="note-item ${currentNoteId === n.id && isSharedNote ? 'active' : ''}" data-id="${n.id}" data-owner="${n.owner_email}" data-permission="${n.permission}" data-title="${esc(n.title)}" data-content="${esc(n.content)}" data-shared="true">
+                    <div class="note-title">
+                        ${esc(n.title)}
+                        <span class="permission-badge ${n.permission === 'edit' ? 'permission-edit' : 'permission-view'}">${n.permission === 'edit' ? '✏️ Can edit' : '👁️ Can view'}</span>
+                    </div>
+                    <div class="note-preview">${esc(n.content.substring(0, 80))}${n.content.length > 80 ? '…' : ''}</div>
+                    <div class="note-date">from ${esc(n.owner_name)} · ${new Date(n.shared_at).toLocaleDateString()}</div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.note-item[data-shared="true"]').forEach(el => {
+                el.addEventListener('click', () => {
+                    const noteId = parseInt(el.dataset.id);
+                    const owner = el.dataset.owner;
+                    const permission = el.dataset.permission;
+                    const title = el.dataset.title;
+                    const content = el.dataset.content;
+                    openSharedNote(noteId, owner, permission, title, content);
+                });
+            });
+        }
+
+        function openSharedNote(noteId, ownerEmail, permission, title, content) {
+            isSharedNote = true;
+            currentNoteId = noteId;
+            currentSharedNoteData = { id: noteId, owner_email: ownerEmail, permission: permission, title: title, content: content };
+            sharedPermission = permission;
+            
+            document.getElementById('note-title').value = title;
+            document.getElementById('note-content').value = content;
+            document.getElementById('note-content').readOnly = (permission !== 'edit');
+            document.getElementById('favorite-btn').style.display = 'none';
+            document.getElementById('rename-btn').style.display = 'none';
+            document.getElementById('share-btn').style.display = 'none';
+            document.getElementById('delete-note-btn').style.display = 'none';
+            document.getElementById('add-tag-btn').style.display = 'none';
+            document.getElementById('tag-input').style.display = 'none';
+            
+            const banner = document.getElementById('shared-note-banner');
+            banner.style.display = 'block';
+            document.getElementById('shared-owner-name').textContent = ownerEmail;
+            document.getElementById('shared-permission-text').textContent = permission === 'edit' ? 'You can edit this note' : 'You can only view this note';
+            
+            renderNotesList();
+            renderSharedNotesList();
+        }
+
+        async function saveSharedNote() {
+            if (!isSharedNote || sharedPermission !== 'edit') return;
+            
+            const newTitle = document.getElementById('note-title').value;
+            const newContent = document.getElementById('note-content').value;
+            
+            try {
+                const res = await fetch(`${API}/api/notes/shared/${currentNoteId}/update`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                        owner_email: currentSharedNoteData.owner_email,
+                        title: newTitle, 
+                        content: newContent 
+                    })
+                });
+                if (res.ok) {
+                    currentSharedNoteData.title = newTitle;
+                    currentSharedNoteData.content = newContent;
+                    toast('Shared note saved');
+                }
+            } catch(e) { console.error('Save shared error:', e); }
+        }
+
         async function saveNote() {
+            if (isSharedNote) {
+                await saveSharedNote();
+                return;
+            }
             if (!currentNoteId) return;
+            
             const title = document.getElementById('note-title').value;
             const content = document.getElementById('note-content').value;
             const note = notes.find(n => n.id === currentNoteId);
@@ -683,6 +804,19 @@
         }
 
         async function renameNote() {
+            if (isSharedNote) {
+                if (sharedPermission === 'edit') {
+                    const newTitle = document.getElementById('rename-title').value.trim();
+                    if (newTitle) {
+                        document.getElementById('note-title').value = newTitle;
+                        await saveSharedNote();
+                        document.getElementById('rename-modal').classList.remove('show');
+                        toast('Note renamed');
+                    }
+                }
+                return;
+            }
+            
             const newTitle = document.getElementById('rename-title').value.trim();
             if (!newTitle || !currentNoteId) return;
             
@@ -707,6 +841,10 @@
         }
 
         async function deleteNote() {
+            if (isSharedNote) {
+                toast('Cannot delete shared notes', true);
+                return;
+            }
             if (!currentNoteId) return;
             if (!confirm('Delete this note?')) return;
             try {
@@ -719,8 +857,17 @@
                         selectNote(notes[0].id);
                     } else {
                         currentNoteId = null;
+                        isSharedNote = false;
                         document.getElementById('note-title').value = '';
                         document.getElementById('note-content').value = '';
+                        document.getElementById('shared-note-banner').style.display = 'none';
+                        document.getElementById('note-content').readOnly = false;
+                        document.getElementById('favorite-btn').style.display = 'flex';
+                        document.getElementById('rename-btn').style.display = 'flex';
+                        document.getElementById('share-btn').style.display = 'flex';
+                        document.getElementById('delete-note-btn').style.display = 'flex';
+                        document.getElementById('add-tag-btn').style.display = 'flex';
+                        document.getElementById('tag-input').style.display = 'flex';
                     }
                     toast('Note deleted');
                 }
@@ -728,6 +875,7 @@
         }
 
         async function toggleFavorite() {
+            if (isSharedNote) return;
             const note = notes.find(n => n.id === currentNoteId);
             if (!note) return;
             const newFav = !note.is_favorite;
@@ -751,6 +899,10 @@
         }
 
         async function addTag() {
+            if (isSharedNote) {
+                toast('Cannot add tags to shared notes', true);
+                return;
+            }
             const tagInput = document.getElementById('tag-input');
             const tag = tagInput.value.trim().toLowerCase();
             if (!tag || !currentNoteId) return;
@@ -808,9 +960,8 @@
                 const data = await res.json();
                 if (data.response) {
                     if (prompt) {
-                        // AI is editing the note - replace content directly
                         document.getElementById('note-content').value = data.response;
-                        saveNote();
+                        await saveNote();
                         responseDiv.innerHTML = `<span style="color:var(--success);">✅ Note updated with AI suggestion!</span>`;
                         toast('Note updated with AI');
                         setTimeout(() => responseDiv.style.display = 'none', 2000);
@@ -823,6 +974,10 @@
         }
 
         async function shareNote() {
+            if (isSharedNote) {
+                toast('Cannot share shared notes', true);
+                return;
+            }
             const email = document.getElementById('share-email').value.trim();
             const permission = document.getElementById('share-permission').value;
             const errorDiv = document.getElementById('share-error');
@@ -856,47 +1011,30 @@
             }
         }
 
-        async function loadSharedNotes() {
-            try {
-                const res = await fetch(`${API}/api/notes/shared`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    const sharedNotes = data.shared_notes || [];
-                    const container = document.getElementById('shared-list');
-                    
-                    if (sharedNotes.length === 0) {
-                        container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted);">No notes shared with you yet</div>';
-                    } else {
-                        container.innerHTML = sharedNotes.map(n => `
-                            <div class="shared-item" data-id="${n.id}" data-owner="${n.owner_email}">
-                                <div style="font-weight:600; margin-bottom:4px;">${esc(n.title)}</div>
-                                <div style="font-size:11px; color:var(--muted);">from ${esc(n.owner_name)} · ${n.permission === 'edit' ? '✏️ Can edit' : '👁️ Can view'}</div>
-                                <div style="font-size:11px; color:var(--gold); margin-top:8px;">${new Date(n.shared_at).toLocaleDateString()}</div>
-                            </div>
-                        `).join('');
-                        
-                        document.querySelectorAll('.shared-item').forEach(item => {
-                            item.addEventListener('click', () => {
-                                toast('Opening shared note... Coming soon!');
-                            });
-                        });
-                    }
-                }
-            } catch(e) { console.error('Load shared error:', e); }
-        }
-
         function selectNote(id) {
-            if (currentNoteId === id) return;
+            if (currentNoteId === id && !isSharedNote) return;
+            isSharedNote = false;
             currentNoteId = id;
             const note = notes.find(n => n.id === id);
             if (note) {
                 document.getElementById('note-title').value = note.title;
                 document.getElementById('note-content').value = note.content;
+                document.getElementById('note-content').readOnly = false;
+                document.getElementById('shared-note-banner').style.display = 'none';
+                document.getElementById('favorite-btn').style.display = 'flex';
+                document.getElementById('rename-btn').style.display = 'flex';
+                document.getElementById('share-btn').style.display = 'flex';
+                document.getElementById('delete-note-btn').style.display = 'flex';
+                document.getElementById('add-tag-btn').style.display = 'flex';
+                document.getElementById('tag-input').style.display = 'flex';
                 const favBtn = document.getElementById('favorite-btn');
                 favBtn.innerHTML = note.is_favorite ? '⭐' : '☆';
                 favBtn.classList.toggle('active', note.is_favorite);
             }
             renderNotesList();
+            if (currentFolder === 'shared') {
+                renderSharedNotesList();
+            }
         }
 
         function filterNotes() {
@@ -916,13 +1054,18 @@
             const container = document.getElementById('notes-list');
             const filtered = filterNotes();
             
-            if (filtered.length === 0) {
+            if (filtered.length === 0 && currentFolder !== 'shared') {
                 container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted);">📭 No notes<br>Click "New Note" to start</div>';
                 return;
             }
             
+            if (currentFolder === 'shared') {
+                renderSharedNotesList();
+                return;
+            }
+            
             container.innerHTML = filtered.map(n => `
-                <div class="note-item ${n.id === currentNoteId ? 'active' : ''}" data-id="${n.id}">
+                <div class="note-item ${n.id === currentNoteId && !isSharedNote ? 'active' : ''}" data-id="${n.id}">
                     <div class="note-title">${esc(n.title || 'Untitled')}${n.is_favorite ? ' ⭐' : ''}</div>
                     <div class="note-preview">${esc((n.content || '').substring(0, 80))}${(n.content || '').length > 80 ? '…' : ''}</div>
                     <div class="note-date">${new Date(n.updated_at).toLocaleDateString()}</div>
@@ -930,7 +1073,7 @@
                 </div>
             `).join('');
             
-            document.querySelectorAll('.note-item').forEach(el => {
+            document.querySelectorAll('.note-item:not([data-shared="true"])').forEach(el => {
                 el.addEventListener('click', () => selectNote(parseInt(el.dataset.id)));
             });
             
@@ -975,7 +1118,8 @@
         document.getElementById('confirm-new-note').onclick = createNewNote;
         document.getElementById('cancel-new-note').onclick = () => document.getElementById('new-note-modal').classList.remove('show');
         document.getElementById('rename-btn').onclick = () => {
-            if (!currentNoteId) { toast('Select a note first', true); return; }
+            if (!currentNoteId && !isSharedNote) { toast('Select a note first', true); return; }
+            if (isSharedNote && sharedPermission !== 'edit') { toast('You only have view permission', true); return; }
             document.getElementById('rename-title').value = document.getElementById('note-title').value;
             document.getElementById('rename-modal').classList.add('show');
         };
@@ -984,13 +1128,18 @@
         document.getElementById('delete-note-btn').onclick = deleteNote;
         document.getElementById('favorite-btn').onclick = toggleFavorite;
         document.getElementById('share-btn').onclick = () => {
-            if (!currentNoteId) { toast('Select a note first', true); return; }
+            if (!currentNoteId && !isSharedNote) { toast('Select a note first', true); return; }
+            if (isSharedNote) { toast('Cannot share shared notes', true); return; }
             document.getElementById('share-modal').classList.add('show');
         };
         document.getElementById('confirm-share').onclick = shareNote;
         document.getElementById('cancel-share').onclick = () => document.getElementById('share-modal').classList.remove('show');
-        document.getElementById('shared-btn').onclick = () => { loadSharedNotes(); document.getElementById('shared-modal').classList.add('show'); };
-        document.getElementById('close-shared').onclick = () => document.getElementById('shared-modal').classList.remove('show');
+        document.getElementById('shared-btn').onclick = () => {
+            currentFolder = 'shared';
+            document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
+            document.querySelector('.folder-item[data-folder="shared"]').classList.add('active');
+            renderNotesList();
+        };
         document.getElementById('ai-action-btn').onclick = askAI;
         document.getElementById('add-tag-btn').onclick = addTag;
         document.getElementById('tag-input').addEventListener('keypress', e => { if (e.key === 'Enter') addTag(); });
@@ -1003,15 +1152,17 @@
                 f.classList.add('active');
                 currentFolder = f.dataset.folder;
                 currentTag = null;
+                isSharedNote = false;
                 renderTags();
                 renderNotesList();
+                if (currentFolder !== 'shared') {
+                    document.getElementById('shared-note-banner').style.display = 'none';
+                }
             });
         });
 
-        // Auto-save before unload
         window.addEventListener('beforeunload', () => { if (currentNoteId) saveNote(); });
 
-        // Mobile sidebar toggle
         const hamburger = document.createElement('button');
         hamburger.innerHTML = '☰';
         hamburger.style.cssText = 'position:fixed; top:15px; left:15px; z-index:1000; background:linear-gradient(135deg,var(--gold),#a8751e); border:none; border-radius:50%; width:40px; height:40px; font-size:20px; color:var(--ink); cursor:pointer; display:none;';
