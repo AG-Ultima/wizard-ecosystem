@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Wizard Notes — AI-powered note-taking with summaries, tags, and search. Part of the Wizard Ecosystem.">
+    <meta name="author" content="Arnav Gupta">
+    <meta name="theme-color" content="#080612">
+    <title>Wizard Notes — AI-Powered Note-Taking</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --ink:          #080612;
+            --ink-2:        #0e0b1e;
+            --ink-3:        #13102a;
+            --ink-4:        #1a1635;
+            --gold:         #c9a84c;
+            --gold-light:   #e8c97a;
+            --gold-dim:     rgba(201,168,76,0.1);
+            --gold-glow:    rgba(201,168,76,0.2);
+            --violet:       #7c5cbf;
+            --silver:       #d4d0e8;
+            --silver-dim:   rgba(212,208,232,0.55);
+            --muted:        rgba(212,208,232,0.32);
+            --border:       rgba(201,168,76,0.14);
+            --border-strong:rgba(201,168,76,0.4);
+            --success:      #4ade80;
+            --danger:       #f87171;
+            --warning:      #fbbf24;
+        }
+
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--silver);
+        }
+
+        /* Starfield */
+        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .amb {
+            position: fixed; border-radius: 50%;
+            filter: blur(130px); pointer-events: none; z-index: 0;
+            opacity: 0.28; animation: drift 20s ease-in-out infinite alternate;
+        }
+        .amb-1 { width: 600px; height: 600px; top: -180px; left: -180px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
+        .amb-2 { width: 450px; height: 450px; bottom: -100px; right: -100px; background: radial-gradient(circle, #5c3a1e, transparent 70%); animation-delay: -10s; }
+        @keyframes drift { from { transform: translate(0,0); } to { transform: translate(35px,25px); } }
+
+        /* Layout */
+        .notes-shell { position: relative; z-index: 10; display: flex; height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px; flex-shrink: 0;
+            background: rgba(13,10,26,0.92);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            backdrop-filter: blur(20px);
+            overflow-y: auto;
+        }
+
+        .sidebar-head { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); }
+        .logo {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; margin-bottom: 20px;
+        }
+        .logo-glyph { font-size: 28px; filter: drop-shadow(0 0 10px rgba(201,168,76,0.4)); animation: lev 5s ease-in-out infinite; }
+        @keyframes lev { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .logo-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px; font-weight: 600;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .user-card {
+            background: var(--gold-dim);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+        .user-email { font-size: 12px; color: var(--silver-dim); word-break: break-all; }
+
+        /* New Note Button */
+        .new-note-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+            border: none; border-radius: 100px;
+            padding: 12px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px; font-weight: 600;
+            color: var(--ink);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+        .new-note-btn:hover { opacity: 0.88; box-shadow: 0 4px 18px rgba(201,168,76,0.3); }
+
+        /* Folders */
+        .folder-section { padding: 0 12px 16px; }
+        .folder-label {
+            font-size: 10px; font-weight: 500; letter-spacing: 0.2em;
+            text-transform: uppercase; color: var(--muted);
+            padding: 10px 8px 6px;
+        }
+        .folder-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: 12px;
+            cursor: pointer; margin-bottom: 2px;
+            border: 1px solid transparent;
+        }
+        .folder-item:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
+        .folder-item.active {
+            background: var(--gold-dim); border-color: var(--border-strong);
+        }
+        .folder-icon { font-size: 16px; width: 24px; }
+        .folder-name { flex: 1; font-size: 13px; }
+        .folder-count {
+            font-size: 10px;
+            background: var(--gold-dim);
+            border: 1px solid rgba(201,168,76,0.2);
+            padding: 2px 8px; border-radius: 100px;
+        }
+
+        /* Notes List */
+        .notes-list {
+            flex: 1; overflow-y: auto;
+            padding: 8px;
+        }
+        .note-item {
+            padding: 14px;
+            border-radius: 14px;
+            cursor: pointer;
+            margin-bottom: 6px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .note-item:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
+        .note-item.active {
+            background: var(--gold-dim);
+            border-color: var(--border-strong);
+        }
+        .note-title {
+            font-size: 14px; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .note-preview {
+            font-size: 11px; color: var(--muted);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .note-date {
+            font-size: 10px; color: var(--muted);
+            margin-top: 6px;
+        }
+
+        /* Tags */
+        .tags-section {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+        .tag-list {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            margin-top: 8px;
+        }
+        .tag {
+            background: rgba(201,168,76,0.1);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 4px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .tag:hover { background: rgba(201,168,76,0.2); }
+
+        /* Main Editor */
+        .main {
+            flex: 1; display: flex; flex-direction: column;
+            overflow: hidden; min-width: 0;
+        }
+        .editor-toolbar {
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex; gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: rgba(13,10,26,0.7);
+            backdrop-filter: blur(12px);
+        }
+        .editor-title-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px; font-weight: 600;
+            color: var(--silver);
+            outline: none;
+            padding: 8px 0;
+        }
+        .editor-title-input::placeholder { color: var(--muted); }
+        .editor-actions {
+            display: flex; gap: 8px;
+        }
+        .icon-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover { background: var(--gold-dim); border-color: var(--border-strong); }
+        .delete-btn:hover { background: rgba(248,113,113,0.15); color: var(--danger); border-color: var(--danger); }
+
+        .editor-body {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        .editor-content {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            line-height: 1.75;
+            color: var(--silver-dim);
+            resize: none;
+            outline: none;
+        }
+        .editor-content::placeholder { color: var(--muted); }
+
+        /* AI Panel */
+        .ai-panel {
+            border-top: 1px solid var(--border);
+            padding: 16px 20px;
+            background: rgba(13,10,26,0.7);
+            backdrop-filter: blur(12px);
+        }
+        .ai-panel-header {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 12px;
+        }
+        .ai-panel-header span { font-size: 12px; color: var(--gold); }
+        .ai-input-group {
+            display: flex; gap: 10px;
+        }
+        .ai-prompt {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 10px 16px;
+            color: var(--silver);
+            font-size: 13px;
+            outline: none;
+        }
+        .ai-prompt:focus { border-color: var(--border-strong); }
+        .ai-action-btn {
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+            border: none; border-radius: 100px;
+            padding: 10px 20px;
+            font-size: 12px; font-weight: 600;
+            color: var(--ink);
+            cursor: pointer;
+        }
+        .ai-response {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(201,168,76,0.05);
+            border-radius: 12px;
+            font-size: 13px;
+            color: var(--silver-dim);
+            display: none;
+        }
+        .tag-input-group {
+            display: flex; gap: 8px; margin-top: 12px;
+        }
+        .tag-input {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 8px 14px;
+            font-size: 12px;
+            color: var(--silver);
+            outline: none;
+        }
+        .add-tag-btn {
+            background: var(--gold-dim);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 8px 16px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(5,3,14,0.95);
+            backdrop-filter: blur(18px);
+            z-index: 10000;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 28px;
+            width: 400px;
+        }
+        .modal-box input, .modal-box textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            color: var(--silver);
+            margin-bottom: 16px;
+            font-family: inherit;
+        }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+        .modal-buttons button { flex: 1; padding: 10px; border-radius: 100px; cursor: pointer; font-weight: 600; }
+        .modal-confirm { background: linear-gradient(135deg, var(--gold), #a8751e); border: none; color: var(--ink); }
+        .modal-cancel { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--muted); }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+            color: var(--ink);
+            padding: 10px 24px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 10001;
+            transition: transform 0.3s;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 700px) {
+            .sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.3s; }
+            .sidebar.open { transform: translateX(0); }
+            .editor-title-input { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="amb amb-1" aria-hidden="true"></div>
+    <div class="amb amb-2" aria-hidden="true"></div>
+
+    <div class="notes-shell">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-head">
+                <a class="logo" href="https://wizardecosystem.dpdns.org">
+                    <span class="logo-glyph">📝</span>
+                    <span class="logo-name">Wizard Notes</span>
+                </a>
+                <div class="user-card">
+                    <div class="user-email" id="user-email">Loading…</div>
+                </div>
+                <button class="new-note-btn" id="new-note-btn">✨ New Note</button>
+            </div>
+
+            <div class="folder-section">
+                <div class="folder-label">Folders</div>
+                <div class="folder-item active" data-folder="all">
+                    <span class="folder-icon">📓</span>
+                    <span class="folder-name">All Notes</span>
+                    <span class="folder-count" id="all-count">0</span>
+                </div>
+                <div class="folder-item" data-folder="favorites">
+                    <span class="folder-icon">⭐</span>
+                    <span class="folder-name">Favorites</span>
+                    <span class="folder-count" id="fav-count">0</span>
+                </div>
+                <div class="folder-item" data-folder="recent">
+                    <span class="folder-icon">🕐</span>
+                    <span class="folder-name">Recent</span>
+                </div>
+            </div>
+
+            <div class="notes-list" id="notes-list">
+                <div class="state-msg" style="text-align:center; padding:40px;">Loading notes…</div>
+            </div>
+
+            <div class="tags-section">
+                <div class="folder-label">Tags</div>
+                <div class="tag-list" id="tag-list"></div>
+            </div>
+        </aside>
+
+        <!-- Main Editor -->
+        <main class="main">
+            <div class="editor-toolbar">
+                <input type="text" id="note-title" class="editor-title-input" placeholder="Untitled Note">
+                <div class="editor-actions">
+                    <button class="icon-btn" id="favorite-btn" title="Favorite">☆</button>
+                    <button class="icon-btn" id="share-btn" title="Share">🔗</button>
+                    <button class="icon-btn delete-btn" id="delete-note-btn" title="Delete">🗑</button>
+                </div>
+            </div>
+
+            <div class="editor-body">
+                <textarea id="note-content" class="editor-content" placeholder="Start writing your note here..."></textarea>
+            </div>
+
+            <!-- AI Panel -->
+            <div class="ai-panel">
+                <div class="ai-panel-header">
+                    <span>🧙</span>
+                    <span>Wizard AI Assistant</span>
+                </div>
+                <div class="ai-input-group">
+                    <input type="text" id="ai-prompt" class="ai-prompt" placeholder="e.g., Summarize this note, Fix grammar, Make it more professional">
+                    <button id="ai-action-btn" class="ai-action-btn">Enhance</button>
+                </div>
+                <div class="tag-input-group">
+                    <input type="text" id="tag-input" class="tag-input" placeholder="Add tag...">
+                    <button id="add-tag-btn" class="add-tag-btn">+ Add Tag</button>
+                </div>
+                <div id="ai-response" class="ai-response"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Share Modal -->
+    <div id="share-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="margin-bottom: 16px; color: var(--gold);">Share Note</h3>
+            <input type="text" id="share-email" placeholder="Email address">
+            <select id="share-permission" style="width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:12px; padding:12px; color:var(--silver); margin-bottom:16px;">
+                <option value="view">Can view</option>
+                <option value="edit">Can edit</option>
+            </select>
+            <div class="modal-buttons">
+                <button id="share-confirm" class="modal-confirm">Share</button>
+                <button id="share-cancel" class="modal-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const API = 'https://arnav0928.pythonanywhere.com';
+        let currentUser = null;
+        let notes = [];
+        let currentNoteId = null;
+        let currentFolder = 'all';
+        let currentTag = null;
+
+        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API}/api/check-auth`, { credentials: 'include' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.authenticated && data.user) {
+                        currentUser = data.user;
+                        document.getElementById('user-email').textContent = currentUser.email;
+                        await loadNotes();
+                        return;
+                    }
+                }
+            } catch(e) {}
+            window.location.href = 'https://wizardecosystem.dpdns.org';
+        }
+
+        async function loadNotes() {
+            try {
+                const res = await fetch(`${API}/api/notes`, { credentials: 'include' });
+                if (res.ok) {
+                    const data = await res.json();
+                    notes = data.notes || [];
+                    renderNotesList();
+                    renderTags();
+                    if (notes.length > 0 && !currentNoteId) {
+                        selectNote(notes[0].id);
+                    }
+                }
+            } catch(e) { console.error('Load notes error:', e); }
+        }
+
+        async function saveNote() {
+            if (!currentNoteId) return;
+            const title = document.getElementById('note-title').value;
+            const content = document.getElementById('note-content').value;
+            const note = notes.find(n => n.id === currentNoteId);
+            const tags = note ? note.tags : [];
+            
+            try {
+                const res = await fetch(`${API}/api/notes/${currentNoteId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ title, content, tags })
+                });
+                if (res.ok) {
+                    const updated = await res.json();
+                    const index = notes.findIndex(n => n.id === currentNoteId);
+                    if (index !== -1) notes[index] = updated.note;
+                    renderNotesList();
+                    renderTags();
+                }
+            } catch(e) { console.error('Save error:', e); }
+        }
+
+        async function createNewNote() {
+            try {
+                const res = await fetch(`${API}/api/notes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ title: 'Untitled', content: '' })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    notes.unshift(data.note);
+                    renderNotesList();
+                    selectNote(data.note.id);
+                    toast('✨ New note created');
+                }
+            } catch(e) { console.error('Create error:', e); }
+        }
+
+        async function deleteNote() {
+            if (!currentNoteId) return;
+            if (!confirm('Delete this note?')) return;
+            try {
+                const res = await fetch(`${API}/api/notes/${currentNoteId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                if (res.ok) {
+                    notes = notes.filter(n => n.id !== currentNoteId);
+                    renderNotesList();
+                    renderTags();
+                    if (notes.length > 0) {
+                        selectNote(notes[0].id);
+                    } else {
+                        currentNoteId = null;
+                        document.getElementById('note-title').value = '';
+                        document.getElementById('note-content').value = '';
+                    }
+                    toast('Note deleted');
+                }
+            } catch(e) { console.error('Delete error:', e); }
+        }
+
+        async function addTag() {
+            const tagInput = document.getElementById('tag-input');
+            const tag = tagInput.value.trim().toLowerCase();
+            if (!tag || !currentNoteId) return;
+            
+            const note = notes.find(n => n.id === currentNoteId);
+            if (!note) return;
+            
+            const tags = note.tags || [];
+            if (tags.includes(tag)) {
+                toast('Tag already exists', true);
+                return;
+            }
+            tags.push(tag);
+            
+            try {
+                const res = await fetch(`${API}/api/notes/${currentNoteId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ title: note.title, content: note.content, tags })
+                });
+                if (res.ok) {
+                    note.tags = tags;
+                    renderNotesList();
+                    renderTags();
+                    tagInput.value = '';
+                    toast(`Tag #${tag} added`);
+                }
+            } catch(e) { console.error('Add tag error:', e); }
+        }
+
+        async function toggleFavorite() {
+            const note = notes.find(n => n.id === currentNoteId);
+            if (!note) return;
+            const newFav = !note.is_favorite;
+            
+            try {
+                const res = await fetch(`${API}/api/notes/${currentNoteId}/favorite`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ favorite: newFav })
+                });
+                if (res.ok) {
+                    note.is_favorite = newFav;
+                    renderNotesList();
+                    updateFavoriteButton();
+                    toast(newFav ? '⭐ Added to favorites' : '☆ Removed from favorites');
+                }
+            } catch(e) { console.error('Favorite error:', e); }
+        }
+
+        async function askAI() {
+            const prompt = document.getElementById('ai-prompt').value;
+            const content = document.getElementById('note-content').value;
+            if (!prompt && !content) {
+                toast('Enter a prompt or write some content first', true);
+                return;
+            }
+            
+            const responseDiv = document.getElementById('ai-response');
+            responseDiv.style.display = 'block';
+            responseDiv.innerHTML = '<div class="spinner-ring" style="width:20px;height:20px;margin:0 auto;"></div>';
+            
+            try {
+                const res = await fetch(`${API}/api/chat/simple`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        prompt: prompt ? 
+                            `Note content: ${content}\n\nUser request: ${prompt}\n\nRespond with the improved/enhanced version of the note.` :
+                            `Summarize this note in 2-3 sentences:\n\n${content}`,
+                        mode: 'Fast'
+                    })
+                });
+                const data = await res.json();
+                if (data.response) {
+                    responseDiv.innerHTML = `<strong style="color:var(--gold);">✨ AI Suggestion:</strong><br><br>${esc(data.response)}`;
+                    if (!prompt) {
+                        // Offer to replace content
+                        responseDiv.innerHTML += `<br><br><button onclick="replaceWithAISuggestion()" style="background:var(--gold-dim); border:1px solid var(--border); border-radius:100px; padding:6px 14px; margin-top:10px; cursor:pointer;">📝 Replace with this summary</button>`;
+                        window.lastAISuggestion = data.response;
+                    }
+                }
+            } catch(e) { responseDiv.innerHTML = 'Error getting AI response'; }
+            document.getElementById('ai-prompt').value = '';
+        }
+
+        function replaceWithAISuggestion() {
+            if (window.lastAISuggestion) {
+                document.getElementById('note-content').value = window.lastAISuggestion;
+                saveNote();
+                document.getElementById('ai-response').style.display = 'none';
+                toast('Note updated with AI suggestion');
+            }
+        }
+
+        function selectNote(id) {
+            if (currentNoteId === id) return;
+            currentNoteId = id;
+            const note = notes.find(n => n.id === id);
+            if (note) {
+                document.getElementById('note-title').value = note.title;
+                document.getElementById('note-content').value = note.content;
+                updateFavoriteButton();
+            }
+            renderNotesList();
+        }
+
+        function updateFavoriteButton() {
+            const note = notes.find(n => n.id === currentNoteId);
+            const btn = document.getElementById('favorite-btn');
+            if (note && note.is_favorite) {
+                btn.innerHTML = '⭐';
+                btn.title = 'Remove from favorites';
+            } else {
+                btn.innerHTML = '☆';
+                btn.title = 'Add to favorites';
+            }
+        }
+
+        function filterNotes() {
+            let filtered = [...notes];
+            if (currentFolder === 'favorites') {
+                filtered = filtered.filter(n => n.is_favorite);
+            } else if (currentFolder === 'recent') {
+                filtered = filtered.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 10);
+            }
+            if (currentTag) {
+                filtered = filtered.filter(n => n.tags && n.tags.includes(currentTag));
+            }
+            return filtered;
+        }
+
+        function renderNotesList() {
+            const container = document.getElementById('notes-list');
+            const filtered = filterNotes();
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted);">📭 No notes<br>Click "New Note" to start</div>';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(n => `
+                <div class="note-item ${n.id === currentNoteId ? 'active' : ''}" data-id="${n.id}">
+                    <div class="note-title">${esc(n.title || 'Untitled')}${n.is_favorite ? ' ⭐' : ''}</div>
+                    <div class="note-preview">${esc((n.content || '').substring(0, 80))}${(n.content || '').length > 80 ? '…' : ''}</div>
+                    <div class="note-date">${new Date(n.updated_at).toLocaleDateString()}</div>
+                    ${n.tags && n.tags.length ? `<div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap;">${n.tags.map(t => `<span style="background:rgba(201,168,76,0.1); border-radius:100px; padding:2px 8px; font-size:9px;">#${esc(t)}</span>`).join('')}</div>` : ''}
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.note-item').forEach(el => {
+                el.addEventListener('click', () => selectNote(parseInt(el.dataset.id)));
+            });
+            
+            document.getElementById('all-count').textContent = notes.length;
+            document.getElementById('fav-count').textContent = notes.filter(n => n.is_favorite).length;
+        }
+
+        function renderTags() {
+            const allTags = new Set();
+            notes.forEach(n => {
+                if (n.tags) n.tags.forEach(t => allTags.add(t));
+            });
+            const container = document.getElementById('tag-list');
+            if (allTags.size === 0) {
+                container.innerHTML = '<div style="color:var(--muted); font-size:11px; text-align:center;">No tags yet</div>';
+                return;
+            }
+            container.innerHTML = Array.from(allTags).map(t => `
+                <div class="tag ${currentTag === t ? 'active' : ''}" data-tag="${esc(t)}">#${esc(t)}</div>
+            `).join('');
+            
+            document.querySelectorAll('.tag').forEach(el => {
+                el.addEventListener('click', () => {
+                    const tag = el.dataset.tag;
+                    currentTag = currentTag === tag ? null : tag;
+                    renderTags();
+                    renderNotesList();
+                });
+            });
+        }
+
+        // Auto-save on input
+        let saveTimeout;
+        document.getElementById('note-title').addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => saveNote(), 500);
+        });
+        document.getElementById('note-content').addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => saveNote(), 500);
+        });
+
+        // Event listeners
+        document.getElementById('new-note-btn').addEventListener('click', createNewNote);
+        document.getElementById('delete-note-btn').addEventListener('click', deleteNote);
+        document.getElementById('favorite-btn').addEventListener('click', toggleFavorite);
+        document.getElementById('share-btn').addEventListener('click', () => document.getElementById('share-modal').classList.add('show'));
+        document.getElementById('ai-action-btn').addEventListener('click', askAI);
+        document.getElementById('add-tag-btn').addEventListener('click', addTag);
+        document.getElementById('tag-input').addEventListener('keypress', e => { if (e.key === 'Enter') addTag(); });
+        
+        document.getElementById('share-cancel').addEventListener('click', () => document.getElementById('share-modal').classList.remove('show'));
+        document.getElementById('share-confirm').addEventListener('click', async () => {
+            const email = document.getElementById('share-email').value;
+            const permission = document.getElementById('share-permission').value;
+            if (!email) { toast('Enter an email', true); return; }
+            try {
+                const res = await fetch(`${API}/api/notes/${currentNoteId}/share`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, permission })
+                });
+                if (res.ok) {
+                    toast(`Note shared with ${email}`);
+                    document.getElementById('share-modal').classList.remove('show');
+                    document.getElementById('share-email').value = '';
+                } else {
+                    toast('Share failed', true);
+                }
+            } catch(e) { toast('Share failed', true); }
+        });
+
+        document.querySelectorAll('.folder-item').forEach(f => {
+            f.addEventListener('click', () => {
+                document.querySelectorAll('.folder-item').forEach(x => x.classList.remove('active'));
+                f.classList.add('active');
+                currentFolder = f.dataset.folder;
+                currentTag = null;
+                renderTags();
+                renderNotesList();
+            });
+        });
+
+        // Auto-save before unload
+        window.addEventListener('beforeunload', () => {
+            if (currentNoteId) saveNote();
+        });
+
+        // Load on mobile
+        const hamburger = document.createElement('button');
+        hamburger.innerHTML = '☰';
+        hamburger.style.cssText = 'position:fixed; top:15px; left:15px; z-index:1000; background:linear-gradient(135deg,var(--gold),#a8751e); border:none; border-radius:50%; width:40px; height:40px; font-size:20px; color:var(--ink); cursor:pointer; display:none;';
+        document.body.appendChild(hamburger);
+        hamburger.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
+        
+        if (window.innerWidth <= 700) {
+            hamburger.style.display = 'block';
+            document.querySelector('.sidebar').classList.add('open');
+        }
+
+        checkAuth();
+    </script>
+</body>
+</html>
