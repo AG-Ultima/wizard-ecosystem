@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Wizard Ecosystem — your complete AI-powered workspace. Chat with Wizard AI, search the web intelligently, manage email, calendar, and messaging in one magical place.">
-    <meta name="keywords" content="Wizard Ecosystem, AI assistant, AI tools, email client, calendar app, web search, productivity suite, Arnav Gupta">
+    <meta name="description" content="Wizard Ecosystem — your complete AI-powered workspace. Chat with Wizard AI, search the web intelligently, manage email, calendar, notes, and more in one magical place.">
+    <meta name="keywords" content="Wizard Ecosystem, AI assistant, AI tools, email client, calendar app, web search, notes app, productivity suite, Arnav Gupta">
     <meta name="author" content="Arnav Gupta">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#0a0814">
 
     <!-- Open Graph -->
     <meta property="og:title" content="Wizard Ecosystem — Your Magical AI Workspace">
-    <meta property="og:description" content="One ecosystem. AI assistant, smart search, email, calendar, and chat — all powered by magic.">
+    <meta property="og:description" content="One ecosystem. AI assistant, smart search, email, calendar, notes, and chat — all powered by magic.">
     <meta property="og:image" content="https://wizardecosystem.dpdns.org/favicon.ico">
     <meta property="og:url" content="https://wizardecosystem.dpdns.org">
     <meta property="og:type" content="website">
@@ -20,7 +20,7 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Wizard Ecosystem — Your Magical AI Workspace">
-    <meta name="twitter:description" content="One ecosystem. AI assistant, smart search, email, calendar, and chat — all powered by magic.">
+    <meta name="twitter:description" content="One ecosystem. AI assistant, smart search, email, calendar, notes, and chat — all powered by magic.">
     <meta name="twitter:image" content="https://wizardecosystem.dpdns.org/favicon.ico">
 
     <!-- Canonical -->
@@ -33,7 +33,7 @@
       "@type": "WebApplication",
       "name": "Wizard Ecosystem",
       "url": "https://wizardecosystem.dpdns.org",
-      "description": "An AI-powered productivity workspace with chat, search, email, calendar, and messaging tools.",
+      "description": "An AI-powered productivity workspace with chat, search, email, calendar, notes, and messaging tools.",
       "applicationCategory": "ProductivityApplication",
       "author": { "@type": "Person", "name": "Arnav Gupta" },
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
@@ -106,7 +106,7 @@
         .shell {
             position: relative;
             z-index: 10;
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 40px 24px 80px;
         }
@@ -226,7 +226,7 @@
         /* ── Search ── */
         .search-wrap {
             max-width: 580px;
-            margin: 0 auto 80px;
+            margin: 0 auto 60px;
         }
         .search-field {
             display: flex;
@@ -301,7 +301,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 18px;
-            margin-bottom: 80px;
+            margin-bottom: 60px;
         }
 
         .app-card {
@@ -371,7 +371,46 @@
             padding: 3px 9px;
         }
 
-        /* ── Footer ── */
+        /* Download Cards Section */
+        .download-section {
+            margin-top: 20px;
+            margin-bottom: 60px;
+        }
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .download-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 28px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .download-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-strong);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .download-icon { font-size: 48px; display: block; margin-bottom: 16px; }
+        .download-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .download-desc { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+        .download-link {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+            color: var(--ink);
+            text-decoration: none;
+            padding: 10px 24px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .download-link:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(201,168,76,0.3); }
+
+        /* Footer */
         footer {
             text-align: center;
             border-top: 1px solid rgba(255,255,255,0.06);
@@ -392,7 +431,7 @@
         .footer-meta a { color: var(--gold); text-decoration: none; opacity: 0.7; }
         .footer-meta a:hover { opacity: 1; }
 
-        /* ── Modal ── */
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -479,7 +518,7 @@
 
         .error-msg { color: #e07070; font-size: 12px; margin-bottom: 10px; }
 
-        /* ── Entrance animation ── */
+        /* Entrance animation */
         .fade-up {
             opacity: 0;
             transform: translateY(22px);
@@ -549,47 +588,82 @@
             </div>
         </div>
 
-        <!-- Apps -->
+        <!-- Web Apps -->
         <nav aria-label="Wizard Ecosystem apps">
             <div class="section-label fade-up delay-3">
-                <span>Your tools</span>
+                <span>Web Apps</span>
             </div>
 
             <div class="apps-grid" role="list">
-
-                <div class="app-card fade-up delay-3" data-app="ai" role="listitem" tabindex="0" aria-label="Wizard AI — AI Assistant with 7 personalities">
+                <div class="app-card fade-up delay-3" data-app="ai" role="listitem" tabindex="0">
                     <span class="card-badge">AI</span>
                     <span class="card-glyph" aria-hidden="true">🧠</span>
                     <div class="card-name">Wizard AI</div>
-                    <p class="card-desc">AI assistant with 7 distinct personalities</p>
+                    <p class="card-desc">AI assistant with 7 personalities</p>
                 </div>
 
-                <div class="app-card fade-up delay-4" data-app="search" role="listitem" tabindex="0" aria-label="Wizard Search — AI-powered web search">
+                <div class="app-card fade-up delay-4" data-app="search" role="listitem" tabindex="0">
                     <span class="card-glyph" aria-hidden="true">🔍</span>
                     <div class="card-name">Wizard Search</div>
-                    <p class="card-desc">Intelligent web search, powered by AI</p>
+                    <p class="card-desc">AI-powered web search</p>
                 </div>
 
-                <div class="app-card fade-up delay-4" data-app="mail" role="listitem" tabindex="0" aria-label="Wizard Mail — Email client">
+                <div class="app-card fade-up delay-4" data-app="mail" role="listitem" tabindex="0">
                     <span class="card-glyph" aria-hidden="true">📧</span>
                     <div class="card-name">Wizard Mail</div>
-                    <p class="card-desc">Gmail, Outlook & any IMAP inbox</p>
+                    <p class="card-desc">Email client (Gmail, Outlook, IMAP)</p>
                 </div>
 
-                <div class="app-card fade-up delay-5" data-app="calendar" role="listitem" tabindex="0" aria-label="Wizard Calendar — Schedule and manage events">
+                <div class="app-card fade-up delay-5" data-app="calendar" role="listitem" tabindex="0">
                     <span class="card-glyph" aria-hidden="true">📅</span>
                     <div class="card-name">Wizard Calendar</div>
-                    <p class="card-desc">Schedule events and manage your time</p>
+                    <p class="card-desc">Schedule and manage events</p>
                 </div>
 
-                <div class="app-card fade-up delay-6" data-app="chat" role="listitem" tabindex="0" aria-label="Wizard Chat — Messaging with Wizard users">
+                <div class="app-card fade-up delay-5" data-app="notes" role="listitem" tabindex="0">
+                    <span class="card-badge">NEW</span>
+                    <span class="card-glyph" aria-hidden="true">📝</span>
+                    <div class="card-name">Wizard Notes</div>
+                    <p class="card-desc">AI-powered note-taking</p>
+                </div>
+
+                <div class="app-card fade-up delay-6" data-app="chat" role="listitem" tabindex="0">
                     <span class="card-glyph" aria-hidden="true">💬</span>
                     <div class="card-name">Wizard Chat</div>
-                    <p class="card-desc">Real-time messaging with Wizard users</p>
+                    <p class="card-desc">Real-time messaging</p>
                 </div>
-
             </div>
         </nav>
+
+        <!-- Desktop Apps Section -->
+        <div class="download-section">
+            <div class="section-label fade-up delay-4">
+                <span>Desktop Apps</span>
+            </div>
+
+            <div class="download-grid">
+                <div class="download-card fade-up delay-4">
+                    <span class="download-icon">🌐</span>
+                    <div class="download-title">Wizard Browser</div>
+                    <p class="download-desc">AI-powered browser with workspaces, password manager, and ad blocking</p>
+                    <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/wizard-browser.Setup.10.0.0.exe" class="download-link" download>⬇ Download for Windows</a>
+                </div>
+
+                <div class="download-card fade-up delay-5">
+                    <span class="download-icon">🤖</span>
+                    <div class="download-title">Wizard Autopilot</div>
+                    <p class="download-desc">Full computer automation — control mouse, keyboard, and apps with natural language</p>
+                    <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/Wizard.Autopilot-2.1.0-Setup.exe" class="download-link" download>⬇ Download for Windows</a>
+                </div>
+
+                <div class="download-card fade-up delay-6">
+                    <span class="download-icon">🧙</span>
+                    <div class="download-title">Wizard Ecosystem</div>
+                    <p class="download-desc">All-in-one desktop suite — AI, Mail, Calendar, Chat, Notes, and more</p>
+                    <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/Wizard.Ecosystem.Setup.2.0.0.exe" class="download-link" download>⬇ Download for Windows</a>
+                </div>
+            </div>
+        </div>
 
         <!-- Footer -->
         <footer role="contentinfo">
@@ -695,6 +769,7 @@
             search:   'https://wizardecosystem.dpdns.org/search',
             mail:     'https://wizardecosystem.dpdns.org/mail',
             calendar: 'https://wizardecosystem.dpdns.org/calendar',
+            notes:    'https://wizardecosystem.dpdns.org/notes',
             chat:     'https://wizardecosystem.dpdns.org/chat'
         };
 
