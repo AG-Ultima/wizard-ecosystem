@@ -28,6 +28,7 @@ Wizard Ecosystem is a comprehensive, AI-powered productivity suite that replaces
 | 📅 **Wizard Calendar** | Calendar and event management | [Calendar](https://wizardecosystem.dpdns.org/calendar) |
 | 💬 **Wizard Chat** | Instant messaging for Wizard users | [Chat](https://wizardecosystem.dpdns.org/chat) |
 | 🔍 **Wizard Search** | AI-powered search engine | [Search](https://wizardecosystem.dpdns.org/search) |
+| 📝 **Wizard Notes** | AI-powered note-taking with collaboration | [Notes](https://wizardecosystem.dpdns.org/notes) |
 
 ---
 
@@ -53,6 +54,44 @@ Wizard Ecosystem is a comprehensive, AI-powered productivity suite that replaces
 - **Code Execution** - Python sandbox
 - **Image Generation** - AI art creation
 - **Voice Input** - Speak naturally
+- **WizProfile** - Rich user profiles for personalized responses
+
+### 📝 Wizard Notes
+
+- **Core Note Management**
+  - Rich text notes with titles and content
+  - Create via modal with title and initial content
+  - Click-to-edit with auto-save on keystroke
+  - Delete, favorite (⭐), and rename via dedicated modals
+  - Recent Notes view automatically surfaces the 10 most recently edited entries
+
+- **Organization & Navigation**
+  - Custom tag creation with tag-based filtering
+  - Folder views: All Notes, Favorites, Recent, Shared With Me
+  - Full-text search across all notes
+  - Left-side panel for notes list, tags, and folder navigation
+  - Clean, distraction-free editor
+
+- **AI-Powered Editing Suite**
+  - **AI Edit** - Direct note transformation (e.g., "Make this more professional")
+  - **Grammar Fix** - Instant spelling and grammar correction
+  - **Summarize** - Generate 2–3 sentence synopsis
+  - **Format** - Apply bullet points and structured headings
+  - **Translate** - Convert note content into any target language
+  - **Expand** - Elaborate and enrich brief drafts
+  - Always-visible AI Panel for quick access
+
+- **Sharing & Collaboration**
+  - Share notes with any Wizard Ecosystem user by email address
+  - Permission levels: Read-only (Can View) and full access (Can Edit)
+  - Shared Inbox for receiving notes from others
+  - Real-time synchronization ensures changes propagate immediately
+
+- **Technical Architecture**
+  - Frontend: `/notes/index.html` with responsive dark purple/gold aesthetic
+  - RESTful API endpoints: `GET/POST /api/notes`, `PUT/DELETE /api/notes/{id}`, `POST /api/notes/{id}/favorite`, `POST /api/notes/{id}/share`, `GET /api/notes/shared`
+  - Data stored as JSON within SQLite `user.notes_data` column
+  - Authentication via same session-based system as Wizard Mail
 
 ### 📧 Wizard Mail
 
@@ -82,9 +121,10 @@ Wizard Ecosystem is a comprehensive, AI-powered productivity suite that replaces
 
 ### 🔍 Wizard Search
 
-- **AI-Powered** - Get intelligent summaries
+- **AI-Powered** - Get intelligent summaries of your search topic
 - **Real-time Suggestions** - As you type
 - **Direct Links** - No redirects, go straight to results
+- **Multiple Engines** - Brave, DuckDuckGo, Startpage, Bing fallbacks
 - **URL Parameters** - `?q=search+query`
 
 ---
@@ -126,6 +166,8 @@ wizard-ecosystem/
 │   └── index.html          # Wizard Chat
 ├── search/
 │   └── index.html          # Wizard Search
+├── notes/
+│   └── index.html          # Wizard Notes
 ├── updates/
 │   └── index.html          # Update history
 ├── icons/                  # App icons for PWA
@@ -167,6 +209,7 @@ Wizard Mail	wizardecosystem.dpdns.org/mail
 Wizard Calendar	wizardecosystem.dpdns.org/calendar
 Wizard Chat	wizardecosystem.dpdns.org/chat
 Wizard Search	wizardecosystem.dpdns.org/search
+Wizard Notes	wizardecosystem.dpdns.org/notes
 Update History	wizardecosystem.dpdns.org/updates
 🔐 Email Aliases
 Get a free @wizardecosystem.dpdns.org email alias that forwards to your real email:
@@ -182,6 +225,21 @@ Enter your forwarding email
 Done! Emails sent to yourname@wizardecosystem.dpdns.org will forward to you
 
 Powered by Cloudflare Email Routing.
+
+📝 Notes Sharing
+Share your notes with other Wizard Ecosystem users:
+
+Open Wizard Notes
+
+Click the Share (🔗) button on any note
+
+Enter the recipient's email address
+
+Choose permission level (View or Edit)
+
+The recipient will see the note in their "Shared With Me" folder
+
+Notes sync in real-time – changes appear instantly for all collaborators.
 
 🎨 Themes
 Theme	Description
