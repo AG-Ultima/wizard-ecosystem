@@ -5,7 +5,7 @@
 // ============================================
 
 const API_BASE_URL = 'https://arnav0928.pythonanywhere.com';
-const SITE_URL = 'https://www.wizardai.dpdns.org';
+const SITE_URL = 'https://www.wizardecosystem.dev/ai';
 
 // ============================================
 // MARKDOWN RENDERING FUNCTION
@@ -639,7 +639,7 @@ function registerServiceWorker() {
 function setupAgentStudioButton() {
     if (agentStudioBtn) {
         agentStudioBtn.addEventListener('click', () => {
-            window.open('/agent-studio/', '_blank');
+            window.open('/ai/agent-studio/', '_blank');
         });
     }
 }
@@ -826,7 +826,7 @@ async function checkBackendStatus() {
 function setupDevHubButton() {
     if (devHubBtn) {
         devHubBtn.addEventListener('click', () => {
-            window.open('/devhub/', '_blank');
+            window.open('/ai/devhub/', '_blank');
         });
     }
 }
@@ -2530,17 +2530,17 @@ if (isElectron && window.electronAPI) {
 
     window.electronAPI.onOpenAgentStudio(() => {
         console.log('🤖 Agent Studio clicked - opening...');
-        window.open('/agent-studio/', '_blank');
+        window.open('/ai/agent-studio/', '_blank');
     });
 
     window.electronAPI.onOpenDevHub(() => {
         console.log('🔑 Developer Hub clicked - opening...');
-        window.open('/devhub/', '_blank');
+        window.open('/ai/devhub/', '_blank');
     });
 
     window.electronAPI.onOpenAdmin(() => {
         console.log('👑 Admin Dashboard clicked - opening...');
-        window.open('/admin/', '_blank');
+        window.open('/ai/admin/', '_blank');
     });
     
     window.electronAPI.onUpdateStatus((event, data) => {
@@ -2625,8 +2625,8 @@ function setupEventListeners() {
     if (profileBtn) profileBtn.addEventListener('click', openProfileModal);
     if (statsBtn) statsBtn.addEventListener('click', loadDetailedStats);
     if (personalitiesBtn) personalitiesBtn.addEventListener('click', openPersonalitiesBrowser);
-    if (devHubBtn) devHubBtn.addEventListener('click', () => window.open('/devhub/', '_blank'));
-    if (agentStudioBtn) agentStudioBtn.addEventListener('click', () => window.open('/agent-studio/', '_blank'));
+    if (devHubBtn) devHubBtn.addEventListener('click', () => window.open('/ai/devhub/', '_blank'));
+    if (agentStudioBtn) agentStudioBtn.addEventListener('click', () => window.open('/ai/agent-studio/', '_blank'));
     if (updateHistoryBtn) updateHistoryBtn.addEventListener('click', showUpdateHistory);
     if (closeUpdate) closeUpdate.addEventListener('click', () => closeModal(updateModal));
     if (fileUpload) fileUpload.addEventListener('change', handleFileUpload);
