@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Documentation - Wizard.AI Developer Hub</title>
+    <link rel="stylesheet" href="devhub.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="devhub-container">
+        <div class="devhub-header">
+            <div class="logo">
+                <span class="logo-icon">🧙</span>
+                <h1>Developer Hub</h1>
+            </div>
+            <div class="nav-links">
+                <a href="/devhub/" class="nav-link">Home</a>
+                <a href="/devhub/api-keys.html" class="nav-link">API Keys</a>
+                <a href="/devhub/docs.html" class="nav-link active">Documentation</a>
+                <a href="/devhub/examples.html" class="nav-link">Examples</a>
+                <a href="/devhub/analytics.html" class="nav-link">Analytics</a>
+                <a href="/" class="nav-link">← Back to App</a>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-header">
+                    <h2>🚀 Getting Started</h2>
+                </div>
+                <h3 style="margin-bottom: 10px;">Authentication</h3>
+                <p style="margin-bottom: 15px;">All API requests require an API key. Get yours from the <a href="/devhub/api-keys.html" style="color: var(--primary);">API Keys</a> page.</p>
+                <div class="code-block">
+                    <pre style="margin: 0;">Authorization: Bearer YOUR_API_KEY</pre>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>🎭 Models</h2>
+                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="text-align: left; padding: 10px;">Model ID</th>
+                        <th style="text-align: left; padding: 10px;">Personality</th>
+                    </tr>
+                    <tr><td style="padding: 10px;">wizard-jarvis</td><td>JARVIS - Sophisticated AI</td></tr>
+                    <tr><td style="padding: 10px;">wizard-oracle</td><td>ORACLE - Mystical</td></tr>
+                    <tr><td style="padding: 10px;">wizard-nerd</td><td>Nerd - Academic</td></tr>
+                    <tr><td style="padding: 10px;">wizard-fun</td><td>Fun - Playful</td></tr>
+                    <tr><td style="padding: 10px;">wizard-sarcastic</td><td>Sarcastic - Witty</td></tr>
+                    <tr><td style="padding: 10px;">wizard-fast</td><td>Fast - Quick responses</td></tr>
+                    <tr><td style="padding: 10px;">wizard-normal</td><td>Normal - Balanced</td></tr>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>📡 API Endpoints</h2>
+                </div>
+                <h3 style="margin-bottom: 10px;">Chat Completions</h3>
+                <div class="code-block">
+                    <pre style="margin: 0;">POST https://api.wizardai.dpdns.org/v1/chat/completions</pre>
+                </div>
+                <h3 style="margin: 15px 0 10px;">List Models</h3>
+                <div class="code-block">
+                    <pre style="margin: 0;">GET https://api.wizardai.dpdns.org/v1/models</pre>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>⚡ Rate Limits</h2>
+                </div>
+                <p><strong>Free Tier:</strong> 100 requests per minute</p>
+                <p><strong>Burst Limit:</strong> 20 requests per second</p>
+                <p style="margin-top: 15px; color: var(--text-muted);">Headers returned with each request:</p>
+                <div class="code-block">
+                    <pre style="margin: 0;">X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1640995200</pre>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>📦 Python SDK</h2>
+                </div>
+                <p>Install the official Python client:</p>
+                <div class="code-block">
+                    <pre style="margin: 0;">pip install wizard-ai-pro</pre>
+                </div>
+                <p style="margin-top: 15px;">Then use it in your code:</p>
+                <div class="code-block">
+                    <pre style="margin: 0;">from wizard import Wizard
+
+client = Wizard(api_key="your-key")
+response = client.chat.create(
+    messages=[{"role": "user", "content": "Hello!"}],
+    model="wizard-jarvis"
+)
+print(response.choices[0].message.content)</pre>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>🔧 Error Codes</h2>
+                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="text-align: left; padding: 10px;">Code</th>
+                        <th style="text-align: left; padding: 10px;">Meaning</th>
+                    </tr>
+                    <tr><td style="padding: 8px;">401</td><td>Invalid API key</td></tr>
+                    <tr><td style="padding: 8px;">429</td><td>Rate limit exceeded</td></tr>
+                    <tr><td style="padding: 8px;">500</td><td>Server error</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="devhub-footer">
+            <p>✨ Wizard.AI Pro v12.0.0 - Complete API documentation</p>
+        </div>
+    </div>
+</body>
+</html>

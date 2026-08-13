@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Analytics - Wizard.AI Developer Hub</title>
+    <link rel="stylesheet" href="devhub.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="devhub-container">
+        <div class="devhub-header">
+            <div class="logo">
+                <span class="logo-icon">🧙</span>
+                <h1>Developer Hub</h1>
+            </div>
+            <div class="nav-links">
+                <a href="/devhub/" class="nav-link">Home</a>
+                <a href="/devhub/api-keys.html" class="nav-link">API Keys</a>
+                <a href="/devhub/docs.html" class="nav-link">Documentation</a>
+                <a href="/devhub/examples.html" class="nav-link">Examples</a>
+                <a href="/devhub/analytics.html" class="nav-link active">Analytics</a>
+                <a href="/" class="nav-link">← Back to App</a>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalRequests">0</div>
+                <div class="stat-label">Total API Requests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalKeys">0</div>
+                <div class="stat-label">Active API Keys</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="requestsToday">0</div>
+                <div class="stat-label">Requests Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="rateLimit">100</div>
+                <div class="stat-label">Rate Limit (per minute)</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>📈 Request History</h2>
+                <button class="btn btn-secondary" id="refreshBtn">🔄 Refresh</button>
+            </div>
+            <div id="requestsList">
+                <div class="loading" style="text-align: center; padding: 40px;">Loading request history...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>🔑 API Key Usage</h2>
+            </div>
+            <div id="keysUsage">
+                <div class="loading" style="text-align: center; padding: 40px;">Loading key usage...</div>
+            </div>
+        </div>
+
+        <div class="devhub-footer">
+            <p>✨ Wizard.AI Pro v12.0.0 - Track your API usage</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://arnav0928.pythonanywhere.com';
+        let currentUser = null;
+
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/check-auth`, { credentials: 'include' });
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    loadAnalytics();
+                } else {
+                    document.getElementById('requestsList').innerHTML = '<div class="loading" style="text-align: center; padding: 40px;">🔐 Please login to view analytics. <a href="/" style="color: var(--primary);">Go to Wizard.AI</a></div>';
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+            }
+        }
+
+        async function loadAnalytics() {
+            await loadStats();
+            await loadRequests();
+            await loadKeyUsage();
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/stats`, { credentials: 'include' });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('totalRequests').textContent = data.api_requests || 0;
+                    document.getElementById('totalKeys').textContent = data.api_keys || 0;
+                    document.getElementById('requestsToday').textContent = data.requests_today || 0;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadRequests() {
+            const container = document.getElementById('requestsList');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/requests`, { credentials: 'include' });
+                if (response.ok) {
+                    const requests = await response.json();
+                    if (!requests || requests.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">📭 No API requests yet. Make your first API call!</div>';
+                    } else {
+                        let html = '<table style="width: 100%; border-collapse: collapse;">';
+                        html += '<tr style="border-bottom: 1px solid var(--border-color);"><th style="text-align: left; padding: 10px;">Time</th><th style="text-align: left; padding: 10px;">Endpoint</th><th style="text-align: left; padding: 10px;">Status</th></tr>';
+                        requests.forEach(req => {
+                            html += `<tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 10px;">${new Date(req.timestamp).toLocaleString()}</td>
+                                <td style="padding: 10px;">${req.endpoint}</td>
+                                <td style="padding: 10px;">${req.status}</td>
+                            </tr>`;
+                        });
+                        html += '</table>';
+                        container.innerHTML = html;
+                    }
+                }
+            } catch (error) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--danger);">Error loading requests</div>';
+            }
+        }
+
+        async function loadKeyUsage() {
+            const container = document.getElementById('keysUsage');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/keys`, { credentials: 'include' });
+                if (response.ok) {
+                    const keys = await response.json();
+                    if (!keys || keys.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No API keys yet. Generate one to see usage!</div>';
+                    } else {
+                        let html = '';
+                        keys.forEach(key => {
+                            html += `
+                                <div class="api-key-item">
+                                    <div>
+                                        <div class="api-key-name">${escapeHtml(key.name)}</div>
+                                        <div style="font-size: 12px; color: var(--text-muted);">Created: ${new Date(key.created_at).toLocaleDateString()}</div>
+                                    </div>
+                                    <div class="api-key-stats" style="text-align: right;">
+                                        <div>📊 ${key.requests || 0} requests</div>
+                                        <div style="font-size: 12px;">Last used: ${key.last_used ? new Date(key.last_used).toLocaleDateString() : 'Never'}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        container.innerHTML = html;
+                    }
+                }
+            } catch (error) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--danger);">Error loading key usage</div>';
+            }
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', loadAnalytics);
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        checkAuth();
+        setInterval(loadAnalytics, 30000);
+    </script>
+</body>
+</html>
