@@ -115,12 +115,8 @@
         .quick-stat-value { color: var(--gold); font-weight: 600; }
 
         /* Main Content */
-        .main {
-            flex: 1; display: flex; flex-direction: column;
-            overflow: hidden; min-width: 0;
-        }
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
-        /* Toolbar */
         .toolbar {
             padding: 16px 24px;
             border-bottom: 1px solid var(--border);
@@ -152,17 +148,12 @@
             border: none;
         }
 
-        /* Content Area */
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px;
-        }
+        .content { flex: 1; overflow-y: auto; padding: 24px; }
 
         /* Stats Cards */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -176,7 +167,7 @@
             font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
         }
         .stat-card-value {
-            font-size: 28px; font-weight: 700; color: var(--gold); margin-top: 4px;
+            font-size: 24px; font-weight: 700; color: var(--gold); margin-top: 4px;
         }
         .stat-card-change {
             font-size: 12px; margin-top: 4px;
@@ -208,7 +199,7 @@
         }
         .transactions-header {
             display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 16px;
+            margin-bottom: 16px; flex-wrap: wrap; gap: 8px;
         }
         .transactions-header h3 {
             font-family: 'Cormorant Garamond', serif;
@@ -236,6 +227,11 @@
         }
         .transaction-amount.income { color: var(--success); }
         .transaction-amount.expense { color: var(--danger); }
+        .receipt-icon {
+            font-size: 16px;
+            margin-left: 8px;
+            opacity: 0.5;
+        }
 
         /* Modal */
         .modal-overlay {
@@ -252,7 +248,7 @@
             border: 1px solid var(--border-strong);
             border-radius: 24px;
             padding: 32px;
-            width: 480px;
+            width: 520px;
             max-width: 92vw;
             max-height: 85vh;
             overflow-y: auto;
@@ -299,6 +295,65 @@
             color: var(--silver-dim);
         }
 
+        /* Camera Scanner */
+        .camera-container {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000;
+            margin-bottom: 16px;
+        }
+        .camera-container video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .camera-overlay {
+            position: absolute;
+            inset: 0;
+            border: 2px dashed rgba(201,168,76,0.5);
+            border-radius: 16px;
+            pointer-events: none;
+        }
+        .camera-controls {
+            display: flex; gap: 12px; margin-top: 12px;
+        }
+        .camera-controls button {
+            flex: 1; padding: 10px; border-radius: 100px; font-weight: 600; cursor: pointer;
+        }
+        .camera-capture {
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+            border: none; color: var(--ink);
+        }
+        .camera-close {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--silver-dim);
+        }
+        .receipt-preview {
+            max-height: 200px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        .receipt-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .extracted-data {
+            background: rgba(201,168,76,0.05);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+        .extracted-row {
+            display: flex; justify-content: space-between; padding: 4px 0;
+            font-size: 13px;
+        }
+        .extracted-label { color: var(--muted); }
+        .extracted-value { color: var(--gold); font-weight: 500; }
+
         /* Toast */
         .toast {
             position: fixed; bottom: 30px; left: 50%;
@@ -315,19 +370,6 @@
         .toast.show { transform: translateX(-50%) translateY(0); }
         .toast.error { background: linear-gradient(135deg, var(--danger), #b44); color: white; }
 
-        /* Budget Alerts */
-        .budget-alert {
-            background: rgba(251,191,36,0.1);
-            border: 1px solid var(--warning);
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            display: flex; align-items: center; gap: 12px;
-        }
-        .budget-alert-icon { font-size: 20px; }
-        .budget-alert-text { flex: 1; font-size: 13px; color: var(--warning); }
-
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--gold), #a8751e); border-radius: 100px; }
@@ -337,6 +379,7 @@
             .sidebar.open { transform: translateX(0); }
             .form-row { grid-template-columns: 1fr; }
             .stats-grid { grid-template-columns: 1fr 1fr; }
+            .modal-box { width: 95%; padding: 20px; }
         }
     </style>
 </head>
@@ -417,7 +460,6 @@
             <div class="content" id="content-area">
                 <!-- Dashboard View -->
                 <div id="view-dashboard">
-                    <!-- Stats Grid -->
                     <div class="stats-grid" id="stats-grid">
                         <div class="stat-card">
                             <div class="stat-card-label">Total Income</div>
@@ -441,10 +483,8 @@
                         </div>
                     </div>
 
-                    <!-- Budget Alerts -->
                     <div id="budget-alerts-container"></div>
 
-                    <!-- Chart -->
                     <div class="chart-container">
                         <h3>📈 Spending by Category</h3>
                         <div class="chart-wrapper">
@@ -452,7 +492,6 @@
                         </div>
                     </div>
 
-                    <!-- Recent Transactions -->
                     <div class="transactions-section">
                         <div class="transactions-header">
                             <h3>Recent Transactions</h3>
@@ -533,6 +572,30 @@
     <div id="transaction-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>💰 Add Transaction</h3>
+
+            <!-- Receipt Scanner -->
+            <div style="margin-bottom: 16px;">
+                <label style="display:block; font-size:11px; color:var(--muted); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.05em;">📸 Scan Receipt</label>
+                <button id="scan-receipt-btn" class="toolbar-btn primary" style="width:100%;">📷 Open Camera</button>
+                <div id="camera-container" class="camera-container" style="display:none;">
+                    <video id="video" autoplay playsinline></video>
+                    <div class="camera-overlay"></div>
+                    <div class="camera-controls">
+                        <button id="capture-btn" class="camera-capture">📸 Capture</button>
+                        <button id="close-camera" class="camera-close">✕ Close</button>
+                    </div>
+                </div>
+                <div id="receipt-preview" class="receipt-preview" style="display:none;">
+                    <img id="receipt-image" src="" alt="Receipt">
+                    <div id="extracted-data" class="extracted-data" style="display:none;">
+                        <div class="extracted-row"><span class="extracted-label">Merchant</span><span class="extracted-value" id="extract-merchant">—</span></div>
+                        <div class="extracted-row"><span class="extracted-label">Amount</span><span class="extracted-value" id="extract-amount">—</span></div>
+                        <div class="extracted-row"><span class="extracted-label">Category</span><span class="extracted-value" id="extract-category">—</span></div>
+                        <div class="extracted-row"><span class="extracted-label">Date</span><span class="extracted-value" id="extract-date">—</span></div>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label>Amount ($)</label>
@@ -689,6 +752,8 @@
         let loadOffset = 0;
         const LIMIT = 20;
         let categoryChart = null;
+        let stream = null;
+        let capturedImage = null;
 
         function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
@@ -901,6 +966,7 @@
                     </div>
                     <div class="transaction-amount ${tx.transaction_type}">
                         ${tx.transaction_type === 'income' ? '+' : '-'}${formatCurrency(tx.amount)}
+                        ${tx.receipt_data ? '<span class="receipt-icon">📸</span>' : ''}
                     </div>
                 </div>
             `).join('');
@@ -992,6 +1058,7 @@
                     </div>
                     <div class="transaction-amount ${tx.transaction_type}">
                         ${tx.transaction_type === 'income' ? '+' : '-'}${formatCurrency(tx.amount)}
+                        ${tx.receipt_data ? '<span class="receipt-icon">📸</span>' : ''}
                     </div>
                 </div>
             `).join('');
@@ -1109,6 +1176,116 @@
         }
 
         // ============================================
+        // CAMERA / RECEIPT SCANNING
+        // ============================================
+
+        async function startCamera() {
+            const container = document.getElementById('camera-container');
+            const video = document.getElementById('video');
+            
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+                video.srcObject = stream;
+                await video.play();
+                container.style.display = 'block';
+                document.getElementById('receipt-preview').style.display = 'none';
+            } catch(err) {
+                toast('Unable to access camera. Please allow camera permissions.', true);
+                console.error('Camera error:', err);
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            document.getElementById('camera-container').style.display = 'none';
+            document.getElementById('video').srcObject = null;
+        }
+
+        function captureImage() {
+            const video = document.getElementById('video');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            capturedImage = imageData;
+            
+            document.getElementById('receipt-image').src = imageData;
+            document.getElementById('receipt-preview').style.display = 'block';
+            document.getElementById('extracted-data').style.display = 'block';
+            
+            // Send to backend for extraction
+            scanReceipt(imageData);
+            
+            stopCamera();
+        }
+
+        async function scanReceipt(imageData) {
+            try {
+                const res = await fetch(`${API}/api/finance/receipt/scan`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ image: imageData })
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    const extracted = data.extracted || {};
+                    
+                    document.getElementById('extract-merchant').textContent = extracted.merchant || '—';
+                    document.getElementById('extract-amount').textContent = extracted.amount ? formatCurrency(extracted.amount) : '—';
+                    document.getElementById('extract-category').textContent = extracted.category || 'Other Expense';
+                    document.getElementById('extract-date').textContent = extracted.date || '—';
+                    
+                    // Auto-fill form fields
+                    if (extracted.merchant) {
+                        document.getElementById('tx-merchant').value = extracted.merchant;
+                    }
+                    if (extracted.amount) {
+                        document.getElementById('tx-amount').value = extracted.amount;
+                    }
+                    if (extracted.category && extracted.category !== 'Other Expense') {
+                        const catSelect = document.getElementById('tx-category');
+                        for (let option of catSelect.options) {
+                            if (option.value === extracted.category) {
+                                catSelect.value = extracted.category;
+                                break;
+                            }
+                        }
+                    }
+                    if (extracted.date) {
+                        try {
+                            const dateObj = new Date(extracted.date);
+                            if (!isNaN(dateObj)) {
+                                document.getElementById('tx-date').value = dateObj.toISOString().split('T')[0];
+                            }
+                        } catch(e) {}
+                    }
+                    
+                    // Auto-fill description
+                    if (!document.getElementById('tx-description').value && extracted.merchant) {
+                        document.getElementById('tx-description').value = `Purchase at ${extracted.merchant}`;
+                    }
+                    
+                    toast('📸 Receipt scanned! Data extracted.');
+                } else {
+                    toast('Failed to scan receipt', true);
+                }
+            } catch(e) {
+                toast('Error scanning receipt', true);
+                console.error('Receipt scan error:', e);
+            }
+        }
+
+        // ============================================
         // EVENT LISTENERS
         // ============================================
 
@@ -1120,11 +1297,21 @@
         document.getElementById('add-transaction-btn').addEventListener('click', () => {
             document.getElementById('tx-date').value = new Date().toISOString().split('T')[0];
             document.getElementById('transaction-modal').classList.add('show');
+            // Reset camera state
+            stopCamera();
+            document.getElementById('receipt-preview').style.display = 'none';
+            capturedImage = null;
         });
 
         document.getElementById('tx-cancel').addEventListener('click', () => {
             document.getElementById('transaction-modal').classList.remove('show');
+            stopCamera();
         });
+
+        // Camera / Receipt Scanning
+        document.getElementById('scan-receipt-btn').addEventListener('click', startCamera);
+        document.getElementById('capture-btn').addEventListener('click', captureImage);
+        document.getElementById('close-camera').addEventListener('click', stopCamera);
 
         document.getElementById('tx-confirm').addEventListener('click', async () => {
             const amount = document.getElementById('tx-amount').value;
@@ -1139,19 +1326,26 @@
                 return;
             }
 
+            const payload = {
+                amount: parseFloat(amount),
+                description: description || (merchant ? `Purchase at ${merchant}` : ''),
+                category: category || undefined,
+                type: type,
+                date: date ? new Date(date).toISOString() : undefined,
+                merchant: merchant || undefined
+            };
+
+            // Add receipt data if captured
+            if (capturedImage) {
+                payload.receipt_data = capturedImage;
+            }
+
             try {
                 const res = await fetch(`${API}/api/finance/transactions`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({
-                        amount: parseFloat(amount),
-                        description,
-                        category: category || undefined,
-                        type,
-                        date: date ? new Date(date).toISOString() : undefined,
-                        merchant: merchant || undefined
-                    })
+                    body: JSON.stringify(payload)
                 });
                 if (res.ok) {
                     toast('✅ Transaction added!');
@@ -1159,6 +1353,10 @@
                     document.getElementById('tx-amount').value = '';
                     document.getElementById('tx-description').value = '';
                     document.getElementById('tx-merchant').value = '';
+                    document.getElementById('tx-category').value = '';
+                    capturedImage = null;
+                    document.getElementById('receipt-preview').style.display = 'none';
+                    stopCamera();
                     await loadDashboard();
                     if (currentView === 'transactions') loadAllTransactions(true);
                 } else {
@@ -1321,7 +1519,10 @@
         // Close modals on backdrop click
         ['transaction-modal', 'budget-modal', 'goal-modal', 'contribute-modal'].forEach(id => {
             document.getElementById(id).addEventListener('click', function(e) {
-                if (e.target === this) this.classList.remove('show');
+                if (e.target === this) {
+                    this.classList.remove('show');
+                    if (id === 'transaction-modal') stopCamera();
+                }
             });
         });
 
@@ -1343,7 +1544,6 @@
         // INIT
         // ============================================
 
-        // Mobile hamburger
         const hamburger = document.createElement('button');
         hamburger.innerHTML = '☰';
         hamburger.style.cssText = 'position:fixed; top:15px; left:15px; z-index:1000; background:linear-gradient(135deg,var(--gold),#a8751e); border:none; border-radius:50%; width:40px; height:40px; font-size:20px; color:var(--ink); cursor:pointer; display:none;';
