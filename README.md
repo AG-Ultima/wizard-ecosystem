@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Wizard Ecosystem Banner](https://wizardecosystem.dpdns.org/og-image.png)
+![Wizard Ecosystem Banner](https://wizardecosystem.dev/og-image.png)
 
 **Your complete AI-powered productivity suite**
 
@@ -10,7 +10,7 @@
 [![Electron](https://img.shields.io/badge/Electron-28-blue.svg)](https://electronjs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-[**Live Demo**](https://wizardecosystem.dpdns.org) • [**Documentation**](https://github.com/ag-ultima/wizard-ecosystem/wiki) • [**Report Bug**](https://github.com/ag-ultima/wizard-ecosystem/issues)
+[**Live Demo**](https://wizardecosystem.dev) • [**Documentation**](https://github.com/ag-ultima/wizard-ecosystem/wiki) • [**Report Bug**](https://github.com/ag-ultima/wizard-ecosystem/issues)
 
 </div>
 
@@ -22,13 +22,13 @@ Wizard Ecosystem is a comprehensive, AI-powered productivity suite that replaces
 
 | Component | Description | Live URL |
 |-----------|-------------|----------|
-| 🧙 **Wizard Browser** | AI-powered web browser with workspaces | [Browser](https://wizardecosystem.dpdns.org) |
-| 🧠 **Wizard AI** | Multi-agent AI assistant | [AI](https://wizardai.dpdns.org) |
-| 📧 **Wizard Mail** | Email client (Gmail, Outlook, any IMAP) | [Mail](https://wizardecosystem.dpdns.org/mail) |
-| 📅 **Wizard Calendar** | Calendar and event management | [Calendar](https://wizardecosystem.dpdns.org/calendar) |
-| 💬 **Wizard Chat** | Instant messaging for Wizard users | [Chat](https://wizardecosystem.dpdns.org/chat) |
-| 🔍 **Wizard Search** | AI-powered search engine | [Search](https://wizardecosystem.dpdns.org/search) |
-| 📝 **Wizard Notes** | AI-powered note-taking with collaboration | [Notes](https://wizardecosystem.dpdns.org/notes) |
+| 🧙 **Wizard Browser** | AI-powered web browser with workspaces | [Browser](https://wizardecosystem.dev) |
+| 🧠 **Wizard AI** | Multi-agent AI assistant | [AI](https://wizardecosystem.dev/ai) |
+| 📧 **Wizard Mail** | Email client (Gmail, Outlook, any IMAP) | [Mail](https://wizardecosystem.dev/mail) |
+| 📅 **Wizard Calendar** | Calendar and event management | [Calendar](https://wizardecosystem.dev/calendar) |
+| 💬 **Wizard Chat** | Instant messaging for Wizard users | [Chat](https://wizardecosystem.dev/chat) |
+| 🔍 **Wizard Search** | AI-powered search engine | [Search](https://wizardecosystem.dev/search) |
+| 📝 **Wizard Notes** | AI-powered note-taking with collaboration | [Notes](https://wizardecosystem.dev/notes) |
 
 ---
 
@@ -97,7 +97,7 @@ Wizard Ecosystem is a comprehensive, AI-powered productivity suite that replaces
 
 - **Multi-Account Support** - Gmail, Outlook, Yahoo, custom domains
 - **Folder Management** - Inbox, Sent, Spam, Trash, Drafts
-- **Email Aliases** - `username@wizardecosystem.dpdns.org` via Cloudflare
+- **Email Aliases** - `username@wizardecosystem.dev` via Cloudflare
 - **AI Assistant** - Compose, summarize, enhance emails
 - **Rich Text Editor** - Formatting, images, attachments
 - **Search & Star** - Find and favorite important emails
@@ -133,11 +133,11 @@ Wizard Ecosystem is a comprehensive, AI-powered productivity suite that replaces
 
 ### Web Access
 
-Simply visit **[https://wizardecosystem.dpdns.org](https://wizardecosystem.dpdns.org)**
+Simply visit **[https://wizardecosystem.dev](https://wizardecosystem.dev)**
 
 ### Desktop App (Windows)
 
-Download from: [https://wizardecosystem.dpdns.org/download](https://wizardecosystem.dpdns.org/download)
+Download from: [https://wizardecosystem.dev/download](https://wizardecosystem.dev/download)
 
 ### Local Development
 
@@ -203,26 +203,25 @@ npm run build:mac
 npm run build:linux
 🔗 Ecosystem Links
 Service	URL
-Ecosystem Hub	wizardecosystem.dpdns.org
-Wizard AI	wizardai.dpdns.org
-Wizard Mail	wizardecosystem.dpdns.org/mail
-Wizard Calendar	wizardecosystem.dpdns.org/calendar
-Wizard Chat	wizardecosystem.dpdns.org/chat
-Wizard Search	wizardecosystem.dpdns.org/search
-Wizard Notes	wizardecosystem.dpdns.org/notes
-Update History	wizardecosystem.dpdns.org/updates
+Ecosystem Hub	wizardecosystem.dev
+Wizard Mail	wizardecosystem.dev/mail
+Wizard Calendar	wizardecosystem.dev/calendar
+Wizard Chat	wizardecosystem.dev/chat
+Wizard Search	wizardecosystem.dev/search
+Wizard Notes	wizardecosystem.dev/notes
+Update History	wizardecosystem.dev/updates
 🔐 Email Aliases
-Get a free @wizardecosystem.dpdns.org email alias that forwards to your real email:
+Get a free @wizardecosystem.dev email alias that forwards to your real email:
 
 Open Wizard Mail
 
-Click "Get Free @wizardecosystem.dpdns.org Email"
+Click "Get Free @wizardecosystem.dev Email"
 
 Choose your username
 
 Enter your forwarding email
 
-Done! Emails sent to yourname@wizardecosystem.dpdns.org will forward to you
+Done! Emails sent to yourname@wizardecosystem.dev will forward to you
 
 Powered by Cloudflare Email Routing.
 
@@ -279,11 +278,11 @@ Distributed under the MIT License. See LICENSE for more information.
 👤 Author
 Arnav Gupta
 
-Website: https://wizardecosystem.dpdns.org
+Website: https://wizardecosystem.dev
 
 GitHub: @ag-ultima
 
-Email: arnav@wizardecosystem.dpdns.org
+Email: arnav@wizardecosystem.dev
 
 🙏 Acknowledgments
 Electron - Desktop framework
