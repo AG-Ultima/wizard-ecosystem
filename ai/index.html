@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <title>Wizard.AI Pro — Multi-Agent AI Assistant with 7 Personalities</title>
+    <meta name="title" content="Wizard.AI Pro — Multi-Agent AI Assistant | Your Magical AI Workspace">
+    <meta name="description" content="Wizard.AI is a complete AI platform with multi-agent orchestration, RAG, persistent memory, web search, code execution, image generation, admin dashboard, developer hub, and 7 distinct personalities.">
+    <meta name="keywords" content="Wizard.AI, AI assistant, multi-agent, RAG, machine learning, Flask, Groq, Llama, AI chatbot, code execution, image generation, web search, Wizard Ecosystem, Arnav Gupta">
+    <meta name="author" content="Arnav Gupta">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#080612">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.wizardai.dpdns.org/">
+    <meta property="og:title" content="Wizard.AI Pro — Your Magical AI Workspace">
+    <meta property="og:description" content="Multi-agent orchestration, RAG, memory, web search, code execution, image generation, admin dashboard, developer hub, and 7 personalities.">
+    <meta property="og:site_name" content="Wizard.AI Pro">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="https://www.wizardai.dpdns.org/">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Wizard.AI Pro",
+      "url": "https://www.wizardai.dpdns.org/",
+      "description": "A complete AI platform with multi-agent orchestration, RAG, persistent memory, and 7 AI personalities.",
+      "applicationCategory": "AIApplication",
+      "author": { "@type": "Person", "name": "Arnav Gupta" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Wizard.AI">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="ambient ambient-1" aria-hidden="true"></div>
+    <div class="ambient ambient-2" aria-hidden="true"></div>
+    <div class="ambient ambient-3" aria-hidden="true"></div>
+
+    <div class="app-shell">
+
+        <!-- ═══════════════════════════════════
+             LEFT SIDEBAR
+        ═══════════════════════════════════ -->
+        <aside class="sidebar" id="sidebar" role="complementary" aria-label="Wizard settings">
+
+            <!-- Profile Block -->
+            <div class="wizard-profile">
+                <div class="rune-ring" aria-hidden="true"></div>
+                <div class="wizard-avatar">
+                    <span class="floating-glyph">🧙‍♂️</span>
+                </div>
+                <h1 class="hero-wordmark">Wizard<em>.AI</em></h1>
+                <p class="tagline">Your magical AI companion</p>
+                <div class="status-badge" id="status-badge" role="status">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Connecting…</span>
+                </div>
+            </div>
+
+            <div class="rune-divider" aria-hidden="true"><span>✦</span></div>
+
+            <!-- User Account -->
+            <div class="grimoire-panel user-section" id="user-section">
+                <div class="user-info" id="user-info" style="display:none;">
+                    <div class="user-avatar-chip" id="user-avatar">🧙</div>
+                    <div class="user-details">
+                        <span class="user-name" id="user-name"></span>
+                        <span class="user-email" id="user-email"></span>
+                    </div>
+                    <button class="icon-btn danger-hover" id="logout-btn" title="Logout" aria-label="Logout">🚪</button>
+                </div>
+                <div class="auth-buttons" id="auth-buttons">
+                    <button class="auth-btn primary-btn" id="show-login-btn">🔐 Login</button>
+                    <button class="auth-btn ghost-btn" id="show-signup-btn">✨ Sign Up</button>
+                </div>
+            </div>
+
+            <!-- Personality Mode -->
+            <div class="grimoire-panel mode-section">
+                <div class="panel-label"><span>🧠</span> Personality Mode</div>
+                <div class="custom-dropdown" id="mode-dropdown">
+                    <div class="dropdown-trigger" id="dropdown-btn" role="button" tabindex="0" aria-haspopup="listbox">
+                        <span id="selected-mode-display">🎩 JARVIS</span>
+                        <span class="dropdown-chevron" aria-hidden="true">▾</span>
+                    </div>
+                    <div class="dropdown-menu" id="dropdown-content" role="listbox"></div>
+                </div>
+                <button class="ghost-pill-btn" id="toggle-creator-btn">
+                    <span id="creator-toggle-icon">➕</span> Create New Personality
+                </button>
+                <div class="creator-panel" id="creator-panel" style="display:none;">
+                    <div class="creator-header">
+                        <h3>Craft a Personality</h3>
+                        <button class="close-x" id="close-creator" aria-label="Close">✕</button>
+                    </div>
+                    <input type="text" class="field-sm" id="custom-name" placeholder="Name (e.g. 'Pirate')" maxlength="30">
+                    <input type="text" class="field-sm" id="custom-emoji" placeholder="Emoji (e.g. 🏴‍☠️)" maxlength="2">
+                    <textarea class="field-sm" id="custom-prompt" placeholder="System prompt…" rows="3"></textarea>
+                    <input type="text" class="field-sm" id="custom-greeting" placeholder="Greeting (optional)">
+                    <label class="checkbox-row">
+                        <input type="checkbox" id="custom-public" checked> Make public
+                    </label>
+                    <div class="creator-actions">
+                        <button class="primary-btn sm-btn" id="save-personality">Save</button>
+                        <button class="ghost-btn sm-btn" id="cancel-personality">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Model & Turbo -->
+            <div class="grimoire-panel model-panel">
+                <div class="panel-label"><span>📦</span> Active Model</div>
+                <div class="model-chip" id="current-model">
+                    <span>🧙‍♂️</span>
+                    <span class="model-name">Llama 4 Scout</span>
+                </div>
+                <button id="turbo-btn" class="turbo-btn" aria-pressed="false">
+                    <span>⚡</span>
+                    <span>TURBO MODE</span>
+                    <span class="turbo-badge" id="turbo-status">OFF</span>
+                </button>
+                <p class="helper-text">2× faster · more tokens</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="grimoire-panel stats-panel">
+                <div class="panel-label"><span>📊</span> Your Stats</div>
+                <div class="stats-grid">
+                    <div class="stat-tile"><span class="stat-icon">💬</span><span class="stat-val" id="stat-messages">0</span><span class="stat-lbl">Messages</span></div>
+                    <div class="stat-tile"><span class="stat-icon">📎</span><span class="stat-val" id="stat-files">0</span><span class="stat-lbl">Files</span></div>
+                    <div class="stat-tile"><span class="stat-icon">👤</span><span class="stat-val" id="stat-profile-completeness">0%</span><span class="stat-lbl">Profile</span></div>
+                    <div class="stat-tile"><span class="stat-icon">🎨</span><span class="stat-val" id="stat-images">0</span><span class="stat-lbl">Images</span></div>
+                    <div class="stat-tile"><span class="stat-icon">🌐</span><span class="stat-val" id="stat-searches">0</span><span class="stat-lbl">Searches</span></div>
+                    <div class="stat-tile"><span class="stat-icon">⚡</span><span class="stat-val" id="stat-response">0.4s</span><span class="stat-lbl">Avg Speed</span></div>
+                </div>
+            </div>
+
+            <!-- API Keys -->
+            <div class="grimoire-panel api-panel">
+                <div class="panel-label"><span>🔑</span> API Keys</div>
+                <div class="api-keys-list" id="api-keys-list">
+                    <div class="empty-state-sm">🔐 Login to view your API keys</div>
+                </div>
+                <button class="ghost-pill-btn" id="create-api-key-sidebar">
+                    <span>👨‍💻</span> Developer Hub
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div class="sidebar-footer">
+                <button id="reset-current-btn" class="footer-btn reset-btn">🧹 Clear Chat</button>
+                <button id="update-history-btn" class="footer-btn version-btn">📜 v15.1.0 · What's New?</button>
+                <div class="footer-brand">
+                    <p>Crafted with ✦ by <a href="https://wizardecosystem.dpdns.org" rel="author">Arnav Gupta</a></p>
+                    <p class="version-tag">v15.1.0 — WizProfile Update</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ═══════════════════════════════════
+             MAIN CHAT AREA
+        ═══════════════════════════════════ -->
+        <main class="chat-area" role="main">
+
+            <!-- Chat Header -->
+            <div class="chat-header grimoire-panel">
+                <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
+                <div class="chat-title">
+                    <span id="current-chat-emoji" class="chat-emoji-lg" aria-hidden="true">🧙</span>
+                    <h2 id="current-chat-name">Main Chat</h2>
+                </div>
+                <div class="chat-actions">
+                    <button id="rename-chat-btn" class="icon-btn" title="Rename" aria-label="Rename chat">✏️</button>
+                    <button id="delete-chat-btn" class="icon-btn danger-hover" title="Delete" aria-label="Delete chat">🗑️</button>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="pro-toolbar" id="pro-toolbar" role="toolbar" aria-label="Chat tools">
+                <button class="tool-btn" id="search-btn" title="Web Search">🌐 <span>Search</span></button>
+                <button class="tool-btn" id="upload-btn" title="Upload File">📎 <span>Upload</span></button>
+                <button class="tool-btn" id="code-btn" title="Run Python">💻 <span>Code</span></button>
+                <button class="tool-btn" id="image-btn" title="Generate Image">🎨 <span>Generate</span></button>
+                <button class="tool-btn" id="profile-btn" title="My Profile">👤 <span>Profile</span></button>
+                <button class="tool-btn" id="stats-btn" title="Stats">📊 <span>Stats</span></button>
+                <button class="tool-btn" id="personalities-btn" title="Personalities">🎭 <span>Personalities</span></button>
+                <button class="tool-btn" id="devhub-btn" title="Dev Hub">👨‍💻 <span>Dev Hub</span></button>
+                <button class="tool-btn" id="agent-studio-btn" title="Agent Studio">🤖 <span>Agents</span></button>
+            </div>
+
+            <!-- Messages -->
+            <div id="chat-history" class="chat-history" role="log" aria-live="polite" aria-label="Chat messages"></div>
+
+            <!-- Typing -->
+            <div id="typing-indicator" class="typing-indicator" style="display:none;" aria-live="polite">
+                <span></span><span></span><span></span>
+                <span class="typing-label">Wizard is weaving a reply…</span>
+            </div>
+
+            <!-- Upload Progress -->
+            <div id="upload-progress" class="upload-progress" style="display:none;" role="progressbar">
+                <div class="progress-track"><div class="progress-fill" id="progress-bar-fill"></div></div>
+                <span id="progress-text">Uploading…</span>
+            </div>
+
+            <!-- Input -->
+            <div class="input-zone grimoire-panel">
+                <div class="input-wrap">
+                    <input type="text" id="chat-input" placeholder="Speak your incantation… or click 🎤 to conjure" autocomplete="off" aria-label="Your message">
+                    <span class="search-pulse" id="input-search-indicator" style="display:none;" aria-hidden="true">🌐</span>
+                </div>
+                <button id="voice-input-btn" class="voice-btn" title="Voice input" aria-label="Voice input">🎤</button>
+                <button id="send-btn" class="send-btn" aria-label="Send message">
+                    Send
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                </button>
+            </div>
+        </main>
+
+        <!-- ═══════════════════════════════════
+             RIGHT SIDEBAR — CHATS
+        ═══════════════════════════════════ -->
+        <aside class="chats-sidebar" id="chats-sidebar" role="complementary" aria-label="Chat list">
+            <div class="grimoire-panel chats-header">
+                <div class="panel-label" style="margin-bottom:0"><span>💬</span> Your Chats</div>
+                <button id="new-chat-btn" class="new-chat-btn" title="New Chat" aria-label="New chat">➕</button>
+            </div>
+
+            <div class="chats-list" id="chats-list" role="list"></div>
+
+            <div class="grimoire-panel personalities-sidebar">
+                <div class="panel-label"><span>🎭</span> Community Personalities</div>
+                <div id="personalities-list">
+                    <div class="shimmer-row"></div>
+                    <div class="shimmer-row"></div>
+                    <div class="shimmer-row"></div>
+                </div>
+            </div>
+
+            <div class="grimoire-panel quick-stats">
+                <div class="quick-row"><span>⚡</span><span>Today</span><span id="quick-today">0 msgs</span></div>
+                <div class="quick-row"><span>📊</span><span>Total</span><span id="quick-total">0 msgs</span></div>
+            </div>
+
+            <div class="grimoire-panel ecosystem-panel">
+                <a href="https://wizardecosystem.dpdns.org" class="ecosystem-link" rel="noopener">
+                    <span>🧙</span> Back to Ecosystem <span class="arrow">→</span>
+                </a>
+            </div>
+        </aside>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         MODALS
+    ═══════════════════════════════════ -->
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="auth-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="auth-modal-title" class="modal-title">Login to Wizard.AI</h3>
+                <button class="close-x modal-close" id="close-auth-modal" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" id="first-name-group" style="display:none;">
+                    <label>First Name</label>
+                    <input class="field" type="text" id="first-name" placeholder="Enter your first name">
+                </div>
+                <div class="form-group" id="last-name-group" style="display:none;">
+                    <label>Last Name</label>
+                    <input class="field" type="text" id="last-name" placeholder="Enter your last name">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input class="field" type="email" id="auth-email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input class="field" type="password" id="auth-password" placeholder="Enter your password">
+                </div>
+                <div class="form-group" id="confirm-password-group" style="display:none;">
+                    <label>Confirm Password</label>
+                    <input class="field" type="password" id="auth-confirm" placeholder="Confirm your password">
+                </div>
+                <div class="form-group" id="verification-group" style="display:none;">
+                    <label>Verification Code</label>
+                    <input class="field" type="text" id="verification-code" placeholder="Enter 6-digit code" maxlength="6">
+                    <button class="ghost-btn sm-btn" id="resend-code-btn" style="margin-top:8px;">📧 Resend Code</button>
+                </div>
+                <div class="auth-error" id="auth-error" role="alert"></div>
+                <button class="primary-btn full-btn" id="auth-submit">Login</button>
+                <div class="auth-switch">
+                    <span id="auth-switch-text">Don't have an account?</span>
+                    <button id="auth-switch-btn">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Modal -->
+    <div class="modal-overlay" id="rename-modal-overlay" role="dialog" aria-modal="true" aria-label="Rename chat">
+        <div class="modal-box modal-sm">
+            <div class="modal-header">
+                <h3 class="modal-title">Rename Chat</h3>
+                <button class="close-x modal-close" id="close-rename-modal" aria-label="Close">✕</button>
+            </div>
+            <input class="field" type="text" id="rename-input" placeholder="Enter new name…" maxlength="30">
+            <div class="modal-actions">
+                <button class="primary-btn" id="modal-save">Save</button>
+                <button class="ghost-btn" id="modal-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code Modal -->
+    <div class="modal-overlay" id="code-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="code-modal-title">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <h3 id="code-modal-title" class="modal-title">🐍 Python Code Interpreter</h3>
+                <button class="close-x modal-close" id="close-code-modal" aria-label="Close">✕</button>
+            </div>
+            <textarea id="code-input" class="code-editor" placeholder="# Write your Python code here&#10;print('Hello Wizard!')" rows="10" aria-label="Python code editor"></textarea>
+            <div class="modal-actions">
+                <button class="primary-btn" id="run-code">▶ Run Code</button>
+                <button class="ghost-btn" id="clear-code">Clear</button>
+            </div>
+            <div id="code-output" class="code-output" role="region" aria-label="Code output"></div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal-overlay" id="image-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="image-modal-title">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="image-modal-title" class="modal-title">🎨 AI Image Generator</h3>
+                <button class="close-x modal-close" id="close-image-modal" aria-label="Close">✕</button>
+            </div>
+            <div class="form-group">
+                <label>Describe your image</label>
+                <input class="field" type="text" id="image-prompt" placeholder="A wizard casting spells under a starry sky…">
+            </div>
+            <div class="form-group">
+                <label>Size</label>
+                <select class="field" id="image-size">
+                    <option value="512x512">Square (512×512)</option>
+                    <option value="768x512">Landscape (768×512)</option>
+                    <option value="512x768">Portrait (512×768)</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="primary-btn" id="generate-image">✦ Generate</button>
+            </div>
+            <div id="image-result" class="image-result" role="region"></div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profile-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <h3 id="profile-modal-title" class="modal-title">👤 Wizard Profile</h3>
+                <button class="close-x modal-close" id="close-profile-modal" aria-label="Close">✕</button>
+            </div>
+            <div class="profile-tabs" role="tablist">
+                <button class="tab-btn active" data-tab="basic" role="tab">Basic Info</button>
+                <button class="tab-btn" data-tab="professional" role="tab">Professional</button>
+                <button class="tab-btn" data-tab="interests" role="tab">Interests</button>
+                <button class="tab-btn" data-tab="ai-preferences" role="tab">AI Prefs</button>
+                <button class="tab-btn" data-tab="goals" role="tab">Goals</button>
+            </div>
+            <div class="profile-body">
+                <div id="profile-tab-basic" class="tab-pane active">
+                    <div class="form-row">
+                        <div class="form-group"><label>Full Name</label><input class="field" type="text" id="profile-full-name" placeholder="Your full name"></div>
+                        <div class="form-group"><label>Display Name</label><input class="field" type="text" id="profile-display-name" placeholder="How to address you"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Birthday</label><input class="field" type="date" id="profile-birthday"></div>
+                        <div class="form-group"><label>Gender</label><select class="field" id="profile-gender"><option value="">Prefer not to say</option><option value="male">Male</option><option value="female">Female</option><option value="non-binary">Non-binary</option><option value="other">Other</option></select></div>
+                    </div>
+                    <div class="form-group"><label>Bio</label><textarea class="field" id="profile-bio" rows="3" placeholder="Tell me about yourself…"></textarea></div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Phone</label><input class="field" type="tel" id="profile-phone" placeholder="Your phone number"></div>
+                        <div class="form-group"><label>Website</label><input class="field" type="url" id="profile-website" placeholder="Your website"></div>
+                    </div>
+                    <div class="form-group"><label>Custom Greeting</label><input class="field" type="text" id="profile-greeting" placeholder="How I should greet you"></div>
+                </div>
+                <div id="profile-tab-professional" class="tab-pane">
+                    <div class="form-row">
+                        <div class="form-group"><label>Occupation</label><input class="field" type="text" id="profile-occupation" placeholder="Your job title"></div>
+                        <div class="form-group"><label>Company</label><input class="field" type="text" id="profile-company" placeholder="Where you work"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Experience Years</label><input class="field" type="number" id="profile-experience" placeholder="Years of experience"></div>
+                        <div class="form-group"><label>Education</label><input class="field" type="text" id="profile-education" placeholder="Your degree/school"></div>
+                    </div>
+                    <div class="form-group"><label>Skills (comma separated)</label><input class="field" type="text" id="profile-skills" placeholder="Python, JavaScript, Design…"></div>
+                </div>
+                <div id="profile-tab-interests" class="tab-pane">
+                    <div class="form-group"><label>Interests (comma separated)</label><input class="field" type="text" id="profile-interests" placeholder="Reading, Gaming, Music…"></div>
+                    <div class="form-group"><label>Favorite Topics</label><input class="field" type="text" id="profile-fav-topics" placeholder="AI, History, Science, Art…"></div>
+                    <div class="form-group"><label>Learning Interests</label><input class="field" type="text" id="profile-learning" placeholder="Topics you want to learn…"></div>
+                    <div class="form-group"><label>Known Topics</label><input class="field" type="text" id="profile-known" placeholder="Topics you already master…"></div>
+                </div>
+                <div id="profile-tab-ai-preferences" class="tab-pane">
+                    <div class="form-row">
+                        <div class="form-group"><label>Preferred Mode</label><select class="field" id="profile-preferred-mode"><option value="JARVIS">JARVIS</option><option value="ORACLE">ORACLE</option><option value="Nerd">Nerd</option><option value="Fun">Fun</option><option value="Sarcastic">Sarcastic</option><option value="Fast">Fast</option><option value="Normal">Normal</option></select></div>
+                        <div class="form-group"><label>Response Style</label><select class="field" id="profile-response-style"><option value="balanced">Balanced</option><option value="concise">Concise</option><option value="detailed">Detailed</option></select></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label>Formality</label><select class="field" id="profile-formality"><option value="casual">Casual</option><option value="friendly">Friendly</option><option value="professional">Professional</option></select></div>
+                        <div class="form-group"><label>Use Emojis</label><select class="field" id="profile-emojis"><option value="true">Yes, use emojis</option><option value="false">No, plain text</option></select></div>
+                    </div>
+                    <div class="form-group"><label>Custom AI Instructions</label><textarea class="field" id="profile-instructions" rows="3" placeholder="How you'd like me to respond…"></textarea></div>
+                </div>
+                <div id="profile-tab-goals" class="tab-pane">
+                    <div class="form-group"><label>Current Goals (one per line)</label><textarea class="field" id="profile-goals" rows="4" placeholder="Learn Python&#10;Write a book&#10;Run a marathon"></textarea></div>
+                    <div class="form-group"><label>Reminders (one per line)</label><textarea class="field" id="profile-reminders" rows="3" placeholder="Call mom on Sunday&#10;Submit project by Friday"></textarea></div>
+                </div>
+            </div>
+            <div class="profile-completeness-bar-wrap">
+                <span>Profile Completeness</span>
+                <div class="progress-track"><div class="progress-fill" id="profile-completeness-fill"></div></div>
+                <span id="profile-completeness-text">0%</span>
+            </div>
+            <div class="modal-actions">
+                <button class="primary-btn" id="save-profile">💾 Save Profile</button>
+                <button class="ghost-btn" id="close-profile">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal-overlay" id="stats-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <h3 id="stats-modal-title" class="modal-title">📊 Detailed Statistics</h3>
+                <button class="close-x modal-close" id="close-stats-modal" aria-label="Close">✕</button>
+            </div>
+            <div class="stats-detail">
+                <div class="stats-section">
+                    <h4>📈 Usage Overview</h4>
+                    <div class="stats-row"><span>Account Created</span><span id="stats-created">—</span></div>
+                    <div class="stats-row"><span>Last Active</span><span id="stats-last">—</span></div>
+                    <div class="stats-row"><span>Total Messages</span><span id="stats-total-msgs">0</span></div>
+                    <div class="stats-row"><span>Total Chats</span><span id="stats-total-chats">0</span></div>
+                </div>
+                <div class="stats-section">
+                    <h4>📁 Content Stats</h4>
+                    <div class="stats-row"><span>Files Uploaded</span><span id="stats-files-detailed">0</span></div>
+                    <div class="stats-row"><span>Images Generated</span><span id="stats-images-detailed">0</span></div>
+                    <div class="stats-row"><span>Code Executions</span><span id="stats-code-detailed">0</span></div>
+                    <div class="stats-row"><span>Web Searches</span><span id="stats-searches-detailed">0</span></div>
+                </div>
+                <div class="stats-section">
+                    <h4>👤 Profile Stats</h4>
+                    <div class="stats-row"><span>Profile Completeness</span><span id="stats-profile-completeness">0%</span></div>
+                    <div class="stats-row"><span>Skills Tracked</span><span id="stats-skills-count">0</span></div>
+                    <div class="stats-row"><span>Interests Tracked</span><span id="stats-interests-count">0</span></div>
+                    <div class="stats-row"><span>Goals Set</span><span id="stats-goals-count">0</span></div>
+                </div>
+                <div class="stats-section">
+                    <h4>⚡ Performance</h4>
+                    <div class="stats-row"><span>Avg Response Time</span><span id="stats-avg-response">0.4s</span></div>
+                    <div class="stats-row"><span>Fastest Response</span><span id="stats-fastest">0.2s</span></div>
+                    <div class="stats-row"><span>API Keys</span><span id="stats-api-keys-detailed">0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personalities Browser Modal -->
+    <div class="modal-overlay" id="personalities-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="personalities-modal-title">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <h3 id="personalities-modal-title" class="modal-title">🎭 Community Personalities</h3>
+                <button class="close-x modal-close" id="close-personalities-modal" aria-label="Close">✕</button>
+            </div>
+            <div class="persona-tabs" role="tablist">
+                <button class="tab-btn active" data-tab="featured" role="tab">Featured</button>
+                <button class="tab-btn" data-tab="popular" role="tab">Popular</button>
+                <button class="tab-btn" data-tab="recent" role="tab">Recent</button>
+                <button class="tab-btn" data-tab="mine" role="tab">Mine</button>
+            </div>
+            <div id="personalities-grid" class="personalities-grid" role="list"></div>
+        </div>
+    </div>
+
+    <!-- Update History Modal -->
+    <div class="modal-overlay" id="update-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="update-modal-title">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <h3 id="update-modal-title" class="modal-title">📜 Update History</h3>
+                <button class="close-x modal-close" id="close-update-modal" aria-label="Close">✕</button>
+            </div>
+            <div class="update-timeline">
+                <div class="update-entry current">
+                    <div class="update-tag">v15.1.0 — WizProfile Update <span class="current-badge">Current</span></div>
+                    <div class="update-date">June 2026</div>
+                    <ul>
+                        <li>👤 Complete WizProfile system — rich user profiles with 50+ data points</li>
+                        <li>🧠 AI learns from your profile to personalize responses</li>
+                        <li>📊 Profile completeness meter and stats</li>
+                        <li>⚙️ Custom AI instructions per user</li>
+                        <li>🎯 Goal tracking and reminders</li>
+                    </ul>
+                </div>
+                <div class="update-entry">
+                    <div class="update-tag">v15.0.0 — UI Update</div>
+                    <div class="update-date">May 2026</div>
+                    <ul>
+                        <li>🎨 Complete UI overhaul — unified Wizard Ecosystem visual language</li>
+                        <li>✦ Cormorant Garamond display font, grimoire-panel aesthetic</li>
+                        <li>🌟 New ambient depth system: atmospheric blobs + starfield</li>
+                    </ul>
+                </div>
+                <div class="update-entry">
+                    <div class="update-tag">v14.0.0 — Ecosystem Update</div>
+                    <div class="update-date">April 2026</div>
+                    <ul>
+                        <li>🌐 Wizard Ecosystem homepage at wizardecosystem.dpdns.org</li>
+                        <li>📧 Wizard Mail, 💬 Wizard Chat, 📅 Calendar, 🌍 Browser</li>
+                        <li>🔐 Unified authentication across all Ecosystem apps</li>
+                    </ul>
+                </div>
+                <div class="update-entry">
+                    <div class="update-tag">v13.0.0 — Multi-Agent Update</div>
+                    <div class="update-date">April 3, 2026</div>
+                    <ul>
+                        <li>🤖 Multi-Agent Orchestration — chain specialized AI agents</li>
+                        <li>🔗 Chain Studio — pre-built multi-agent workflows</li>
+                        <li>🛒 Agent Marketplace — share and install community agents</li>
+                    </ul>
+                </div>
+                <div class="update-entry">
+                    <div class="update-tag">v12.0.0 — Developer Hub</div>
+                    <div class="update-date">April 2026</div>
+                    <ul>
+                        <li>👨‍💻 Developer Hub at /devhub with API key management</li>
+                        <li>📚 Full API documentation with code examples</li>
+                    </ul>
+                </div>
+                <div class="update-entry">
+                    <div class="update-tag">v9.0.0 — PRO Update</div>
+                    <div class="update-date">March 2026</div>
+                    <ul>
+                        <li>🌐 Web search · 📎 File upload RAG · 💻 Code execution</li>
+                        <li>🎨 AI image generation · 🎭 Community personalities</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="file-upload" style="display:none;" accept=".txt,.pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.png" aria-hidden="true">
+
+    <!-- Notification Toast -->
+    <div id="notification-toast" class="notification-toast" role="status" aria-live="polite"></div>
+
+    <!-- Mobile Overlay -->
+    <div class="mobile-overlay" id="mobile-overlay"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
