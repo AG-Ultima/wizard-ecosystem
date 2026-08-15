@@ -48,7 +48,7 @@
             letter-spacing: 0.01em;
         }
 
-        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5; }
 
         /* Signature element: a slow heat-shimmer horizon glow that recolors with risk */
         .horizon {
@@ -70,11 +70,13 @@
 
         .amb {
             position: fixed; border-radius: 50%;
-            filter: blur(140px); pointer-events: none; z-index: 0;
-            opacity: 0.22;
+            filter: blur(130px); pointer-events: none; z-index: 0;
+            opacity: 0.38; animation: drift 20s ease-in-out infinite alternate;
         }
-        .amb-1 { width: 560px; height: 560px; top: -200px; left: -160px; background: radial-gradient(circle, var(--sun), transparent 70%); }
-        .amb-2 { width: 420px; height: 420px; bottom: -140px; right: -120px; background: radial-gradient(circle, var(--sky), transparent 70%); }
+        .amb-1 { width: 580px; height: 580px; top: -200px; left: -160px; background: radial-gradient(circle, var(--sun), transparent 70%); }
+        .amb-2 { width: 460px; height: 460px; bottom: -140px; right: -120px; background: radial-gradient(circle, var(--ember), transparent 70%); animation-delay: -8s; }
+        .amb-3 { width: 380px; height: 380px; top: 30%; right: 10%; background: radial-gradient(circle, var(--sky), transparent 70%); opacity: 0.22; animation-delay: -14s; }
+        @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(35px,25px) scale(1.08); } }
 
         .app-shell {
             position: relative; z-index: 10;
@@ -87,6 +89,7 @@
         /* Header */
         .header {
             display: flex; justify-content: space-between; align-items: center;
+            gap: 16px;
             padding: 10px 0 16px;
             border-bottom: 1px solid var(--line);
             flex-shrink: 0;
@@ -122,7 +125,7 @@
         .weather-current { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-bottom: 24px; }
 
         .weather-card {
-            background: linear-gradient(145deg, var(--sand-card), var(--sand-mid));
+            background: linear-gradient(150deg, rgba(242,165,60,0.1), var(--sand-card) 55%, var(--sand-mid));
             border: 1px solid var(--line);
             border-radius: 20px;
             padding: 26px;
@@ -156,8 +159,8 @@
 
         /* Hydration */
         .hydration-tracker {
-            background: linear-gradient(145deg, rgba(79,157,173,0.12), rgba(79,157,173,0.03));
-            border: 1px solid rgba(79,157,173,0.28);
+            background: linear-gradient(150deg, rgba(79,157,173,0.22), rgba(79,157,173,0.04));
+            border: 1px solid rgba(79,157,173,0.32);
             border-radius: 20px;
             padding: 24px;
             text-align: center;
@@ -235,7 +238,55 @@
         .activity-advice .advice-text { font-size: 13.5px; color: var(--paper-dim); margin-top: 10px; line-height: 1.65; }
 
         /* Footer */
-        .footer { flex-shrink: 0; text-align: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: 11px; color: var(--paper-faint); }
+        .footer { flex-shrink: 0; text-align: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: 11px; color: var(--paper-faint); display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .footer .refresh-countdown { color: var(--paper-faint); }
+        .footer .refresh-countdown::before { content: '·'; margin-right: 10px; }
+
+        .unit-toggle {
+            background: rgba(242,165,60,0.1);
+            border: 1px solid var(--line-strong);
+            border-radius: 100px;
+            padding: 6px 14px;
+            font-size: 12px; font-weight: 600; color: var(--sun-light);
+            cursor: pointer; transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .unit-toggle:hover { background: rgba(242,165,60,0.2); }
+
+        /* Tools tab */
+        .tool-card {
+            background: var(--sand-card); border: 1px solid var(--line);
+            border-radius: 16px; padding: 20px; margin-bottom: 16px;
+        }
+        .tool-card h4 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 16px; color: var(--paper); margin-bottom: 6px; }
+        .tool-card p { font-size: 12.5px; color: var(--paper-faint); line-height: 1.5; margin-bottom: 14px; }
+        .tool-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .tool-row label { font-size: 12.5px; color: var(--paper-dim); }
+        .tool-row input[type="number"] {
+            width: 70px; background: rgba(244,234,217,0.05); border: 1px solid var(--line);
+            border-radius: 8px; padding: 6px 10px; color: var(--paper); font-family: 'Space Grotesk', sans-serif; font-size: 13px;
+        }
+        .tool-btn {
+            background: linear-gradient(135deg, var(--sun), var(--ember));
+            color: var(--sand-dark); border: none; border-radius: 100px;
+            padding: 8px 18px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+        }
+        .tool-btn.secondary {
+            background: rgba(244,234,217,0.06); color: var(--paper); border: 1px solid var(--line);
+        }
+        .tool-btn:disabled { opacity: 0.5; cursor: default; }
+        .timer-display {
+            font-family: 'Fraunces', serif; font-size: 32px; color: var(--sun-light);
+            margin: 10px 0;
+        }
+        .toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: var(--sand-card); border: 1px solid var(--line-strong);
+            color: var(--paper); padding: 10px 20px; border-radius: 100px;
+            font-size: 13px; z-index: 100; opacity: 0; pointer-events: none;
+            transition: all 0.3s;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -254,6 +305,7 @@
     <div class="horizon" id="horizon-glow" aria-hidden="true"></div>
     <div class="amb amb-1" aria-hidden="true"></div>
     <div class="amb amb-2" aria-hidden="true"></div>
+    <div class="amb amb-3" aria-hidden="true"></div>
 
     <div class="app-shell">
         <!-- Header -->
@@ -267,8 +319,10 @@
                 <a href="#" data-tab="forecast">Forecast</a>
                 <a href="#" data-tab="centers">Cooling Centers</a>
                 <a href="#" data-tab="activity">Activity Safety</a>
+                <a href="#" data-tab="tools">Tools</a>
                 <a href="/">← Home</a>
             </nav>
+            <button id="unit-toggle" class="unit-toggle" title="Switch temperature units">°F</button>
         </header>
 
         <!-- Main Content -->
@@ -343,18 +397,107 @@
                     <div style="color:var(--paper-faint);">Select an activity to get safety advice.</div>
                 </div>
             </div>
+
+            <!-- Tools Tab (fully client-side, no backend required) -->
+            <div id="tab-tools" class="tab-content">
+                <h3 class="section-title">Tools</h3>
+
+                <div class="tool-card" style="margin-top:14px;">
+                    <h4>💧 Hydration Reminders</h4>
+                    <p>Get a browser notification every so often as a nudge to drink water — runs entirely in this tab.</p>
+                    <div class="tool-row">
+                        <label>Every</label>
+                        <input type="number" id="reminder-interval" min="5" max="120" value="30" step="5">
+                        <label>minutes</label>
+                        <button class="tool-btn" id="reminder-toggle">Start Reminders</button>
+                    </div>
+                    <div id="reminder-status" style="margin-top:10px; font-size:12px; color:var(--paper-faint);">Off</div>
+                </div>
+
+                <div class="tool-card">
+                    <h4>🧴 Sunscreen Timer</h4>
+                    <p>SPF wears off — this counts down to your next reapplication and notifies you when it's time.</p>
+                    <div class="tool-row">
+                        <label>Reapply every</label>
+                        <input type="number" id="spf-interval" min="30" max="240" value="120" step="10">
+                        <label>minutes</label>
+                        <button class="tool-btn" id="spf-toggle">Start Timer</button>
+                    </div>
+                    <div class="timer-display" id="spf-display" style="display:none;">--:--</div>
+                </div>
+
+                <div class="tool-card">
+                    <h4>📋 Share Current Conditions</h4>
+                    <p>Copy a quick summary of right-now conditions and hydration status to your clipboard.</p>
+                    <button class="tool-btn secondary" id="copy-summary">Copy Summary</button>
+                </div>
+            </div>
         </main>
 
         <!-- Footer -->
         <footer class="footer">
-            ☉ Wizard Heat — Powered by OpenWeatherMap & Wizard AI &nbsp;·&nbsp; Stay safe in the heat
+            <span>☉ Wizard Heat — Powered by OpenWeatherMap & Wizard AI · Stay safe in the heat</span>
+            <span class="refresh-countdown" id="refresh-countdown"></span>
         </footer>
     </div>
 
+    <div class="toast" id="toast"></div>
+
     <script>
+        // ── Starfield ──
+        (function() {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+            let stars = [];
+            const N = 160;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < N; i++) {
+                stars.push({
+                    x: Math.random(),
+                    y: Math.random(),
+                    r: Math.random() * 1.2 + 0.2,
+                    a: Math.random(),
+                    speed: Math.random() * 0.0005 + 0.0002,
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const t = Date.now() / 1000;
+                stars.forEach(s => {
+                    const alpha = 0.3 + 0.5 * Math.sin(t * s.speed * 6000 + s.a * 100);
+                    ctx.beginPath();
+                    ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(244,234,217,${alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
         const API_BASE = 'https://arnav0928.pythonanywhere.com';
         let currentUser = null;
         let currentLocation = null;
+        let lastWeatherData = null;
+        let unit = localStorage.getItem('wh_unit') || 'F';
+
+        function toast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            clearTimeout(toast._t);
+            toast._t = setTimeout(() => el.classList.remove('show'), 2600);
+        }
+
+        function fToC(f) { return Math.round((f - 32) * 5 / 9); }
 
         // ========== GEOLOCATION ==========
         function getLocation() {
@@ -416,13 +559,13 @@
         }
 
         function updateWeatherUI(data) {
+            lastWeatherData = data;
+            renderTemps();
             const current = data.current;
             const risk = data.risk;
 
-            document.getElementById('current-temp').innerHTML = `${current.temp || 0}° <small>F</small>`;
             document.getElementById('current-condition').textContent = current.condition || 'Unknown';
             document.getElementById('current-humidity').textContent = current.humidity || 0;
-            document.getElementById('current-feels').textContent = current.feels_like || 0;
             document.getElementById('current-wind').textContent = current.wind_speed || 0;
             document.getElementById('current-uv').textContent = current.uv_index || '--';
 
@@ -449,14 +592,34 @@
                 : '<div style="color:var(--paper-faint);">No recommendations available</div>';
         }
 
+        function renderTemps() {
+            if (!lastWeatherData) return;
+            const c = lastWeatherData.current;
+            const t = c.temp || 0, f = c.feels_like || 0;
+            const dt = unit === 'F' ? t : fToC(t);
+            const df = unit === 'F' ? f : fToC(f);
+            document.getElementById('current-temp').innerHTML = `${dt}° <small>${unit}</small>`;
+            document.getElementById('current-feels').textContent = df;
+        }
+
+        document.getElementById('unit-toggle').addEventListener('click', () => {
+            unit = unit === 'F' ? 'C' : 'F';
+            localStorage.setItem('wh_unit', unit);
+            document.getElementById('unit-toggle').textContent = `°${unit}`;
+            renderTemps();
+            if (lastForecastData) updateForecastUI(lastForecastData);
+        });
+        document.getElementById('unit-toggle').textContent = `°${unit}`;
+
         // ========== FETCH FORECAST ==========
+        let lastForecastData = null;
         async function fetchForecast() {
             if (!currentLocation) currentLocation = await getLocation();
             const { lat, lon } = currentLocation;
             try {
                 const res = await fetch(`${API_BASE}/api/heat/forecast?lat=${lat}&lon=${lon}`, { credentials: 'include' });
                 const data = await res.json();
-                if (data.success) updateForecastUI(data);
+                if (data.success) { lastForecastData = data; updateForecastUI(data); }
             } catch(e) { console.error('Forecast error:', e); }
         }
 
@@ -470,12 +633,13 @@
                 'safe': '#7fc47a', 'caution': '#f2a53c', 'warning': '#f2a53c',
                 'danger': '#ff5c4d', 'extreme': '#c73e2c'
             };
+            const conv = (v) => unit === 'F' ? v : fToC(v);
             container.innerHTML = data.daily.map(day => `
                 <div class="forecast-item">
                     <div class="day">${day.day}</div>
                     <div class="icon">☀️</div>
-                    <div class="temp-high">${day.max_temp}°</div>
-                    <div class="temp-low">${day.min_temp}°</div>
+                    <div class="temp-high">${conv(day.max_temp)}°</div>
+                    <div class="temp-low">${conv(day.min_temp)}°</div>
                     <div class="risk" style="background:${riskColors[day.risk_level] || '#888'}2a; color:${riskColors[day.risk_level] || '#888'};">${day.risk_level}</div>
                 </div>
             `).join('');
@@ -579,13 +743,122 @@
             });
         });
 
+        // ========== HYDRATION REMINDERS (client-side only) ==========
+        let reminderTimer = null;
+        const reminderToggle = document.getElementById('reminder-toggle');
+        const reminderStatus = document.getElementById('reminder-status');
+
+        function startReminders() {
+            const mins = Math.max(5, parseInt(document.getElementById('reminder-interval').value) || 30);
+            if (Notification && Notification.permission === 'default') Notification.requestPermission();
+            clearInterval(reminderTimer);
+            reminderTimer = setInterval(() => {
+                if (Notification && Notification.permission === 'granted') {
+                    new Notification('💧 Time to hydrate', { body: 'Take a water break — you\'re in the Arizona heat.' });
+                } else {
+                    toast('💧 Reminder: time to drink some water');
+                }
+            }, mins * 60000);
+            reminderToggle.textContent = 'Stop Reminders';
+            reminderStatus.textContent = `On — every ${mins} min`;
+            localStorage.setItem('wh_reminder_on', '1');
+            localStorage.setItem('wh_reminder_mins', String(mins));
+        }
+        function stopReminders() {
+            clearInterval(reminderTimer);
+            reminderTimer = null;
+            reminderToggle.textContent = 'Start Reminders';
+            reminderStatus.textContent = 'Off';
+            localStorage.setItem('wh_reminder_on', '0');
+        }
+        reminderToggle.addEventListener('click', () => reminderTimer ? stopReminders() : startReminders());
+        if (localStorage.getItem('wh_reminder_on') === '1') {
+            document.getElementById('reminder-interval').value = localStorage.getItem('wh_reminder_mins') || 30;
+            startReminders();
+        }
+
+        // ========== SUNSCREEN TIMER (client-side only) ==========
+        let spfEndTime = null, spfTick = null;
+        const spfToggle = document.getElementById('spf-toggle');
+        const spfDisplay = document.getElementById('spf-display');
+
+        function formatMMSS(ms) {
+            const total = Math.max(0, Math.floor(ms / 1000));
+            const m = String(Math.floor(total / 60)).padStart(2, '0');
+            const s = String(total % 60).padStart(2, '0');
+            return `${m}:${s}`;
+        }
+        function startSpfTimer() {
+            const mins = Math.max(10, parseInt(document.getElementById('spf-interval').value) || 120);
+            spfEndTime = Date.now() + mins * 60000;
+            spfDisplay.style.display = 'block';
+            spfToggle.textContent = 'Cancel Timer';
+            clearInterval(spfTick);
+            spfTick = setInterval(() => {
+                const remaining = spfEndTime - Date.now();
+                if (remaining <= 0) {
+                    clearInterval(spfTick);
+                    spfDisplay.textContent = '00:00';
+                    if (Notification && Notification.permission === 'granted') {
+                        new Notification('🧴 Reapply sunscreen', { body: 'Your SPF window is up.' });
+                    } else {
+                        toast('🧴 Time to reapply sunscreen');
+                    }
+                    spfToggle.textContent = 'Start Timer';
+                    spfEndTime = null;
+                    return;
+                }
+                spfDisplay.textContent = formatMMSS(remaining);
+            }, 1000);
+        }
+        spfToggle.addEventListener('click', () => {
+            if (spfEndTime) {
+                clearInterval(spfTick);
+                spfEndTime = null;
+                spfDisplay.style.display = 'none';
+                spfToggle.textContent = 'Start Timer';
+            } else {
+                if (Notification && Notification.permission === 'default') Notification.requestPermission();
+                startSpfTimer();
+            }
+        });
+
+        // ========== COPY SUMMARY (client-side only) ==========
+        document.getElementById('copy-summary').addEventListener('click', async () => {
+            if (!lastWeatherData) { toast('No conditions loaded yet'); return; }
+            const c = lastWeatherData.current, r = lastWeatherData.risk || {}, hyd = lastWeatherData.hydrations || {};
+            const dt = unit === 'F' ? c.temp : fToC(c.temp);
+            const summary = `Wizard Heat — ${dt}°${unit}, ${c.condition || ''}. Risk: ${(r.level || 'safe').toUpperCase()}. Hydration: ${hyd.message || 'n/a'}.`;
+            try {
+                await navigator.clipboard.writeText(summary);
+                toast('Copied to clipboard');
+            } catch(e) {
+                toast('Could not copy — clipboard unavailable');
+            }
+        });
+
+        // ========== REFRESH COUNTDOWN (client-side only) ==========
+        let nextRefreshAt = Date.now() + 300000;
+        function tickRefreshCountdown() {
+            const remaining = Math.max(0, nextRefreshAt - Date.now());
+            const mins = Math.floor(remaining / 60000);
+            const secs = Math.floor((remaining % 60000) / 1000);
+            document.getElementById('refresh-countdown').textContent = `next refresh in ${mins}:${String(secs).padStart(2,'0')}`;
+        }
+        setInterval(tickRefreshCountdown, 1000);
+        tickRefreshCountdown();
+
         // ========== INIT ==========
         async function init() {
             const authed = await checkAuth();
             if (!authed) return;
             currentLocation = await getLocation();
             await fetchWeather();
-            setInterval(fetchWeather, 300000);
+            nextRefreshAt = Date.now() + 300000;
+            setInterval(() => {
+                fetchWeather();
+                nextRefreshAt = Date.now() + 300000;
+            }, 300000);
         }
         init();
     </script>
