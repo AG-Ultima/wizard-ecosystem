@@ -443,35 +443,46 @@
         }
 
         function updateWeatherUI(data) {
-            const current = data.current;
-            const risk = data.risk;
-            
-            document.getElementById('current-temp').innerHTML = `${current.temp}° <small>F</small>`;
-            document.getElementById('current-condition').textContent = current.condition;
-            document.getElementById('current-humidity').textContent = current.humidity;
-            document.getElementById('current-feels').textContent = current.feels_like;
-            document.getElementById('current-wind').textContent = current.wind_speed;
-            document.getElementById('current-uv').textContent = current.uv_index || '--';
-            
-            const badge = document.getElementById('risk-badge');
-            badge.textContent = `${risk.emoji} ${risk.level.toUpperCase()}`;
-            badge.style.background = risk.color + '33';
-            badge.style.color = risk.color;
-            
-            // Hydration
-            const hyd = data.hydration;
-            const percent = Math.min(100, Math.round((hyd.daily_goal_oz / hyd.base) * 100));
-            document.getElementById('hydration-percent').textContent = percent + '%';
-            document.getElementById('hydration-text').textContent = `${hyd.daily_goal_oz} oz / ${hyd.base + hyd.heat_bonus + hyd.activity_bonus} oz`;
-            
-            // Recommendations
-            const recs = data.recommendations;
-            if (recs && recs.length) {
-                document.getElementById('recommendations').innerHTML = recs.map(r => 
-                    `<div style="padding:8px 12px; margin-bottom:6px; background:rgba(255,255,255,0.03); border-radius:10px; border-left:2px solid var(--gold); font-size:13px;">${r}</div>`
-                ).join('');
-            }
-        }
+    const current = data.current;
+    const risk = data.risk;
+    
+    // Safely access all properties with fallbacks
+    document.getElementById('current-temp').innerHTML = `${current.temp || 0}° <small>F</small>`;
+    document.getElementById('current-condition').textContent = current.condition || 'Unknown';
+    document.getElementById('current-humidity').textContent = current.humidity || 0;
+    document.getElementById('current-feels').textContent = current.feels_like || 0;
+    document.getElementById('current-wind').textContent = current.wind_speed || 0;
+    document.getElementById('current-uv').textContent = current.uv_index || '--';
+    
+    const badge = document.getElementById('risk-badge');
+    if (risk) {
+        badge.textContent = `${risk.emoji || '🟢'} ${(risk.level || 'SAFE').toUpperCase()}`;
+        badge.style.background = (risk.color || '#00BFFF') + '33';
+        badge.style.color = risk.color || '#00BFFF';
+    }
+    
+    // Hydration from the new hydrations field
+    const hyd = data.hydrations || {};
+    const percent = hyd.percent || 0;
+    document.getElementById('hydration-percent').textContent = percent + '%';
+    document.getElementById('hydration-text').textContent = hyd.message || '0 oz / 80 oz';
+    document.getElementById('hydration-fill').style.transform = `rotate(${percent * 3.6}deg)`;
+    
+    // Message
+    if (hyd.message) {
+        document.getElementById('hydration-message').textContent = hyd.message;
+    }
+    
+    // Recommendations
+    const recs = data.recommendations || [];
+    if (recs && recs.length) {
+        document.getElementById('recommendations').innerHTML = recs.map(r => 
+            `<div style="padding:8px 12px; margin-bottom:6px; background:rgba(255,255,255,0.03); border-radius:10px; border-left:2px solid var(--gold); font-size:13px;">${r}</div>`
+        ).join('');
+    } else {
+        document.getElementById('recommendations').innerHTML = '<div style="color:var(--muted);">No recommendations available</div>';
+    }
+}
 
         // ========== FETCH FORECAST ==========
         async function fetchForecast() {
