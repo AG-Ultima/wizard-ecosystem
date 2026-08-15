@@ -8,47 +8,73 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --ink: #080612;
-            --ink-2: #0e0b1e;
-            --ink-3: #13102a;
-            --gold: #c9a84c;
-            --gold-light: #e8c97a;
-            --gold-glow: rgba(201,168,76,0.18);
-            --violet: #7c5cbf;
-            --silver: #d4d0e8;
-            --silver-dim: rgba(212,208,232,0.55);
-            --muted: rgba(212,208,232,0.35);
-            --border: rgba(201,168,76,0.18);
-            --border-strong: rgba(201,168,76,0.45);
-            --danger: #e05555;
-            --warning: #f59e0b;
-            --success: #4ade80;
-            --info: #60a5fa;
+            /* Desert-at-noon palette: sun-baked sand, dry sky, ember heat */
+            --sand-dark: #1c1410;
+            --sand-mid: #241a14;
+            --sand-card: #2b2019;
+            --sun: #f2a53c;
+            --sun-light: #ffc773;
+            --ember: #ff6b47;
+            --ember-deep: #c73e2c;
+            --sky: #4f9dad;
+            --sky-light: #7fc4d1;
+            --paper: #f4ead9;
+            --paper-dim: rgba(244,234,217,0.62);
+            --paper-faint: rgba(244,234,217,0.34);
+            --line: rgba(242,165,60,0.16);
+            --line-strong: rgba(242,165,60,0.4);
+            --danger: #ff5c4d;
+            --warning: #f2a53c;
+            --success: #7fc47a;
         }
 
         html, body { height: 100%; overflow: hidden; }
         body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--ink);
-            color: var(--silver);
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--sand-dark);
+            color: var(--paper);
+        }
+
+        h3.section-title {
+            font-family: 'Fraunces', serif;
+            font-size: 19px; font-weight: 500; font-style: italic;
+            color: var(--sun-light);
+            letter-spacing: 0.01em;
         }
 
         #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 
+        /* Signature element: a slow heat-shimmer horizon glow that recolors with risk */
+        .horizon {
+            position: fixed; left: 0; right: 0; bottom: 0; height: 42vh;
+            pointer-events: none; z-index: 0;
+            background: linear-gradient(to top, var(--horizon-color, var(--ember-deep)) 0%, transparent 78%);
+            opacity: 0.22;
+            filter: blur(60px);
+            transition: background 1.2s ease;
+            animation: shimmer 7s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.20; }
+            50% { transform: translateY(-10px) scaleX(1.03); opacity: 0.28; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .horizon { animation: none; }
+        }
+
         .amb {
             position: fixed; border-radius: 50%;
-            filter: blur(130px); pointer-events: none; z-index: 0;
-            opacity: 0.28; animation: drift 20s ease-in-out infinite alternate;
+            filter: blur(140px); pointer-events: none; z-index: 0;
+            opacity: 0.22;
         }
-        .amb-1 { width: 600px; height: 600px; top: -180px; left: -180px; background: radial-gradient(circle, #5c1a1a, transparent 70%); }
-        .amb-2 { width: 450px; height: 450px; bottom: -100px; right: -100px; background: radial-gradient(circle, #8b5a1e, transparent 70%); animation-delay: -10s; }
-        @keyframes drift { from { transform: translate(0,0); } to { transform: translate(35px,25px); } }
+        .amb-1 { width: 560px; height: 560px; top: -200px; left: -160px; background: radial-gradient(circle, var(--sun), transparent 70%); }
+        .amb-2 { width: 420px; height: 420px; bottom: -140px; right: -120px; background: radial-gradient(circle, var(--sky), transparent 70%); }
 
         .app-shell {
             position: relative; z-index: 10;
@@ -62,220 +88,159 @@
         .header {
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 0 16px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--line);
             flex-shrink: 0;
         }
-        .logo {
-            display: flex; align-items: center; gap: 12px;
-            text-decoration: none;
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-glyph {
+            font-size: 26px;
+            filter: drop-shadow(0 0 8px rgba(242,165,60,0.5));
         }
-        .logo-glyph { font-size: 32px; }
         .logo-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 24px; font-weight: 600;
-            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            font-family: 'Fraunces', serif;
+            font-size: 23px; font-weight: 500; font-style: italic;
+            background: linear-gradient(135deg, var(--sun-light), var(--ember));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .logo-name span { font-weight: 300; font-size: 14px; color: var(--muted); -webkit-text-fill-color: var(--muted); }
-        .nav-links {
-            display: flex; gap: 16px;
-            font-size: 13px; font-weight: 400;
-        }
+        .logo-name span { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 400; font-size: 12px; color: var(--paper-faint); -webkit-text-fill-color: var(--paper-faint); letter-spacing: 0.08em; text-transform: uppercase; }
+
+        .nav-links { display: flex; gap: 6px; font-size: 13px; font-weight: 500; }
         .nav-links a {
-            color: var(--silver-dim); text-decoration: none;
-            padding: 6px 12px; border-radius: 100px;
+            color: var(--paper-dim); text-decoration: none;
+            padding: 7px 14px; border-radius: 100px;
             transition: all 0.2s;
         }
-        .nav-links a:hover { background: var(--gold-dim); color: var(--silver); }
-        .nav-links a.active { background: var(--gold-dim); color: var(--gold); border: 1px solid var(--border-strong); }
+        .nav-links a:hover { background: rgba(242,165,60,0.08); color: var(--paper); }
+        .nav-links a.active { background: rgba(242,165,60,0.14); color: var(--sun-light); border: 1px solid var(--line-strong); }
 
         /* Main Content */
-        .main-content {
-            flex: 1; overflow-y: auto;
-            padding: 20px 0;
-            scrollbar-width: thin;
-        }
+        .main-content { flex: 1; overflow-y: auto; padding: 22px 0; scrollbar-width: thin; }
         .main-content::-webkit-scrollbar { width: 4px; }
-        .main-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .main-content::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
 
         /* Current Weather */
-        .weather-current {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
+        .weather-current { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-bottom: 24px; }
 
         .weather-card {
-            background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-            border: 1px solid var(--border);
+            background: linear-gradient(145deg, var(--sand-card), var(--sand-mid));
+            border: 1px solid var(--line);
             border-radius: 20px;
-            padding: 24px;
+            padding: 26px;
+            position: relative;
+            overflow: hidden;
+        }
+        .weather-card::before {
+            content: '☉';
+            position: absolute; top: -18px; right: -6px;
+            font-size: 130px; color: var(--sun);
+            opacity: 0.06; pointer-events: none;
         }
         .weather-card .temp {
-            font-size: 56px;
-            font-weight: 300;
-            color: var(--silver);
-            line-height: 1;
+            font-family: 'Fraunces', serif;
+            font-size: 62px; font-weight: 400;
+            color: var(--paper); line-height: 1;
         }
-        .weather-card .temp small { font-size: 20px; color: var(--muted); }
-        .weather-card .condition {
-            font-size: 16px;
-            color: var(--silver-dim);
-            margin-top: 4px;
-        }
+        .weather-card .temp small { font-family: 'Space Grotesk', sans-serif; font-size: 18px; color: var(--paper-faint); }
+        .weather-card .condition { font-size: 15px; color: var(--paper-dim); margin-top: 6px; }
         .weather-card .details {
-            display: flex; gap: 20px;
-            margin-top: 12px;
-            font-size: 13px; color: var(--muted);
+            display: flex; gap: 18px; flex-wrap: wrap;
+            margin-top: 16px; font-size: 12.5px; color: var(--paper-faint);
         }
-        .weather-card .details span { display: flex; align-items: center; gap: 6px; }
+        .weather-card .details span { display: flex; align-items: center; gap: 5px; }
 
         .risk-badge {
-            display: inline-block;
-            padding: 6px 14px;
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 12px;
+            display: inline-block; padding: 7px 16px; border-radius: 100px;
+            font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+            margin-top: 14px;
         }
 
         /* Hydration */
         .hydration-tracker {
-            background: linear-gradient(145deg, rgba(201,168,76,0.08), rgba(201,168,76,0.02));
-            border: 1px solid var(--border);
+            background: linear-gradient(145deg, rgba(79,157,173,0.12), rgba(79,157,173,0.03));
+            border: 1px solid rgba(79,157,173,0.28);
             border-radius: 20px;
             padding: 24px;
             text-align: center;
+            display: flex; flex-direction: column; justify-content: center;
         }
         .hydration-tracker .progress-ring {
-            width: 80px; height: 80px;
-            border-radius: 50%;
-            border: 4px solid var(--border);
-            position: relative;
-            margin: 0 auto 12px;
+            width: 76px; height: 76px; border-radius: 50%;
+            border: 4px solid rgba(79,157,173,0.2);
+            position: relative; margin: 0 auto 10px;
         }
         .hydration-tracker .progress-ring .fill {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            border: 4px solid var(--gold);
+            width: 100%; height: 100%; border-radius: 50%;
+            border: 4px solid var(--sky-light);
             clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
             transform: rotate(0deg);
             transition: transform 0.5s;
         }
-        .hydration-tracker .progress-label {
-            font-size: 24px; font-weight: 600;
-            color: var(--gold);
-        }
-        .hydration-tracker .sub-label {
-            font-size: 12px; color: var(--muted);
-        }
-        .hydration-tracker .actions {
-            display: flex; gap: 8px;
-            justify-content: center;
-            margin-top: 12px;
-        }
+        .hydration-tracker .progress-label { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; color: var(--sky-light); }
+        .hydration-tracker .sub-label { font-size: 12px; color: var(--paper-faint); }
+        .hydration-tracker .actions { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
         .hydration-tracker .actions button {
-            background: var(--gold-dim);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 6px 16px;
-            font-size: 12px;
-            color: var(--silver);
-            cursor: pointer;
+            background: rgba(79,157,173,0.14);
+            border: 1px solid rgba(79,157,173,0.3);
+            border-radius: 100px; padding: 7px 14px;
+            font-size: 12px; font-weight: 500; color: var(--paper);
+            cursor: pointer; transition: background 0.2s;
         }
-        .hydration-tracker .actions button:hover { background: rgba(201,168,76,0.2); }
+        .hydration-tracker .actions button:hover { background: rgba(79,157,173,0.26); }
+        #hydration-message { margin-top: 10px; font-size: 12px; color: var(--paper-faint); min-height: 14px; }
+
+        /* Recommendations */
+        .rec-item {
+            padding: 10px 14px; margin-bottom: 7px;
+            background: rgba(242,165,60,0.05);
+            border-radius: 10px; border-left: 2px solid var(--sun);
+            font-size: 13px; color: var(--paper-dim); line-height: 1.5;
+        }
 
         /* Forecast */
-        .forecast-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 12px;
-            margin-top: 16px;
-        }
+        .forecast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
         .forecast-item {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 14px;
-            text-align: center;
+            background: var(--sand-card); border: 1px solid var(--line);
+            border-radius: 16px; padding: 16px; text-align: center;
         }
         .forecast-item .day { font-size: 13px; font-weight: 500; }
-        .forecast-item .temp-high { font-size: 18px; font-weight: 600; }
-        .forecast-item .temp-low { font-size: 13px; color: var(--muted); }
-        .forecast-item .icon { font-size: 28px; margin: 4px 0; }
-        .forecast-item .risk { font-size: 10px; padding: 2px 8px; border-radius: 100px; display: inline-block; }
+        .forecast-item .temp-high { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; margin-top: 4px; }
+        .forecast-item .temp-low { font-size: 12px; color: var(--paper-faint); }
+        .forecast-item .icon { font-size: 26px; margin: 6px 0; }
+        .forecast-item .risk { font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 100px; display: inline-block; margin-top: 6px; letter-spacing: 0.02em; }
 
         /* Cooling Centers */
-        .centers-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 12px;
-            margin-top: 16px;
-        }
-        .center-item {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px;
-        }
-        .center-item .name { font-weight: 500; font-size: 14px; }
-        .center-item .address { font-size: 12px; color: var(--muted); margin: 4px 0; }
-        .center-item .services { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
-        .center-item .services span {
-            font-size: 10px; background: var(--gold-dim);
-            padding: 2px 8px; border-radius: 100px;
-        }
+        .centers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+        .center-item { background: var(--sand-card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+        .center-item .name { font-weight: 600; font-size: 14px; }
+        .center-item .address { font-size: 12px; color: var(--paper-faint); margin: 4px 0; }
+        .center-item .services { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+        .center-item .services span { font-size: 10px; background: rgba(242,165,60,0.12); color: var(--sun-light); padding: 3px 9px; border-radius: 100px; }
 
         /* Activity Safety */
-        .activity-selector {
-            display: flex; gap: 8px; flex-wrap: wrap;
-            margin: 12px 0;
-        }
+        .activity-selector { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
         .activity-selector button {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 6px 16px;
-            font-size: 12px;
-            color: var(--silver-dim);
-            cursor: pointer;
-            transition: all 0.2s;
+            background: rgba(244,234,217,0.04);
+            border: 1px solid var(--line);
+            border-radius: 100px; padding: 7px 16px;
+            font-size: 12.5px; font-weight: 500; color: var(--paper-dim);
+            cursor: pointer; transition: all 0.2s;
         }
-        .activity-selector button:hover { background: var(--gold-dim); }
+        .activity-selector button:hover { background: rgba(242,165,60,0.08); }
         .activity-selector button.active {
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            color: var(--ink);
-            border-color: var(--gold);
+            background: linear-gradient(135deg, var(--sun), var(--ember));
+            color: var(--sand-dark); border-color: transparent; font-weight: 600;
         }
-        .activity-advice {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px;
-            margin-top: 12px;
-        }
-        .activity-advice .status {
-            font-size: 14px; font-weight: 600;
-        }
-        .activity-advice .advice-text {
-            font-size: 13px; color: var(--silver-dim);
-            margin-top: 8px;
-            line-height: 1.6;
-        }
+        .activity-advice { background: var(--sand-card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-top: 4px; }
+        .activity-advice .status { font-size: 14px; font-weight: 700; letter-spacing: 0.03em; }
+        .activity-advice .advice-text { font-size: 13.5px; color: var(--paper-dim); margin-top: 10px; line-height: 1.65; }
 
         /* Footer */
-        .footer {
-            flex-shrink: 0;
-            text-align: center;
-            padding: 12px 0;
-            border-top: 1px solid var(--border);
-            font-size: 11px;
-            color: var(--muted);
-        }
+        .footer { flex-shrink: 0; text-align: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: 11px; color: var(--paper-faint); }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+
+        a:focus-visible, button:focus-visible { outline: 2px solid var(--sun-light); outline-offset: 2px; }
 
         @media (max-width: 640px) {
             .weather-current { grid-template-columns: 1fr; }
@@ -286,6 +251,7 @@
 </head>
 <body>
     <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="horizon" id="horizon-glow" aria-hidden="true"></div>
     <div class="amb amb-1" aria-hidden="true"></div>
     <div class="amb amb-2" aria-hidden="true"></div>
 
@@ -293,8 +259,8 @@
         <!-- Header -->
         <header class="header">
             <a href="/" class="logo">
-                <span class="logo-glyph">🌡️</span>
-                <span class="logo-name">Wizard Heat <span>| Arizona</span></span>
+                <span class="logo-glyph">☉</span>
+                <span class="logo-name">Wizard Heat <span>Arizona</span></span>
             </a>
             <nav class="nav-links">
                 <a href="#" class="active" data-tab="dashboard">Dashboard</a>
@@ -328,41 +294,41 @@
                         <div class="progress-label" id="hydration-percent">0%</div>
                         <div class="sub-label" id="hydration-text">0 oz / 64 oz</div>
                         <div class="actions">
-                            <button onclick="trackHydration(8)">💧 +8oz</button>
-                            <button onclick="trackHydration(16)">💧 +16oz</button>
-                            <button onclick="trackHydration(24)">💧 +24oz</button>
+                            <button onclick="trackHydration(8)">+8oz</button>
+                            <button onclick="trackHydration(16)">+16oz</button>
+                            <button onclick="trackHydration(24)">+24oz</button>
                         </div>
-                        <div style="margin-top:10px; font-size:12px; color:var(--muted);" id="hydration-message"></div>
+                        <div id="hydration-message"></div>
                     </div>
                 </div>
 
-                <div style="margin-top:20px;">
-                    <h3 style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:400; color:var(--gold);">📋 Recommendations</h3>
+                <div>
+                    <h3 class="section-title">Recommendations</h3>
                     <div id="recommendations" style="margin-top:12px;">
-                        <div style="color:var(--muted);">Loading recommendations...</div>
+                        <div style="color:var(--paper-faint);">Loading recommendations...</div>
                     </div>
                 </div>
             </div>
 
             <!-- Forecast Tab -->
             <div id="tab-forecast" class="tab-content">
-                <h3 style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:400; color:var(--gold); margin-bottom:16px;">📅 5-Day Forecast</h3>
-                <div id="forecast-container">
-                    <div style="color:var(--muted);">Loading forecast...</div>
+                <h3 class="section-title">5-Day Forecast</h3>
+                <div id="forecast-container" class="forecast-grid">
+                    <div style="color:var(--paper-faint);">Loading forecast...</div>
                 </div>
             </div>
 
             <!-- Cooling Centers Tab -->
             <div id="tab-centers" class="tab-content">
-                <h3 style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:400; color:var(--gold); margin-bottom:16px;">🏛️ Cooling Centers</h3>
-                <div id="centers-container">
-                    <div style="color:var(--muted);">Loading cooling centers...</div>
+                <h3 class="section-title">Cooling Centers</h3>
+                <div id="centers-container" class="centers-grid">
+                    <div style="color:var(--paper-faint);">Loading cooling centers...</div>
                 </div>
             </div>
 
             <!-- Activity Safety Tab -->
             <div id="tab-activity" class="tab-content">
-                <h3 style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:400; color:var(--gold); margin-bottom:16px;">🏃 Activity Safety</h3>
+                <h3 class="section-title">Activity Safety</h3>
                 <div class="activity-selector" id="activity-selector">
                     <button class="active" data-activity="hiking">🥾 Hiking</button>
                     <button data-activity="running">🏃 Running</button>
@@ -374,14 +340,14 @@
                     <button data-activity="picnic">🧺 Picnic</button>
                 </div>
                 <div class="activity-advice" id="activity-advice">
-                    <div style="color:var(--muted);">Select an activity to get safety advice.</div>
+                    <div style="color:var(--paper-faint);">Select an activity to get safety advice.</div>
                 </div>
             </div>
         </main>
 
         <!-- Footer -->
         <footer class="footer">
-            🌡️ Wizard Heat — Powered by OpenWeatherMap & Wizard AI &nbsp;·&nbsp; Stay safe in the heat
+            ☉ Wizard Heat — Powered by OpenWeatherMap & Wizard AI &nbsp;·&nbsp; Stay safe in the heat
         </footer>
     </div>
 
@@ -391,26 +357,19 @@
         let currentLocation = null;
 
         // ========== GEOLOCATION ==========
-       function getLocation() {
-    return new Promise((resolve) => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    console.log('📍 Location detected:', pos.coords.latitude, pos.coords.longitude);
-                    resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
-                },
-                () => {
-                    console.log('⚠️ Location permission denied, using Phoenix default');
+        function getLocation() {
+            return new Promise((resolve) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+                        () => resolve({ lat: 33.4484, lon: -112.0740 }),
+                        { timeout: 5000, enableHighAccuracy: false }
+                    );
+                } else {
                     resolve({ lat: 33.4484, lon: -112.0740 });
-                },
-                { timeout: 5000, enableHighAccuracy: false }
-            );
-        } else {
-            console.log('⚠️ Geolocation not available, using Phoenix default');
-            resolve({ lat: 33.4484, lon: -112.0740 });
+                }
+            });
         }
-    });
-}
 
         // ========== AUTH ==========
         async function checkAuth() {
@@ -429,202 +388,149 @@
         }
 
         // ========== FETCH WEATHER ==========
-        // In heat/index.html, update the fetchWeather function
-async function fetchWeather() {
-    if (!currentLocation) {
-        currentLocation = await getLocation();
-    }
-    const { lat, lon } = currentLocation;
-    
-    try {
-        console.log(`🌡️ Fetching weather for: ${lat}, ${lon}`);
-        const res = await fetch(`${API_BASE}/api/heat/current?lat=${lat}&lon=${lon}`, {
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json'
+        async function fetchWeather() {
+            if (!currentLocation) currentLocation = await getLocation();
+            const { lat, lon } = currentLocation;
+            try {
+                const res = await fetch(`${API_BASE}/api/heat/current?lat=${lat}&lon=${lon}`, {
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
+                const data = await res.json();
+                if (data.success) updateWeatherUI(data);
+                else showError(data.error || 'Failed to load weather');
+            } catch(e) {
+                console.error('Weather fetch error:', e);
+                showError('Unable to load weather data. Please try again.');
             }
-        });
-        
-        if (!res.ok) {
-            const errorText = await res.text();
-            console.error('Weather API error:', res.status, errorText);
-            throw new Error(`Weather API error: ${res.status}`);
         }
-        
-        const data = await res.json();
-        console.log('Weather data:', data);
-        if (data.success) {
-            updateWeatherUI(data);
-        } else {
-            console.error('Weather error:', data.error);
-            showError(data.error || 'Failed to load weather');
-        }
-    } catch(e) {
-        console.error('Weather fetch error:', e);
-        showError('Unable to load weather data. Please try again.');
-    }
-}
 
-function showError(message) {
-    document.getElementById('current-temp').innerHTML = '--° <small>F</small>';
-    document.getElementById('current-condition').textContent = message;
-    document.getElementById('risk-badge').textContent = '⚠️ Error';
-    document.getElementById('risk-badge').style.background = 'rgba(239,68,68,0.2)';
-    document.getElementById('risk-badge').style.color = '#ef4444';
-}
+        function showError(message) {
+            document.getElementById('current-temp').innerHTML = '--° <small>F</small>';
+            document.getElementById('current-condition').textContent = message;
+            const badge = document.getElementById('risk-badge');
+            badge.textContent = '⚠️ Error';
+            badge.style.background = 'rgba(255,92,77,0.18)';
+            badge.style.color = '#ff5c4d';
+        }
+
         function updateWeatherUI(data) {
-    const current = data.current;
-    const risk = data.risk;
-    
-    // Safely access all properties with fallbacks
-    document.getElementById('current-temp').innerHTML = `${current.temp || 0}° <small>F</small>`;
-    document.getElementById('current-condition').textContent = current.condition || 'Unknown';
-    document.getElementById('current-humidity').textContent = current.humidity || 0;
-    document.getElementById('current-feels').textContent = current.feels_like || 0;
-    document.getElementById('current-wind').textContent = current.wind_speed || 0;
-    document.getElementById('current-uv').textContent = current.uv_index || '--';
-    
-    const badge = document.getElementById('risk-badge');
-    if (risk) {
-        badge.textContent = `${risk.emoji || '🟢'} ${(risk.level || 'SAFE').toUpperCase()}`;
-        badge.style.background = (risk.color || '#00BFFF') + '33';
-        badge.style.color = risk.color || '#00BFFF';
-    }
-    
-    // Hydration from the new hydrations field
-    const hyd = data.hydrations || {};
-    const percent = hyd.percent || 0;
-    document.getElementById('hydration-percent').textContent = percent + '%';
-    document.getElementById('hydration-text').textContent = hyd.message || '0 oz / 80 oz';
-    document.getElementById('hydration-fill').style.transform = `rotate(${percent * 3.6}deg)`;
-    
-    // Message
-    if (hyd.message) {
-        document.getElementById('hydration-message').textContent = hyd.message;
-    }
-    
-    // Recommendations
-    const recs = data.recommendations || [];
-    if (recs && recs.length) {
-        document.getElementById('recommendations').innerHTML = recs.map(r => 
-            `<div style="padding:8px 12px; margin-bottom:6px; background:rgba(255,255,255,0.03); border-radius:10px; border-left:2px solid var(--gold); font-size:13px;">${r}</div>`
-        ).join('');
-    } else {
-        document.getElementById('recommendations').innerHTML = '<div style="color:var(--muted);">No recommendations available</div>';
-    }
-}
+            const current = data.current;
+            const risk = data.risk;
+
+            document.getElementById('current-temp').innerHTML = `${current.temp || 0}° <small>F</small>`;
+            document.getElementById('current-condition').textContent = current.condition || 'Unknown';
+            document.getElementById('current-humidity').textContent = current.humidity || 0;
+            document.getElementById('current-feels').textContent = current.feels_like || 0;
+            document.getElementById('current-wind').textContent = current.wind_speed || 0;
+            document.getElementById('current-uv').textContent = current.uv_index || '--';
+
+            const badge = document.getElementById('risk-badge');
+            if (risk) {
+                badge.textContent = `${risk.emoji || '🟢'} ${(risk.level || 'SAFE').toUpperCase()}`;
+                badge.style.background = (risk.color || '#4f9dad') + '2a';
+                badge.style.color = risk.color || '#4f9dad';
+                // Signature element: tint the horizon glow to match current risk
+                document.getElementById('horizon-glow').style.setProperty('--horizon-color', risk.color || '#c73e2c');
+            }
+
+            const hyd = data.hydrations || {};
+            const percent = hyd.percent || 0;
+            document.getElementById('hydration-percent').textContent = percent + '%';
+            document.getElementById('hydration-text').textContent = hyd.message || '0 oz / 80 oz';
+            document.getElementById('hydration-fill').style.transform = `rotate(${percent * 3.6}deg)`;
+            if (hyd.message) document.getElementById('hydration-message').textContent = hyd.message;
+
+            const recs = data.recommendations || [];
+            const recContainer = document.getElementById('recommendations');
+            recContainer.innerHTML = recs.length
+                ? recs.map(r => `<div class="rec-item">${r}</div>`).join('')
+                : '<div style="color:var(--paper-faint);">No recommendations available</div>';
+        }
 
         // ========== FETCH FORECAST ==========
         async function fetchForecast() {
-            if (!currentLocation) {
-                currentLocation = await getLocation();
-            }
+            if (!currentLocation) currentLocation = await getLocation();
             const { lat, lon } = currentLocation;
-            
             try {
-                const res = await fetch(`${API_BASE}/api/heat/forecast?lat=${lat}&lon=${lon}`, {
-                    credentials: 'include'
-                });
+                const res = await fetch(`${API_BASE}/api/heat/forecast?lat=${lat}&lon=${lon}`, { credentials: 'include' });
                 const data = await res.json();
-                if (data.success) {
-                    updateForecastUI(data);
-                }
-            } catch(e) {
-                console.error('Forecast error:', e);
-            }
+                if (data.success) updateForecastUI(data);
+            } catch(e) { console.error('Forecast error:', e); }
         }
 
         function updateForecastUI(data) {
             const container = document.getElementById('forecast-container');
             if (!data.daily || !data.daily.length) {
-                container.innerHTML = '<div style="color:var(--muted);">No forecast available</div>';
+                container.innerHTML = '<div style="color:var(--paper-faint);">No forecast available</div>';
                 return;
             }
-            
             const riskColors = {
-                'safe': '#4ade80',
-                'caution': '#f59e0b',
-                'warning': '#f97316',
-                'danger': '#ef4444',
-                'extreme': '#7f1d1d'
+                'safe': '#7fc47a', 'caution': '#f2a53c', 'warning': '#f2a53c',
+                'danger': '#ff5c4d', 'extreme': '#c73e2c'
             };
-            
             container.innerHTML = data.daily.map(day => `
                 <div class="forecast-item">
                     <div class="day">${day.day}</div>
                     <div class="icon">☀️</div>
                     <div class="temp-high">${day.max_temp}°</div>
                     <div class="temp-low">${day.min_temp}°</div>
-                    <div class="risk" style="background:${riskColors[day.risk_level] || '#666'}33; color:${riskColors[day.risk_level] || '#666'};">${day.risk_level}</div>
+                    <div class="risk" style="background:${riskColors[day.risk_level] || '#888'}2a; color:${riskColors[day.risk_level] || '#888'};">${day.risk_level}</div>
                 </div>
             `).join('');
         }
 
         // ========== FETCH COOLING CENTERS ==========
         async function fetchCoolingCenters() {
-            if (!currentLocation) {
-                currentLocation = await getLocation();
-            }
+            if (!currentLocation) currentLocation = await getLocation();
             const { lat, lon } = currentLocation;
-            
             try {
-                const res = await fetch(`${API_BASE}/api/heat/cooling-centers?lat=${lat}&lon=${lon}`, {
-                    credentials: 'include'
-                });
+                const res = await fetch(`${API_BASE}/api/heat/cooling-centers?lat=${lat}&lon=${lon}`, { credentials: 'include' });
                 const data = await res.json();
-                if (data.success) {
-                    updateCentersUI(data);
-                }
-            } catch(e) {
-                console.error('Centers error:', e);
-            }
+                if (data.success) updateCentersUI(data);
+            } catch(e) { console.error('Centers error:', e); }
         }
 
         function updateCentersUI(data) {
             const container = document.getElementById('centers-container');
             if (!data.centers || !data.centers.length) {
-                container.innerHTML = '<div style="color:var(--muted);">No cooling centers found nearby.</div>';
+                container.innerHTML = '<div style="color:var(--paper-faint);">No cooling centers found nearby.</div>';
                 return;
             }
-            
             container.innerHTML = data.centers.map(c => `
                 <div class="center-item">
                     <div class="name">🏛️ ${c.name}</div>
                     <div class="address">📍 ${c.address}</div>
-                    ${c.distance_miles ? `<div style="font-size:11px;color:var(--muted);">${c.distance_miles} miles away</div>` : ''}
-                    <div style="font-size:12px;color:var(--gold);">🕐 ${c.hours}</div>
+                    ${c.distance_miles ? `<div style="font-size:11px;color:var(--paper-faint);">${c.distance_miles} miles away</div>` : ''}
+                    <div style="font-size:12px;color:var(--sun-light); margin-top:4px;">🕐 ${c.hours}</div>
                     <div class="services">${c.services.map(s => `<span>${s}</span>`).join('')}</div>
                 </div>
             `).join('');
         }
 
         // ========== HYDRATION ==========
-        // Update trackHydration to handle the response correctly
-async function trackHydration(oz) {
-    try {
-        const res = await fetch(`${API_BASE}/api/heat/hydration`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ amount: oz })
-        });
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById('hydration-message').textContent = data.message || '';
-            document.getElementById('hydration-percent').textContent = data.percent_complete + '%';
-            document.getElementById('hydration-text').textContent = `${data.today_total} oz / ${data.goal} oz`;
-            const pct = Math.min(100, data.percent_complete);
-            document.getElementById('hydration-fill').style.transform = `rotate(${pct * 3.6}deg)`;
-            
-            // Update stats
-            if (data.today_total >= data.goal) {
-                document.getElementById('hydration-message').textContent = `✅ Goal met! ${data.today_total}oz / ${data.goal}oz`;
-            }
+        async function trackHydration(oz) {
+            try {
+                const res = await fetch(`${API_BASE}/api/heat/hydration`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ amount: oz })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('hydration-message').textContent = data.message || '';
+                    document.getElementById('hydration-percent').textContent = data.percent_complete + '%';
+                    document.getElementById('hydration-text').textContent = `${data.today_total} oz / ${data.goal} oz`;
+                    const pct = Math.min(100, data.percent_complete);
+                    document.getElementById('hydration-fill').style.transform = `rotate(${pct * 3.6}deg)`;
+                    if (data.today_total >= data.goal) {
+                        document.getElementById('hydration-message').textContent = `✅ Goal met! ${data.today_total}oz / ${data.goal}oz`;
+                    }
+                }
+            } catch(e) { console.error('Hydration error:', e); }
         }
-    } catch(e) {
-        console.error('Hydration error:', e);
-    }
-}
 
         // ========== ACTIVITY SAFETY ==========
         async function fetchActivitySafety(activity) {
@@ -637,25 +543,17 @@ async function trackHydration(oz) {
                 });
                 const data = await res.json();
                 if (data.success) {
-                    const colors = {
-                        'danger': '#ef4444',
-                        'warning': '#f59e0b',
-                        'safe': '#4ade80'
-                    };
+                    const colors = { 'danger': '#ff5c4d', 'warning': '#f2a53c', 'safe': '#7fc47a' };
                     document.getElementById('activity-advice').innerHTML = `
-                        <div class="status" style="color:${colors[data.status] || '#fff'}">
-                            ${data.status.toUpperCase()}
-                        </div>
+                        <div class="status" style="color:${colors[data.status] || '#fff'}">${data.status.toUpperCase()}</div>
                         <div class="advice-text">${data.advice}</div>
-                        <div style="margin-top:10px; font-size:13px; color:var(--gold);">
+                        <div style="margin-top:12px; font-size:13px; color:var(--sun-light);">
                             💧 Water needed: ${data.water_needed_oz} oz
                             <br>${data.best_time || ''}
                         </div>
                     `;
                 }
-            } catch(e) {
-                console.error('Activity error:', e);
-            }
+            } catch(e) { console.error('Activity error:', e); }
         }
 
         // ========== TAB SWITCHING ==========
@@ -666,8 +564,6 @@ async function trackHydration(oz) {
                 link.classList.add('active');
                 document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
                 document.getElementById(`tab-${link.dataset.tab}`).classList.add('active');
-                
-                // Load data for tab
                 if (link.dataset.tab === 'forecast') fetchForecast();
                 if (link.dataset.tab === 'centers') fetchCoolingCenters();
                 if (link.dataset.tab === 'activity') fetchActivitySafety('hiking');
@@ -687,11 +583,8 @@ async function trackHydration(oz) {
         async function init() {
             const authed = await checkAuth();
             if (!authed) return;
-            
             currentLocation = await getLocation();
             await fetchWeather();
-            
-            // Auto-refresh every 5 minutes
             setInterval(fetchWeather, 300000);
         }
         init();
