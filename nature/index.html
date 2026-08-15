@@ -5,89 +5,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Wizard Nature — Desert survival and wildlife identification app. Cactus tracker, snake ID, sunset forecast, and more.">
     <meta name="author" content="Arnav Gupta">
-    <meta name="theme-color" content="#1a2a1a">
+    <meta name="theme-color" content="#141f16">
     <title>🌵 Wizard Nature — Desert Survival & Wildlife</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
         :root {
-            --desert:        #1a2a1a;
-            --desert-light:  #2a3a2a;
-            --sand:          #d4c4a8;
-            --sand-light:    #e8dcc8;
-            --cactus:        #4a8c5a;
+            /* Wizard Nature keeps its own desert-flora identity (dusk greens, sunset
+               ember, cactus bloom) rather than borrowing Heat/FireWatch's sand palette —
+               but shares the ecosystem's type system, radii, and structural rhythm. */
+            --desert:        #141f16;
+            --desert-mid:    #1a271c;
+            --desert-card:   #202f22;
+            --cactus:        #5ba06c;
+            --cactus-light:  #86c493;
             --cactus-dark:   #2a5a3a;
-            --cactus-glow:   rgba(74,140,90,0.2);
             --sunset:        #e8844a;
-            --sunset-glow:   rgba(232,132,74,0.3);
+            --sunset-light:  #f5ab7a;
+            --bloom:         #d97fa8;
             --gold:          #c9a84c;
             --gold-light:    #e8c97a;
-            --silver:        #d4d0e8;
-            --silver-dim:    rgba(212,208,232,0.55);
-            --muted:         rgba(212,208,232,0.32);
-            --border:        rgba(201,168,76,0.14);
-            --border-strong: rgba(201,168,76,0.4);
-            --danger:        #e05555;
-            --success:       #4ade80;
-            --warning:       #fbbf24;
+            --sand:          #ece3d1;
+            --sand-dim:      rgba(236,227,209,0.62);
+            --sand-faint:    rgba(236,227,209,0.34);
+            --line:          rgba(91,160,108,0.18);
+            --line-strong:   rgba(91,160,108,0.42);
+            --danger:        #e0685a;
+            --success:       #7fc47a;
+            --warning:       #f2b84e;
+            --radius: 20px;
         }
 
         html, body { height: 100%; overflow: hidden; }
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Space Grotesk', sans-serif;
             background: var(--desert);
             color: var(--sand);
         }
+        h1, h2, .logo-name, .feature-title, .panel-title {
+            font-family: 'Fraunces', serif;
+        }
 
         #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.3; }
+
+        /* Signature element: a "desert light" glow that shifts with the actual time
+           of day — dawn peach, midday green, dusk ember, night indigo — echoing the
+           app's own subject (you're out there watching the sky) rather than a risk
+           reading like the sibling apps use. */
+        .day-glow {
+            position: fixed; left: 0; right: 0; bottom: 0; height: 44vh;
+            pointer-events: none; z-index: 0;
+            background: linear-gradient(to top, var(--glow-color, var(--cactus)) 0%, transparent 78%);
+            opacity: 0.2; filter: blur(70px);
+            transition: background 3s ease;
+            animation: shimmer 9s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.18; }
+            50% { transform: translateY(-8px) scaleX(1.03); opacity: 0.26; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .day-glow, .logo-glyph { animation: none !important; }
+        }
+
         .amb {
             position: fixed; border-radius: 50%;
             filter: blur(130px); pointer-events: none; z-index: 0;
-            opacity: 0.2; animation: drift 25s ease-in-out infinite alternate;
+            opacity: 0.18;
         }
-        .amb-1 { width: 600px; height: 600px; top: -200px; left: -200px; background: radial-gradient(circle, #4a8c5a, transparent 70%); }
-        .amb-2 { width: 450px; height: 450px; bottom: -100px; right: -100px; background: radial-gradient(circle, #e8844a, transparent 70%); animation-delay: -10s; }
-        @keyframes drift { from { transform: translate(0,0); } to { transform: translate(35px,25px); } }
+        .amb-1 { width: 600px; height: 600px; top: -200px; left: -200px; background: radial-gradient(circle, var(--cactus), transparent 70%); }
+        .amb-2 { width: 450px; height: 450px; bottom: -100px; right: -100px; background: radial-gradient(circle, var(--sunset), transparent 70%); }
 
         .app-shell { position: relative; z-index: 10; display: flex; height: 100vh; }
 
         /* Sidebar */
         .sidebar {
             width: 280px; flex-shrink: 0;
-            background: rgba(26,42,26,0.95);
-            border-right: 1px solid var(--border);
+            background: rgba(20,31,22,0.95);
+            border-right: 1px solid var(--line);
             display: flex; flex-direction: column;
             backdrop-filter: blur(20px);
             overflow-y: auto;
         }
+        .sidebar::-webkit-scrollbar { width: 3px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--cactus); border-radius: 3px; }
 
-        .sidebar-head { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); }
-        .logo {
-            display: flex; align-items: center; gap: 10px;
-            text-decoration: none; margin-bottom: 16px;
-        }
-        .logo-glyph { font-size: 32px; filter: drop-shadow(0 0 10px rgba(74,140,90,0.4)); animation: lev 5s ease-in-out infinite; }
+        .sidebar-head { padding: 20px 18px 16px; border-bottom: 1px solid var(--line); }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 16px; }
+        .logo-glyph { font-size: 30px; filter: drop-shadow(0 0 12px rgba(91,160,108,0.45)); animation: lev 5s ease-in-out infinite; }
         @keyframes lev { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
         .logo-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 20px; font-weight: 600;
-            background: linear-gradient(135deg, var(--cactus), var(--gold));
+            font-size: 20px; font-weight: 500; font-style: italic;
+            background: linear-gradient(135deg, var(--cactus-light), var(--gold-light));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
         .user-card {
-            background: rgba(74,140,90,0.1);
-            border: 1px solid var(--border);
+            background: rgba(91,160,108,0.08);
+            border: 1px solid var(--line);
             border-radius: 14px;
             padding: 10px 12px;
             margin-bottom: 16px;
         }
-        .user-email { font-size: 11px; color: var(--silver-dim); word-break: break-all; }
+        .user-email { font-size: 11px; color: var(--sand-dim); word-break: break-all; }
 
         .nav-item {
             display: flex; align-items: center; gap: 10px;
@@ -98,161 +123,131 @@
             transition: all 0.2s;
             margin-bottom: 2px;
         }
-        .nav-item:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
-        .nav-item.active {
-            background: rgba(74,140,90,0.15);
-            border-color: var(--cactus);
-        }
+        .nav-item:hover { background: rgba(236,227,209,0.04); border-color: var(--line); }
+        .nav-item.active { background: rgba(91,160,108,0.16); border-color: var(--cactus); }
         .nav-icon { font-size: 18px; width: 28px; }
         .nav-label { font-size: 13px; }
 
         /* Main */
-        .main {
-            flex: 1; display: flex; flex-direction: column;
-            overflow: hidden; min-width: 0;
-        }
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
         .main-header {
             padding: 16px 24px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(26,42,26,0.7);
+            border-bottom: 1px solid var(--line);
+            background: rgba(20,31,22,0.7);
             backdrop-filter: blur(12px);
+            flex-shrink: 0;
         }
-        .main-header h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 26px; font-weight: 600;
-            color: var(--sand);
-        }
-        .main-header p {
-            font-size: 13px; color: var(--muted);
-        }
+        .main-header h1 { font-size: 25px; font-weight: 500; font-style: italic; color: var(--sand); }
+        .main-header p { font-size: 13px; color: var(--sand-faint); margin-top: 2px; }
 
-        .content-area {
-            flex: 1; overflow-y: auto; padding: 24px;
-        }
+        .content-area { flex: 1; overflow-y: auto; padding: 24px; }
+        .content-area::-webkit-scrollbar { width: 4px; }
+        .content-area::-webkit-scrollbar-thumb { background: var(--cactus); border-radius: 4px; }
 
         /* Feature Cards */
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .feature-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
+            background: linear-gradient(145deg, var(--desert-card), var(--desert-mid));
+            border: 1px solid var(--line);
             border-radius: 16px;
             padding: 24px;
             cursor: pointer;
             transition: all 0.3s;
         }
-        .feature-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--cactus);
-            box-shadow: 0 8px 30px rgba(74,140,90,0.15);
-        }
-        .feature-icon { font-size: 40px; margin-bottom: 12px; }
-        .feature-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-        .feature-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+        .feature-card:hover { transform: translateY(-4px); border-color: var(--cactus); box-shadow: 0 8px 30px rgba(91,160,108,0.16); }
+        .feature-icon { font-size: 38px; margin-bottom: 12px; }
+        .feature-title { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
+        .feature-desc { font-size: 13px; color: var(--sand-faint); line-height: 1.5; }
 
         /* Panels */
         .panel {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
+            background: linear-gradient(145deg, var(--desert-card), var(--desert-mid));
+            border: 1px solid var(--line);
             border-radius: 16px;
             padding: 24px;
             margin-bottom: 24px;
         }
-        .panel-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
-        .panel-title em { color: var(--cactus); font-style: italic; }
+        .panel-title { font-size: 18px; font-weight: 500; margin-bottom: 16px; }
+        .panel-title em { color: var(--cactus-light); font-style: italic; }
 
         .upload-area {
-            border: 2px dashed var(--border);
+            border: 2px dashed var(--line);
             border-radius: 16px;
             padding: 40px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
         }
-        .upload-area:hover { border-color: var(--cactus); background: rgba(74,140,90,0.05); }
+        .upload-area:hover { border-color: var(--cactus); background: rgba(91,160,108,0.06); }
+        .upload-area.dragover { border-color: var(--gold); background: rgba(201,168,76,0.06); }
         .upload-area input { display: none; }
 
         .result-box {
             margin-top: 20px;
-            padding: 16px;
-            background: rgba(74,140,90,0.1);
+            padding: 20px;
+            background: rgba(91,160,108,0.1);
             border-radius: 12px;
             display: none;
+            border-left: 4px solid var(--cactus);
         }
-        .result-box.show { display: block; }
-        .result-image { max-width: 100%; max-height: 300px; border-radius: 12px; margin-top: 12px; }
-        .result-text { font-size: 14px; line-height: 1.6; color: var(--sand-light); }
-        .result-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 100px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .badge-danger { background: rgba(224,85,85,0.2); color: var(--danger); }
-        .badge-success { background: rgba(74,140,90,0.2); color: var(--cactus); }
-        .badge-warning { background: rgba(251,191,36,0.2); color: var(--warning); }
+        .result-box.show { display: block; animation: fadeSlide 0.4s ease; }
+        @keyframes fadeSlide { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-        .cactus-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 16px;
-        }
+        .result-image { max-width: 100%; max-height: 300px; border-radius: 12px; margin-top: 12px; }
+        .result-text { font-size: 14px; line-height: 1.8; color: var(--sand); white-space: pre-wrap; }
+        .result-text strong { color: var(--gold-light); }
+        .result-text .danger { color: var(--danger); }
+        .result-text .success { color: var(--success); }
+
+        .result-badge { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; margin-top: 8px; }
+        .badge-danger { background: rgba(224,104,90,0.2); color: var(--danger); }
+        .badge-success { background: rgba(91,160,108,0.2); color: var(--cactus-light); }
+        .badge-warning { background: rgba(242,184,78,0.2); color: var(--warning); }
+        .badge-gold { background: rgba(201,168,76,0.2); color: var(--gold-light); }
+
+        .cactus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
         .cactus-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
+            background: rgba(236,227,209,0.03);
+            border: 1px solid var(--line);
             border-radius: 12px;
             padding: 16px;
             text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
         }
-        .cactus-emoji { font-size: 48px; margin-bottom: 8px; }
+        .cactus-card:hover { transform: translateY(-2px); border-color: var(--cactus); }
+        .cactus-card.spotted { border-color: var(--cactus); background: rgba(91,160,108,0.1); }
+        .cactus-emoji { font-size: 46px; margin-bottom: 8px; }
         .cactus-name { font-size: 14px; font-weight: 500; }
-        .cactus-status {
-            font-size: 11px;
-            color: var(--muted);
-            margin-top: 4px;
-        }
-        .cactus-status.seen { color: var(--cactus); }
+        .cactus-status { font-size: 11px; color: var(--sand-faint); margin-top: 4px; }
+        .cactus-status.seen { color: var(--success); }
+        .cactus-status.unseen { color: var(--sand-faint); }
 
-        .sunset-meter {
-            width: 100%; height: 12px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 100px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-        .sunset-fill {
-            height: 100%;
-            border-radius: 100px;
-            transition: width 0.5s;
-            background: linear-gradient(90deg, #f59e0b, #e8844a, #dc2626);
-        }
+        .sunset-meter { width: 100%; height: 12px; background: rgba(236,227,209,0.06); border-radius: 100px; overflow: hidden; margin-top: 8px; }
+        .sunset-fill { height: 100%; border-radius: 100px; transition: width 1s ease; background: linear-gradient(90deg, var(--gold), var(--sunset), #d94f3a); }
 
-        .camping-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 16px;
-        }
+        .camping-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
         .camping-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
+            background: rgba(236,227,209,0.03);
+            border: 1px solid var(--line);
             border-radius: 12px;
             padding: 16px;
+            transition: all 0.3s;
         }
+        .camping-card:hover { transform: translateY(-2px); border-color: var(--gold); }
         .camping-name { font-size: 15px; font-weight: 600; }
-        .camping-location { font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .camping-location { font-size: 12px; color: var(--sand-faint); margin-top: 4px; }
+        .camping-features { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
+        .camping-feature { background: rgba(201,168,76,0.1); border: 1px solid var(--line); border-radius: 100px; padding: 2px 8px; font-size: 10px; color: var(--sand-faint); }
 
         .loading-spinner {
-            display: inline-block;
-            width: 24px; height: 24px;
-            border: 2px solid rgba(74,140,90,0.2);
+            display: inline-block; width: 24px; height: 24px;
+            border: 2px solid rgba(91,160,108,0.2);
             border-top-color: var(--cactus);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+            vertical-align: middle; margin-right: 10px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -260,34 +255,47 @@
             position: fixed; bottom: 30px; left: 50%;
             transform: translateX(-50%) translateY(100px);
             background: linear-gradient(135deg, var(--cactus), var(--cactus-dark));
-            color: var(--sand);
+            color: var(--desert);
             padding: 10px 24px;
             border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 13px; font-weight: 600;
             z-index: 10000;
-            transition: transform 0.3s;
+            transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
-        .toast.error { background: linear-gradient(135deg, var(--danger), #b44); }
+        .toast.error { background: linear-gradient(135deg, var(--danger), #a3392c); color: var(--sand); }
 
+        button:focus-visible, .upload-area:focus-visible, .nav-item:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+
+        /* Mobile */
         @media (max-width: 700px) {
-            .sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.3s; }
+            .sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.3s ease; }
             .sidebar.open { transform: translateX(0); }
             .feature-grid { grid-template-columns: 1fr; }
+            .cactus-grid { grid-template-columns: repeat(2, 1fr); }
+            .camping-grid { grid-template-columns: 1fr; }
+            .main-header h1 { font-size: 20px; }
+            .content-area { padding: 16px; }
+        }
+
+        @media (max-width: 480px) {
+            .cactus-grid { grid-template-columns: repeat(2, 1fr); }
+            .sidebar { width: 100%; }
         }
     </style>
 </head>
 <body>
     <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="day-glow" id="day-glow" aria-hidden="true"></div>
     <div class="amb amb-1" aria-hidden="true"></div>
     <div class="amb amb-2" aria-hidden="true"></div>
 
     <div class="app-shell">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-head">
-                <a class="logo" href="https://wizardecosystem.dev">
+                <a class="logo" href="https://wizardecosystem.dpdns.org">
                     <span class="logo-glyph">🌵</span>
                     <span class="logo-name">Wizard Nature</span>
                 </a>
@@ -296,7 +304,7 @@
                 </div>
             </div>
 
-            <nav style="padding: 0 12px;">
+            <nav style="padding: 0 12px; flex: 1;">
                 <div class="nav-item active" data-view="home">
                     <span class="nav-icon">🏠</span>
                     <span class="nav-label">Dashboard</span>
@@ -317,6 +325,10 @@
                     <span class="nav-icon">🦎</span>
                     <span class="nav-label">Critter ID</span>
                 </div>
+                <div class="nav-item" data-view="plant">
+                    <span class="nav-icon">🌿</span>
+                    <span class="nav-label">Plant ID</span>
+                </div>
                 <div class="nav-item" data-view="wildflower">
                     <span class="nav-icon">🌸</span>
                     <span class="nav-label">Wildflower Alert</span>
@@ -326,6 +338,12 @@
                     <span class="nav-label">Camping Guide</span>
                 </div>
             </nav>
+
+            <div style="padding: 16px; border-top: 1px solid var(--line);">
+                <div style="font-size: 11px; color: var(--sand-faint); text-align: center;">
+                    🌵 Sonoran Desert · Arizona
+                </div>
+            </div>
         </aside>
 
         <!-- Main -->
@@ -336,7 +354,7 @@
             </div>
 
             <div class="content-area" id="content-area">
-                <!-- Content rendered by JS -->
+                <!-- Rendered by JS -->
             </div>
         </main>
     </div>
@@ -347,6 +365,7 @@
         const API = 'https://arnav0928.pythonanywhere.com';
         let currentUser = null;
         let currentView = 'home';
+        let isProcessing = false;
 
         function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
@@ -355,8 +374,34 @@
             t.textContent = msg;
             t.className = `toast ${isError ? 'error' : ''}`;
             t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
+            clearTimeout(t._timeout);
+            t._timeout = setTimeout(() => t.classList.remove('show'), 3500);
         }
+
+        function showLoading(container, msg = 'Loading...') {
+            container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--sand-faint);"><div class="loading-spinner"></div>${esc(msg)}</div>`;
+        }
+
+        function markdownToHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // Signature element: tint the ambient glow to the actual local time of day
+        function applyDayGlow() {
+            const hour = new Date().getHours();
+            let color;
+            if (hour >= 5 && hour < 8) color = '#f5ab7a';       // dawn
+            else if (hour >= 8 && hour < 17) color = '#5ba06c'; // midday, cactus green
+            else if (hour >= 17 && hour < 20) color = '#e8844a'; // dusk
+            else color = '#3a2f6e';                              // night, indigo
+            document.getElementById('day-glow').style.setProperty('--glow-color', color);
+        }
+        applyDayGlow();
+        setInterval(applyDayGlow, 600000);
 
         async function checkAuth() {
             try {
@@ -370,27 +415,17 @@
                     }
                 }
             } catch(e) {}
-            window.location.href = 'https://wizardecosystem.dev';
+            window.location.href = 'https://wizardecosystem.dpdns.org';
         }
 
         // Cactus data
         const cactusData = [
-            { name: 'Saguaro', emoji: '🌵', status: 'Common', seen: true },
-            { name: 'Barrel Cactus', emoji: '🟢', status: 'Common', seen: true },
-            { name: 'Prickly Pear', emoji: '🟣', status: 'Common', seen: true },
-            { name: 'Cholla', emoji: '🌵', status: 'Common', seen: true },
-            { name: 'Organ Pipe', emoji: '🎵', status: 'Rare', seen: false },
-            { name: 'Senita', emoji: '🕯️', status: 'Rare', seen: false },
-        ];
-
-        // Camping data
-        const campingData = [
-            { name: 'Sedona', location: 'Coconino National Forest', rating: 5 },
-            { name: 'Grand Canyon', location: 'South Rim', rating: 5 },
-            { name: 'Mogollon Rim', location: 'Coconino County', rating: 4 },
-            { name: 'Lost Dutchman', location: 'Superstition Mountains', rating: 4 },
-            { name: 'Lake Powell', location: 'Glen Canyon', rating: 4 },
-            { name: 'Organ Pipe Cactus', location: 'Pima County', rating: 3 },
+            { id: 'saguaro', name: 'Saguaro', emoji: '🌵', status: 'Common' },
+            { id: 'barrel', name: 'Barrel Cactus', emoji: '🟢', status: 'Common' },
+            { id: 'prickly_pear', name: 'Prickly Pear', emoji: '🟣', status: 'Common' },
+            { id: 'cholla', name: 'Cholla', emoji: '🌵', status: 'Common' },
+            { id: 'organ_pipe', name: 'Organ Pipe', emoji: '🎵', status: 'Rare' },
+            { id: 'senita', name: 'Senita', emoji: '🕯️', status: 'Rare' },
         ];
 
         // Views
@@ -405,7 +440,7 @@
                     <div class="feature-card" onclick="switchView('snake')">
                         <div class="feature-icon">🐍</div>
                         <div class="feature-title">Snake ID</div>
-                        <div class="feature-desc">Upload a photo — AI identifies rattlesnake vs gopher snake</div>
+                        <div class="feature-desc">Upload a photo — AI identifies rattlesnake vs harmless</div>
                     </div>
                     <div class="feature-card" onclick="switchView('sunset')">
                         <div class="feature-icon">🌅</div>
@@ -416,6 +451,11 @@
                         <div class="feature-icon">🦎</div>
                         <div class="feature-title">Critter ID</div>
                         <div class="feature-desc">Identify lizards, birds, and desert wildlife</div>
+                    </div>
+                    <div class="feature-card" onclick="switchView('plant')">
+                        <div class="feature-icon">🌿</div>
+                        <div class="feature-title">Plant ID</div>
+                        <div class="feature-desc">Identify cacti, wildflowers, and desert plants</div>
                     </div>
                     <div class="feature-card" onclick="switchView('wildflower')">
                         <div class="feature-icon">🌸</div>
@@ -431,101 +471,109 @@
             `,
 
             cactus: () => `
-                <h2 style="font-family:'Cormorant Garamond',serif; font-size:22px; margin-bottom:16px;">🌵 Cactus Tracker</h2>
-                <p style="color:var(--muted); margin-bottom:20px;">Track the cacti you've spotted in the Sonoran Desert</p>
-                <div class="cactus-grid">
+                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🌵 Cactus Tracker</h2>
+                <p style="color:var(--sand-faint); margin-bottom:20px;">Track the cacti you've spotted in the Sonoran Desert</p>
+                <div class="cactus-grid" id="cactus-grid">
                     ${cactusData.map(c => `
-                        <div class="cactus-card">
+                        <div class="cactus-card" data-cactus="${c.id}" onclick="toggleCactus('${c.id}')">
                             <div class="cactus-emoji">${c.emoji}</div>
                             <div class="cactus-name">${esc(c.name)}</div>
-                            <div class="cactus-status ${c.seen ? 'seen' : ''}">${c.seen ? '✅ Spotted!' : '🔍 Not yet'}</div>
+                            <div class="cactus-status unseen" id="cactus-status-${c.id}">🔍 Not yet</div>
                         </div>
                     `).join('')}
                 </div>
-                <button onclick="toast('🌵 Cactus tracker updated!')" style="margin-top:20px; background:var(--cactus); border:none; border-radius:100px; padding:10px 20px; color:white; cursor:pointer;">Mark All Spotted</button>
+                <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
+                    <button onclick="markAllCactusSpotted()" style="background:var(--cactus); border:none; border-radius:100px; padding:10px 20px; color:var(--desert); font-weight:600; cursor:pointer; font-family:inherit;">✅ Mark All Spotted</button>
+                    <button onclick="resetCactus()" style="background:rgba(236,227,209,0.05); border:1px solid var(--line); border-radius:100px; padding:10px 20px; color:var(--sand-dim); cursor:pointer; font-family:inherit;">🔄 Reset</button>
+                </div>
             `,
 
             snake: () => `
-                <h2 style="font-family:'Cormorant Garamond',serif; font-size:22px; margin-bottom:16px;">🐍 Snake ID</h2>
-                <p style="color:var(--muted); margin-bottom:20px;">Upload a photo and AI will identify if it's a rattlesnake or harmless gopher snake</p>
+                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🐍 Snake ID</h2>
+                <p style="color:var(--sand-faint); margin-bottom:20px;">Upload a photo — AI will identify if it's a rattlesnake or harmless</p>
                 <div class="upload-area" id="snake-upload">
                     <div style="font-size:48px; margin-bottom:12px;">📸</div>
-                    <div>Tap to upload a snake photo</div>
-                    <div style="font-size:12px; color:var(--muted); margin-top:8px;">PNG, JPG, WebP</div>
+                    <div>Tap or drag to upload a snake photo</div>
+                    <div style="font-size:12px; color:var(--sand-faint); margin-top:8px;">PNG, JPG, WebP</div>
                     <input type="file" id="snake-file" accept="image/*">
                 </div>
                 <div class="result-box" id="snake-result">
-                    <div class="result-text" id="snake-text">Analyzing...</div>
+                    <div class="result-text" id="snake-text"></div>
                     <img class="result-image" id="snake-image" style="display:none;">
                 </div>
             `,
 
             sunset: () => `
-                <h2 style="font-family:'Cormorant Garamond',serif; font-size:22px; margin-bottom:16px;">🌅 Sunset Forecast</h2>
-                <p style="color:var(--muted); margin-bottom:20px;">Arizona has the best sunsets — here's how good tonight's will be</p>
-                <div class="panel">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🌅 Sunset Forecast</h2>
+                <p style="color:var(--sand-faint); margin-bottom:20px;">Arizona has the best sunsets — here's how good tonight's will be</p>
+                <div class="panel" id="sunset-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
                         <span style="font-size:18px;">Tonight's Sunset</span>
-                        <span style="font-size:24px; font-weight:600; color:var(--sunset);">8.5/10</span>
+                        <span style="font-size:32px; font-weight:700; color:var(--sunset-light);" id="sunset-rating">--</span>
                     </div>
-                    <div class="sunset-meter"><div class="sunset-fill" style="width:85%;"></div></div>
-                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:var(--muted);">
-                        <span>Cloud cover: 20%</span>
-                        <span>Humidity: 15%</span>
-                        <span>Air quality: Good</span>
+                    <div class="sunset-meter"><div class="sunset-fill" id="sunset-fill" style="width:0%;"></div></div>
+                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:var(--sand-faint);">
+                        <span>☁️ Cloud cover: <span id="sunset-cloud">--</span>%</span>
+                        <span>💧 Humidity: <span id="sunset-humidity">--</span>%</span>
+                        <span>🌬️ Air quality: <span id="sunset-air">--</span></span>
                     </div>
-                    <div style="margin-top:16px; padding:12px; background:rgba(232,132,74,0.1); border-radius:12px; border-left:3px solid var(--sunset);">
-                        <strong>✨ Pro tip:</strong> Head to Papago Park or Camelback Mountain for the best view tonight!
+                    <div id="sunset-recommendation" style="margin-top:16px; padding:12px; background:rgba(232,132,74,0.1); border-radius:12px; border-left:3px solid var(--sunset);">
+                        Loading forecast...
                     </div>
                 </div>
             `,
 
             critter: () => `
-                <h2 style="font-family:'Cormorant Garamond',serif; font-size:22px; margin-bottom:16px;">🦎 Critter ID</h2>
-                <p style="color:var(--muted); margin-bottom:20px;">Identify lizards, birds, and other desert wildlife</p>
+                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🦎 Critter ID</h2>
+                <p style="color:var(--sand-faint); margin-bottom:20px;">Identify lizards, birds, and other desert wildlife</p>
                 <div class="upload-area" id="critter-upload">
                     <div style="font-size:48px; margin-bottom:12px;">📸</div>
-                    <div>Tap to upload a critter photo</div>
+                    <div>Tap or drag to upload a critter photo</div>
                     <input type="file" id="critter-file" accept="image/*">
                 </div>
                 <div class="result-box" id="critter-result">
-                    <div class="result-text" id="critter-text">Analyzing...</div>
+                    <div class="result-text" id="critter-text"></div>
                     <img class="result-image" id="critter-image" style="display:none;">
                 </div>
             `,
 
+            plant: () => `
+                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🌿 Plant ID</h2>
+                <p style="color:var(--sand-faint); margin-bottom:20px;">Identify cacti, wildflowers, and desert plants</p>
+                <div class="upload-area" id="plant-upload">
+                    <div style="font-size:48px; margin-bottom:12px;">📸</div>
+                    <div>Tap or drag to upload a plant photo</div>
+                    <input type="file" id="plant-file" accept="image/*">
+                </div>
+                <div class="result-box" id="plant-result">
+                    <div class="result-text" id="plant-text"></div>
+                    <img class="result-image" id="plant-image" style="display:none;">
+                </div>
+            `,
+
             wildflower: () => `
-                <h2 style="font-family:'Cormorant Garamond',serif; font-size:22px; margin-bottom:16px;">🌸 Wildflower Alert</h2>
-                <p style="color:var(--muted); margin-bottom:20px;">Bloom notifications after winter rains</p>
-                <div class="panel">
+                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🌸 Wildflower Alert</h2>
+                <p style="color:var(--sand-faint); margin-bottom:20px;">Bloom notifications after winter rains</p>
+                <div class="panel" id="wildflower-panel">
                     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-                        <span style="font-size:40px;">🌸</span>
+                        <span style="font-size:40px;" id="wildflower-icon">🌸</span>
                         <div>
-                            <div style="font-weight:600;">Current Status</div>
-                            <div style="color:var(--warning);">🌧️ Recent rains — blooms expected in 2-3 weeks!</div>
+                            <div style="font-weight:600;" id="wildflower-status">Loading...</div>
+                            <div style="color:var(--sand-faint); font-size:13px;" id="wildflower-detail"></div>
                         </div>
                     </div>
-                    <div style="margin-top:16px; padding:12px; background:rgba(251,191,36,0.1); border-radius:12px;">
-                        <strong>🌾 Best spots:</strong> Picacho Peak, Lost Dutchman State Park, Superstition Mountains
+                    <div style="margin-top:16px; padding:12px; background:rgba(242,184,78,0.1); border-radius:12px;" id="wildflower-spots">
+                        Loading best spots...
                     </div>
-                    <button onclick="toast('🔔 You\'ll be notified when wildflowers bloom!')" style="margin-top:12px; background:var(--cactus); border:none; border-radius:100px; padding:8px 16px; color:white; cursor:pointer;">🔔 Set Bloom Alert</button>
+                    <button onclick="setBloomAlert()" style="margin-top:12px; background:var(--cactus); border:none; border-radius:100px; padding:8px 16px; color:var(--desert); font-weight:600; cursor:pointer; font-family:inherit;">🔔 Set Bloom Alert</button>
                 </div>
             `,
 
             camping: () => `
-                <h2 style="font-family:'Cormorant Garamond',serif; font-size:22px; margin-bottom:16px;">🏕️ Camping Guide</h2>
-                <p style="color:var(--muted); margin-bottom:20px;">Best campsites in Arizona</p>
-                <div class="camping-grid">
-                    ${campingData.map(c => `
-                        <div class="camping-card">
-                            <div class="camping-name">${esc(c.name)}</div>
-                            <div class="camping-location">📍 ${esc(c.location)}</div>
-                            <div style="color:var(--gold); font-size:12px; margin-top:6px;">${'⭐'.repeat(c.rating)}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                <div style="margin-top:16px; padding:12px; background:rgba(74,140,90,0.1); border-radius:12px;">
-                    <strong>🔥 Pro tip:</strong> Reserve campsites 4-6 months in advance for Grand Canyon and Sedona!
+                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🏕️ Camping Guide</h2>
+                <p style="color:var(--sand-faint); margin-bottom:20px;">Best campsites in Arizona</p>
+                <div id="camping-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px;">
+                    <div style="text-align:center; padding:40px; color:var(--sand-faint);"><div class="loading-spinner"></div> Loading campsites...</div>
                 </div>
             `
         };
@@ -536,6 +584,10 @@
                 el.classList.toggle('active', el.dataset.view === view);
             });
             renderContent();
+            if (view === 'sunset') loadSunsetForecast();
+            if (view === 'wildflower') loadWildflowerAlert();
+            if (view === 'camping') loadCampingGuide();
+            if (view === 'cactus') loadCactusTracker();
         }
 
         function renderContent() {
@@ -546,6 +598,7 @@
                 snake: ['🐍 Snake ID', 'Upload a photo for AI identification'],
                 sunset: ['🌅 Sunset Forecast', 'Arizona has the best sunsets'],
                 critter: ['🦎 Critter ID', 'Identify lizards, birds, and wildlife'],
+                plant: ['🌿 Plant ID', 'Identify cacti, wildflowers, and plants'],
                 wildflower: ['🌸 Wildflower Alert', 'Bloom notifications after winter rains'],
                 camping: ['🏕️ Camping Guide', 'Best campsites in Arizona']
             };
@@ -556,83 +609,267 @@
             setupUploadHandlers();
         }
 
-        function setupUploadHandlers() {
-            // Snake upload
-            const snakeFile = document.getElementById('snake-file');
-            if (snakeFile) {
-                snakeFile.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const resultDiv = document.getElementById('snake-result');
-                    resultDiv.classList.add('show');
-                    document.getElementById('snake-text').innerHTML = '<div class="loading-spinner"></div> Analyzing...';
-                    const img = document.getElementById('snake-image');
-                    img.style.display = 'block';
-                    img.src = URL.createObjectURL(file);
-                    try {
-                        const formData = new FormData();
-                        formData.append('image', file);
-                        const res = await fetch(`${API}/api/nature/snake-id`, {
-                            method: 'POST',
-                            credentials: 'include',
-                            body: formData
-                        });
-                        const data = await res.json();
-                        document.getElementById('snake-text').innerHTML = data.result || 'Could not identify. Please try again.';
-                    } catch(e) {
-                        document.getElementById('snake-text').innerHTML = 'Error analyzing image';
-                    }
-                };
-            }
+        // ========== CACTUS TRACKER ==========
+        let cactusSpotted = {};
 
-            // Critter upload
-            const critterFile = document.getElementById('critter-file');
-            if (critterFile) {
-                critterFile.onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const resultDiv = document.getElementById('critter-result');
-                    resultDiv.classList.add('show');
-                    document.getElementById('critter-text').innerHTML = '<div class="loading-spinner"></div> Analyzing...';
-                    const img = document.getElementById('critter-image');
-                    img.style.display = 'block';
-                    img.src = URL.createObjectURL(file);
-                    try {
-                        const formData = new FormData();
-                        formData.append('image', file);
-                        const res = await fetch(`${API}/api/nature/critter-id`, {
-                            method: 'POST',
-                            credentials: 'include',
-                            body: formData
+        async function loadCactusTracker() {
+            try {
+                const res = await fetch(`${API}/api/nature/cactus-tracker`, { credentials: 'include' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.cactus) {
+                        Object.keys(data.cactus).forEach(key => {
+                            cactusSpotted[key] = data.cactus[key].spotted;
+                            const el = document.getElementById(`cactus-status-${key}`);
+                            const card = document.querySelector(`.cactus-card[data-cactus="${key}"]`);
+                            if (el) {
+                                if (cactusSpotted[key]) {
+                                    el.textContent = '✅ Spotted!';
+                                    el.className = 'cactus-status seen';
+                                    if (card) card.classList.add('spotted');
+                                } else {
+                                    el.textContent = '🔍 Not yet';
+                                    el.className = 'cactus-status unseen';
+                                    if (card) card.classList.remove('spotted');
+                                }
+                            }
                         });
-                        const data = await res.json();
-                        document.getElementById('critter-text').innerHTML = data.result || 'Could not identify. Try again!';
-                    } catch(e) {
-                        document.getElementById('critter-text').innerHTML = 'Error analyzing image';
                     }
-                };
+                }
+            } catch(e) { console.error('Load cactus error:', e); }
+        }
+
+        async function toggleCactus(id) {
+            const newState = !cactusSpotted[id];
+            cactusSpotted[id] = newState;
+            try {
+                await fetch(`${API}/api/nature/cactus-tracker`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ cactus_type: id, spotted: newState })
+                });
+                const el = document.getElementById(`cactus-status-${id}`);
+                const card = document.querySelector(`.cactus-card[data-cactus="${id}"]`);
+                if (el) {
+                    if (newState) {
+                        el.textContent = '✅ Spotted!';
+                        el.className = 'cactus-status seen';
+                        if (card) card.classList.add('spotted');
+                        toast(`🌵 ${cactusData.find(c => c.id === id)?.name} marked as spotted!`);
+                    } else {
+                        el.textContent = '🔍 Not yet';
+                        el.className = 'cactus-status unseen';
+                        if (card) card.classList.remove('spotted');
+                    }
+                }
+            } catch(e) { toast('Failed to update', true); }
+        }
+
+        async function markAllCactusSpotted() {
+            for (const c of cactusData) {
+                if (!cactusSpotted[c.id]) {
+                    await toggleCactus(c.id);
+                }
+            }
+            toast('🌵 All cacti marked as spotted!');
+        }
+
+        async function resetCactus() {
+            for (const c of cactusData) {
+                if (cactusSpotted[c.id]) {
+                    await toggleCactus(c.id);
+                }
+            }
+            toast('🔄 Cactus tracker reset');
+        }
+
+        // ========== IMAGE UPLOAD HANDLERS ==========
+        function setupUploadHandlers() {
+            setupUpload('snake', '/api/nature/snake-id', 'snake-text', 'snake-image');
+            setupUpload('critter', '/api/nature/critter-id', 'critter-text', 'critter-image');
+            setupUpload('plant', '/api/nature/plant-id', 'plant-text', 'plant-image');
+        }
+
+        function setupUpload(prefix, endpoint, textId, imageId) {
+            const fileInput = document.getElementById(`${prefix}-file`);
+            const uploadArea = document.getElementById(`${prefix}-upload`);
+            const resultDiv = document.getElementById(`${prefix}-result`);
+            const textEl = document.getElementById(textId);
+            const imageEl = document.getElementById(imageId);
+
+            if (!fileInput || !uploadArea) return;
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            fileInput.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                resultDiv.classList.add('show');
+                textEl.innerHTML = `<div class="loading-spinner"></div> Analyzing with Qwen Vision AI...`;
+                if (imageEl) {
+                    imageEl.style.display = 'block';
+                    imageEl.src = URL.createObjectURL(file);
+                }
+
+                try {
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    const res = await fetch(`${API}${endpoint}`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        textEl.innerHTML = markdownToHtml(data.result);
+                        toast(`✅ ${prefix.charAt(0).toUpperCase() + prefix.slice(1)} identified!`);
+                    } else {
+                        textEl.innerHTML = `❌ Error: ${data.error || 'Could not identify. Please try again.'}`;
+                        toast('Identification failed', true);
+                    }
+                } catch(err) {
+                    textEl.innerHTML = '❌ Error analyzing image. Please try again.';
+                    toast('Error analyzing image', true);
+                }
+            };
+        }
+
+        // ========== SUNSET FORECAST ==========
+        async function loadSunsetForecast() {
+            const ratingEl = document.getElementById('sunset-rating');
+            const fillEl = document.getElementById('sunset-fill');
+            const cloudEl = document.getElementById('sunset-cloud');
+            const humidityEl = document.getElementById('sunset-humidity');
+            const airEl = document.getElementById('sunset-air');
+            const recEl = document.getElementById('sunset-recommendation');
+
+            if (!ratingEl) return;
+
+            try {
+                const res = await fetch(`${API}/api/nature/sunset-forecast`, { credentials: 'include' });
+                const data = await res.json();
+                if (data.success) {
+                    ratingEl.textContent = `${data.rating}/10`;
+                    fillEl.style.width = `${(data.rating / 10) * 100}%`;
+                    cloudEl.textContent = data.cloud_cover || '--';
+                    humidityEl.textContent = data.humidity || '--';
+                    airEl.textContent = data.air_quality || 'Good';
+                    recEl.textContent = data.recommendation || '🌵 Enjoy the Arizona sunset!';
+                } else {
+                    recEl.textContent = '🌵 Unable to load forecast. Check back later!';
+                }
+            } catch(e) {
+                recEl.textContent = '🌵 Error loading forecast. Please try again.';
             }
         }
 
-        // Navigation
+        // ========== WILDFLOWER ALERT ==========
+        async function loadWildflowerAlert() {
+            const statusEl = document.getElementById('wildflower-status');
+            const detailEl = document.getElementById('wildflower-detail');
+            const spotsEl = document.getElementById('wildflower-spots');
+            const iconEl = document.getElementById('wildflower-icon');
+
+            if (!statusEl) return;
+
+            try {
+                const res = await fetch(`${API}/api/nature/wildflower-alert`, { credentials: 'include' });
+                const data = await res.json();
+                if (data.success) {
+                    statusEl.textContent = data.bloom_status || 'Unknown';
+                    detailEl.textContent = data.status || '';
+                    spotsEl.innerHTML = `<strong>🌾 Best spots:</strong> ${(data.best_spots || []).join(', ')}`;
+                    if (data.is_bloom_season) {
+                        iconEl.textContent = '🌸';
+                        statusEl.style.color = 'var(--success)';
+                    } else {
+                        iconEl.textContent = '🌵';
+                        statusEl.style.color = 'var(--sand-faint)';
+                    }
+                }
+            } catch(e) { console.error('Wildflower error:', e); }
+        }
+
+        function setBloomAlert() {
+            toast('🔔 You\'ll be notified when wildflowers bloom!');
+        }
+
+        // ========== CAMPING GUIDE ==========
+        async function loadCampingGuide() {
+            const container = document.getElementById('camping-grid');
+            if (!container) return;
+
+            try {
+                const res = await fetch(`${API}/api/nature/camping-guide`, { credentials: 'include' });
+                const data = await res.json();
+                if (data.success && data.campsites) {
+                    container.innerHTML = data.campsites.map(c => `
+                        <div class="camping-card">
+                            <div class="camping-name">${esc(c.name)}</div>
+                            <div class="camping-location">📍 ${esc(c.location)}</div>
+                            <div style="color:var(--gold-light); font-size:12px; margin-top:6px;">${'⭐'.repeat(c.rating)}</div>
+                            <div class="camping-features">${(c.features || []).map(f => `<span class="camping-feature">${esc(f)}</span>`).join('')}</div>
+                            <div style="font-size:10px; color:var(--sand-faint); margin-top:8px;">📅 ${esc(c.season)} · Reserve ${esc(c.reserve)}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--sand-faint);">No campsites found</div>';
+                }
+            } catch(e) {
+                container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--sand-faint);">Error loading campsites</div>';
+            }
+        }
+
+        // ========== NAVIGATION ==========
         document.querySelectorAll('.nav-item').forEach(el => {
             el.addEventListener('click', () => switchView(el.dataset.view));
         });
 
-        // Mobile hamburger
+        // ========== MOBILE SIDEBAR ==========
         const hamburger = document.createElement('button');
         hamburger.innerHTML = '☰';
-        hamburger.style.cssText = 'position:fixed; top:15px; left:15px; z-index:1000; background:linear-gradient(135deg,var(--cactus),var(--cactus-dark)); border:none; border-radius:50%; width:40px; height:40px; font-size:20px; color:white; cursor:pointer; display:none;';
+        hamburger.style.cssText = 'position:fixed; top:15px; left:15px; z-index:1000; background:linear-gradient(135deg,var(--cactus),var(--cactus-dark)); border:none; border-radius:50%; width:40px; height:40px; font-size:20px; color:var(--desert); cursor:pointer; display:none;';
         document.body.appendChild(hamburger);
-        hamburger.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
+        hamburger.addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
 
         if (window.innerWidth <= 700) {
             hamburger.style.display = 'block';
-            document.querySelector('.sidebar').classList.add('open');
+            document.getElementById('sidebar').classList.add('open');
         }
 
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 700) {
+                hamburger.style.display = 'block';
+            } else {
+                hamburger.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        });
+
+        // ========== INIT ==========
         checkAuth();
         renderContent();
+
+        // Auto-refresh sunset forecast every 5 minutes
+        setInterval(() => {
+            if (currentView === 'sunset') loadSunsetForecast();
+        }, 300000);
     </script>
 </body>
 </html>
