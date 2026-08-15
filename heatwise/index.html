@@ -4,18 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌡️ Heat-Wise Routes — Coolest Path in Arizona</title>
+    <meta name="description" content="Find the coolest walking path in Arizona using real-time weather, sun position, and shade data">
+    <meta name="author" content="Arnav Gupta">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
             --ink: #080612;
             --ink-2: #0e0b1e;
             --gold: #c9a84c;
             --gold-light: #e8c97a;
+            --gold-glow: rgba(201,168,76,0.2);
             --silver: #d4d0e8;
             --silver-dim: rgba(212,208,232,0.55);
             --muted: rgba(212,208,232,0.32);
@@ -39,6 +44,7 @@
             overflow-x: hidden;
         }
 
+        /* Ambient Background */
         .ambient {
             position: fixed;
             border-radius: 50%;
@@ -62,7 +68,7 @@
             flex-direction: column;
         }
 
-        /* Header */
+        /* ===== HEADER ===== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -102,9 +108,21 @@
             border-radius: 100px;
             padding: 4px 14px;
             font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
+        .temp-badge .loading-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-dot { 0%,100% { opacity: 0.3; } 50% { opacity: 1; } }
 
-        /* Main Grid */
+        /* ===== MAIN GRID ===== */
         .main-grid {
             display: grid;
             grid-template-columns: 380px 1fr;
@@ -113,7 +131,7 @@
             min-height: 500px;
         }
 
-        /* Panel */
+        /* ===== PANEL ===== */
         .panel {
             background: rgba(13,10,26,0.85);
             backdrop-filter: blur(20px);
@@ -136,7 +154,7 @@
             margin-bottom: 18px;
         }
 
-        /* Inputs */
+        /* ===== INPUTS ===== */
         .address-input {
             width: 100%;
             background: rgba(0,0,0,0.3);
@@ -163,12 +181,40 @@
             cursor: pointer;
             transition: all 0.2s;
             margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
         .btn-primary:hover { opacity: 0.88; box-shadow: 0 4px 20px rgba(201,168,76,0.3); }
         .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
-        /* Results */
-        #results { flex: 1; overflow-y: auto; margin-top: 16px; padding-right: 4px; }
+        .btn-secondary {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px;
+            font-size: 13px;
+            color: var(--muted);
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.08); color: var(--silver); }
+
+        /* ===== RESULTS ===== */
+        #results { 
+            flex: 1; 
+            overflow-y: auto; 
+            margin-top: 16px; 
+            padding-right: 4px;
+            scroll-behavior: smooth;
+        }
         #results::-webkit-scrollbar { width: 3px; }
         #results::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
 
@@ -178,6 +224,11 @@
             padding: 16px;
             margin-top: 12px;
             border: 1px solid var(--border);
+            animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .result-card .label {
             font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
@@ -187,6 +238,7 @@
         .result-card .value { font-size: 28px; font-weight: 600; margin: 4px 0; }
         .result-card .sub { font-size: 13px; color: var(--silver-dim); }
 
+        /* Heat Score */
         .heat-score {
             display: flex;
             align-items: center;
@@ -199,6 +251,7 @@
             font-size: 24px; font-weight: 700;
             border: 3px solid;
             flex-shrink: 0;
+            background: rgba(0,0,0,0.2);
         }
         .heat-extreme .score-circle { border-color: var(--heat-extreme); color: var(--heat-extreme); }
         .heat-high .score-circle { border-color: var(--heat-high); color: var(--heat-high); }
@@ -217,20 +270,26 @@
         .risk-moderate { background: rgba(234,179,8,0.15); color: var(--heat-moderate); border: 1px solid rgba(234,179,8,0.3); }
         .risk-low { background: rgba(34,197,94,0.15); color: var(--heat-low); border: 1px solid rgba(34,197,94,0.3); }
 
+        /* Route Stats */
         .route-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             margin-top: 4px;
         }
-        .route-stat { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px; text-align: center; }
+        .route-stat {
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
         .route-stat .num { font-size: 18px; font-weight: 600; color: var(--gold-light); }
         .route-stat .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
-        /* Forecast */
+        /* ===== FORECAST ===== */
         .forecast-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(65px, 1fr));
             gap: 6px;
             margin-top: 8px;
         }
@@ -243,9 +302,9 @@
         }
         .forecast-item .time { font-size: 9px; color: var(--muted); }
         .forecast-item .temp { font-size: 15px; font-weight: 600; }
-        .forecast-item .icon { font-size: 18px; }
+        .forecast-item .icon { font-size: 18px; margin-top: 2px; }
 
-        /* Steps */
+        /* ===== STEPS ===== */
         .steps-list {
             max-height: 150px;
             overflow-y: auto;
@@ -256,10 +315,13 @@
             border-bottom: 1px solid rgba(255,255,255,0.04);
             font-size: 12px;
             color: var(--silver-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .steps-list .step .dist { color: var(--muted); font-size: 10px; }
 
-        /* Map */
+        /* ===== MAP ===== */
         #map {
             flex: 1;
             min-height: 400px;
@@ -268,6 +330,7 @@
             background: var(--ink-2);
         }
 
+        /* ===== LOADING ===== */
         .loading-spinner {
             display: inline-block;
             width: 20px; height: 20px;
@@ -280,6 +343,14 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        .loading-text {
+            text-align: center;
+            padding: 20px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* ===== ERROR ===== */
         .error-box {
             background: rgba(239,68,68,0.08);
             border: 1px solid rgba(239,68,68,0.25);
@@ -290,7 +361,22 @@
             text-align: center;
         }
 
-        /* Footer */
+        /* ===== ECO-SYSTEM LINK ===== */
+        .ecosystem-link {
+            margin-top: 16px;
+            padding: 12px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+        .ecosystem-link a {
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 13px;
+            transition: opacity 0.2s;
+        }
+        .ecosystem-link a:hover { opacity: 0.7; }
+
+        /* ===== FOOTER ===== */
         .footer {
             margin-top: 24px;
             padding: 16px;
@@ -300,7 +386,7 @@
             border-top: 1px solid var(--border);
         }
 
-        /* Responsive */
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
             .main-grid { grid-template-columns: 1fr; }
             #map { min-height: 350px; }
@@ -309,6 +395,7 @@
             .header { flex-direction: column; text-align: center; }
             .heat-score { flex-direction: column; }
             .route-stats { grid-template-columns: 1fr 1fr; }
+            .header-sub { justify-content: center; }
         }
     </style>
 </head>
@@ -317,7 +404,7 @@
     <div class="ambient ambient-2" aria-hidden="true"></div>
 
     <div class="container">
-        <!-- Header -->
+        <!-- ===== HEADER ===== -->
         <header class="header">
             <div class="logo">
                 <span class="logo-glyph">🌡️</span>
@@ -326,11 +413,13 @@
             </div>
             <div class="header-sub">
                 <span>🌵 Find the coolest walking path</span>
-                <span class="temp-badge" id="phx-temp">🌡️ Phoenix: --°F</span>
+                <span class="temp-badge" id="phx-temp">
+                    <span class="loading-dot"></span> Phoenix: --
+                </span>
             </div>
         </header>
 
-        <!-- Main -->
+        <!-- ===== MAIN ===== -->
         <div class="main-grid">
             <!-- Left Panel -->
             <div class="panel">
@@ -340,9 +429,19 @@
                 <input type="text" id="start-address" class="address-input" placeholder="Starting address (e.g., 123 Main St, Phoenix)">
                 <input type="text" id="end-address" class="address-input" placeholder="Destination address">
 
-                <button id="find-route-btn" class="btn-primary">🌡️ Find Coolest Route</button>
+                <button id="find-route-btn" class="btn-primary">
+                    🌡️ Find Coolest Route
+                </button>
+
+                <button id="swap-addresses-btn" class="btn-secondary">
+                    🔄 Swap Addresses
+                </button>
 
                 <div id="results"></div>
+
+                <div class="ecosystem-link">
+                    <a href="https://wizardecosystem.dpdns.org" target="_blank">🧙 Back to Wizard Ecosystem</a>
+                </div>
             </div>
 
             <!-- Map -->
@@ -351,70 +450,110 @@
             </div>
         </div>
 
-        <!-- Footer -->
+        <!-- ===== FOOTER ===== -->
         <div class="footer">
             <p>🌡️ Heat-Wise Routes · Powered by OpenWeatherMap + OpenStreetMap</p>
             <p style="margin-top: 4px;">Calculates coolest walking paths using real-time weather, sun position, and shade data</p>
         </div>
     </div>
 
+    <!-- ===== SCRIPTS ===== -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
         const API_BASE = 'https://arnav0928.pythonanywhere.com';  // Your PythonAnywhere URL
 
+        // ============================================
+        // STATE
+        // ============================================
         let map = null;
         let routeLayer = null;
         let startMarker = null;
         let endMarker = null;
+        let isRouteShowing = false;
 
-        // ============ PHOENIX WEATHER ============
+        // ============================================
+        // PHOENIX WEATHER
+        // ============================================
         async function fetchPhoenixWeather() {
+            const badge = document.getElementById('phx-temp');
             try {
-                const res = await fetch(`${API_BASE}/api/weather`);
+                const res = await fetch(`${API_BASE}/api/heatwise/weather`);
                 const data = await res.json();
-                if (data.temp) {
-                    document.getElementById('phx-temp').textContent = `🌡️ Phoenix: ${Math.round(data.temp)}°F`;
+                if (data.success && data.temp) {
+                    badge.innerHTML = `🌡️ Phoenix: ${Math.round(data.temp)}°F`;
+                } else {
+                    badge.innerHTML = `🌡️ Phoenix: --°F`;
                 }
-            } catch(e) { /* ignore */ }
+            } catch(e) {
+                badge.innerHTML = `🌡️ Phoenix: --°F`;
+            }
         }
 
-        // ============ MAP ============
+        // ============================================
+        // MAP
+        // ============================================
         function initMap() {
-            map = L.map('map').setView([33.4484, -112.0740], 12);
+            map = L.map('map', {
+                center: [33.4484, -112.0740],
+                zoom: 12,
+                zoomControl: true,
+                fadeAnimation: true
+            });
+
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; CartoDB'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; CartoDB',
+                maxZoom: 19
             }).addTo(map);
 
+            // Click on map to fill addresses
             map.on('click', async (e) => {
                 const lat = e.latlng.lat;
                 const lng = e.latlng.lng;
                 try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=16`);
                     const data = await res.json();
                     const address = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    
                     const startInput = document.getElementById('start-address');
                     const endInput = document.getElementById('end-address');
+                    
                     if (!startInput.value) {
                         startInput.value = address;
+                        startInput.style.borderColor = 'var(--gold)';
+                        setTimeout(() => startInput.style.borderColor = '', 2000);
                     } else if (!endInput.value) {
                         endInput.value = address;
+                        endInput.style.borderColor = 'var(--gold)';
+                        setTimeout(() => endInput.style.borderColor = '', 2000);
                     } else {
                         startInput.value = address;
                         endInput.value = '';
+                        startInput.style.borderColor = 'var(--gold)';
+                        setTimeout(() => startInput.style.borderColor = '', 2000);
                     }
-                } catch(e) { /* ignore */ }
+                } catch(e) {
+                    // Silent fail
+                }
             });
         }
 
-        // ============ GEOCODE ============
+        // ============================================
+        // GEOCODE
+        // ============================================
         async function geocodeAddress(address) {
-            const res = await fetch(`${API_BASE}/api/geocode?address=${encodeURIComponent(address)}`);
+            const res = await fetch(`${API_BASE}/api/heatwise/geocode?address=${encodeURIComponent(address)}`);
             const data = await res.json();
             if (data.error) throw new Error(data.error);
+            if (!data.success) throw new Error('Address not found');
             return { lat: data.lat, lng: data.lng, display_name: data.display_name };
         }
 
-        // ============ FIND ROUTE ============
+        // ============================================
+        // FIND ROUTE
+        // ============================================
         async function findRoute() {
             const startAddr = document.getElementById('start-address').value.trim();
             const endAddr = document.getElementById('end-address').value.trim();
@@ -426,18 +565,29 @@
                 return;
             }
 
+            // Show loading
             btn.disabled = true;
             btn.innerHTML = '<span class="loading-spinner"></span> Finding route...';
-            resultsDiv.innerHTML = '<div class="result-card" style="text-align:center;"><span class="loading-spinner"></span> Locating addresses...</div>';
+            resultsDiv.innerHTML = `
+                <div class="loading-text">
+                    <span class="loading-spinner"></span>
+                    Locating addresses...
+                </div>
+            `;
 
             try {
                 // Geocode both addresses
                 const start = await geocodeAddress(startAddr);
-                resultsDiv.innerHTML = '<div class="result-card" style="text-align:center;"><span class="loading-spinner"></span> Calculating coolest path...</div>';
+                resultsDiv.innerHTML = `
+                    <div class="loading-text">
+                        <span class="loading-spinner"></span>
+                        Calculating coolest path...
+                    </div>
+                `;
                 const end = await geocodeAddress(endAddr);
 
                 // Get route
-                const res = await fetch(`${API_BASE}/api/route`, {
+                const res = await fetch(`${API_BASE}/api/heatwise/route`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -450,6 +600,7 @@
 
                 const data = await res.json();
                 if (data.error) throw new Error(data.error);
+                if (!data.success) throw new Error('Route calculation failed');
 
                 displayResults(data);
                 displayRoute(data.route, start, end);
@@ -462,7 +613,9 @@
             }
         }
 
-        // ============ DISPLAY RESULTS ============
+        // ============================================
+        // DISPLAY RESULTS
+        // ============================================
         function displayResults(data) {
             const resultsDiv = document.getElementById('results');
             const heat = data.heat_score;
@@ -471,6 +624,7 @@
 
             let html = '';
 
+            // Heat Score
             if (heat) {
                 const riskClass = heat.risk_level === 'Extreme' ? 'risk-extreme' :
                                  heat.risk_level === 'High' ? 'risk-high' :
@@ -498,18 +652,26 @@
                 `;
             }
 
+            // Route Details
             if (route) {
                 html += `
                     <div class="result-card">
                         <div style="font-weight: 600; margin-bottom: 8px;">🚶 Route Details</div>
                         <div class="route-stats">
-                            <div class="route-stat"><div class="num">${route.distance_miles}</div><div class="lbl">Miles</div></div>
-                            <div class="route-stat"><div class="num">${route.duration_minutes}</div><div class="lbl">Minutes</div></div>
+                            <div class="route-stat">
+                                <div class="num">${route.distance_miles}</div>
+                                <div class="lbl">Miles</div>
+                            </div>
+                            <div class="route-stat">
+                                <div class="num">${route.duration_minutes}</div>
+                                <div class="lbl">Minutes</div>
+                            </div>
                         </div>
                     </div>
                 `;
             }
 
+            // Water Needed
             if (water) {
                 html += `
                     <div class="result-card">
@@ -520,6 +682,7 @@
                 `;
             }
 
+            // Current Weather
             if (data.weather) {
                 html += `
                     <div class="result-card">
@@ -530,6 +693,7 @@
                 `;
             }
 
+            // Forecast
             if (data.forecast && data.forecast.length > 0) {
                 html += `
                     <div class="result-card">
@@ -547,6 +711,7 @@
                 `;
             }
 
+            // Directions
             if (route && route.steps && route.steps.length > 0) {
                 html += `
                     <div class="result-card">
@@ -554,11 +719,11 @@
                         <div class="steps-list">
                             ${route.steps.slice(0, 10).map(s => `
                                 <div class="step">
-                                    ${s.instruction}
-                                    <span class="dist">(${(s.distance / 1609.34).toFixed(2)} mi)</span>
+                                    <span>${s.instruction}</span>
+                                    <span class="dist">${(s.distance / 1609.34).toFixed(2)} mi</span>
                                 </div>
                             `).join('')}
-                            ${route.steps.length > 10 ? `<div class="step" style="color: var(--muted);">+ ${route.steps.length - 10} more steps</div>` : ''}
+                            ${route.steps.length > 10 ? `<div class="step" style="color: var(--muted); justify-content: center;">+ ${route.steps.length - 10} more steps</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -567,41 +732,95 @@
             resultsDiv.innerHTML = html || '<div class="result-card" style="text-align:center;">No data available</div>';
         }
 
-        // ============ DISPLAY ROUTE ON MAP ============
+        // ============================================
+        // DISPLAY ROUTE ON MAP
+        // ============================================
         function displayRoute(route, start, end) {
-            if (!route || !route.path || route.path.length < 2) return;
+            if (!route || !route.path || route.path.length < 2) {
+                return;
+            }
 
             // Clear old layers
-            if (routeLayer) { map.removeLayer(routeLayer); routeLayer = null; }
-            if (startMarker) { map.removeLayer(startMarker); startMarker = null; }
-            if (endMarker) { map.removeLayer(endMarker); endMarker = null; }
+            if (routeLayer) {
+                map.removeLayer(routeLayer);
+                routeLayer = null;
+            }
+            if (startMarker) {
+                map.removeLayer(startMarker);
+                startMarker = null;
+            }
+            if (endMarker) {
+                map.removeLayer(endMarker);
+                endMarker = null;
+            }
 
-            // Draw route
+            // Draw route with gradient based on heat
             const latlngs = route.path.map(p => [p[0], p[1]]);
+            
+            // Cool route color (teal to gold gradient)
             routeLayer = L.polyline(latlngs, {
                 color: '#c9a84c',
-                weight: 4,
+                weight: 5,
                 opacity: 0.9,
-                dashArray: null,
-                lineJoin: 'round'
+                lineJoin: 'round',
+                smoothFactor: 1
             }).addTo(map);
 
-            // Add markers
-            startMarker = L.marker([start.lat, start.lng], {
-                icon: L.divIcon({ html: '🟢', className: 'marker-icon', iconSize: [24, 24] })
-            }).addTo(map).bindPopup('Start: ' + (start.display_name || 'Start'));
+            // Add animated dash effect
+            routeLayer.setStyle({
+                dashArray: null
+            });
 
-            endMarker = L.marker([end.lat, end.lng], {
-                icon: L.divIcon({ html: '🔴', className: 'marker-icon', iconSize: [24, 24] })
-            }).addTo(map).bindPopup('End: ' + (end.display_name || 'End'));
+            // Markers
+            const greenIcon = L.divIcon({
+                html: '🟢',
+                className: 'marker-icon',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            });
+            const redIcon = L.divIcon({
+                html: '🔴',
+                className: 'marker-icon',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            });
 
-            // Fit map to route
+            startMarker = L.marker([start.lat, start.lng], { icon: greenIcon })
+                .addTo(map)
+                .bindPopup('📍 Start: ' + (start.display_name || 'Start'));
+
+            endMarker = L.marker([end.lat, end.lng], { icon: redIcon })
+                .addTo(map)
+                .bindPopup('📍 End: ' + (end.display_name || 'End'));
+
+            // Fit map to route with padding
             const bounds = L.latLngBounds(latlngs);
-            map.fitBounds(bounds, { padding: [50, 50] });
+            map.fitBounds(bounds, { padding: [60, 60], maxZoom: 15 });
+
+            isRouteShowing = true;
         }
 
-        // ============ EVENT LISTENERS ============
+        // ============================================
+        // SWAP ADDRESSES
+        // ============================================
+        function swapAddresses() {
+            const startInput = document.getElementById('start-address');
+            const endInput = document.getElementById('end-address');
+            const temp = startInput.value;
+            startInput.value = endInput.value;
+            endInput.value = temp;
+            
+            // Auto-search if both have values
+            if (startInput.value && endInput.value) {
+                findRoute();
+            }
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
         document.getElementById('find-route-btn').addEventListener('click', findRoute);
+        document.getElementById('swap-addresses-btn').addEventListener('click', swapAddresses);
 
         document.querySelectorAll('.address-input').forEach(input => {
             input.addEventListener('keypress', e => {
@@ -609,12 +828,24 @@
             });
         });
 
-        // ============ INIT ============
+        // ============================================
+        // INIT
+        // ============================================
         initMap();
         fetchPhoenixWeather();
+        setInterval(fetchPhoenixWeather, 300000);  // Refresh every 5 min
 
-        // Refresh Phoenix weather every 5 minutes
-        setInterval(fetchPhoenixWeather, 300000);
+        // Check URL params for address prefill
+        const params = new URLSearchParams(window.location.search);
+        const start = params.get('start');
+        const end = params.get('end');
+        if (start) document.getElementById('start-address').value = start;
+        if (end) document.getElementById('end-address').value = end;
+        if (start && end) findRoute();
+
+        console.log('🌡️ Heat-Wise Routes loaded!');
+        console.log('📍 Click on the map to fill addresses');
+        console.log('🔗 Backend:', API_BASE);
     </script>
 </body>
 </html>
