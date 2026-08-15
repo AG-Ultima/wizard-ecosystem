@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Wizard Grid — Energy & Water Resilience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        :root {
+            --ink:          #080612;
+            --ink-2:        #0e0b1e;
+            --gold:         #c9a84c;
+            --gold-light:   #e8c97a;
+            --gold-glow:    rgba(201,168,76,0.18);
+            --silver:       #d4d0e8;
+            --silver-dim:   rgba(212,208,232,0.55);
+            --muted:        rgba(212,208,232,0.35);
+            --border:       rgba(201,168,76,0.18);
+            --border-mid:   rgba(201,168,76,0.30);
+            --border-strong:rgba(201,168,76,0.50);
+            --danger:       #e05555;
+            --success:      #5cb87a;
+            --warning:      #fbbf24;
+            --info:         #3b82f6;
+            --pill:         100px;
+            --panel:        20px;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--silver);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .ambient {
+            position:fixed; border-radius:50%;
+            filter:blur(130px); pointer-events:none; z-index:0;
+            animation: drift 20s ease-in-out infinite alternate;
+        }
+        .ambient-1 { width:700px;height:700px;top:-200px;left:-200px;background:radial-gradient(circle,#3a1f6e,transparent 70%);opacity:0.3; }
+        .ambient-2 { width:500px;height:500px;bottom:-100px;right:-100px;background:radial-gradient(circle,#5c3a1e,transparent 70%);opacity:0.25;animation-delay:-10s; }
+        @keyframes drift { from{transform:translate(0,0) scale(1);} to{transform:translate(40px,28px) scale(1.1);} }
+
+        .shell { position:relative; z-index:10; max-width:1400px; margin:0 auto; padding:24px 20px 40px; }
+
+        .page-header {
+            display:flex; justify-content:space-between; align-items:center;
+            flex-wrap:wrap; gap:16px; padding:18px 28px; margin-bottom:28px;
+            background: linear-gradient(150deg, rgba(19,16,42,0.94), rgba(10,8,24,0.92));
+            border: 1px solid var(--border);
+            border-radius: var(--panel);
+            backdrop-filter: blur(14px);
+        }
+        .logo { display:flex; align-items:center; gap:14px; text-decoration:none; }
+        .logo-glyph { font-size:32px; filter:drop-shadow(0 0 14px rgba(201,168,76,0.4)); animation:levitate 5s ease-in-out infinite; }
+        @keyframes levitate { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
+        .logo-wordmark { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:var(--silver); }
+        .logo-wordmark em { font-style:italic; background:linear-gradient(135deg,var(--gold-light),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .logo-badge { font-size:10px; font-weight:600; letter-spacing:0.12em; background:linear-gradient(135deg,var(--gold),#8a5a1a); color:var(--ink); padding:3px 10px; border-radius:var(--pill); }
+        .back-link {
+            display:flex; align-items:center; gap:8px;
+            color:var(--muted); text-decoration:none; font-size:13px;
+            border:1px solid var(--border); border-radius:var(--pill); padding:8px 18px;
+            transition:all 0.2s;
+        }
+        .back-link:hover { color:var(--gold); border-color:var(--border-strong); background:rgba(201,168,76,0.06); }
+
+        .location-banner {
+            background: rgba(201,168,76,0.08);
+            border: 1px solid var(--border-mid);
+            border-radius: var(--pill);
+            padding: 8px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .location-text { font-size: 13px; color: var(--silver-dim); }
+        .location-text strong { color: var(--gold-light); }
+        .location-btn {
+            background: var(--gold);
+            border: none;
+            border-radius: var(--pill);
+            padding: 4px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ink);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .location-btn:hover { transform: scale(1.02); }
+
+        .grid-hero {
+            text-align:center; padding:30px 20px 20px; margin-bottom:20px;
+        }
+        .hero-glyph { font-size:56px; display:block; margin-bottom:8px; animation:levitate 5s ease-in-out infinite; }
+        .hero-title { font-family:'Cormorant Garamond',serif; font-size:clamp(28px,4vw,44px); font-weight:300; color:var(--silver); line-height:0.95; margin-bottom:6px; }
+        .hero-title em { font-style:italic; background:linear-gradient(135deg,var(--gold-light),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .hero-sub { font-size:15px; font-weight:300; color:var(--muted); }
+
+        /* Stats Grid */
+        .stats-grid {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+            gap:14px; margin-bottom:20px;
+        }
+        .stat-card {
+            padding:16px 14px; text-align:center;
+            background: linear-gradient(150deg, rgba(19,16,42,0.8), rgba(10,8,24,0.7));
+            border: 1px solid var(--border);
+            border-radius: var(--panel);
+            backdrop-filter: blur(8px);
+        }
+        .stat-card:hover { border-color:var(--border-mid); }
+        .stat-value { font-size:24px; font-weight:700; color:var(--gold-light); display:block; }
+        .stat-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:4px; }
+        .stat-unit { font-size:12px; color:var(--silver-dim); font-weight:400; }
+
+        /* Alert Banner */
+        .alert-banner {
+            padding:12px 18px; border-radius:var(--panel); margin-bottom:20px;
+            display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+            border-left:4px solid var(--warning);
+            background:rgba(251,191,36,0.08);
+        }
+        .alert-banner.danger { border-left-color:var(--danger); background:rgba(224,85,85,0.08); }
+        .alert-banner.success { border-left-color:var(--success); background:rgba(92,184,122,0.08); }
+        .alert-icon { font-size:20px; }
+        .alert-content { flex:1; }
+        .alert-title { font-size:12px; font-weight:600; color:var(--gold); }
+        .alert-text { font-size:12px; color:var(--silver-dim); }
+        .alert-action {
+            background:var(--gold); border:none; border-radius:var(--pill);
+            padding:5px 14px; color:var(--ink); font-size:11px; font-weight:600; cursor:pointer;
+        }
+        .alert-action:hover { opacity:0.85; }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display:grid; grid-template-columns:repeat(2,1fr);
+            gap:18px; margin-bottom:20px;
+        }
+        .panel {
+            background: linear-gradient(150deg, rgba(19,16,42,0.85), rgba(10,8,24,0.75));
+            border: 1px solid var(--border);
+            border-radius: var(--panel);
+            padding:18px;
+            backdrop-filter: blur(8px);
+        }
+        .panel:hover { border-color:var(--border-mid); }
+        .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+        .panel-title { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:400; color:var(--gold); }
+        .panel-value { font-size:20px; font-weight:600; color:var(--silver); }
+        .panel-sub { font-size:11px; color:var(--muted); }
+
+        .energy-bar {
+            height:6px; background:rgba(255,255,255,0.05); border-radius:var(--pill);
+            overflow:hidden; margin:8px 0;
+        }
+        .energy-bar-fill {
+            height:100%; border-radius:var(--pill);
+            background:linear-gradient(90deg,var(--success),var(--gold));
+            transition:width 1s ease;
+        }
+        .water-bar {
+            height:6px; background:rgba(255,255,255,0.05); border-radius:var(--pill);
+            overflow:hidden; margin:8px 0;
+        }
+        .water-bar-fill {
+            height:100%; border-radius:var(--pill);
+            background:linear-gradient(90deg,#3b82f6,#60a5fa);
+            transition:width 1s ease;
+        }
+
+        .info-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.03); font-size:12px; }
+        .info-row:last-child { border-bottom:none; }
+        .info-label { color:var(--muted); }
+        .info-value { color:var(--silver); font-weight:500; }
+
+        .reservoir-item {
+            padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.03);
+            display:flex; justify-content:space-between; align-items:center;
+        }
+        .reservoir-name { font-size:12px; color:var(--silver); }
+        .reservoir-level { font-size:11px; font-weight:600; }
+        .reservoir-level.safe { color:var(--success); }
+        .reservoir-level.warning { color:var(--warning); }
+        .reservoir-level.danger { color:var(--danger); }
+
+        .recommendation-card {
+            background:rgba(255,255,255,0.03);
+            border:1px solid var(--border);
+            border-radius:10px;
+            padding:12px 14px;
+            margin-bottom:8px;
+        }
+        .rec-title { font-size:12px; font-weight:600; color:var(--gold); }
+        .rec-action { font-size:11px; color:var(--silver-dim); margin:3px 0; }
+        .rec-savings { font-size:10px; color:var(--success); }
+        .rec-priority-high { border-left:3px solid var(--danger); }
+        .rec-priority-medium { border-left:3px solid var(--warning); }
+
+        .chart-container { height:140px; margin:8px 0; position:relative; overflow:hidden; }
+        .chart-line { display:flex; align-items:flex-end; height:100%; gap:2px; padding:4px 0; }
+        .chart-bar {
+            flex:1; border-radius:2px 2px 0 0;
+            background:linear-gradient(180deg,var(--gold),rgba(201,168,76,0.2));
+            transition:height 0.5s ease;
+            min-height:3px;
+        }
+        .chart-bar.solar { background:linear-gradient(180deg,var(--warning),rgba(251,191,36,0.2)); }
+        .chart-bar.energy { background:linear-gradient(180deg,var(--info),rgba(59,130,246,0.2)); }
+        .chart-labels { display:flex; gap:2px; margin-top:2px; }
+        .chart-label { flex:1; text-align:center; font-size:7px; color:var(--muted); }
+
+        .community-grid {
+            display:grid; grid-template-columns:repeat(3,1fr);
+            gap:10px; margin-top:10px;
+        }
+        .community-stat {
+            text-align:center; padding:10px;
+            background:rgba(255,255,255,0.02);
+            border-radius:10px;
+            border:1px solid var(--border);
+        }
+        .community-value { font-size:18px; font-weight:600; color:var(--gold-light); }
+        .community-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+
+        .footer-note {
+            text-align:center; padding:20px; border-top:1px solid var(--border);
+            margin-top:20px; color:var(--muted); font-size:11px;
+        }
+
+        .loading { text-align:center; padding:40px; color:var(--muted); }
+        .spinner {
+            width:36px; height:36px;
+            border:3px solid rgba(201,168,76,0.15);
+            border-top-color:var(--gold);
+            border-radius:50%;
+            animation:spin 1s linear infinite;
+            margin:0 auto 12px;
+        }
+        @keyframes spin { to{transform:rotate(360deg);} }
+
+        /* Location permission modal */
+        .location-modal {
+            position: fixed; inset: 0;
+            background: rgba(5,3,14,0.95);
+            backdrop-filter: blur(20px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .location-modal.show { display: flex; }
+        .location-modal-box {
+            background: linear-gradient(150deg, var(--ink-2), var(--ink-3));
+            border: 1px solid var(--border-strong);
+            border-radius: 24px;
+            padding: 40px 32px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes modalIn {
+            from { opacity:0; transform: scale(0.9) translateY(20px); }
+            to { opacity:1; transform: scale(1) translateY(0); }
+        }
+        .location-modal-icon { font-size: 56px; margin-bottom: 12px; }
+        .location-modal-title { font-family:'Cormorant Garamond',serif; font-size: 28px; font-weight: 400; color: var(--silver); margin-bottom: 8px; }
+        .location-modal-text { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+        .location-modal-buttons { display: flex; gap: 12px; }
+        .location-modal-btn {
+            flex: 1; padding: 12px; border-radius: var(--pill);
+            border: none; font-size: 14px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .location-modal-btn.primary {
+            background: linear-gradient(135deg, var(--gold), #8a5a1a);
+            color: var(--ink);
+        }
+        .location-modal-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(201,168,76,0.3); }
+        .location-modal-btn.secondary {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--silver-dim);
+        }
+        .location-modal-btn.secondary:hover { background: rgba(255,255,255,0.1); }
+
+        @media (max-width:1024px) { .dashboard-grid { grid-template-columns:1fr; } }
+        @media (max-width:768px) {
+            .stats-grid { grid-template-columns:repeat(2,1fr); }
+            .community-grid { grid-template-columns:1fr 1fr; }
+            .page-header { flex-direction:column; text-align:center; }
+            .location-modal-box { padding: 28px 20px; }
+            .location-modal-buttons { flex-direction: column; }
+        }
+        @media (max-width:480px) {
+            .stats-grid { grid-template-columns:1fr; }
+            .community-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient ambient-1" aria-hidden="true"></div>
+    <div class="ambient ambient-2" aria-hidden="true"></div>
+
+    <!-- Location Permission Modal -->
+    <div id="location-modal" class="location-modal">
+        <div class="location-modal-box">
+            <div class="location-modal-icon">📍</div>
+            <h2 class="location-modal-title">Enable Location</h2>
+            <p class="location-modal-text">
+                Wizard Grid works best with your location enabled.<br>
+                We use your location to provide:
+                <span style="display:block; margin-top:8px; font-size:13px; color:var(--silver-dim);">
+                    🌡️ Local weather & heat index<br>
+                    ⚡ Regional grid demand<br>
+                    💧 Arizona reservoir levels<br>
+                    🏘️ Community resilience data
+                </span>
+            </p>
+            <div class="location-modal-buttons">
+                <button class="location-modal-btn primary" id="location-allow">📡 Share Location</button>
+                <button class="location-modal-btn secondary" id="location-skip">Continue without</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="shell">
+        <header class="page-header">
+            <a href="/" class="logo">
+                <span class="logo-glyph">⚡</span>
+                <span class="logo-wordmark">Wizard <em>Grid</em></span>
+                <span class="logo-badge">Resilience</span>
+            </a>
+            <a href="/" class="back-link">← Back to Wizard.AI</a>
+        </header>
+
+        <div class="location-banner" id="location-banner">
+            <span class="location-text">📍 <strong id="location-city">Phoenix, AZ</strong> — <span id="location-desc">Real-time energy & water data</span></span>
+            <button class="location-btn" id="location-update-btn">🔁 Update Location</button>
+        </div>
+
+        <div class="grid-hero">
+            <span class="hero-glyph">⚡</span>
+            <h1 class="hero-title">Arizona <em>Energy & Water</em> Resilience</h1>
+            <p class="hero-sub" id="status-text">Loading your dashboard…</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">⚡</span>
+                <span class="stat-value" id="stat-energy">--</span>
+                <span class="stat-label">Energy Usage <span class="stat-unit">kWh</span></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">☀️</span>
+                <span class="stat-value" id="stat-solar">--</span>
+                <span class="stat-label">Solar Production <span class="stat-unit">kWh</span></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">💧</span>
+                <span class="stat-value" id="stat-water">--</span>
+                <span class="stat-label">Water Usage <span class="stat-unit">gal</span></span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🌡️</span>
+                <span class="stat-value" id="stat-temp">--</span>
+                <span class="stat-label">Heat Index <span class="stat-unit">°F</span></span>
+            </div>
+        </div>
+
+        <!-- Alert Banner -->
+        <div id="alert-banner" class="alert-banner" style="display:none;"></div>
+
+        <!-- Dashboard -->
+        <div class="dashboard-grid" id="dashboard-grid">
+            <!-- Energy Panel -->
+            <div class="panel" id="energy-panel">
+                <div class="panel-header">
+                    <span class="panel-title">⚡ Energy</span>
+                    <span class="panel-sub" id="energy-status">Live</span>
+                </div>
+                <div class="info-row"><span class="info-label">Current Usage</span><span class="info-value" id="energy-usage">-- kWh</span></div>
+                <div class="info-row"><span class="info-label">Solar Production</span><span class="info-value" id="energy-solar">-- kWh</span></div>
+                <div class="info-row"><span class="info-label">Net Grid Draw</span><span class="info-value" id="energy-net">-- kWh</span></div>
+                <div class="energy-bar"><div class="energy-bar-fill" id="energy-bar" style="width:0%"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted);">
+                    <span>0 kWh</span>
+                    <span id="energy-max-label">100 kWh</span>
+                </div>
+                <div class="chart-container" id="energy-chart"><div class="chart-line" id="energy-chart-line"></div></div>
+            </div>
+
+            <!-- Water Panel -->
+            <div class="panel" id="water-panel">
+                <div class="panel-header">
+                    <span class="panel-title">💧 Water</span>
+                    <span class="panel-sub" id="water-status">Live</span>
+                </div>
+                <div class="info-row"><span class="info-label">Current Usage</span><span class="info-value" id="water-usage">-- gal</span></div>
+                <div class="info-row"><span class="info-label">Avg. Daily Usage</span><span class="info-value" id="water-avg">-- gal</span></div>
+                <div class="info-row"><span class="info-label">Leak Detected</span><span class="info-value" id="water-leak">🔍 Checking…</span></div>
+                <div class="water-bar"><div class="water-bar-fill" id="water-bar" style="width:0%"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--muted);">
+                    <span>0 gal</span>
+                    <span id="water-max-label">500 gal</span>
+                </div>
+                <div style="margin-top:10px; font-size:11px; color:var(--muted);">
+                    <div id="water-tips"></div>
+                </div>
+            </div>
+
+            <!-- Weather & Grid Panel -->
+            <div class="panel" id="weather-panel">
+                <div class="panel-header">
+                    <span class="panel-title">🌤️ Weather & Grid</span>
+                    <span class="panel-sub" id="weather-status">Live</span>
+                </div>
+                <div class="info-row"><span class="info-label">Temperature</span><span class="info-value" id="weather-temp">--°F</span></div>
+                <div class="info-row"><span class="info-label">Heat Index</span><span class="info-value" id="weather-heat">--°F</span></div>
+                <div class="info-row"><span class="info-label">Humidity</span><span class="info-value" id="weather-humidity">--%</span></div>
+                <div class="info-row"><span class="info-label">Grid Demand</span><span class="info-value" id="grid-demand">-- MW</span></div>
+                <div class="info-row"><span class="info-label">Outage Risk</span><span class="info-value" id="outage-risk">--</span></div>
+                <div class="info-row"><span class="info-label">Renewable Mix</span><span class="info-value" id="renewable-mix">--%</span></div>
+            </div>
+
+            <!-- Community Panel -->
+            <div class="panel" id="community-panel">
+                <div class="panel-header">
+                    <span class="panel-title">🏘️ Community</span>
+                    <span class="panel-sub" id="community-status">Resilience</span>
+                </div>
+                <div class="info-row"><span class="info-label">City</span><span class="info-value" id="community-city">--</span></div>
+                <div class="info-row"><span class="info-label">Active Users</span><span class="info-value" id="community-users">--</span></div>
+                <div class="info-row"><span class="info-label">Resilience Score</span><span class="info-value" id="community-score">--</span></div>
+                <div class="community-grid">
+                    <div class="community-stat">
+                        <span class="community-value" id="community-generators">--</span>
+                        <span class="community-label">Generators</span>
+                    </div>
+                    <div class="community-stat">
+                        <span class="community-value" id="community-solar">--</span>
+                        <span class="community-label">Solar Homes</span>
+                    </div>
+                    <div class="community-stat">
+                        <span class="community-value" id="community-water">--</span>
+                        <span class="community-label">Water Storage (gal)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="panel" style="margin-bottom:20px;">
+            <div class="panel-header">
+                <span class="panel-title">🧙 AI Recommendations</span>
+                <span class="panel-sub">Optimize your usage</span>
+            </div>
+            <div id="recommendations">
+                <div class="loading">Loading recommendations…</div>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            ⚡ Wizard Grid — Arizona Energy & Water Resilience Dashboard<br>
+            <span style="font-size:10px; color:var(--muted);">Data refreshes every 60 seconds • Powered by Wizard.AI</span>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://arnav0928.pythonanywhere.com';
+        let refreshInterval = null;
+
+        // ============================================
+        // LOCATION PERMISSION
+        // ============================================
+
+        function requestLocation() {
+            if (!navigator.geolocation) {
+                document.getElementById('location-modal').classList.remove('show');
+                loadDashboard(null);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const location = {
+                        lat: pos.coords.latitude,
+                        lon: pos.coords.longitude
+                    };
+                    document.getElementById('location-modal').classList.remove('show');
+                    saveLocation(location);
+                    loadDashboard(location);
+                },
+                (err) => {
+                    console.log('Location error:', err.message);
+                    document.getElementById('location-modal').classList.remove('show');
+                    loadDashboard(null);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+            );
+        }
+
+        async function saveLocation(location) {
+            if (!location) return;
+            try {
+                await fetch(`${API_BASE}/api/grid/location`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(location)
+                });
+                updateLocationDisplay(location);
+            } catch(e) { console.log('Save location error:', e); }
+        }
+
+        function updateLocationDisplay(location) {
+            if (!location) return;
+            document.getElementById('location-city').textContent = location.city || 'Phoenix, AZ';
+            document.getElementById('location-desc').textContent = 'Real-time energy & water data';
+        }
+
+        // ============================================
+        // DASHBOARD DATA
+        // ============================================
+
+        async function loadDashboard(location) {
+            document.getElementById('status-text').textContent = 'Loading your dashboard…';
+            document.getElementById('recommendations').innerHTML = '<div class="loading">Loading recommendations…</div>';
+
+            try {
+                const url = `${API_BASE}/api/grid/dashboard`;
+                const response = await fetch(url, {
+                    credentials: 'include',
+                    headers: location ? { 'X-Geolocation': JSON.stringify(location) } : {}
+                });
+
+                if (!response.ok) throw new Error('Failed to load dashboard');
+
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Unknown error');
+
+                renderDashboard(result.data);
+
+            } catch (error) {
+                console.error('Dashboard error:', error);
+                document.getElementById('status-text').textContent = '⚠️ Error loading data — retrying…';
+                setTimeout(() => loadDashboard(location), 5000);
+            }
+        }
+
+        function renderDashboard(data) {
+            const d = data;
+
+            // Update status
+            document.getElementById('status-text').textContent = `Live data for ${d.location.city || 'Phoenix, AZ'} — updated ${new Date(d.timestamp).toLocaleTimeString()}`;
+
+            // Stats
+            document.getElementById('stat-energy').textContent = d.energy.current_usage || '--';
+            document.getElementById('stat-solar').textContent = d.energy.solar_production || '--';
+            document.getElementById('stat-water').textContent = d.water.current_usage || '--';
+            document.getElementById('stat-temp').textContent = d.weather.heat_index || d.weather.temp || '--';
+
+            // Energy
+            document.getElementById('energy-usage').textContent = `${d.energy.current_usage} kWh`;
+            document.getElementById('energy-solar').textContent = `${d.energy.solar_production} kWh`;
+            document.getElementById('energy-net').textContent = `${d.energy.net_usage} kWh`;
+            
+            const energyPct = Math.min(100, (d.energy.current_usage / 80) * 100);
+            document.getElementById('energy-bar').style.width = `${energyPct}%`;
+            document.getElementById('energy-max-label').textContent = `${Math.max(80, Math.round(d.energy.current_usage * 1.5))} kWh`;
+
+            // Energy chart
+            renderChart('energy-chart-line', d.energy.history || [], 'energy');
+
+            // Water
+            document.getElementById('water-usage').textContent = `${d.water.current_usage} gal`;
+            document.getElementById('water-avg').textContent = `${d.water.average_usage || 250} gal`;
+            document.getElementById('water-leak').textContent = d.water.leak_detected ? '⚠️ Leak Detected!' : '✅ No leaks detected';
+            
+            const waterPct = Math.min(100, (d.water.current_usage / 400) * 100);
+            document.getElementById('water-bar').style.width = `${waterPct}%`;
+            document.getElementById('water-max-label').textContent = `${Math.max(400, Math.round(d.water.current_usage * 1.5))} gal`;
+
+            // Water tips
+            const tipsEl = document.getElementById('water-tips');
+            if (d.water.conservation_tips && d.water.conservation_tips.length) {
+                tipsEl.innerHTML = d.water.conservation_tips.map(t => `💡 ${t}`).join('<br>');
+            }
+
+            // Weather & Grid
+            document.getElementById('weather-temp').textContent = `${d.weather.temp}°F`;
+            document.getElementById('weather-heat').textContent = `${d.weather.heat_index}°F`;
+            document.getElementById('weather-humidity').textContent = `${d.weather.humidity}%`;
+            document.getElementById('grid-demand').textContent = `${d.grid.total_demand} MW`;
+            
+            const riskColors = { low: '✅ Low', medium: '⚠️ Medium', high: '🔴 High' };
+            document.getElementById('outage-risk').textContent = riskColors[d.grid.outage_risk] || d.grid.outage_risk;
+            document.getElementById('outage-risk').style.color = d.grid.outage_risk === 'high' ? 'var(--danger)' : d.grid.outage_risk === 'medium' ? 'var(--warning)' : 'var(--success)';
+            document.getElementById('renewable-mix').textContent = `${d.grid.renewable_percentage}%`;
+
+            // Community
+            document.getElementById('community-city').textContent = d.community.city || 'Phoenix';
+            document.getElementById('community-users').textContent = d.community.active_now || '--';
+            document.getElementById('community-score').textContent = `${d.community.resilience_score}%`;
+            document.getElementById('community-generators').textContent = d.community.resources?.backup_generators || '--';
+            document.getElementById('community-solar').textContent = d.community.resources?.solar_installations || '--';
+            document.getElementById('community-water').textContent = (d.community.resources?.water_storage || 0).toLocaleString();
+
+            // Alerts
+            renderAlerts(d.alerts || []);
+
+            // Recommendations
+            loadRecommendations(d.energy.current_usage, d.water.current_usage, d.weather.temp, d.energy.has_solar);
+        }
+
+        function renderChart(containerId, data, type) {
+            const container = document.getElementById(containerId);
+            if (!container || !data || !data.length) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const maxVal = Math.max(...data.map(d => d.energy || d.solar || 1));
+            const bars = data.slice(-24).map(d => {
+                const val = type === 'energy' ? d.energy : d.solar;
+                const pct = maxVal > 0 ? (val / maxVal) * 100 : 0;
+                const isSolar = type === 'solar';
+                return `<div class="chart-bar ${isSolar ? 'solar' : 'energy'}" style="height:${Math.max(5, pct)}%;" title="${d.time}: ${val} kWh"></div>`;
+            }).join('');
+
+            container.innerHTML = bars;
+        }
+
+        function renderAlerts(alerts) {
+            const banner = document.getElementById('alert-banner');
+            if (!alerts || !alerts.length) {
+                banner.style.display = 'none';
+                return;
+            }
+
+            const alert = alerts[0]; // Show most critical first
+            banner.style.display = 'flex';
+            banner.className = `alert-banner ${alert.level === 'danger' ? 'danger' : alert.level === 'warning' ? '' : 'success'}`;
+            banner.innerHTML = `
+                <span class="alert-icon">${alert.type === 'heat' ? '🔥' : alert.type === 'outage' ? '⚡' : alert.type === 'water' ? '💧' : '⚠️'}</span>
+                <div class="alert-content">
+                    <div class="alert-title">${alert.title}</div>
+                    <div class="alert-text">${alert.message}</div>
+                </div>
+                ${alert.recommendation ? `<button class="alert-action" onclick="showNotification('${alert.recommendation}')">View Tip</button>` : ''}
+            `;
+        }
+
+        function showNotification(msg) {
+            alert(msg); // Simple fallback - could be a toast
+        }
+
+        async function loadRecommendations(energy, water, temp, hasSolar) {
+            try {
+                const response = await fetch(`${API_BASE}/api/grid/optimize`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        energy_usage: energy || 50,
+                        water_usage: water || 250,
+                        temp: temp || 95,
+                        has_solar: hasSolar !== undefined ? hasSolar : true
+                    })
+                });
+
+                const result = await response.json();
+                const container = document.getElementById('recommendations');
+
+                if (result.success && result.recommendations && result.recommendations.length) {
+                    container.innerHTML = result.recommendations.map(r => `
+                        <div class="recommendation-card ${r.priority === 'high' ? 'rec-priority-high' : r.priority === 'medium' ? 'rec-priority-medium' : ''}">
+                            <div class="rec-title">${r.title}</div>
+                            <div class="rec-action">${r.action}</div>
+                            <div class="rec-savings">💰 ${r.savings} • ${r.detail}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted);">✨ No recommendations right now. Everything looks great!</div>';
+                }
+            } catch (e) {
+                console.log('Recommendations error:', e);
+                document.getElementById('recommendations').innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted);">💡 Check back later for personalized recommendations.</div>';
+            }
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        function init() {
+            // Check if location was already shared
+            const hasLocation = localStorage.getItem('wizard_grid_location_shared');
+
+            if (hasLocation) {
+                document.getElementById('location-modal').classList.remove('show');
+                loadDashboard(null);
+            } else {
+                document.getElementById('location-modal').classList.add('show');
+            }
+
+            // Event listeners
+            document.getElementById('location-allow').addEventListener('click', () => {
+                localStorage.setItem('wizard_grid_location_shared', 'true');
+                requestLocation();
+            });
+
+            document.getElementById('location-skip').addEventListener('click', () => {
+                localStorage.setItem('wizard_grid_location_shared', 'true');
+                document.getElementById('location-modal').classList.remove('show');
+                loadDashboard(null);
+            });
+
+            document.getElementById('location-update-btn').addEventListener('click', () => {
+                localStorage.removeItem('wizard_grid_location_shared');
+                document.getElementById('location-modal').classList.add('show');
+            });
+
+            // Refresh every 60 seconds
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(() => {
+                const hasLoc = localStorage.getItem('wizard_grid_location_shared');
+                if (hasLoc) loadDashboard(null);
+            }, 60000);
+        }
+
+        // Start when DOM ready
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
