@@ -6,46 +6,58 @@
     <title>⚡ Wizard Grid — Energy & Water Resilience</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
         :root {
-            --ink:          #080612;
-            --ink-2:        #0e0b1e;
-            --gold:         #c9a84c;
-            --gold-light:   #e8c97a;
-            --gold-glow:    rgba(201,168,76,0.18);
-            --silver:       #d4d0e8;
-            --silver-dim:   rgba(212,208,232,0.55);
-            --muted:        rgba(212,208,232,0.35);
-            --border:       rgba(201,168,76,0.18);
-            --border-mid:   rgba(201,168,76,0.30);
-            --border-strong:rgba(201,168,76,0.50);
-            --danger:       #e05555;
-            --success:      #5cb87a;
-            --warning:      #fbbf24;
-            --info:         #3b82f6;
+            /* Wizard Grid's own identity: night-grid indigo + live-wire gold + water
+               blue — distinct from Heat/FireWatch's desert palette and Nature's
+               greens, but sharing the ecosystem's structural language. */
+            --ink:          #0a0818;
+            --ink-2:        #0f0c22;
+            --ink-3:        #15112e;
+            --gold:         #e8b23c;
+            --gold-light:   #ffd47a;
+            --gold-glow:    rgba(232,178,60,0.2);
+            --water:        #4f9dda;
+            --water-light:  #7fc0ea;
+            --silver:       #d8d4ec;
+            --silver-dim:   rgba(216,212,236,0.6);
+            --muted:        rgba(216,212,236,0.36);
+            --border:       rgba(232,178,60,0.16);
+            --border-mid:   rgba(232,178,60,0.30);
+            --border-strong:rgba(232,178,60,0.50);
+            --danger:       #ff6157;
+            --success:      #5cd48a;
+            --warning:      #f2b84e;
+            --info:         #4f9dda;
             --pill:         100px;
             --panel:        20px;
         }
 
         html { scroll-behavior: smooth; }
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'Space Grotesk', sans-serif;
             background: var(--ink);
             color: var(--silver);
             min-height: 100vh;
             overflow-x: hidden;
         }
+        h1, h2, .logo-wordmark, .hero-title, .panel-title, .location-modal-title {
+            font-family: 'Fraunces', serif;
+        }
+
+        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5; }
 
         .ambient {
             position:fixed; border-radius:50%;
             filter:blur(130px); pointer-events:none; z-index:0;
             animation: drift 20s ease-in-out infinite alternate;
         }
-        .ambient-1 { width:700px;height:700px;top:-200px;left:-200px;background:radial-gradient(circle,#3a1f6e,transparent 70%);opacity:0.3; }
-        .ambient-2 { width:500px;height:500px;bottom:-100px;right:-100px;background:radial-gradient(circle,#5c3a1e,transparent 70%);opacity:0.25;animation-delay:-10s; }
+        .ambient-1 { width:700px;height:700px;top:-200px;left:-200px;background:radial-gradient(circle,#5a3fc4,transparent 70%);opacity:0.34; }
+        .ambient-2 { width:520px;height:520px;bottom:-100px;right:-100px;background:radial-gradient(circle,var(--gold),transparent 70%);opacity:0.28;animation-delay:-10s; }
+        .ambient-3 { width:400px;height:400px;top:30%;right:12%;background:radial-gradient(circle,var(--water),transparent 70%);opacity:0.2;animation-delay:-16s; }
         @keyframes drift { from{transform:translate(0,0) scale(1);} to{transform:translate(40px,28px) scale(1.1);} }
 
         .shell { position:relative; z-index:10; max-width:1400px; margin:0 auto; padding:24px 20px 40px; }
@@ -53,27 +65,27 @@
         .page-header {
             display:flex; justify-content:space-between; align-items:center;
             flex-wrap:wrap; gap:16px; padding:18px 28px; margin-bottom:28px;
-            background: linear-gradient(150deg, rgba(19,16,42,0.94), rgba(10,8,24,0.92));
+            background: linear-gradient(150deg, rgba(90,63,196,0.14), rgba(15,12,34,0.92) 55%);
             border: 1px solid var(--border);
             border-radius: var(--panel);
             backdrop-filter: blur(14px);
         }
         .logo { display:flex; align-items:center; gap:14px; text-decoration:none; }
-        .logo-glyph { font-size:32px; filter:drop-shadow(0 0 14px rgba(201,168,76,0.4)); animation:levitate 5s ease-in-out infinite; }
+        .logo-glyph { font-size:32px; filter:drop-shadow(0 0 16px rgba(232,178,60,0.5)); animation:levitate 5s ease-in-out infinite; }
         @keyframes levitate { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
-        .logo-wordmark { font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:300; color:var(--silver); }
+        .logo-wordmark { font-size:23px; font-weight:400; font-style: italic; color:var(--silver); }
         .logo-wordmark em { font-style:italic; background:linear-gradient(135deg,var(--gold-light),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .logo-badge { font-size:10px; font-weight:600; letter-spacing:0.12em; background:linear-gradient(135deg,var(--gold),#8a5a1a); color:var(--ink); padding:3px 10px; border-radius:var(--pill); }
+        .logo-badge { font-family: 'Space Grotesk', sans-serif; font-size:10px; font-weight:700; letter-spacing:0.12em; background:linear-gradient(135deg,var(--gold),#a8751e); color:var(--ink); padding:3px 10px; border-radius:var(--pill); }
         .back-link {
             display:flex; align-items:center; gap:8px;
             color:var(--muted); text-decoration:none; font-size:13px;
             border:1px solid var(--border); border-radius:var(--pill); padding:8px 18px;
             transition:all 0.2s;
         }
-        .back-link:hover { color:var(--gold); border-color:var(--border-strong); background:rgba(201,168,76,0.06); }
+        .back-link:hover { color:var(--gold-light); border-color:var(--border-strong); background:rgba(232,178,60,0.08); }
 
         .location-banner {
-            background: rgba(201,168,76,0.08);
+            background: linear-gradient(120deg, rgba(232,178,60,0.1), rgba(79,157,218,0.06));
             border: 1px solid var(--border-mid);
             border-radius: var(--pill);
             padding: 8px 20px;
@@ -87,40 +99,36 @@
         .location-text { font-size: 13px; color: var(--silver-dim); }
         .location-text strong { color: var(--gold-light); }
         .location-btn {
-            background: var(--gold);
+            background: linear-gradient(135deg, var(--gold), #a8751e);
             border: none;
             border-radius: var(--pill);
             padding: 4px 16px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--ink);
             cursor: pointer;
             transition: all 0.2s;
         }
         .location-btn:hover { transform: scale(1.02); }
 
-        .grid-hero {
-            text-align:center; padding:30px 20px 20px; margin-bottom:20px;
-        }
-        .hero-glyph { font-size:56px; display:block; margin-bottom:8px; animation:levitate 5s ease-in-out infinite; }
-        .hero-title { font-family:'Cormorant Garamond',serif; font-size:clamp(28px,4vw,44px); font-weight:300; color:var(--silver); line-height:0.95; margin-bottom:6px; }
+        .grid-hero { text-align:center; padding:30px 20px 20px; margin-bottom:20px; }
+        .hero-glyph { font-size:54px; display:block; margin-bottom:8px; animation:levitate 5s ease-in-out infinite; filter: drop-shadow(0 0 26px rgba(232,178,60,0.35)); }
+        .hero-title { font-size:clamp(28px,4vw,44px); font-weight:400; color:var(--silver); line-height:1.05; margin-bottom:6px; }
         .hero-title em { font-style:italic; background:linear-gradient(135deg,var(--gold-light),var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .hero-sub { font-size:15px; font-weight:300; color:var(--muted); }
+        .hero-sub { font-size:15px; font-weight:400; color:var(--muted); }
 
         /* Stats Grid */
-        .stats-grid {
-            display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-            gap:14px; margin-bottom:20px;
-        }
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:20px; }
         .stat-card {
-            padding:16px 14px; text-align:center;
-            background: linear-gradient(150deg, rgba(19,16,42,0.8), rgba(10,8,24,0.7));
+            padding:18px 14px; text-align:center;
+            background: linear-gradient(155deg, rgba(232,178,60,0.1), rgba(15,12,34,0.75) 60%);
             border: 1px solid var(--border);
             border-radius: var(--panel);
             backdrop-filter: blur(8px);
+            transition: border-color 0.2s;
         }
         .stat-card:hover { border-color:var(--border-mid); }
-        .stat-value { font-size:24px; font-weight:700; color:var(--gold-light); display:block; }
+        .stat-value { font-family: 'Fraunces', serif; font-size:26px; font-weight:500; color:var(--gold-light); display:block; }
         .stat-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:4px; }
         .stat-unit { font-size:12px; color:var(--silver-dim); font-weight:400; }
 
@@ -129,66 +137,47 @@
             padding:12px 18px; border-radius:var(--panel); margin-bottom:20px;
             display:flex; align-items:center; gap:12px; flex-wrap:wrap;
             border-left:4px solid var(--warning);
-            background:rgba(251,191,36,0.08);
+            background:rgba(242,184,78,0.08);
         }
-        .alert-banner.danger { border-left-color:var(--danger); background:rgba(224,85,85,0.08); }
-        .alert-banner.success { border-left-color:var(--success); background:rgba(92,184,122,0.08); }
+        .alert-banner.danger { border-left-color:var(--danger); background:rgba(255,97,87,0.08); }
+        .alert-banner.success { border-left-color:var(--success); background:rgba(92,212,138,0.08); }
         .alert-icon { font-size:20px; }
         .alert-content { flex:1; }
-        .alert-title { font-size:12px; font-weight:600; color:var(--gold); }
+        .alert-title { font-size:12px; font-weight:700; color:var(--gold-light); }
         .alert-text { font-size:12px; color:var(--silver-dim); }
         .alert-action {
-            background:var(--gold); border:none; border-radius:var(--pill);
-            padding:5px 14px; color:var(--ink); font-size:11px; font-weight:600; cursor:pointer;
+            background:linear-gradient(135deg, var(--gold), #a8751e); border:none; border-radius:var(--pill);
+            padding:5px 14px; color:var(--ink); font-size:11px; font-weight:700; cursor:pointer;
         }
         .alert-action:hover { opacity:0.85; }
 
         /* Dashboard Grid */
-        .dashboard-grid {
-            display:grid; grid-template-columns:repeat(2,1fr);
-            gap:18px; margin-bottom:20px;
-        }
+        .dashboard-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:18px; margin-bottom:20px; }
         .panel {
-            background: linear-gradient(150deg, rgba(19,16,42,0.85), rgba(10,8,24,0.75));
+            background: linear-gradient(155deg, rgba(90,63,196,0.1), rgba(15,12,34,0.82) 55%);
             border: 1px solid var(--border);
             border-radius: var(--panel);
             padding:18px;
             backdrop-filter: blur(8px);
+            transition: border-color 0.2s;
         }
         .panel:hover { border-color:var(--border-mid); }
         .panel-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-        .panel-title { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:400; color:var(--gold); }
+        .panel-title { font-size:17px; font-weight:500; font-style: italic; color:var(--gold-light); }
         .panel-value { font-size:20px; font-weight:600; color:var(--silver); }
         .panel-sub { font-size:11px; color:var(--muted); }
 
-        .energy-bar {
-            height:6px; background:rgba(255,255,255,0.05); border-radius:var(--pill);
-            overflow:hidden; margin:8px 0;
-        }
-        .energy-bar-fill {
-            height:100%; border-radius:var(--pill);
-            background:linear-gradient(90deg,var(--success),var(--gold));
-            transition:width 1s ease;
-        }
-        .water-bar {
-            height:6px; background:rgba(255,255,255,0.05); border-radius:var(--pill);
-            overflow:hidden; margin:8px 0;
-        }
-        .water-bar-fill {
-            height:100%; border-radius:var(--pill);
-            background:linear-gradient(90deg,#3b82f6,#60a5fa);
-            transition:width 1s ease;
-        }
+        .energy-bar { height:6px; background:rgba(255,255,255,0.06); border-radius:var(--pill); overflow:hidden; margin:8px 0; }
+        .energy-bar-fill { height:100%; border-radius:var(--pill); background:linear-gradient(90deg,var(--success),var(--gold)); transition:width 1s ease; }
+        .water-bar { height:6px; background:rgba(255,255,255,0.06); border-radius:var(--pill); overflow:hidden; margin:8px 0; }
+        .water-bar-fill { height:100%; border-radius:var(--pill); background:linear-gradient(90deg,var(--water),var(--water-light)); transition:width 1s ease; }
 
-        .info-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.03); font-size:12px; }
+        .info-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:12px; }
         .info-row:last-child { border-bottom:none; }
         .info-label { color:var(--muted); }
         .info-value { color:var(--silver); font-weight:500; }
 
-        .reservoir-item {
-            padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.03);
-            display:flex; justify-content:space-between; align-items:center;
-        }
+        .reservoir-item { padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04); display:flex; justify-content:space-between; align-items:center; }
         .reservoir-name { font-size:12px; color:var(--silver); }
         .reservoir-level { font-size:11px; font-weight:600; }
         .reservoir-level.safe { color:var(--success); }
@@ -202,7 +191,7 @@
             padding:12px 14px;
             margin-bottom:8px;
         }
-        .rec-title { font-size:12px; font-weight:600; color:var(--gold); }
+        .rec-title { font-size:12px; font-weight:700; color:var(--gold-light); }
         .rec-action { font-size:11px; color:var(--silver-dim); margin:3px 0; }
         .rec-savings { font-size:10px; color:var(--success); }
         .rec-priority-high { border-left:3px solid var(--danger); }
@@ -210,39 +199,23 @@
 
         .chart-container { height:140px; margin:8px 0; position:relative; overflow:hidden; }
         .chart-line { display:flex; align-items:flex-end; height:100%; gap:2px; padding:4px 0; }
-        .chart-bar {
-            flex:1; border-radius:2px 2px 0 0;
-            background:linear-gradient(180deg,var(--gold),rgba(201,168,76,0.2));
-            transition:height 0.5s ease;
-            min-height:3px;
-        }
-        .chart-bar.solar { background:linear-gradient(180deg,var(--warning),rgba(251,191,36,0.2)); }
-        .chart-bar.energy { background:linear-gradient(180deg,var(--info),rgba(59,130,246,0.2)); }
+        .chart-bar { flex:1; border-radius:2px 2px 0 0; background:linear-gradient(180deg,var(--gold),rgba(232,178,60,0.2)); transition:height 0.5s ease; min-height:3px; }
+        .chart-bar.solar { background:linear-gradient(180deg,var(--warning),rgba(242,184,78,0.2)); }
+        .chart-bar.energy { background:linear-gradient(180deg,var(--info),rgba(79,157,218,0.2)); }
         .chart-labels { display:flex; gap:2px; margin-top:2px; }
         .chart-label { flex:1; text-align:center; font-size:7px; color:var(--muted); }
 
-        .community-grid {
-            display:grid; grid-template-columns:repeat(3,1fr);
-            gap:10px; margin-top:10px;
-        }
-        .community-stat {
-            text-align:center; padding:10px;
-            background:rgba(255,255,255,0.02);
-            border-radius:10px;
-            border:1px solid var(--border);
-        }
-        .community-value { font-size:18px; font-weight:600; color:var(--gold-light); }
+        .community-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
+        .community-stat { text-align:center; padding:10px; background:rgba(255,255,255,0.03); border-radius:10px; border:1px solid var(--border); }
+        .community-value { font-family: 'Fraunces', serif; font-size:19px; font-weight:500; color:var(--gold-light); }
         .community-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
 
-        .footer-note {
-            text-align:center; padding:20px; border-top:1px solid var(--border);
-            margin-top:20px; color:var(--muted); font-size:11px;
-        }
+        .footer-note { text-align:center; padding:20px; border-top:1px solid var(--border); margin-top:20px; color:var(--muted); font-size:11px; }
 
         .loading { text-align:center; padding:40px; color:var(--muted); }
         .spinner {
             width:36px; height:36px;
-            border:3px solid rgba(201,168,76,0.15);
+            border:3px solid rgba(232,178,60,0.16);
             border-top-color:var(--gold);
             border-radius:50%;
             animation:spin 1s linear infinite;
@@ -253,7 +226,7 @@
         /* Location permission modal */
         .location-modal {
             position: fixed; inset: 0;
-            background: rgba(5,3,14,0.95);
+            background: rgba(6,4,16,0.95);
             backdrop-filter: blur(20px);
             z-index: 10000;
             display: none;
@@ -276,26 +249,17 @@
             from { opacity:0; transform: scale(0.9) translateY(20px); }
             to { opacity:1; transform: scale(1) translateY(0); }
         }
-        .location-modal-icon { font-size: 56px; margin-bottom: 12px; }
-        .location-modal-title { font-family:'Cormorant Garamond',serif; font-size: 28px; font-weight: 400; color: var(--silver); margin-bottom: 8px; }
+        .location-modal-icon { font-size: 54px; margin-bottom: 12px; }
+        .location-modal-title { font-size: 27px; font-weight: 400; font-style: italic; color: var(--silver); margin-bottom: 8px; }
         .location-modal-text { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
         .location-modal-buttons { display: flex; gap: 12px; }
-        .location-modal-btn {
-            flex: 1; padding: 12px; border-radius: var(--pill);
-            border: none; font-size: 14px; font-weight: 600; cursor: pointer;
-            transition: all 0.2s;
-        }
-        .location-modal-btn.primary {
-            background: linear-gradient(135deg, var(--gold), #8a5a1a);
-            color: var(--ink);
-        }
-        .location-modal-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(201,168,76,0.3); }
-        .location-modal-btn.secondary {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            color: var(--silver-dim);
-        }
+        .location-modal-btn { flex: 1; padding: 12px; border-radius: var(--pill); border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: 'Space Grotesk', sans-serif; }
+        .location-modal-btn.primary { background: linear-gradient(135deg, var(--gold), #a8751e); color: var(--ink); }
+        .location-modal-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(232,178,60,0.35); }
+        .location-modal-btn.secondary { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--silver-dim); }
         .location-modal-btn.secondary:hover { background: rgba(255,255,255,0.1); }
+
+        button:focus-visible, a:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
 
         @media (max-width:1024px) { .dashboard-grid { grid-template-columns:1fr; } }
         @media (max-width:768px) {
@@ -312,8 +276,10 @@
     </style>
 </head>
 <body>
+    <canvas id="starfield" aria-hidden="true"></canvas>
     <div class="ambient ambient-1" aria-hidden="true"></div>
     <div class="ambient ambient-2" aria-hidden="true"></div>
+    <div class="ambient ambient-3" aria-hidden="true"></div>
 
     <!-- Location Permission Modal -->
     <div id="location-modal" class="location-modal">
@@ -484,6 +450,45 @@
         const API_BASE = 'https://arnav0928.pythonanywhere.com';
         let refreshInterval = null;
 
+        // ── Starfield (shared ecosystem signature) ──
+        (function() {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+            let stars = [];
+            const N = 170;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            for (let i = 0; i < N; i++) {
+                stars.push({
+                    x: Math.random(),
+                    y: Math.random(),
+                    r: Math.random() * 1.2 + 0.2,
+                    a: Math.random(),
+                    speed: Math.random() * 0.0005 + 0.0002,
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const t = Date.now() / 1000;
+                stars.forEach(s => {
+                    const alpha = 0.3 + 0.5 * Math.sin(t * s.speed * 6000 + s.a * 100);
+                    ctx.beginPath();
+                    ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(216,212,236,${alpha})`;
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
         // ============================================
         // LOCATION PERMISSION
         // ============================================
@@ -565,54 +570,46 @@
         function renderDashboard(data) {
             const d = data;
 
-            // Update status
             document.getElementById('status-text').textContent = `Live data for ${d.location.city || 'Phoenix, AZ'} — updated ${new Date(d.timestamp).toLocaleTimeString()}`;
 
-            // Stats
             document.getElementById('stat-energy').textContent = d.energy.current_usage || '--';
             document.getElementById('stat-solar').textContent = d.energy.solar_production || '--';
             document.getElementById('stat-water').textContent = d.water.current_usage || '--';
             document.getElementById('stat-temp').textContent = d.weather.heat_index || d.weather.temp || '--';
 
-            // Energy
             document.getElementById('energy-usage').textContent = `${d.energy.current_usage} kWh`;
             document.getElementById('energy-solar').textContent = `${d.energy.solar_production} kWh`;
             document.getElementById('energy-net').textContent = `${d.energy.net_usage} kWh`;
-            
+
             const energyPct = Math.min(100, (d.energy.current_usage / 80) * 100);
             document.getElementById('energy-bar').style.width = `${energyPct}%`;
             document.getElementById('energy-max-label').textContent = `${Math.max(80, Math.round(d.energy.current_usage * 1.5))} kWh`;
 
-            // Energy chart
             renderChart('energy-chart-line', d.energy.history || [], 'energy');
 
-            // Water
             document.getElementById('water-usage').textContent = `${d.water.current_usage} gal`;
             document.getElementById('water-avg').textContent = `${d.water.average_usage || 250} gal`;
             document.getElementById('water-leak').textContent = d.water.leak_detected ? '⚠️ Leak Detected!' : '✅ No leaks detected';
-            
+
             const waterPct = Math.min(100, (d.water.current_usage / 400) * 100);
             document.getElementById('water-bar').style.width = `${waterPct}%`;
             document.getElementById('water-max-label').textContent = `${Math.max(400, Math.round(d.water.current_usage * 1.5))} gal`;
 
-            // Water tips
             const tipsEl = document.getElementById('water-tips');
             if (d.water.conservation_tips && d.water.conservation_tips.length) {
                 tipsEl.innerHTML = d.water.conservation_tips.map(t => `💡 ${t}`).join('<br>');
             }
 
-            // Weather & Grid
             document.getElementById('weather-temp').textContent = `${d.weather.temp}°F`;
             document.getElementById('weather-heat').textContent = `${d.weather.heat_index}°F`;
             document.getElementById('weather-humidity').textContent = `${d.weather.humidity}%`;
             document.getElementById('grid-demand').textContent = `${d.grid.total_demand} MW`;
-            
+
             const riskColors = { low: '✅ Low', medium: '⚠️ Medium', high: '🔴 High' };
             document.getElementById('outage-risk').textContent = riskColors[d.grid.outage_risk] || d.grid.outage_risk;
             document.getElementById('outage-risk').style.color = d.grid.outage_risk === 'high' ? 'var(--danger)' : d.grid.outage_risk === 'medium' ? 'var(--warning)' : 'var(--success)';
             document.getElementById('renewable-mix').textContent = `${d.grid.renewable_percentage}%`;
 
-            // Community
             document.getElementById('community-city').textContent = d.community.city || 'Phoenix';
             document.getElementById('community-users').textContent = d.community.active_now || '--';
             document.getElementById('community-score').textContent = `${d.community.resilience_score}%`;
@@ -620,10 +617,8 @@
             document.getElementById('community-solar').textContent = d.community.resources?.solar_installations || '--';
             document.getElementById('community-water').textContent = (d.community.resources?.water_storage || 0).toLocaleString();
 
-            // Alerts
             renderAlerts(d.alerts || []);
 
-            // Recommendations
             loadRecommendations(d.energy.current_usage, d.water.current_usage, d.weather.temp, d.energy.has_solar);
         }
 
@@ -652,7 +647,7 @@
                 return;
             }
 
-            const alert = alerts[0]; // Show most critical first
+            const alert = alerts[0];
             banner.style.display = 'flex';
             banner.className = `alert-banner ${alert.level === 'danger' ? 'danger' : alert.level === 'warning' ? '' : 'success'}`;
             banner.innerHTML = `
@@ -666,7 +661,7 @@
         }
 
         function showNotification(msg) {
-            alert(msg); // Simple fallback - could be a toast
+            alert(msg);
         }
 
         async function loadRecommendations(energy, water, temp, hasSolar) {
@@ -708,7 +703,6 @@
         // ============================================
 
         function init() {
-            // Check if location was already shared
             const hasLocation = localStorage.getItem('wizard_grid_location_shared');
 
             if (hasLocation) {
@@ -718,7 +712,6 @@
                 document.getElementById('location-modal').classList.add('show');
             }
 
-            // Event listeners
             document.getElementById('location-allow').addEventListener('click', () => {
                 localStorage.setItem('wizard_grid_location_shared', 'true');
                 requestLocation();
@@ -735,7 +728,6 @@
                 document.getElementById('location-modal').classList.add('show');
             });
 
-            // Refresh every 60 seconds
             if (refreshInterval) clearInterval(refreshInterval);
             refreshInterval = setInterval(() => {
                 const hasLoc = localStorage.getItem('wizard_grid_location_shared');
@@ -743,7 +735,6 @@
             }, 60000);
         }
 
-        // Start when DOM ready
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
