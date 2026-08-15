@@ -569,26 +569,32 @@
         }
 
         // ========== HYDRATION ==========
-        async function trackHydration(oz) {
-            try {
-                const res = await fetch(`${API_BASE}/api/heat/hydration`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ amount: oz })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById('hydration-message').textContent = data.message;
-                    document.getElementById('hydration-percent').textContent = data.percent_complete + '%';
-                    document.getElementById('hydration-text').textContent = `${data.today_total} oz / ${data.goal} oz`;
-                    const pct = Math.min(100, data.percent_complete);
-                    document.getElementById('hydration-fill').style.transform = `rotate(${pct * 3.6}deg)`;
-                }
-            } catch(e) {
-                console.error('Hydration error:', e);
+        // Update trackHydration to handle the response correctly
+async function trackHydration(oz) {
+    try {
+        const res = await fetch(`${API_BASE}/api/heat/hydration`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ amount: oz })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('hydration-message').textContent = data.message || '';
+            document.getElementById('hydration-percent').textContent = data.percent_complete + '%';
+            document.getElementById('hydration-text').textContent = `${data.today_total} oz / ${data.goal} oz`;
+            const pct = Math.min(100, data.percent_complete);
+            document.getElementById('hydration-fill').style.transform = `rotate(${pct * 3.6}deg)`;
+            
+            // Update stats
+            if (data.today_total >= data.goal) {
+                document.getElementById('hydration-message').textContent = `✅ Goal met! ${data.today_total}oz / ${data.goal}oz`;
             }
         }
+    } catch(e) {
+        console.error('Hydration error:', e);
+    }
+}
 
         // ========== ACTIVITY SAFETY ==========
         async function fetchActivitySafety(activity) {
