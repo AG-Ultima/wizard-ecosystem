@@ -391,18 +391,26 @@
         let currentLocation = null;
 
         // ========== GEOLOCATION ==========
-        function getLocation() {
-            return new Promise((resolve) => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-                        () => resolve({ lat: 33.4484, lon: -112.0740 }) // Fallback Phoenix
-                    );
-                } else {
+       function getLocation() {
+    return new Promise((resolve) => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    console.log('📍 Location detected:', pos.coords.latitude, pos.coords.longitude);
+                    resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+                },
+                () => {
+                    console.log('⚠️ Location permission denied, using Phoenix default');
                     resolve({ lat: 33.4484, lon: -112.0740 });
-                }
-            });
+                },
+                { timeout: 5000, enableHighAccuracy: false }
+            );
+        } else {
+            console.log('⚠️ Geolocation not available, using Phoenix default');
+            resolve({ lat: 33.4484, lon: -112.0740 });
         }
+    });
+}
 
         // ========== AUTH ==========
         async function checkAuth() {
