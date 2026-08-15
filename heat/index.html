@@ -416,32 +416,54 @@
                     }
                 }
             } catch(e) {}
-            window.location.href = 'https://wizardecosystem.dpdns.org';
+            window.location.href = 'https://wizardecosystem.dev';
             return false;
         }
 
         // ========== FETCH WEATHER ==========
-        async function fetchWeather() {
-            if (!currentLocation) {
-                currentLocation = await getLocation();
+        // In heat/index.html, update the fetchWeather function
+async function fetchWeather() {
+    if (!currentLocation) {
+        currentLocation = await getLocation();
+    }
+    const { lat, lon } = currentLocation;
+    
+    try {
+        console.log(`🌡️ Fetching weather for: ${lat}, ${lon}`);
+        const res = await fetch(`${API_BASE}/api/heat/current?lat=${lat}&lon=${lon}`, {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
             }
-            const { lat, lon } = currentLocation;
-            
-            try {
-                const res = await fetch(`${API_BASE}/api/heat/current?lat=${lat}&lon=${lon}`, {
-                    credentials: 'include'
-                });
-                const data = await res.json();
-                if (data.success) {
-                    updateWeatherUI(data);
-                } else {
-                    console.error('Weather error:', data.error);
-                }
-            } catch(e) {
-                console.error('Weather fetch error:', e);
-            }
+        });
+        
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Weather API error:', res.status, errorText);
+            throw new Error(`Weather API error: ${res.status}`);
         }
+        
+        const data = await res.json();
+        console.log('Weather data:', data);
+        if (data.success) {
+            updateWeatherUI(data);
+        } else {
+            console.error('Weather error:', data.error);
+            showError(data.error || 'Failed to load weather');
+        }
+    } catch(e) {
+        console.error('Weather fetch error:', e);
+        showError('Unable to load weather data. Please try again.');
+    }
+}
 
+function showError(message) {
+    document.getElementById('current-temp').innerHTML = '--° <small>F</small>';
+    document.getElementById('current-condition').textContent = message;
+    document.getElementById('risk-badge').textContent = '⚠️ Error';
+    document.getElementById('risk-badge').style.background = 'rgba(239,68,68,0.2)';
+    document.getElementById('risk-badge').style.color = '#ef4444';
+}
         function updateWeatherUI(data) {
     const current = data.current;
     const risk = data.risk;
