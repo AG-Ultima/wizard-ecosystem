@@ -6,29 +6,30 @@
     <title>FireWatch AI — Real-Time Wildfire Detection</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* ── Reset & Variables ── */
+        /* ── Reset & Variables (shared Wizard Ecosystem desert-heat system) ── */
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --ink: #080612;
-            --ink-2: #0e0b1e;
-            --ink-3: #13102a;
-            --fire: #e07020;
-            --fire-glow: rgba(224,112,32,0.25);
-            --fire-light: #f5a050;
-            --fire-dark: #8a3a10;
-            --gold: #c9a84c;
-            --silver: #d4d0e8;
-            --silver-dim: rgba(212,208,232,0.55);
-            --muted: rgba(212,208,232,0.35);
-            --border: rgba(201,168,76,0.14);
-            --border-strong: rgba(201,168,76,0.4);
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #4ade80;
-            --info: #3b82f6;
+            --sand-dark: #1c1410;
+            --sand-mid: #241a14;
+            --sand-card: #2b2019;
+            --sun: #f2a53c;
+            --sun-light: #ffc773;
+            --ember: #ff6b47;
+            --ember-deep: #c73e2c;
+            --sky: #4f9dad;
+            --sky-light: #7fc4d1;
+            --paper: #f4ead9;
+            --paper-dim: rgba(244,234,217,0.62);
+            --paper-faint: rgba(244,234,217,0.34);
+            --line: rgba(242,165,60,0.16);
+            --line-strong: rgba(242,165,60,0.4);
+            --danger: #ff5c4d;
+            --warning: #f2a53c;
+            --success: #7fc47a;
+            --info: #7fc4d1;
             --radius: 20px;
             --radius-sm: 12px;
             --shadow: 0 8px 32px rgba(0,0,0,0.4);
@@ -36,28 +37,44 @@
 
         html { scroll-behavior: smooth; }
         body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--ink);
-            color: var(--silver);
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--sand-dark);
+            color: var(--paper);
             min-height: 100vh;
+        }
+
+        h1, h2, h3, .card-title, .logo-name, .hero-title, .risk-value {
+            font-family: 'Fraunces', serif;
         }
 
         /* ── Ambient & Starfield ── */
         #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 
+        /* Signature element: heat-shimmer horizon glow, tints with current fire risk */
+        .horizon {
+            position: fixed; left: 0; right: 0; bottom: 0; height: 46vh;
+            pointer-events: none; z-index: 0;
+            background: linear-gradient(to top, var(--horizon-color, var(--ember-deep)) 0%, transparent 78%);
+            opacity: 0.22;
+            filter: blur(70px);
+            transition: background 1.2s ease;
+            animation: shimmer 7s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.20; }
+            50% { transform: translateY(-10px) scaleX(1.03); opacity: 0.3; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .horizon, .logo-glyph, .hero-icon { animation: none !important; }
+        }
+
         .ambient {
             position: fixed; border-radius: 50%;
-            filter: blur(120px); pointer-events: none; z-index: 0;
-            opacity: 0.4; animation: drift 18s ease-in-out infinite alternate;
+            filter: blur(130px); pointer-events: none; z-index: 0;
+            opacity: 0.24;
         }
-        .ambient-fire { 
-            width: 500px; height: 500px; 
-            bottom: -100px; right: -100px; 
-            background: radial-gradient(circle, rgba(224,112,32,0.2), transparent 70%);
-            animation-delay: -5s;
-        }
-        .ambient-1 { width: 600px; height: 600px; top: -150px; left: -150px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
-        @keyframes drift { from { transform: translate(0,0); } to { transform: translate(40px,30px) scale(1.08); } }
+        .ambient-fire { width: 520px; height: 520px; bottom: -110px; right: -110px; background: radial-gradient(circle, var(--ember), transparent 70%); }
+        .ambient-1 { width: 600px; height: 600px; top: -160px; left: -160px; background: radial-gradient(circle, var(--sky), transparent 70%); }
 
         /* ── Shell ── */
         .shell { position: relative; z-index: 10; max-width: 1400px; margin: 0 auto; padding: 20px 24px 60px; }
@@ -67,109 +84,107 @@
             display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 16px;
             padding: 16px 24px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
+            background: linear-gradient(145deg, var(--sand-card), var(--sand-mid));
+            border: 1px solid var(--line);
             border-radius: var(--radius);
             margin-bottom: 24px;
         }
         .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .logo-glyph { font-size: 32px; filter: drop-shadow(0 0 20px rgba(224,112,32,0.3)); animation: pulse 3s ease-in-out infinite; }
+        .logo-glyph { font-size: 30px; filter: drop-shadow(0 0 16px rgba(255,107,71,0.4)); animation: pulse 3s ease-in-out infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
         .logo-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 24px; font-weight: 600;
-            background: linear-gradient(135deg, var(--fire-light), var(--fire));
+            font-size: 23px; font-weight: 500; font-style: italic;
+            background: linear-gradient(135deg, var(--sun-light), var(--ember));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         .logo-badge {
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 9px; font-weight: 600; letter-spacing: 0.12em;
-            background: rgba(224,112,32,0.2); border: 1px solid rgba(224,112,32,0.3);
-            color: var(--fire-light); padding: 2px 10px; border-radius: 100px;
+            background: rgba(255,107,71,0.16); border: 1px solid rgba(255,107,71,0.32);
+            color: var(--ember); padding: 3px 10px; border-radius: 100px;
         }
 
         .header-right { display: flex; align-items: center; gap: 16px; }
         .location-badge {
             display: flex; align-items: center; gap: 8px;
-            font-size: 13px; color: var(--silver-dim);
-            background: rgba(255,255,255,0.05);
+            font-size: 13px; color: var(--paper-dim);
+            background: rgba(244,234,217,0.05);
             padding: 8px 16px; border-radius: 100px;
-            border: 1px solid var(--border);
+            border: 1px solid var(--line);
         }
         .user-pill {
             display: flex; align-items: center; gap: 8px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
+            background: rgba(244,234,217,0.04);
+            border: 1px solid var(--line);
             border-radius: 100px;
             padding: 5px 14px 5px 8px;
         }
-        .user-avatar { width: 30px; height: 30px; background: linear-gradient(135deg, var(--fire), var(--fire-dark)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .user-avatar { width: 30px; height: 30px; background: linear-gradient(135deg, var(--sun), var(--ember)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 
         /* ── Hero ── */
-        .hero {
-            text-align: center; padding: 30px 0 40px;
-        }
-        .hero-icon { font-size: 72px; display: block; margin-bottom: 16px; animation: levitate 5s ease-in-out infinite; filter: drop-shadow(0 0 40px rgba(224,112,32,0.3)); }
+        .hero { text-align: center; padding: 30px 0 40px; }
+        .hero-icon { font-size: 68px; display: block; margin-bottom: 16px; animation: levitate 5s ease-in-out infinite; filter: drop-shadow(0 0 40px rgba(255,107,71,0.35)); }
         @keyframes levitate { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .hero-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(40px, 6vw, 64px);
-            font-weight: 300; color: var(--silver);
+            font-size: clamp(38px, 6vw, 60px);
+            font-weight: 400; color: var(--paper);
             margin-bottom: 8px;
         }
-        .hero-title em { font-style: italic; background: linear-gradient(135deg, var(--fire-light), var(--fire)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-sub { font-size: 16px; color: var(--muted); letter-spacing: 0.02em; }
+        .hero-title em { font-style: italic; background: linear-gradient(135deg, var(--sun-light), var(--ember)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-sub { font-size: 15.5px; color: var(--paper-faint); letter-spacing: 0.01em; }
 
         /* ── Location Input ── */
-        .location-bar {
-            display: flex; gap: 12px; max-width: 600px; margin: 0 auto 32px;
-        }
+        .location-bar { display: flex; gap: 12px; max-width: 600px; margin: 0 auto 32px; }
         .loc-field {
             flex: 1;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--line);
             border-radius: 100px;
             padding: 14px 22px;
-            color: var(--silver);
+            color: var(--paper);
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 15px;
             outline: none;
             transition: border-color 0.3s;
         }
-        .loc-field:focus { border-color: var(--fire); }
+        .loc-field:focus { border-color: var(--ember); }
+        .loc-field::placeholder { color: var(--paper-faint); }
         .loc-btn {
-            background: linear-gradient(135deg, var(--fire), var(--fire-dark));
+            background: linear-gradient(135deg, var(--sun), var(--ember));
             border: none;
             border-radius: 100px;
             padding: 14px 28px;
-            color: white;
-            font-weight: 600;
+            color: var(--sand-dark);
+            font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
             cursor: pointer;
             transition: all 0.3s;
             white-space: nowrap;
         }
-        .loc-btn:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(224,112,32,0.3); }
+        .loc-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(255,107,71,0.35); }
 
         /* ── Status Bar ── */
         .status-bar {
             display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
+            background: rgba(244,234,217,0.03);
+            border: 1px solid var(--line);
             border-radius: var(--radius);
             padding: 14px 24px;
             margin-bottom: 28px;
         }
         .status-item { display: flex; align-items: center; gap: 10px; font-size: 13px; }
         .status-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .status-dot.green { background: var(--success); box-shadow: 0 0 12px rgba(74,222,128,0.4); }
-        .status-dot.yellow { background: var(--warning); box-shadow: 0 0 12px rgba(245,158,11,0.4); }
-        .status-dot.red { background: var(--danger); box-shadow: 0 0 12px rgba(239,68,68,0.4); animation: pulse-dot 1s ease-in-out infinite; }
+        .status-dot.green { background: var(--success); box-shadow: 0 0 12px rgba(127,196,122,0.5); }
+        .status-dot.yellow { background: var(--warning); box-shadow: 0 0 12px rgba(242,165,60,0.5); }
+        .status-dot.red { background: var(--danger); box-shadow: 0 0 12px rgba(255,92,77,0.5); animation: pulse-dot 1s ease-in-out infinite; }
         @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
-        .status-label { color: var(--muted); }
+        .status-label { color: var(--paper-faint); }
         .status-value { font-weight: 600; }
         .status-value.loading { opacity: 0.5; }
 
         /* ── Alert Banner ── */
         .alert-banner {
-            background: rgba(239,68,68,0.08);
+            background: rgba(255,92,77,0.08);
             border: 1px solid var(--danger);
             border-radius: var(--radius-sm);
             padding: 14px 20px;
@@ -182,9 +197,9 @@
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .alert-icon { font-size: 24px; flex-shrink: 0; }
         .alert-content { flex: 1; }
-        .alert-title { font-weight: 600; color: var(--danger); font-size: 14px; }
-        .alert-desc { font-size: 13px; color: var(--silver-dim); }
-        .alert-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 0 8px; }
+        .alert-title { font-weight: 700; color: var(--danger); font-size: 14px; }
+        .alert-desc { font-size: 13px; color: var(--paper-dim); }
+        .alert-dismiss { background: none; border: none; color: var(--paper-faint); cursor: pointer; font-size: 18px; padding: 0 8px; }
 
         /* ── Dashboard Grid ── */
         .dashboard-grid {
@@ -195,213 +210,127 @@
         }
 
         .card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
+            background: linear-gradient(145deg, var(--sand-card), var(--sand-mid));
+            border: 1px solid var(--line);
             border-radius: var(--radius);
             padding: 24px;
-            transition: all 0.3s;
+            transition: border-color 0.3s;
             backdrop-filter: blur(8px);
         }
-        .card:hover { border-color: var(--border-strong); }
-        .card-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 16px;
-        }
-        .card-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 18px; font-weight: 600;
-            color: var(--silver);
-        }
-        .card-icon { font-size: 22px; opacity: 0.7; }
+        .card:hover { border-color: var(--line-strong); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .card-title { font-size: 18px; font-weight: 500; font-style: italic; color: var(--paper); }
+        .card-icon { font-size: 20px; opacity: 0.6; }
 
         /* Risk Card */
-        .risk-value {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 42px; font-weight: 600;
-            color: var(--fire-light);
-        }
-        .risk-detail { font-size: 14px; color: var(--muted); margin-top: 4px; }
-        .risk-bar-container {
-            margin-top: 16px;
-            padding: 4px 0;
-        }
-        .risk-bar-track {
-            height: 6px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .risk-bar-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.8s ease;
-        }
-        .risk-labels {
-            display: flex; justify-content: space-between;
-            font-size: 10px; color: var(--muted);
-            margin-top: 6px;
-        }
-        .risk-factor {
-            display: flex; justify-content: space-between;
-            font-size: 12px; color: var(--silver-dim);
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
+        .risk-value { font-size: 40px; font-weight: 500; color: var(--sun-light); }
+        .risk-detail { font-size: 13.5px; color: var(--paper-faint); margin-top: 4px; }
+        .risk-bar-container { margin-top: 16px; padding: 4px 0; }
+        .risk-bar-track { height: 6px; background: rgba(244,234,217,0.08); border-radius: 3px; overflow: hidden; }
+        .risk-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+        .risk-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--paper-faint); margin-top: 6px; }
+        .risk-factor { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--paper-dim); padding: 5px 0; border-bottom: 1px solid rgba(244,234,217,0.05); }
 
         /* Fire List */
-        .fire-item {
-            display: flex; align-items: center; gap: 14px;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        .fire-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(244,234,217,0.05); cursor: pointer; transition: background 0.2s; }
         .fire-item:last-child { border-bottom: none; }
-        .fire-item:hover { background: rgba(255,255,255,0.03); margin: 0 -8px; padding: 12px 8px; border-radius: 8px; }
+        .fire-item:hover { background: rgba(244,234,217,0.03); margin: 0 -8px; padding: 12px 8px; border-radius: 8px; }
         .fire-severity { width: 4px; height: 36px; border-radius: 2px; flex-shrink: 0; }
         .fire-severity.critical { background: var(--danger); }
         .fire-severity.high { background: var(--warning); }
-        .fire-severity.medium { background: #f59e0b; }
+        .fire-severity.medium { background: var(--sun); }
         .fire-severity.low { background: var(--success); }
         .fire-info { flex: 1; min-width: 0; }
         .fire-name { font-weight: 600; font-size: 14px; }
-        .fire-location { font-size: 12px; color: var(--muted); }
+        .fire-location { font-size: 12px; color: var(--paper-faint); }
         .fire-right { text-align: right; flex-shrink: 0; }
-        .fire-status {
-            font-size: 10px; font-weight: 600; text-transform: uppercase;
-            padding: 2px 10px; border-radius: 100px;
-        }
-        .fire-status.active { background: rgba(239,68,68,0.2); color: var(--danger); }
-        .fire-status.contained { background: rgba(74,222,128,0.2); color: var(--success); }
-        .fire-status.monitoring { background: rgba(59,130,246,0.2); color: var(--info); }
-        .fire-status.threat { background: rgba(245,158,11,0.2); color: var(--warning); }
-        .fire-acres { font-size: 11px; color: var(--muted); }
+        .fire-status { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 2px 10px; border-radius: 100px; }
+        .fire-status.active { background: rgba(255,92,77,0.18); color: var(--danger); }
+        .fire-status.contained { background: rgba(127,196,122,0.18); color: var(--success); }
+        .fire-status.monitoring { background: rgba(127,196,209,0.18); color: var(--sky-light); }
+        .fire-status.threat { background: rgba(242,165,60,0.18); color: var(--sun); }
+        .fire-acres { font-size: 11px; color: var(--paper-faint); margin-top: 3px; }
 
         /* Alert List */
-        .alert-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
+        .alert-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(244,234,217,0.05); }
         .alert-item:last-child { border-bottom: none; }
-        .alert-time { font-size: 11px; color: var(--muted); flex-shrink: 0; width: 70px; }
-        .alert-msg { font-size: 13px; color: var(--silver-dim); flex: 1; }
-        .alert-badge {
-            font-size: 10px; font-weight: 600;
-            padding: 2px 8px; border-radius: 100px;
-            flex-shrink: 0;
-        }
-        .alert-badge.critical { background: rgba(239,68,68,0.2); color: var(--danger); }
-        .alert-badge.warning { background: rgba(245,158,11,0.2); color: var(--warning); }
-        .alert-badge.info { background: rgba(59,130,246,0.2); color: var(--info); }
+        .alert-time { font-size: 11px; color: var(--paper-faint); flex-shrink: 0; width: 70px; }
+        .alert-msg { font-size: 13px; color: var(--paper-dim); flex: 1; }
+        .alert-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 100px; flex-shrink: 0; }
+        .alert-badge.critical { background: rgba(255,92,77,0.18); color: var(--danger); }
+        .alert-badge.warning { background: rgba(242,165,60,0.18); color: var(--warning); }
+        .alert-badge.info { background: rgba(127,196,209,0.18); color: var(--sky-light); }
 
         /* Routes */
-        .route-step {
-            display: flex; align-items: center; gap: 12px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
+        .route-step { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(244,234,217,0.05); }
         .route-step:last-child { border-bottom: none; }
         .route-num {
             width: 28px; height: 28px;
-            background: rgba(224,112,32,0.15);
-            border: 1px solid rgba(224,112,32,0.2);
+            background: rgba(255,107,71,0.14);
+            border: 1px solid rgba(255,107,71,0.28);
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 600;
-            color: var(--fire-light);
+            font-size: 12px; font-weight: 700;
+            color: var(--sun-light);
             flex-shrink: 0;
         }
-        .route-text { flex: 1; font-size: 13px; color: var(--silver-dim); }
+        .route-text { flex: 1; font-size: 13px; color: var(--paper-dim); }
 
         /* Smoke */
-        .smoke-item {
-            display: flex; align-items: center; gap: 14px;
-            padding: 6px 0;
-        }
-        .smoke-label { font-size: 12px; color: var(--muted); width: 70px; flex-shrink: 0; }
-        .smoke-bar {
-            flex: 1; height: 5px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        .smoke-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.6s ease;
-        }
-        .smoke-level-text { font-size: 12px; font-weight: 500; width: 60px; flex-shrink: 0; text-align: right; }
+        .smoke-item { display: flex; align-items: center; gap: 14px; padding: 6px 0; }
+        .smoke-label { font-size: 12px; color: var(--paper-faint); width: 70px; flex-shrink: 0; }
+        .smoke-bar { flex: 1; height: 5px; background: rgba(244,234,217,0.08); border-radius: 3px; overflow: hidden; }
+        .smoke-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+        .smoke-level-text { font-size: 12px; font-weight: 600; width: 60px; flex-shrink: 0; text-align: right; }
 
         /* Map Preview */
         .map-preview {
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.25);
             border-radius: var(--radius-sm);
             padding: 20px;
             text-align: center;
             min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--border);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 1px solid var(--line);
         }
-        .map-grid {
-            font-size: 28px;
-            letter-spacing: 3px;
-            line-height: 1.6;
-            font-family: monospace;
-        }
-        .map-legend {
-            display: flex; gap: 16px; margin-top: 12px;
-            font-size: 11px; color: var(--muted);
-        }
+        .map-grid { font-size: 26px; letter-spacing: 3px; line-height: 1.6; font-family: monospace; white-space: pre; }
+        .map-legend { display: flex; gap: 16px; margin-top: 12px; font-size: 11px; color: var(--paper-faint); }
         .map-legend span { display: flex; align-items: center; gap: 4px; }
         .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
         .legend-dot.fire { background: var(--danger); animation: pulse-dot 1.5s ease-in-out infinite; }
         .legend-dot.smoke { background: var(--warning); }
-        .legend-dot.evacuation { background: var(--info); }
+        .legend-dot.evacuation { background: var(--sky-light); }
         .map-link {
-            margin-top: 12px; color: var(--fire-light); font-size: 13px;
-            text-decoration: none; border: 1px solid var(--border);
+            margin-top: 12px; color: var(--sun-light); font-size: 13px;
+            text-decoration: none; border: 1px solid var(--line);
             padding: 6px 16px; border-radius: 100px;
-            transition: all 0.3s;
+            transition: all 0.3s; display: inline-block;
         }
-        .map-link:hover { background: rgba(224,112,32,0.1); border-color: var(--fire); }
+        .map-link:hover { background: rgba(242,165,60,0.1); border-color: var(--sun); }
 
         /* Loading states */
-        .loading-placeholder {
-            color: var(--muted);
-            font-size: 13px;
-            text-align: center;
-            padding: 20px 0;
-        }
+        .loading-placeholder { color: var(--paper-faint); font-size: 13px; text-align: center; padding: 20px 0; }
         .spinner {
-            display: inline-block;
-            width: 16px; height: 16px;
-            border: 2px solid rgba(224,112,32,0.2);
-            border-top-color: var(--fire);
+            display: inline-block; width: 16px; height: 16px;
+            border: 2px solid rgba(242,165,60,0.2);
+            border-top-color: var(--sun);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 8px;
+            vertical-align: middle; margin-right: 8px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Data source indicators */
-        .data-source {
-            font-size: 9px; color: var(--muted);
-            display: flex; gap: 12px; margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
-        }
+        .data-source { font-size: 9px; color: var(--paper-faint); display: flex; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
         .source-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; }
         .source-dot.online { background: var(--success); }
         .source-dot.offline { background: var(--danger); }
 
         /* Footer */
-        footer { text-align: center; padding-top: 32px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
-        footer a { color: var(--fire-light); text-decoration: none; }
+        footer { text-align: center; padding-top: 32px; border-top: 1px solid var(--line); color: var(--paper-faint); font-size: 12px; }
+        footer a { color: var(--sun-light); text-decoration: none; }
+
+        a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--sun-light); outline-offset: 2px; }
 
         @media (max-width: 768px) {
             .dashboard-grid { grid-template-columns: 1fr; }
@@ -414,6 +343,7 @@
 </head>
 <body>
     <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="horizon" id="horizon-glow" aria-hidden="true"></div>
     <div class="ambient ambient-fire" aria-hidden="true"></div>
     <div class="ambient ambient-1" aria-hidden="true"></div>
 
@@ -432,7 +362,7 @@
                 </div>
                 <div class="user-pill">
                     <div class="user-avatar">🧙</div>
-                    <span id="user-email" style="font-size:12px;color:var(--silver-dim);">Loading…</span>
+                    <span id="user-email" style="font-size:12px;color:var(--paper-dim);">Loading…</span>
                 </div>
             </div>
         </header>
@@ -446,8 +376,8 @@
 
         <!-- Location Input -->
         <div class="location-bar">
-            <input type="text" id="location-input" class="loc-field" 
-                   placeholder="Enter city, zip, or address (e.g., Phoenix, AZ)" 
+            <input type="text" id="location-input" class="loc-field"
+                   placeholder="Enter city, zip, or address (e.g., Phoenix, AZ)"
                    value="Phoenix, AZ">
             <button class="loc-btn" id="loc-btn">📍 Get Alerts</button>
         </div>
@@ -493,7 +423,7 @@
             <!-- Risk Card -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🔥 Fire Risk Today</span>
+                    <span class="card-title">Fire Risk Today</span>
                     <span class="card-icon">📊</span>
                 </div>
                 <div class="risk-value" id="risk-level">--</div>
@@ -520,7 +450,7 @@
             <!-- Active Fires Card -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🔥 Active Fires</span>
+                    <span class="card-title">Active Fires</span>
                     <span class="card-icon">📋</span>
                 </div>
                 <div id="fires-list">
@@ -536,7 +466,7 @@
             <!-- Alerts Card -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🔔 Recent Alerts</span>
+                    <span class="card-title">Recent Alerts</span>
                     <span class="card-icon">🔔</span>
                 </div>
                 <div id="alerts-list">
@@ -547,7 +477,7 @@
             <!-- Evacuation Routes Card -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🛣️ Evacuation Routes</span>
+                    <span class="card-title">Evacuation Routes</span>
                     <span class="card-icon">🚗</span>
                 </div>
                 <div id="routes-list">
@@ -561,13 +491,13 @@
             <!-- Smoke Forecast Card -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🌫️ Smoke Forecast</span>
+                    <span class="card-title">Smoke Forecast</span>
                     <span class="card-icon">🌫️</span>
                 </div>
                 <div id="smoke-list">
                     <div class="loading-placeholder"><span class="spinner"></span> Loading forecast...</div>
                 </div>
-                <div style="margin-top:12px; font-size:11px; color:var(--muted);" id="wind-info">
+                <div style="margin-top:12px; font-size:11px; color:var(--paper-faint);" id="wind-info">
                     💨 Wind: Loading...
                 </div>
             </div>
@@ -575,16 +505,16 @@
             <!-- Map Card -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">🗺️ Fire Map</span>
+                    <span class="card-title">Fire Map</span>
                     <span class="card-icon">🗺️</span>
                 </div>
                 <div class="map-preview" id="map-preview">
                     <div class="map-grid" id="map-grid">
-                        🌲 🌲 🔥 🌲 🌲
-                        🌲 🔥 🌲 🌲 🔥
-                        🌲 🌲 🏠 🌲 🌲
-                        🌲 🌲 🌲 🌲 🌲
-                        🚒 🌲 🌲 🌲 🌲
+🌲 🌲 🔥 🌲 🌲
+🌲 🔥 🌲 🌲 🔥
+🌲 🌲 🏠 🌲 🌲
+🌲 🌲 🌲 🌲 🌲
+🚒 🌲 🌲 🌲 🌲
                     </div>
                     <div class="map-legend">
                         <span><span class="legend-dot fire"></span> Active fire</span>
@@ -656,7 +586,7 @@
                     const alpha = 0.3 + 0.5 * Math.sin(t * s.speed * 6000 + s.a * 100);
                     ctx.beginPath();
                     ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(212,208,232,${alpha})`;
+                    ctx.fillStyle = `rgba(244,234,217,${alpha})`;
                     ctx.fill();
                 });
                 requestAnimationFrame(draw);
@@ -667,11 +597,12 @@
         // ── Main Logic ──
         let currentLocation = 'Phoenix, AZ';
 
+        const riskHorizonColors = { 'Low': '#7fc47a', 'Moderate': '#f2a53c', 'High': '#f2a53c', 'Extreme': '#c73e2c' };
+
         async function fetchFireData(location) {
             const statusDot = document.getElementById('status-dot');
             const sysStatus = document.getElementById('sys-status');
-            
-            // Show loading
+
             document.querySelectorAll('.status-value').forEach(el => el.classList.add('loading'));
             statusDot.className = 'status-dot yellow';
             sysStatus.textContent = 'Updating...';
@@ -680,17 +611,16 @@
                 const res = await fetch(`${API_BASE}/api/firewatch/status?location=${encodeURIComponent(location)}`, {
                     credentials: 'include'
                 });
-                
+
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                
+
                 const data = await res.json();
                 updateDashboard(data);
-                
-                // Success
+
                 statusDot.className = 'status-dot green';
                 sysStatus.textContent = 'Operational';
                 document.querySelectorAll('.status-value').forEach(el => el.classList.remove('loading'));
-                
+
             } catch (error) {
                 console.error('Fire data error:', error);
                 statusDot.className = 'status-dot red';
@@ -711,12 +641,13 @@
                 document.getElementById('risk-detail').textContent = r.detail || '';
                 document.getElementById('risk-bar').style.width = (r.percentage || 0) + '%';
                 document.getElementById('fire-risk').textContent = r.level || '--';
-                
-                // Risk color
-                const riskColors = { 'Low': 'var(--success)', 'Moderate': 'var(--warning)', 'High': '#f59e0b', 'Extreme': 'var(--danger)' };
-                document.getElementById('risk-level').style.color = riskColors[r.level] || 'var(--silver)';
-                
-                // Weather factors
+
+                const riskColors = { 'Low': 'var(--success)', 'Moderate': 'var(--warning)', 'High': '#f2a53c', 'Extreme': 'var(--danger)' };
+                document.getElementById('risk-level').style.color = riskColors[r.level] || 'var(--paper)';
+
+                // Signature element: tint the ambient horizon glow to match current fire risk
+                document.getElementById('horizon-glow').style.setProperty('--horizon-color', riskHorizonColors[r.level] || '#c73e2c');
+
                 if (r.factors) {
                     document.getElementById('risk-temp').textContent = r.factors.temperature ? `${r.factors.temperature}°F` : '--°F';
                     document.getElementById('risk-humidity').textContent = r.factors.humidity ? `${r.factors.humidity}%` : '--%';
@@ -729,7 +660,7 @@
             if (data.fires) {
                 const container = document.getElementById('fires-list');
                 document.getElementById('active-fires').textContent = data.fires.length;
-                
+
                 if (!data.fires.length) {
                     container.innerHTML = '<div class="loading-placeholder">✅ No active fires detected near you</div>';
                 } else {
@@ -747,14 +678,13 @@
                         </div>
                     `).join('');
                 }
-                
-                // Data source status
+
                 if (data.status && data.status.sources) {
                     const sources = data.status.sources;
                     document.getElementById('nasa-dot').className = `source-dot ${sources.nasa_firms ? 'online' : 'offline'}`;
                     document.getElementById('inciweb-dot').className = `source-dot ${sources.inciweb ? 'online' : 'offline'}`;
                     document.getElementById('nws-dot').className = `source-dot ${sources.nws ? 'online' : 'offline'}`;
-                    document.getElementById('data-sources').textContent = 
+                    document.getElementById('data-sources').textContent =
                         `${Object.values(sources).filter(Boolean).length}/3 online`;
                 }
             }
@@ -773,8 +703,7 @@
                         </div>
                     `).join('');
                 }
-                
-                // Show alert banner if critical
+
                 const critical = data.alerts.some(a => a.critical);
                 const banner = document.getElementById('alert-banner');
                 if (critical) {
@@ -815,9 +744,9 @@
                         <span class="smoke-level-text" style="color:${smokeColors[s.level] || 'var(--warning)'};">${escapeHtml(s.level || '--')}</span>
                     </div>
                 `).join('');
-                
+
                 if (data.weather && data.weather.wind) {
-                    document.getElementById('wind-info').textContent = 
+                    document.getElementById('wind-info').textContent =
                         `💨 Wind: ${data.weather.wind.direction || '--'} · ${data.weather.wind.speed || '--'} mph`;
                 }
             }
@@ -825,7 +754,6 @@
             // ── Map ──
             if (data.fires && data.fires.length) {
                 const mapGrid = document.getElementById('map-grid');
-                // Create a simple visual representation based on fire locations
                 const grid = [
                     ['🌲','🌲','🌲','🌲','🌲'],
                     ['🌲','🌲','🌲','🌲','🌲'],
@@ -833,22 +761,19 @@
                     ['🌲','🌲','🌲','🌲','🌲'],
                     ['🌲','🌲','🌲','🌲','🌲']
                 ];
-                // Place fire markers based on distance
                 const fireDistances = data.fires.map(f => f.distance_km || 999);
                 const minDist = Math.min(...fireDistances);
                 if (minDist < 50) {
                     const idx = fireDistances.indexOf(minDist);
-                    // Place fire at different positions based on index
                     const positions = [[1,1],[1,3],[3,1],[3,3],[2,2]];
                     const pos = positions[idx % positions.length];
                     grid[pos[0]][pos[1]] = '🔥';
-                    // Add smoke nearby
                     if (grid[pos[0]+1] && grid[pos[0]+1][pos[1]] !== '🔥') {
                         grid[pos[0]+1][pos[1]] = '🌫️';
                     }
                 }
-                mapGrid.innerHTML = grid.map(row => row.join(' ')).join('\n');
-                document.getElementById('map-link').href = 
+                mapGrid.textContent = grid.map(row => row.join(' ')).join('\n');
+                document.getElementById('map-link').href =
                     `https://www.arcgis.com/apps/MapSeries/index.html?appid=8b7d6d5e8a5c4b1e8a5d4f8a5c4b1e8a&search=${encodeURIComponent(currentLocation)}`;
             }
 
@@ -870,7 +795,6 @@
             banner.classList.add('show');
             document.getElementById('alert-title').textContent = '⚠️ Error';
             document.getElementById('alert-desc').textContent = msg;
-            document.getElementById('alert-dot').style.background = 'var(--danger)';
         }
 
         // ── Event Listeners ──
