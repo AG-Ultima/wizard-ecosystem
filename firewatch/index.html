@@ -1,1 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FireWatch AI — Wildfire Detection & Alerts</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+        :root {
+            --ink:          #080612;
+            --ink-2:        #0e0b1e;
+            --ink-3:        #13102a;
+            --fire:         #e07020;
+            --fire-glow:    rgba(224,112,32,0.25);
+            --fire-light:   #f5a050;
+            --gold:         #c9a84c;
+            --silver:       #d4d0e8;
+            --silver-dim:   rgba(212,208,232,0.55);
+            --muted:        rgba(212,208,232,0.35);
+            --border:       rgba(201,168,76,0.14);
+            --border-strong:rgba(201,168,76,0.4);
+            --danger:       #ef4444;
+            --warning:      #f59e0b;
+            --success:      #4ade80;
+            --info:         #3b82f6;
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--silver);
+            min-height: 100vh;
+        }
+
+        /* ── Canvas Stars ── */
+        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+        .ambient {
+            position: fixed; border-radius: 50%;
+            filter: blur(120px); pointer-events: none; z-index: 0;
+            opacity: 0.4; animation: drift 18s ease-in-out infinite alternate;
+        }
+        .ambient-fire { 
+            width: 500px; height: 500px; 
+            bottom: -100px; right: -100px; 
+            background: radial-gradient(circle, rgba(224,112,32,0.25), transparent 70%);
+            animation-delay: -5s;
+        }
+        .ambient-1 { width: 600px; height: 600px; top: -150px; left: -150px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
+        @keyframes drift { from { transform: translate(0,0); } to { transform: translate(40px,30px) scale(1.08); } }
+
+        .shell { position: relative; z-index: 10; max-width: 1200px; margin: 0 auto; padding: 24px 24px 60px; }
+
+        /* ── Header ── */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 16px;
+            padding: 16px 0 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 32px;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none;
+        }
+        .logo-glyph { font-size: 32px; filter: drop-shadow(0 0 20px rgba(224,112,32,0.3)); animation: pulse 3s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .logo-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 26px; font-weight: 600;
+            background: linear-gradient(135deg, var(--fire-light), var(--fire));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo-badge {
+            font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+            background: rgba(224,112,32,0.2); border: 1px solid rgba(224,112,32,0.3);
+            color: var(--fire-light); padding: 3px 10px; border-radius: 100px;
+        }
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .user-pill {
+            display: flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 5px 14px 5px 8px;
+        }
+        .user-avatar { width: 30px; height: 30px; background: linear-gradient(135deg, var(--fire), #8a3a10); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .user-email { font-size: 12px; color: var(--silver-dim); }
+
+        /* ── Hero ── */
+        .hero {
+            text-align: center; padding: 30px 0 40px;
+        }
+        .hero-icon { font-size: 72px; display: block; margin-bottom: 16px; animation: levitate 5s ease-in-out infinite; filter: drop-shadow(0 0 40px rgba(224,112,32,0.3)); }
+        @keyframes levitate { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hero-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(40px, 6vw, 64px);
+            font-weight: 300; color: var(--silver);
+            margin-bottom: 8px;
+        }
+        .hero-title em { font-style: italic; background: linear-gradient(135deg, var(--fire-light), var(--fire)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-sub { font-size: 16px; color: var(--muted); letter-spacing: 0.02em; }
+
+        /* ── Status Bar ── */
+        .status-bar {
+            display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 16px 24px;
+            margin-bottom: 32px;
+        }
+        .status-item { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .status-dot.green { background: var(--success); box-shadow: 0 0 12px rgba(74,222,128,0.4); }
+        .status-dot.yellow { background: var(--warning); box-shadow: 0 0 12px rgba(245,158,11,0.4); }
+        .status-dot.red { background: var(--danger); box-shadow: 0 0 12px rgba(239,68,68,0.4); animation: pulse-dot 1s ease-in-out infinite; }
+        @keyframes pulse-dot { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); } }
+        .status-label { color: var(--muted); }
+        .status-value { font-weight: 600; }
+
+        /* ── Alert Banner ── */
+        .alert-banner {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid var(--danger);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: none;
+            align-items: center; gap: 16px;
+            animation: slideDown 0.4s ease;
+        }
+        .alert-banner.show { display: flex; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .alert-icon { font-size: 28px; }
+        .alert-content { flex: 1; }
+        .alert-title { font-weight: 600; color: var(--danger); font-size: 14px; }
+        .alert-desc { font-size: 13px; color: var(--silver-dim); }
+        .alert-dismiss { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; }
+
+        /* ── Grid ── */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+        .card:hover { border-color: var(--border-strong); }
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 20px; font-weight: 600;
+            color: var(--silver);
+        }
+        .card-icon { font-size: 28px; }
+        .card-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px; font-weight: 600;
+            color: var(--fire-light);
+        }
+        .card-label { font-size: 12px; color: var(--muted); }
+
+        /* ── Fire Map Preview ── */
+        .map-preview {
+            background: rgba(0,0,0,0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+        }
+        .map-preview .emoji-grid {
+            font-size: 28px;
+            letter-spacing: 4px;
+            margin-bottom: 12px;
+        }
+        .fire-marker { animation: pulse-dot 1.5s ease-in-out infinite; }
+
+        /* ── Fire List ── */
+        .fire-item {
+            display: flex; align-items: center; gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .fire-item:last-child { border-bottom: none; }
+        .fire-severity {
+            width: 8px; height: 40px; border-radius: 4px;
+        }
+        .fire-severity.critical { background: var(--danger); }
+        .fire-severity.high { background: var(--warning); }
+        .fire-severity.medium { background: #f59e0b; }
+        .fire-severity.low { background: #10b981; }
+        .fire-info { flex: 1; }
+        .fire-name { font-weight: 500; font-size: 14px; }
+        .fire-location { font-size: 12px; color: var(--muted); }
+        .fire-status { font-size: 11px; font-weight: 500; padding: 2px 10px; border-radius: 100px; }
+        .fire-status.active { background: rgba(239,68,68,0.2); color: var(--danger); }
+        .fire-status.contained { background: rgba(74,222,128,0.2); color: var(--success); }
+        .fire-status.monitoring { background: rgba(59,130,246,0.2); color: var(--info); }
+        .fire-acres { font-size: 12px; color: var(--muted); }
+
+        /* ── Alerts List ── */
+        .alert-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .alert-item:last-child { border-bottom: none; }
+        .alert-time { font-size: 11px; color: var(--muted); width: 60px; }
+        .alert-msg { font-size: 13px; color: var(--silver-dim); flex: 1; }
+
+        /* ── Search / Location Input ── */
+        .location-input {
+            display: flex; gap: 12px; margin-bottom: 16px;
+        }
+        .loc-field {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 12px 18px;
+            color: var(--silver);
+            font-size: 14px;
+            outline: none;
+        }
+        .loc-field:focus { border-color: var(--border-strong); }
+        .loc-btn {
+            background: linear-gradient(135deg, var(--fire), #8a3a10);
+            border: none;
+            border-radius: 100px;
+            padding: 12px 24px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .loc-btn:hover { opacity: 0.88; }
+
+        /* ── Evacuation Route ── */
+        .route-step {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .route-step:last-child { border-bottom: none; }
+        .route-num {
+            width: 28px; height: 28px;
+            background: var(--fire-glow);
+            border: 1px solid rgba(224,112,32,0.3);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 600;
+            color: var(--fire-light);
+        }
+        .route-text { flex: 1; font-size: 13px; color: var(--silver-dim); }
+
+        /* ── Smoke Forecast ── */
+        .smoke-level {
+            display: flex; align-items: center; gap: 16px;
+            padding: 8px 0;
+        }
+        .smoke-bar {
+            flex: 1; height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .smoke-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--success), var(--warning), var(--danger));
+            transition: width 0.5s;
+        }
+        .smoke-label { font-size: 12px; color: var(--muted); width: 80px; }
+
+        .risk-high { color: var(--danger); }
+        .risk-med { color: var(--warning); }
+        .risk-low { color: var(--success); }
+
+        /* ── Footer ── */
+        footer { text-align: center; padding-top: 32px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; }
+        footer a { color: var(--fire-light); text-decoration: none; }
+
+        @media (max-width: 640px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; text-align: center; }
+            .status-bar { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="ambient ambient-fire" aria-hidden="true"></div>
+    <div class="ambient ambient-1" aria-hidden="true"></div>
+
+    <div class="shell">
+        <!-- Header -->
+        <header class="header">
+            <a href="/" class="logo">
+                <span class="logo-glyph">🔥</span>
+                <span class="logo-name">FireWatch AI</span>
+                <span class="logo-badge">ALPHA</span>
+            </a>
+            <div class="user-info">
+                <div class="user-pill">
+                    <div class="user-avatar">🧙</div>
+                    <span class="user-email" id="user-email">Loading…</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero -->
+        <div class="hero">
+            <span class="hero-icon">🔥</span>
+            <h1 class="hero-title"><em>FireWatch</em> AI</h1>
+            <p class="hero-sub">Real-time wildfire detection &amp; alerts for Arizona</p>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot green"></span>
+                <span class="status-label">System Status:</span>
+                <span class="status-value" id="sys-status">Operational</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot yellow"></span>
+                <span class="status-label">Fire Risk Today:</span>
+                <span class="status-value" id="fire-risk">Moderate</span>
+            </div>
+            <div class="status-item">
+                <span class="status-dot" id="alert-dot" style="background:var(--muted);"></span>
+                <span class="status-label">Active Fires:</span>
+                <span class="status-value" id="active-fires">3</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Last Updated:</span>
+                <span class="status-value" id="last-updated">Just now</span>
+            </div>
+        </div>
+
+        <!-- Alert Banner -->
+        <div id="alert-banner" class="alert-banner">
+            <span class="alert-icon">🚨</span>
+            <div class="alert-content">
+                <div class="alert-title" id="alert-title">⚠️ Fire Alert</div>
+                <div class="alert-desc" id="alert-desc">A new fire has been detected near you.</div>
+            </div>
+            <button class="alert-dismiss" id="alert-dismiss">✕</button>
+        </div>
+
+        <!-- Location Input -->
+        <div class="location-input">
+            <input type="text" id="location-input" class="loc-field" placeholder="Enter your location (e.g., Phoenix, AZ or zip code)" value="Phoenix, AZ">
+            <button class="loc-btn" id="loc-btn">📍 Get Alerts</button>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard-grid">
+
+            <!-- Risk Level Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🔥 Fire Risk Today</span>
+                    <span class="card-icon">📊</span>
+                </div>
+                <div class="card-value" id="risk-level">Moderate</div>
+                <div class="card-label" id="risk-detail">Dry conditions, moderate winds</div>
+                <div style="margin-top:16px;">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted);">
+                        <span>Low</span><span>Moderate</span><span>High</span><span>Extreme</span>
+                    </div>
+                    <div style="height:6px; background:rgba(255,255,255,0.1); border-radius:3px; margin-top:4px; overflow:hidden;">
+                        <div id="risk-bar" style="width:45%; height:100%; background:linear-gradient(90deg, #10b981, #f59e0b, #ef4444); border-radius:3px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Fires Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🔥 Active Fires</span>
+                    <span class="card-icon">📋</span>
+                </div>
+                <div id="fires-list">
+                    <div class="fire-item">
+                        <div class="fire-severity critical"></div>
+                        <div class="fire-info">
+                            <div class="fire-name">Cave Creek Fire</div>
+                            <div class="fire-location">Maricopa County • 12 mi from you</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="fire-status active">Active</span>
+                            <div class="fire-acres">1,200 acres</div>
+                        </div>
+                    </div>
+                    <div class="fire-item">
+                        <div class="fire-severity high"></div>
+                        <div class="fire-info">
+                            <div class="fire-name">Superstition Fire</div>
+                            <div class="fire-location">Pinal County • 25 mi from you</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="fire-status monitoring">Monitoring</span>
+                            <div class="fire-acres">450 acres</div>
+                        </div>
+                    </div>
+                    <div class="fire-item">
+                        <div class="fire-severity medium"></div>
+                        <div class="fire-info">
+                            <div class="fire-name">Tonto Basin Fire</div>
+                            <div class="fire-location">Gila County • 45 mi from you</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="fire-status contained">Contained</span>
+                            <div class="fire-acres">85 acres</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🔔 Recent Alerts</span>
+                    <span class="card-icon">🔔</span>
+                </div>
+                <div id="alerts-list">
+                    <div class="alert-item">
+                        <span class="alert-time">2 min ago</span>
+                        <span class="alert-msg">🔥 Fire detected near Cave Creek — evacuations advised</span>
+                    </div>
+                    <div class="alert-item">
+                        <span class="alert-time">15 min ago</span>
+                        <span class="alert-msg">🌫️ Smoke advisory issued for North Phoenix area</span>
+                    </div>
+                    <div class="alert-item">
+                        <span class="alert-time">1 hour ago</span>
+                        <span class="alert-msg">⚠️ Red flag warning in effect for Maricopa County</span>
+                    </div>
+                    <div class="alert-item">
+                        <span class="alert-time">2 hours ago</span>
+                        <span class="alert-msg">🛣️ I-17 closed at Carefree Highway due to smoke</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evacuation Routes Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🛣️ Evacuation Routes</span>
+                    <span class="card-icon">🚗</span>
+                </div>
+                <div id="routes-list">
+                    <div class="route-step">
+                        <span class="route-num">1</span>
+                        <span class="route-text">Take Cave Creek Rd north to I-17</span>
+                    </div>
+                    <div class="route-step">
+                        <span class="route-num">2</span>
+                        <span class="route-text">Head west on Carefree Highway</span>
+                    </div>
+                    <div class="route-step">
+                        <span class="route-num">3</span>
+                        <span class="route-text">Connect to I-10 West toward Los Angeles</span>
+                    </div>
+                    <div class="route-step">
+                        <span class="route-num">4</span>
+                        <span class="route-text">Avoid I-17 — currently closed due to smoke</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smoke Forecast Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🌫️ Smoke Forecast</span>
+                    <span class="card-icon">🌫️</span>
+                </div>
+                <div class="smoke-level">
+                    <span class="smoke-label">Now</span>
+                    <div class="smoke-bar"><div class="smoke-fill" style="width:60%;"></div></div>
+                    <span style="font-size:12px; color:var(--warning);">Moderate</span>
+                </div>
+                <div class="smoke-level">
+                    <span class="smoke-label">+3 hours</span>
+                    <div class="smoke-bar"><div class="smoke-fill" style="width:40%;"></div></div>
+                    <span style="font-size:12px; color:var(--success);">Low</span>
+                </div>
+                <div class="smoke-level">
+                    <span class="smoke-label">+6 hours</span>
+                    <div class="smoke-bar"><div class="smoke-fill" style="width:20%;"></div></div>
+                    <span style="font-size:12px; color:var(--success);">Low</span>
+                </div>
+                <div class="smoke-level">
+                    <span class="smoke-label">+12 hours</span>
+                    <div class="smoke-bar"><div class="smoke-fill" style="width:70%;"></div></div>
+                    <span style="font-size:12px; color:var(--danger);">High</span>
+                </div>
+                <div style="margin-top:12px; font-size:12px; color:var(--muted);">
+                    💨 Wind direction: SW → NE · 12 mph
+                </div>
+            </div>
+
+            <!-- Map Preview Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🗺️ Fire Map</span>
+                    <span class="card-icon">🗺️</span>
+                </div>
+                <div class="map-preview">
+                    <div class="emoji-grid">
+                        🌲 🌲 🔥 🌲 🌲
+                        🌲 🔥 🌲 🌲 🔥
+                        🌲 🌲 🏠 🌲 🌲
+                        🌲 🌲 🌲 🌲 🌲
+                        🚒 🌲 🌲 🌲 🌲
+                    </div>
+                    <div style="font-size:12px; color:var(--muted);">
+                        <span class="fire-marker">🔥</span> Active fire · <span style="color:var(--warning);">🟡</span> Smoke · <span style="color:var(--info);">🔵</span> Evacuation zone
+                    </div>
+                    <div style="margin-top:12px; font-size:11px; color:var(--muted);">⚠️ Live map coming soon — click below for current data</div>
+                    <a href="https://www.arcgis.com/apps/MapSeries/index.html?appid=8b7d6d5e8a5c4b1e8a5d4f8a5c4b1e8a" target="_blank" style="margin-top:12px; color:var(--fire-light); font-size:13px;">📡 View live fire map →</a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>🔥 FireWatch AI — Wildfire Detection &amp; Alerts</p>
+            <p style="margin-top:6px;">Data sources: APS Fire Cameras · NWS · InciWeb · NASA FIRMS</p>
+            <p style="margin-top:6px;">Part of the <a href="https://wizardecosystem.dev">Wizard Ecosystem</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE = 'https://arnav0928.pythonanywhere.com';
+        let currentUser = null;
+        let alertTimeout = null;
+
+        async function checkAuth() {
+            try {
+                const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.authenticated && data.user) {
+                        currentUser = data.user;
+                        document.getElementById('user-email').textContent = currentUser.email;
+                        return;
+                    }
+                }
+            } catch(e) {}
+            document.getElementById('user-email').textContent = 'Guest';
+        }
+
+        async function fetchFireData(location) {
+            try {
+                const res = await fetch(`${API_BASE}/api/firewatch/status?location=${encodeURIComponent(location)}`, {
+                    credentials: 'include'
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    updateDashboard(data);
+                }
+            } catch(e) {
+                console.error('Fire data error:', e);
+            }
+        }
+
+        function updateDashboard(data) {
+            // Update risk level
+            if (data.risk) {
+                document.getElementById('risk-level').textContent = data.risk.level;
+                document.getElementById('risk-detail').textContent = data.risk.detail;
+                document.getElementById('risk-bar').style.width = data.risk.percentage + '%';
+                document.getElementById('fire-risk').textContent = data.risk.level;
+            }
+
+            // Update fires
+            if (data.fires) {
+                document.getElementById('active-fires').textContent = data.fires.length;
+                const firesList = document.getElementById('fires-list');
+                firesList.innerHTML = data.fires.map(f => `
+                    <div class="fire-item">
+                        <div class="fire-severity ${f.severity}"></div>
+                        <div class="fire-info">
+                            <div class="fire-name">${f.name}</div>
+                            <div class="fire-location">${f.location} · ${f.distance} mi from you</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="fire-status ${f.status}">${f.status_label}</span>
+                            <div class="fire-acres">${f.acres} acres</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Update alerts
+            if (data.alerts) {
+                const alertsList = document.getElementById('alerts-list');
+                alertsList.innerHTML = data.alerts.map(a => `
+                    <div class="alert-item">
+                        <span class="alert-time">${a.time}</span>
+                        <span class="alert-msg">${a.message}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Update status
+            if (data.status) {
+                document.getElementById('sys-status').textContent = data.status.system;
+                document.getElementById('last-updated').textContent = data.status.updated;
+                
+                if (data.status.alert_active) {
+                    const banner = document.getElementById('alert-banner');
+                    banner.classList.add('show');
+                    document.getElementById('alert-title').textContent = data.status.alert_title || '⚠️ Fire Alert';
+                    document.getElementById('alert-desc').textContent = data.status.alert_desc || 'A new fire has been detected near you.';
+                    document.getElementById('alert-dot').style.background = 'var(--danger)';
+                } else {
+                    document.getElementById('alert-banner').classList.remove('show');
+                    document.getElementById('alert-dot').style.background = 'var(--success)';
+                }
+            }
+
+            // Update smoke forecast
+            if (data.smoke) {
+                const smokeBars = document.querySelectorAll('.smoke-fill');
+                const smokeLabels = document.querySelectorAll('.smoke-level span:last-child');
+                data.smoke.forecast.forEach((s, i) => {
+                    if (smokeBars[i]) smokeBars[i].style.width = s.percentage + '%';
+                    if (smokeLabels[i]) {
+                        smokeLabels[i].textContent = s.level;
+                        smokeLabels[i].style.color = s.color;
+                    }
+                });
+            }
+
+            // Update evacuation routes
+            if (data.routes) {
+                const routesList = document.getElementById('routes-list');
+                routesList.innerHTML = data.routes.map((r, i) => `
+                    <div class="route-step">
+                        <span class="route-num">${i + 1}</span>
+                        <span class="route-text">${r}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Location input
+        document.getElementById('loc-btn').addEventListener('click', () => {
+            const loc = document.getElementById('location-input').value.trim() || 'Phoenix, AZ';
+            fetchFireData(loc);
+        });
+
+        document.getElementById('location-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('loc-btn').click();
+        });
+
+        // Dismiss alert
+        document.getElementById('alert-dismiss').addEventListener('click', () => {
+            document.getElementById('alert-banner').classList.remove('show');
+        });
+
+        // Auto-refresh every 2 minutes
+        setInterval(() => {
+            const loc = document.getElementById('location-input').value.trim() || 'Phoenix, AZ';
+            fetchFireData(loc);
+        }, 120000);
+
+        // Init
+        checkAuth();
+        fetchFireData('Phoenix, AZ');
+    </script>
+</body>
+</html>
