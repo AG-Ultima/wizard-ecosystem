@@ -162,6 +162,12 @@
             white-space: nowrap;
         }
         .loc-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 24px rgba(255,107,71,0.35); }
+        .loc-btn#geo-btn {
+            background: rgba(244,234,217,0.06);
+            color: var(--paper);
+            border: 1px solid var(--line-strong);
+        }
+        .loc-btn#geo-btn:hover { background: rgba(242,165,60,0.1); box-shadow: none; }
 
         /* ── Status Bar ── */
         .status-bar {
@@ -379,7 +385,8 @@
             <input type="text" id="location-input" class="loc-field"
                    placeholder="Enter city, zip, or address (e.g., Phoenix, AZ)"
                    value="Phoenix, AZ">
-            <button class="loc-btn" id="loc-btn">📍 Get Alerts</button>
+            <button class="loc-btn" id="geo-btn" title="Use my current location">📍 My Location</button>
+            <button class="loc-btn" id="loc-btn">Get Alerts</button>
         </div>
 
         <!-- Alert Banner -->
@@ -593,6 +600,44 @@
             }
             draw();
         })();
+
+        // ── Geolocation (same pattern as Wizard Heat) ──
+        function getLocation() {
+            return new Promise((resolve) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            console.log('📍 Location detected:', pos.coords.latitude, pos.coords.longitude);
+                            resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+                        },
+                        () => {
+                            console.log('⚠️ Location permission denied, using Phoenix default');
+                            resolve({ lat: 33.4484, lon: -112.0740 });
+                        },
+                        { timeout: 5000, enableHighAccuracy: false }
+                    );
+                } else {
+                    console.log('⚠️ Geolocation not available, using Phoenix default');
+                    resolve({ lat: 33.4484, lon: -112.0740 });
+                }
+            });
+        }
+
+        // Client-side reverse geocode (no backend/API key needed) so the location
+        // bar shows a readable place name instead of raw coordinates.
+        async function reverseGeocode(lat, lon) {
+            try {
+                const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);
+                const data = await res.json();
+                const city = data.city || data.locality || data.localityInfo?.administrative?.[2]?.name;
+                const state = data.principalSubdivisionCode ? data.principalSubdivisionCode.split('-')[1] : data.principalSubdivision;
+                if (city && state) return `${city}, ${state}`;
+                if (city) return city;
+            } catch(e) {
+                console.log('⚠️ Reverse geocode failed, using coordinates');
+            }
+            return `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+        }
 
         // ── Main Logic ──
         let currentLocation = 'Phoenix, AZ';
@@ -811,6 +856,25 @@
             if (e.key === 'Enter') document.getElementById('loc-btn').click();
         });
 
+        document.getElementById('geo-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('geo-btn');
+            const original = btn.textContent;
+            btn.textContent = 'Locating…';
+            btn.disabled = true;
+            document.getElementById('current-location').textContent = 'Detecting location…';
+            try {
+                const { lat, lon } = await getLocation();
+                const resolvedLocation = await reverseGeocode(lat, lon);
+                currentLocation = resolvedLocation;
+                document.getElementById('location-input').value = resolvedLocation;
+                document.getElementById('current-location').textContent = resolvedLocation;
+                await fetchFireData(resolvedLocation);
+            } finally {
+                btn.textContent = original;
+                btn.disabled = false;
+            }
+        });
+
         document.getElementById('alert-dismiss').addEventListener('click', () => {
             document.getElementById('alert-banner').classList.remove('show');
         });
@@ -827,10 +891,18 @@
         // ── Init ──
         async function init() {
             await checkAuth();
-            const initialLoc = 'Phoenix, AZ';
-            document.getElementById('location-input').value = initialLoc;
-            document.getElementById('current-location').textContent = initialLoc;
-            await fetchFireData(initialLoc);
+
+            const loadingLoc = document.getElementById('current-location');
+            loadingLoc.textContent = 'Detecting location…';
+
+            const { lat, lon } = await getLocation();
+            const resolvedLocation = await reverseGeocode(lat, lon);
+
+            currentLocation = resolvedLocation;
+            document.getElementById('location-input').value = resolvedLocation;
+            document.getElementById('current-location').textContent = resolvedLocation;
+
+            await fetchFireData(resolvedLocation);
             startAutoRefresh();
         }
 
