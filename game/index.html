@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wasteland Adventure</title>
+<style>
+  html,body{margin:0;padding:0;background:#000;overflow:hidden;font-family:'Trebuchet MS',Arial,sans-serif;}
+  #gameWrap{position:relative;width:900px;height:560px;margin:20px auto;box-shadow:0 0 40px rgba(0,0,0,.8);border-radius:6px;overflow:hidden;}
+  canvas{display:block;background:#333;image-rendering:pixelated;cursor:crosshair;}
+  .overlay{position:absolute;top:0;left:0;width:900px;height:560px;pointer-events:none;}
+  #dialogueBox{position:absolute;left:30px;bottom:20px;width:840px;min-height:90px;
+    background:linear-gradient(180deg, rgba(18,14,26,.92), rgba(8,6,14,.95));
+    border:3px solid #d4af37;border-radius:8px;color:#fff;padding:14px 18px;font-size:17px;line-height:1.4;
+    display:none;pointer-events:auto;box-shadow:0 0 22px rgba(0,0,0,.6), inset 0 0 18px rgba(212,175,55,.08);}
+  #dialogueName{color:#f2d375;font-weight:bold;margin-bottom:6px;font-size:15px;text-shadow:0 0 6px rgba(242,211,117,.5);}
+  #dialogueHint{position:absolute;right:16px;bottom:8px;font-size:12px;color:#aaa;}
+  #choiceBox{position:absolute;left:30px;bottom:20px;width:840px;
+    background:linear-gradient(180deg, rgba(18,14,26,.95), rgba(8,6,14,.97));
+    border:3px solid #d4af37;border-radius:8px;padding:14px;display:none;pointer-events:auto;
+    box-shadow:0 0 22px rgba(0,0,0,.6);}
+  #choiceBox button{display:block;width:100%;margin:6px 0;padding:10px;background:#1c1c22;border:2px solid #6a5a2a;
+    color:#fff;font-size:16px;border-radius:5px;cursor:pointer;transition:background .15s,border-color .15s;}
+  #choiceBox button:hover{background:#d4af37;color:#111;border-color:#f2d375;}
+  #skillMenu{position:absolute;top:40px;left:150px;width:600px;
+    background:linear-gradient(180deg, rgba(12,16,28,.97), rgba(6,9,16,.98));border:3px solid #6cf;
+    border-radius:10px;color:#fff;padding:20px;display:none;pointer-events:auto;box-shadow:0 0 30px rgba(0,0,0,.7);}
+  #skillMenu h2{margin-top:0;color:#6cf;text-shadow:0 0 8px rgba(102,204,255,.5);}
+  #skillMenu select,#skillMenu button{font-size:15px;padding:6px;margin:4px 4px 4px 0;border-radius:5px;border:1px solid #6cf;background:#111;color:#fff;}
+  #skillMenu button{cursor:pointer;background:#245;}
+  #skillMenu button:hover{background:#6cf;color:#111;}
+  #skillList{margin:10px 0;font-size:14px;}
+  #hud{position:absolute;top:10px;left:10px;color:#fff;font-size:14px;pointer-events:none;text-shadow:1px 1px 2px #000;
+    background:rgba(0,0,0,.35);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.12);}
+  #hpBarWrap{width:220px;height:18px;background:#300;border:2px solid #ddd;border-radius:4px;overflow:hidden;margin-top:4px;
+    box-shadow:inset 0 0 6px rgba(0,0,0,.6);}
+  #hpBarFill{height:100%;background:linear-gradient(90deg,#7fff7f,#2ba82b);width:100%;box-shadow:0 0 8px rgba(80,255,80,.5);transition:width .2s;}
+  #bossBarWrap{position:absolute;top:14px;left:200px;width:500px;height:22px;background:#200;border:2px solid #ddd;
+    border-radius:4px;overflow:hidden;display:none;box-shadow:inset 0 0 8px rgba(0,0,0,.7);}
+  #bossBarFill{height:100%;background:linear-gradient(90deg,#ff6a4a,#a11);width:100%;box-shadow:0 0 10px rgba(255,90,60,.6);transition:width .2s;}
+  #bossName{position:absolute;top:-2px;left:210px;color:#fff;font-size:13px;display:none;text-shadow:1px 1px 2px #000;}
+  #skillKeys{position:absolute;bottom:8px;left:10px;color:#fff;font-size:12px;pointer-events:none;text-shadow:1px 1px 2px #000;}
+  #controlsHint{position:absolute;bottom:24px;left:10px;color:#ccc;font-size:11px;pointer-events:none;text-shadow:1px 1px 2px #000;}
+  #fadeLayer{position:absolute;top:0;left:0;width:900px;height:560px;background:#000;opacity:0;pointer-events:none;
+    transition:opacity 1.5s;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;letter-spacing:2px;}
+  #selectScreen{position:absolute;top:0;left:0;width:900px;height:560px;color:#fff;overflow:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;
+    background:linear-gradient(180deg,#0b1330 0%,#1c2a52 28%,#3a3f66 52%,#6b5a4a 72%,#2a2018 100%);}
+  #selectScreen::before{content:'';position:absolute;left:0;right:0;top:0;height:560px;pointer-events:none;
+    background-image:
+      radial-gradient(3px 3px at 60px 60px, rgba(255,255,255,.9), transparent),
+      radial-gradient(2px 2px at 180px 40px, rgba(255,255,255,.7), transparent),
+      radial-gradient(2px 2px at 320px 90px, rgba(255,255,255,.6), transparent),
+      radial-gradient(3px 3px at 500px 30px, rgba(255,255,255,.8), transparent),
+      radial-gradient(2px 2px at 700px 70px, rgba(255,255,255,.6), transparent),
+      radial-gradient(2px 2px at 820px 50px, rgba(255,255,255,.7), transparent),
+      radial-gradient(60px 60px at 780px 90px, rgba(255,244,214,.9), rgba(255,244,214,0) 70%);
+    opacity:.8;}
+  #selectScreen .skyline{position:absolute;left:0;right:0;bottom:150px;height:120px;pointer-events:none;
+    background:linear-gradient(180deg, transparent, rgba(10,8,14,.9) 90%);
+    clip-path:polygon(0% 100%,0% 40%,4% 40%,4% 60%,9% 60%,9% 20%,14% 20%,14% 55%,20% 55%,20% 35%,26% 35%,26% 70%,
+      33% 70%,33% 15%,40% 15%,40% 50%,47% 50%,47% 30%,54% 30%,54% 65%,61% 65%,61% 25%,68% 25%,68% 58%,
+      75% 58%,75% 10%,82% 10%,82% 48%,89% 48%,89% 62%,95% 62%,95% 40%,100% 40%,100% 100%);
+    background-color:#0d0a14;}
+  #selectScreen .titleWrap{position:relative;z-index:2;text-align:center;background:rgba(10,8,20,.45);
+    padding:26px 50px;border-radius:14px;border:2px solid rgba(212,175,55,.5);backdrop-filter:blur(1px);}
+  #selectScreen h1{color:#f2d375;letter-spacing:4px;margin:0 0 4px;font-size:34px;
+    text-shadow:0 0 18px rgba(242,211,117,.7), 0 0 3px #000, 2px 2px 0 #000;}
+  #selectScreen .subtitle{color:#c9b98a;font-size:13px;letter-spacing:3px;margin-bottom:6px;text-transform:uppercase;}
+  #selectScreen p{color:#ddd;margin:4px 0 14px;}
+  #charOptions{position:relative;z-index:2;}
+  .charOption{display:inline-block;margin:0 18px;text-align:center;cursor:pointer;padding:14px;border:3px solid transparent;border-radius:10px;
+    background:rgba(0,0,0,.25);}
+  .charOption:hover,.charOption.sel{border-color:#6cf;background:rgba(102,204,255,.15);box-shadow:0 0 14px rgba(102,204,255,.4);}
+  .charSwatch{width:70px;height:90px;border-radius:8px;margin:0 auto 8px;image-rendering:pixelated;}
+  #nameInput{position:relative;z-index:2;}
+  #startBtn{position:relative;z-index:2;margin-top:24px;padding:12px 30px;font-size:18px;background:#245;color:#fff;border:2px solid #6cf;border-radius:6px;cursor:pointer;
+    box-shadow:0 0 12px rgba(102,204,255,.25);}
+  #startBtn:hover{background:#6cf;color:#111;}
+  #dedication{position:absolute;left:0;right:0;bottom:14px;text-align:center;z-index:2;
+    color:rgba(255,255,255,.55);font-size:13px;font-style:italic;letter-spacing:1px;}
+  #winScreen{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(0,0,0,.92);color:#fff;
+    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;text-align:center;}
+  #winScreen h1{color:#d4af37;font-size:42px;}
+</style>
+</head>
+<body>
+<div id="gameWrap">
+  <canvas id="game" width="900" height="560"></canvas>
+
+  <div id="selectScreen">
+    <div class="skyline"></div>
+    <div class="titleWrap">
+      <div class="subtitle">A Post-Collapse Tale</div>
+      <h1>WASTELAND ADVENTURE</h1>
+      <p>Choose your character</p>
+    </div>
+    <div id="charOptions">
+      <div class="charOption" data-color="#5aa9e6"><canvas class="charSwatch" width="40" height="64" data-c="#5aa9e6"></canvas>Wanderer</div>
+      <div class="charOption" data-color="#e65a5a"><canvas class="charSwatch" width="40" height="64" data-c="#e65a5a"></canvas>Drifter</div>
+      <div class="charOption" data-color="#5ae67d"><canvas class="charSwatch" width="40" height="64" data-c="#5ae67d"></canvas>Scavenger</div>
+    </div>
+    <input id="nameInput" type="text" placeholder="Enter your name" maxlength="16"
+      style="position:relative;z-index:2;margin-top:16px;padding:8px 12px;font-size:16px;border-radius:6px;border:2px solid #6cf;background:#111;color:#fff;text-align:center;">
+    <button id="startBtn">Begin Journey</button>
+    <div id="dedication">For Mr. Truong</div>
+  </div>
+
+  <div class="overlay">
+    <div id="hud">
+      <div>HP</div>
+      <div id="hpBarWrap"><div id="hpBarFill"></div></div>
+    </div>
+    <div id="bossName"></div>
+    <div id="bossBarWrap"><div id="bossBarFill"></div></div>
+    <div id="skillKeys"></div>
+    <div id="controlsHint">A/D move · W jump · S crouch · Left Click attack · K skills · H drink potion</div>
+    <div id="dialogueBox">
+      <div id="dialogueName"></div>
+      <div id="dialogueText"></div>
+      <div id="dialogueHint">[Press E / Click]</div>
+    </div>
+    <div id="choiceBox"></div>
+    <div id="skillMenu">
+      <h2>Skills (Press K to close)</h2>
+      <div id="skillList"></div>
+      <div>
+        <b>Merge a skill into a weapon:</b><br>
+        Skill: <select id="mergeSkillSel"></select>
+        Weapon: <select id="mergeWeaponSel"></select>
+        <button id="mergeBtn">Merge</button>
+      </div>
+      <div id="mergeResult" style="margin-top:10px;color:#9f9;"></div>
+    </div>
+  </div>
+  <div id="fadeLayer"></div>
+  <div id="winScreen">
+    <h1>VICTORY</h1>
+    <p>You surpassed your teacher and became the strongest.</p>
+    <button id="restartBtn" style="padding:10px 24px;font-size:16px;background:#245;color:#fff;border:2px solid #d4af37;border-radius:6px;cursor:pointer;">Play Again</button>
+  </div>
+  <div id="loseScreen" style="position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(0,0,0,.94);color:#fff;
+    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;text-align:center;">
+    <h1 style="color:#c33;font-size:44px;">YOU DIED</h1>
+    <p id="loseText">The wasteland claims another soul.</p>
+    <button id="loseRestartBtn" style="padding:10px 24px;font-size:16px;background:#400;color:#fff;border:2px solid #c33;border-radius:6px;cursor:pointer;">Restart</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+ctx.imageSmoothingEnabled=false;
+const W=900,H=560;
+const GROUND_Y=470; // top surface of the ground
+const GRAVITY=0.62;
+const JUMP_VEL=-11.5;
+const FROG_JUMP_VEL=-19.5;
+const NORMAL_W=40, NORMAL_H=64;
+const FROG_W=20, FROG_H=16;
+
+// ================= PIXEL SPRITE ENGINE =================
+function drawPixelSprite(rows, palette, x, y, px, flip){
+  const rowCount=rows.length;
+  const colCount=rows[0].length;
+  for(let r=0;r<rowCount;r++){
+    const row=rows[r];
+    for(let c=0;c<colCount;c++){
+      const ch=row[c];
+      if(ch===' '||ch==='.') continue;
+      const color=palette[ch];
+      if(!color) continue;
+      const drawCol = flip? (colCount-1-c) : c;
+      ctx.fillStyle=color;
+      ctx.fillRect(x+drawCol*px, y+r*px, px, px);
+    }
+  }
+}
+// Draws the sprite with a crisp 1px outline for a more polished, "game-ready" look.
+function drawPixelSpriteOutlined(rows, palette, x, y, px, flip){
+  const rowCount=rows.length, colCount=rows[0].length;
+  const dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+  for(let d=0; d<dirs.length; d++){
+    const dx=dirs[d][0]*(px*0.5), dy=dirs[d][1]*(px*0.5);
+    for(let r=0;r<rowCount;r++){
+      const row=rows[r];
+      for(let c=0;c<colCount;c++){
+        const ch=row[c];
+        if(ch===' '||ch==='.') continue;
+        const drawCol = flip? (colCount-1-c) : c;
+        ctx.fillStyle='rgba(10,8,6,0.85)';
+        ctx.fillRect(x+drawCol*px+dx, y+r*px+dy, px, px);
+      }
+    }
+  }
+  drawPixelSprite(rows, palette, x, y, px, flip);
+}
+function spriteSize(rows,px){ return {w:rows[0].length*px, h:rows.length*px}; }
+
+// Player sprite (10 wide x 16 tall) - 'c' = outfit color swapped per character
+const PLAYER_ROWS=[
+"  hhhh    ",
+" hhhhhh   ",
+" hssssh   ",
+" hsesesh  ",
+" hsssssh  ",
+"  ssssss  ",
+"  cccccc  ",
+" ccccccc  ",
+" ccsccccs ",
+" ccsccccs ",
+"  cc  cc  ",
+"  cc  cc  ",
+"  pp  pp  ",
+"  pp  pp  ",
+"  pp  pp  ",
+"  bb  bb  "
+];
+function playerPalette(outfit){
+  return {h:'#3b2a1a', s:'#f1c39a', e:'#101010', c:outfit, p:'#3a3a3a', b:'#1c1c1c', k:'#242424'};
+}
+// walk-cycle stride frame (legs spread apart)
+const PLAYER_ROWS_WALK=[
+"  hhhh    ",
+" hhhhhh   ",
+" hssssh   ",
+" hsesesh  ",
+" hsssssh  ",
+"  ssssss  ",
+"  cccccc  ",
+" ccccccc  ",
+" ccsccccs ",
+" ccsccccs ",
+" cc    cc ",
+" cc    cc ",
+" pp    pp ",
+" pp    pp ",
+" pp    pp ",
+" bb    bb "
+];
+// crouch variant (shorter)
+const PLAYER_CROUCH_ROWS=[
+"  hhhh    ",
+" hhhhhh   ",
+" hssssh   ",
+" hsesesh  ",
+"  ssssss  ",
+"  cccccc  ",
+" ccccccc  ",
+" ccsccccs ",
+"  pp  pp  ",
+"  bb  bb  "
+];
+
+// Teacher sprite - black hair, white shirt, tie, holding ipad
+const TEACHER_ROWS=[
+"  kkkk    ",
+" kkkkkk   ",
+" kssssk   ",
+" kseseks  ",
+" kssssks  ",
+"  ssssss  ",
+"  wwwwww  ",
+" wwwtwwww ",
+" wwwtwwww ",
+" wwwwwwwI ",
+"  gg  gI  ",
+"  gg  gI  ",
+"  gg  gg  ",
+"  gg  gg  ",
+"  bb  bb  ",
+"  bb  bb  "
+];
+const TEACHER_PALETTE={k:'#111111', s:'#f1c39a', e:'#101010', w:'#e8e8e8', t:'#7a1f1f', g:'#2b2b3a', b:'#151515', I:'#2b2b2b'};
+
+// Witch sprite - pointed hat, purple robe
+const WITCH_ROWS=[
+"   hhh    ",
+"  hhhhh   ",
+" hhhhhhh  ",
+"  hgggh   ",
+"  sesess  ",
+"   ssss   ",
+"  rrrrrr  ",
+" rrrrrrrr ",
+" rrrrrrrr ",
+" rrrrrrrr ",
+"  rr  rr  ",
+"  rr  rr  ",
+"  rr  rr  ",
+"  bb  bb  "
+];
+const WITCH_PALETTE={h:'#3a1a4a', g:'#2a1030', s:'#d9b28c', e:'#101010', r:'#5a2f8a', b:'#1c1c1c'};
+
+// Monster (wasteland creature) 10x10, two-frame bob/walk
+const MONSTER_ROWS=[
+"  mmmm  ",
+" mmmmmm ",
+"mmxmmxmm",
+"mmmmmmmm",
+"mmmmmmmm",
+" mmttmm ",
+" mm  mm ",
+" mm  mm "
+];
+const MONSTER_ROWS_B=[
+"  mmmm  ",
+" mmmmmm ",
+"mmxmmxmm",
+"mmmmmmmm",
+"mmmmmmmm",
+" mmttmm ",
+"mm    mm",
+"mm    mm"
+];
+const MONSTER_PALETTE={m:'#6b2fa8', x:'#ff3b3b', t:'#3d1a5e'};
+
+// Frog transformation sprite (5x4)
+const FROG_ROWS=[
+"  g  ",
+" ggg ",
+"geeeg",
+" g g "
+];
+const FROG_PALETTE={g:'#3fae4a', e:'#123a17'};
+
+
+// Boss phase 1 (12x18) dark robe teacher, blade
+const BOSS1_ROWS=[
+"  kkkkkk    ",
+" kkkkkkkk   ",
+" kssssssk   ",
+" ksesessek  ",
+" kssssssk   ",
+"  ssssssss  ",
+"  rrrrrrrr  ",
+" rrrrrrrrr  ",
+" rrrrrrrrr  ",
+" rrrrrrrrrB ",
+" rrrrrrrrBB ",
+"  rr    rB  ",
+"  rr    rB  ",
+"  rr  rr    ",
+"  rr  rr    ",
+"  gg  gg    ",
+"  gg  gg    ",
+"  bb  bb    "
+];
+const BOSS1_PALETTE={k:'#111111', s:'#f1c39a', e:'#ffcc33', r:'#2a2a35', g:'#1c1c22', b:'#0d0d0d', B:'#ffcc33'};
+
+// Boss phase 2 (armored, cape, purple blade) 12x18
+const BOSS2_ROWS=[
+"  kkkkkk    ",
+" kkkkkkkk   ",
+" kssssssk   ",
+" ksesessek  ",
+" AAAAAAAA   ",
+" AAAAAAAAA  ",
+"AAAAAAAAAA  ",
+"AAAAAAAAAAP ",
+"AAAAAAAAAPP ",
+"AAAAAAAAAPP ",
+" AA CC AAP  ",
+" AA CC AA   ",
+"  AA  AA    ",
+"  AA  AA    ",
+"  gg  gg    ",
+"  gg  gg    ",
+"  bb  bb    ",
+"  bb  bb    "
+];
+const BOSS2_PALETTE={k:'#111111', s:'#f1c39a', e:'#cc66ff', A:'#5a5a66', C:'#7a1f1f', g:'#232329', b:'#0d0d0d', P:'#cc66ff'};
+
+function drawSwatch(cnv, colorHex){
+  const c=cnv.getContext('2d');
+  c.imageSmoothingEnabled=false;
+  const px=4;
+  drawPixelSpriteOn(c, PLAYER_ROWS, playerPalette(colorHex), 0,0,px,false);
+}
+function drawPixelSpriteOn(context, rows, palette, x, y, px, flip){
+  const rowCount=rows.length, colCount=rows[0].length;
+  for(let r=0;r<rowCount;r++){
+    for(let c2=0;c2<colCount;c2++){
+      const ch=rows[r][c2];
+      if(ch===' '||ch==='.') continue;
+      const color=palette[ch];
+      if(!color) continue;
+      const drawCol=flip?(colCount-1-c2):c2;
+      context.fillStyle=color;
+      context.fillRect(x+drawCol*px,y+r*px,px,px);
+    }
+  }
+}
+
+// ================= UI refs =================
+const dialogueBox=document.getElementById('dialogueBox');
+const dialogueName=document.getElementById('dialogueName');
+const dialogueText=document.getElementById('dialogueText');
+const choiceBox=document.getElementById('choiceBox');
+const skillMenu=document.getElementById('skillMenu');
+const skillList=document.getElementById('skillList');
+const hpBarFill=document.getElementById('hpBarFill');
+const bossBarWrap=document.getElementById('bossBarWrap');
+const bossBarFill=document.getElementById('bossBarFill');
+const bossNameEl=document.getElementById('bossName');
+const skillKeysEl=document.getElementById('skillKeys');
+const fadeLayer=document.getElementById('fadeLayer');
+const selectScreen=document.getElementById('selectScreen');
+const winScreen=document.getElementById('winScreen');
+const loseScreen=document.getElementById('loseScreen');
+const loseText=document.getElementById('loseText');
+
+// ================= Game State =================
+let keys={};
+let mouse={x:0,y:0,down:false};
+let camera={x:0,y:0};
+let scene='select';
+let chosenColor='#5aa9e6';
+let playerName='Wanderer';
+let gameOver=false;
+
+const player={
+  x:150,y:GROUND_Y-64,w:40,h:64,vx:0,vy:0,speed:3.1,facing:1,
+  grounded:false, crouching:false,
+  hp:100,maxhp:100,
+  attackCooldown:0,
+  swingTimer:0,
+  weapon:'Sword',
+  weaponDamage:10,
+  swordBuff:false,
+  skills:[],
+  invuln:0,
+  frog:false, jumpBoost:false,
+  healthPotions:0,
+};
+
+let witchFight=null;
+
+let mergedWeapons={'Sword':{damage:10,color:'#ccc'}};
+let ownedWeapons=['Sword'];
+
+let enemies=[];
+let projectiles=[];
+let equations=[];
+
+let dayNightTimer=0;
+const DAY_LEN=2200;
+const NIGHT_LEN=1300;
+let isNight=false;
+
+let world1POIs=[
+  {id:'building', x:950, y:GROUND_Y-200, w:130,h:200, label:'Old Building', triggered:false},
+  {id:'blacksmith', x:1900, y:GROUND_Y-150, w:110,h:150, label:'Blacksmith', triggered:false},
+  {id:'witch', x:2850, y:GROUND_Y-150, w:110,h:150, label:'Witch Hut', triggered:false},
+  {id:'dojo', x:3700, y:GROUND_Y-220, w:150,h:220, label:'Purple Dojo', triggered:false, color:'#5a2f8a'},
+];
+let world1End=4500;
+let yearsLaterTriggered=false;
+let world2Building={x:950,y:GROUND_Y-200,w:130,h:200};
+
+let training={active:false, round:0, maxRounds:5};
+let boss=null;
+let animTime=0;
+
+// Dojo state
+let dojo={ state:null, dummies:[], spawned:0, totalNonDamaging:3, totalDamaging:10, instructor:null, cutsceneStep:0 };
+
+function currentSkyColor(){ return isNight? '#0e1220':'#7ec9e8'; }
+function currentGroundColor(){ return isNight? '#2a2118':'#5c4a30'; }
+
+// ================= Character Select =================
+document.querySelectorAll('.charSwatch').forEach(cnv=>{ drawSwatch(cnv, cnv.dataset.c); });
+document.querySelectorAll('.charOption').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.charOption').forEach(o=>o.classList.remove('sel'));
+    el.classList.add('sel');
+    chosenColor=el.dataset.color;
+  });
+});
+document.getElementById('startBtn').addEventListener('click',()=>{
+  const nameVal=document.getElementById('nameInput').value.trim();
+  if(nameVal) playerName=nameVal.slice(0,16);
+  selectScreen.style.display='none';
+  scene='world1';
+  addSkillKeyHUD();
+});
+
+// ================= Input =================
+window.addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  keys[k]=true;
+  if(k==='e'){ advanceDialogue(); }
+  if(k==='k'){ toggleSkillMenu(); }
+  if(k==='h'){ useHealthPotion(); }
+  if(k===' '){ e.preventDefault(); }
+  handleSkillKey(e.key);
+});
+window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
+canvas.addEventListener('mousemove',e=>{
+  const r=canvas.getBoundingClientRect();
+  mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top;
+});
+canvas.addEventListener('mousedown',()=>{ mouse.down=true; swordSwing(); });
+canvas.addEventListener('mouseup',()=>{ mouse.down=false; });
+dialogueBox.addEventListener('click',advanceDialogue);
+
+// ================= Dialogue =================
+let dq=[]; let dqIndex=0; let dqCallback=null; let dqActive=false; let inputLocked=false;
+function startDialogue(name, lines, callback){
+  dq=lines; dqIndex=0; dqCallback=callback; dqActive=true; inputLocked=true;
+  dialogueBox.style.display='block';
+  dialogueName.textContent=name;
+  dialogueText.textContent=dq[0];
+}
+function advanceDialogue(){
+  if(!dqActive) return;
+  dqIndex++;
+  if(dqIndex>=dq.length){
+    dqActive=false; inputLocked=false;
+    dialogueBox.style.display='none';
+    if(dqCallback) dqCallback();
+  } else {
+    dialogueText.textContent=dq[dqIndex];
+  }
+}
+function showChoices(name, text, options){
+  inputLocked=true;
+  choiceBox.style.display='block';
+  choiceBox.innerHTML='<div style="color:#d4af37;font-weight:bold;margin-bottom:6px;">'+name+'</div><div style="margin-bottom:10px;">'+text+'</div>';
+  options.forEach(opt=>{
+    const b=document.createElement('button');
+    b.textContent=opt.text;
+    b.onclick=()=>{ choiceBox.style.display='none'; inputLocked=false; opt.action(); };
+    choiceBox.appendChild(b);
+  });
+}
+
+// ================= Skills =================
+function addSkillKeyHUD(){
+  let s='Attack: Left Click';
+  player.skills.forEach(sk=>{ s+=' | ['+sk.key+'] '+sk.name; });
+  skillKeysEl.textContent=s;
+}
+function learnSkill(name,key,damage,color,type,baseCooldown){
+  if(player.skills.find(s=>s.name===name)) return;
+  player.skills.push({name,key,damage,color,type,cooldown:0,baseCooldown:baseCooldown||45});
+  addSkillKeyHUD();
+}
+function handleSkillKey(rawKey){
+  if(inputLocked) return;
+  const sk=player.skills.find(s=>s.key===rawKey);
+  if(sk) useSkill(sk);
+}
+function useSkill(sk){
+  if(sk.cooldown>0) return;
+  sk.cooldown=sk.baseCooldown||45;
+  if(sk.type==='potion'){ handlePotionSkill(sk); return; }
+  const px=player.x+player.w/2, py=player.y+player.h/2;
+  const dx=(mouse.x+camera.x) - px;
+  const dy=mouse.y - py;
+  const len=Math.max(1,Math.hypot(dx,dy));
+  const dmg = player.frog? Math.round(sk.damage*0.25) : sk.damage;
+  projectiles.push({
+    x:px, y:py, vx:dx/len*7, vy:dy/len*7, damage:dmg, color:sk.color, owner:'player',
+    life:90, r:10, label:sk.name
+  });
+}
+function handlePotionSkill(sk){
+  const isHeal = Math.random()<0.5;
+  if(isHeal){
+    player.hp=Math.min(player.maxhp, player.hp+20);
+  } else {
+    const px=player.x+player.w/2, py=player.y+player.h/2;
+    const dx=(mouse.x+camera.x) - px;
+    const dy=mouse.y - py;
+    const len=Math.max(1,Math.hypot(dx,dy));
+    const dmg = player.frog? 5 : 20;
+    projectiles.push({
+      x:px, y:py, vx:dx/len*6.5, vy:dy/len*6.5, damage:dmg, color:'#ff4477', owner:'player',
+      life:90, r:10, label:'Potion!'
+    });
+  }
+}
+
+// ================= Skill Menu / Merge =================
+function toggleSkillMenu(){
+  if(inputLocked && skillMenu.style.display!=='block') return;
+  if(skillMenu.style.display==='block'){ skillMenu.style.display='none'; inputLocked=false; return; }
+  inputLocked=true;
+  renderSkillMenu();
+  skillMenu.style.display='block';
+}
+function renderSkillMenu(){
+  skillList.innerHTML = player.skills.length? '' : '<i>No skills learned yet.</i>';
+  player.skills.forEach(sk=>{
+    const d=document.createElement('div');
+    d.textContent='['+sk.key+'] '+sk.name+' (dmg '+sk.damage+')';
+    skillList.appendChild(d);
+  });
+  const mergeSkillSel=document.getElementById('mergeSkillSel');
+  const mergeWeaponSel=document.getElementById('mergeWeaponSel');
+  mergeSkillSel.innerHTML=''; mergeWeaponSel.innerHTML='';
+  player.skills.forEach(sk=>{
+    const o=document.createElement('option'); o.value=sk.name; o.textContent=sk.name;
+    mergeSkillSel.appendChild(o);
+  });
+  ownedWeapons.forEach(w=>{
+    const o=document.createElement('option'); o.value=w; o.textContent=w;
+    mergeWeaponSel.appendChild(o);
+  });
+}
+document.getElementById('mergeBtn').addEventListener('click',()=>{
+  const skName=document.getElementById('mergeSkillSel').value;
+  const wpName=document.getElementById('mergeWeaponSel').value;
+  if(!skName||!wpName) return;
+  const sk=player.skills.find(s=>s.name===skName);
+  const base=mergedWeapons[wpName]||{damage:10,color:'#ccc'};
+  const newName= skName+' '+ (wpName.includes('Sword')?'Sword':wpName);
+  const newDamage=Math.round(base.damage + sk.damage*0.6);
+  mergedWeapons[newName]={damage:newDamage,color:sk.color};
+  if(!ownedWeapons.includes(newName)) ownedWeapons.push(newName);
+  player.weapon=newName; player.weaponDamage=newDamage;
+  document.getElementById('mergeResult').textContent='Created "'+newName+'"! Equipped. Damage: '+newDamage;
+  renderSkillMenu();
+});
+
+// ================= Combat =================
+function currentWeaponDamage(){
+  const w=mergedWeapons[player.weapon]||{damage:10};
+  let dmg=w.damage;
+  if(player.swordBuff && player.weapon.toLowerCase().includes('sword')) dmg=Math.round(dmg*1.3);
+  if(player.frog) dmg=Math.round(dmg*0.25);
+  return dmg;
+}
+function swordSwing(){
+  if(scene==='select') return;
+  if(inputLocked) return;
+  if(player.attackCooldown>0) return;
+  player.attackCooldown=22;
+  player.swingTimer=16;
+  const range=60;
+  const px=player.x+player.w/2, py=player.y+player.h/2;
+  const dmg=currentWeaponDamage();
+
+  equations.forEach(eq=>{
+    if(!eq.alive) return;
+    const d=Math.hypot(eq.x-px, eq.y-py);
+    if(d<range+eq.r){ eq.alive=false; onEquationKilled(); }
+  });
+  enemies.forEach(en=>{
+    if(!en.alive) return;
+    const d=Math.hypot(en.x-px,en.y-py);
+    if(d<range+en.r){ en.hp-=dmg; en.flash=8; if(en.hp<=0) en.alive=false; }
+  });
+  if(boss && boss.alive){
+    const d=Math.hypot(boss.x-px, boss.y-py);
+    if(d<range+boss.r){ damageBoss(dmg); }
+  }
+  dojo.dummies.forEach(du=>{
+    if(!du.alive) return;
+    const d=Math.hypot(du.x-px,du.y-py);
+    if(d<range+du.r){ du.hp-=dmg; du.flash=8; if(du.hp<=0){ du.alive=false; onDummyKilled(); } }
+  });
+  if(dojo.instructor && dojo.instructor.alive){
+    const ins=dojo.instructor;
+    const d=Math.hypot(ins.x-px,ins.y-py);
+    if(d<range+ins.r){ ins.hp-=dmg; ins.flash=8; if(ins.hp<=0){ ins.alive=false; onInstructorDefeated(); } }
+  }
+  if(witchFight && witchFight.alive){
+    const d=Math.hypot(witchFight.x-px, witchFight.y-py);
+    if(d<range+witchFight.r){ damageWitch(dmg); }
+  }
+}
+function damageBoss(dmg){
+  boss.hp-=dmg;
+  boss.flash=10;
+  if(boss.hp<=0){ boss.hp=0; boss.alive=false; onBossDefeated(); }
+}
+
+// ================= Monsters =================
+function spawnMonster(){
+  const side=Math.random()<0.5?-1:1;
+  const ex=player.x + side*(300+Math.random()*150);
+  enemies.push({x:ex,y:GROUND_Y-28,r:16,hp:30,maxhp:30,speed:1.1,alive:true,dmgCooldown:0,flash:0,bobSeed:Math.random()*10});
+}
+function updateEnemies(){
+  if(isNight && enemies.length<6 && Math.random()<0.02) spawnMonster();
+  if(!isNight){
+    enemies.forEach(en=>{ en.x += (en.x<player.x?-1:1)*0.5; });
+  }
+  enemies.forEach(en=>{
+    if(!en.alive) return;
+    en.y=GROUND_Y-28;
+    if(isNight){
+      const dx=player.x-en.x;
+      const d=Math.abs(dx);
+      if(d<260 && d>4){ en.x+=Math.sign(dx)*en.speed; }
+    }
+    if(en.dmgCooldown>0) en.dmgCooldown--;
+    const d2=Math.hypot(player.x-en.x,(player.y+player.h/2)-en.y);
+    if(d2<en.r+22 && en.dmgCooldown<=0 && player.invuln<=0){
+      player.hp-=8; player.invuln=50; en.dmgCooldown=60;
+    }
+  });
+  enemies=enemies.filter(en=>en.alive);
+}
+
+// ================= Training minigame =================
+const eqTexts=['integral of x squared','limit as x to 0','sin squared plus cos squared','derivative of x cubed','x squared plus y squared'];
+function startTraining(){
+  training.active=true; training.round=0;
+  spawnNextEquation();
+}
+function spawnNextEquation(){
+  training.round++;
+  const spawnX = Math.min(player.x+150, 560);
+  equations.push({x:spawnX,y:GROUND_Y-90,r:26,alive:true,text:eqTexts[training.round%eqTexts.length]});
+}
+function exitBuildingToWorld1(poiId){
+  const poi=world1POIs.find(p=>p.id===poiId);
+  scene='world1';
+  if(poi){ player.x=poi.x+poi.w+40; }
+  player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+}
+function onEquationKilled(){
+  if(training.round<training.maxRounds){
+    setTimeout(spawnNextEquation, 500);
+  } else {
+    training.active=false;
+    learnSkill('Honors Precalculus','1',15,'#ffcc33','projectile');
+    startDialogue('Teacher',[
+      "Excellent form! You have learned to channel pure mathematics into power.",
+      "You've learned the skill: Honors Precalculus!",
+      "Now go. The wasteland still holds more for you to find. Return to me when you are ready."
+    ], ()=>{ exitBuildingToWorld1('building'); });
+  }
+}
+
+// ================= Boss =================
+function bossShoot(){
+  if(!boss||!boss.alive) return;
+  const dx=player.x-boss.x, dy=(player.y+player.h/2)-boss.y;
+  const len=Math.max(1,Math.hypot(dx,dy));
+  projectiles.push({
+    x:boss.x,y:boss.y, vx:dx/len*4.4, vy:dy/len*4.4,
+    damage:boss.dmg, color:boss.eqColor, owner:'boss', life:220, r:14,
+    label: boss.eqLabel
+  });
+}
+function updateProjectiles(){
+  projectiles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.life--;
+    if(p.owner==='player'){
+      enemies.forEach(en=>{
+        if(en.alive && Math.hypot(en.x-p.x,en.y-p.y)<en.r+p.r){ en.hp-=p.damage; if(en.hp<=0) en.alive=false; p.life=0; }
+      });
+      if(boss&&boss.alive && Math.hypot(boss.x-p.x,boss.y-p.y)<boss.r+p.r){ damageBoss(p.damage); p.life=0; }
+      if(witchFight&&witchFight.alive && Math.hypot(witchFight.x-p.x,witchFight.y-p.y)<witchFight.r+p.r){ damageWitch(p.damage); p.life=0; }
+    } else if(p.owner==='boss'||p.owner==='witch'){
+      if(player.invuln<=0 && Math.hypot(player.x+player.w/2-p.x,player.y+player.h/2-p.y)<18+p.r){
+        player.hp-=p.damage; player.invuln=40; p.life=0;
+      }
+    }
+  });
+  projectiles=projectiles.filter(p=>p.life>0);
+}
+
+// ================= Scene triggers =================
+function distTo(px,py,ox,oy){ return Math.hypot(px-ox,py-oy); }
+
+function checkWorld1Triggers(){
+  world1POIs.forEach(poi=>{
+    if(poi.triggered) return;
+    const cx=poi.x+poi.w/2, cy=poi.y+poi.h/2;
+    if(distTo(player.x+player.w/2,player.y+player.h/2,cx,cy) < 70){
+      poi.triggered=true;
+      if(poi.id==='building') enterClassroomIntro();
+      if(poi.id==='blacksmith') enterBlacksmith();
+      if(poi.id==='witch') enterWitchHut();
+      if(poi.id==='dojo') enterDojo();
+    }
+  });
+  if(!yearsLaterTriggered && player.x > world1End){
+    yearsLaterTriggered=true;
+    triggerYearsLater();
+  }
+}
+
+function enterClassroomIntro(){
+  inputLocked=true;
+  scene='classroom';
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  startDialogue('Teacher',[
+    "Ah, a traveler! Welcome in from the wasteland, it's not safe out there.",
+    "My name matters little. What matters is your strength - or lack of it.",
+    "I plan on training you myself... to defeat the final boss that awaits at the end of your journey.",
+    "Let's begin. Strike down these equations as I write them!"
+  ], ()=>{ startTraining(); });
+}
+
+function enterBlacksmith(){
+  inputLocked=true;
+  startDialogue('Blacksmith',[
+    "Well met, traveler. Not many make it this far into the wastes.",
+    "I've got two things I can give you for free, take your pick - choose wisely."
+  ], ()=>{
+    showChoices('Blacksmith',"Which will it be?",[
+      {text:'Take the Fireball skill', action:()=>{
+        learnSkill('Fireball','2',20,'#ff5522','projectile');
+        startDialogue('Blacksmith',["A fine choice. Press [2] to hurl it at your foes."],()=>{});
+      }},
+      {text:'Take the Lightning Sword', action:()=>{
+        learnSkill('Lightning','4',5,'#66eaff','projectile',30);
+        mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff'};
+        ownedWeapons.push('Lightning Sword');
+        player.weapon='Lightning Sword'; player.weaponDamage=13;
+        startDialogue('Blacksmith',["A blade already humming with storm magic. Press [4] to unleash a quick Lightning bolt - fast cooldown, low damage."],()=>{});
+      }}
+    ]);
+  });
+}
+
+function enterWitchHut(){
+  inputLocked=true;
+  scene='witch_hut';
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  startDialogue('Witch',[
+    "Mmm... fresh blood, still warm with hope.",
+    "I'll gift you something from the frost realms. No charge, traveler... unless you're too proud to accept."
+  ], ()=>{
+    showChoices('Witch',"What will you take?",[
+      {text:'Learn the Ice skill', action:()=>{
+        learnSkill('Ice','3',18,'#66ccff','projectile');
+        startDialogue('Witch',["You've learned the skill: Ice. Press [3] to unleash it."],()=>{ exitBuildingToWorld1('witch'); });
+      }},
+      {text:'Take a Health Potion', action:()=>{
+        player.healthPotions+=1;
+        startDialogue('Witch',["A single vial of restorative brew. Press [H] to drink it when you need it most."],()=>{ exitBuildingToWorld1('witch'); });
+      }},
+      {text:'Refuse her gift', action:()=> startWitchInsult() }
+    ]);
+  });
+}
+
+function startWitchInsult(){
+  inputLocked=true;
+  startDialogue('Witch',[
+    "...Refuse me? You dare refuse a witch's hospitality?",
+    "Then let's see if your pride can withstand my frost. Duel me, traveler!"
+  ], ()=>{
+    scene='witch_duel';
+    witchFight={x:650,y:GROUND_Y-70,r:26,hp:180,maxhp:180,alive:true,dmg:12,shootCooldown:60,flash:0};
+    bossBarWrap.style.display='block';
+    bossNameEl.style.display='block';
+    bossNameEl.textContent='Witch of the Frost Hut';
+    inputLocked=false;
+  });
+}
+function witchShoot(){
+  if(!witchFight||!witchFight.alive) return;
+  const dx=player.x-witchFight.x, dy=(player.y+player.h/2)-witchFight.y;
+  const len=Math.max(1,Math.hypot(dx,dy));
+  projectiles.push({
+    x:witchFight.x,y:witchFight.y, vx:dx/len*4.6, vy:dy/len*4.6,
+    damage:witchFight.dmg, color:'#66ccff', owner:'witch', life:220, r:12, label:'Ice Bolt'
+  });
+}
+function damageWitch(dmg){
+  if(!witchFight) return;
+  witchFight.hp-=dmg;
+  witchFight.flash=10;
+  if(witchFight.hp<=0){ witchFight.hp=0; witchFight.alive=false; onWitchDefeated(); }
+}
+function updateWitchDuel(){
+  if(!witchFight||!witchFight.alive) return;
+  const dx=player.x-witchFight.x;
+  const d=Math.abs(dx)||1;
+  if(d>170){ witchFight.x+=Math.sign(dx)*0.9; }
+  witchFight.shootCooldown--;
+  if(witchFight.shootCooldown<=0){ witchShoot(); witchFight.shootCooldown=65; }
+  if(witchFight.flash>0) witchFight.flash--;
+  if(player.hp<=0){ triggerFrogCurse(); }
+}
+function onWitchDefeated(){
+  bossBarWrap.style.display='none';
+  bossNameEl.style.display='none';
+  inputLocked=true;
+  learnSkill("Witch's Brew",'5',20,'#ff77cc','potion',300);
+  startDialogue('Witch',[
+    "Hmph! A fine showing... take my brew as your prize.",
+    "You've learned the skill: Witch's Brew! Press [5] - fate decides if it harms or heals."
+  ], ()=>{
+    witchFight=null;
+    exitBuildingToWorld1('witch');
+  });
+}
+function triggerFrogCurse(){
+  witchFight=null;
+  bossBarWrap.style.display='none';
+  bossNameEl.style.display='none';
+  projectiles=projectiles.filter(p=>p.owner!=='witch');
+  turnIntoFrog();
+  exitBuildingToWorld1('witch');
+  startDialogue('???',[
+    "Everything feels... smaller. And slimy.",
+    "The witch's curse has turned you into a frog!"
+  ], ()=>{});
+}
+function turnIntoFrog(){
+  player.frog=true;
+  player.jumpBoost=true;
+  player.hp=Math.max(1,Math.round(player.maxhp*0.3));
+  const feet=player.y+player.h;
+  player.w=FROG_W; player.h=FROG_H;
+  player.y=feet-player.h;
+}
+function cureFrog(){
+  player.frog=false;
+  const feet=player.y+player.h;
+  player.w=NORMAL_W; player.h=NORMAL_H;
+  player.y=feet-player.h;
+  player.hp=player.maxhp;
+}
+function useHealthPotion(){
+  if(scene==='select'||inputLocked) return;
+  if(player.healthPotions>0){
+    player.healthPotions--;
+    player.hp=player.maxhp;
+  }
+}
+
+// ================= Dojo =================
+function enterDojo(){
+  inputLocked=true;
+  scene='dojo';
+  dojo.state='talk';
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  startDialogue('Sword Instructor',[
+    "You there! I saw you crossing the wastes.",
+    "This is the Dojo of the Sword Arts. Would you like to train under me?"
+  ], ()=>{
+    showChoices('Sword Instructor',"Train with me?",[
+      {text:'Yes, train me', action:()=> startDojoTraining()},
+      {text:'No, I do not need training', action:()=> startDojoInsult()}
+    ]);
+  });
+}
+
+function startDojoTraining(){
+  dojo.state='training';
+  dojo.dummies=[];
+  dojo.spawned=0;
+  spawnNextDummy();
+}
+function spawnNextDummy(){
+  dojo.spawned++;
+  const damaging = dojo.spawned > dojo.totalNonDamaging;
+  const dx = 420 + ((dojo.spawned-1)%4)*90;
+  dojo.dummies.push({
+    x:dx, y:GROUND_Y-40, r:22, hp:20, maxhp:20, alive:true, flash:0,
+    damaging:damaging, dmgCooldown:0
+  });
+}
+function onDummyKilled(){
+  const totalDummies=dojo.totalNonDamaging+dojo.totalDamaging;
+  if(dojo.spawned < totalDummies){
+    setTimeout(spawnNextDummy, 400);
+  } else {
+    dojo.state='done';
+    player.swordBuff=true;
+    inputLocked=true;
+    startDialogue('Sword Instructor',[
+      "Not bad! You've endured the full gauntlet.",
+      "Your blade work has sharpened - all your swords now strike 30% harder."
+    ], ()=>{
+      dojo.dummies=[];
+      exitBuildingToWorld1('dojo');
+    });
+  }
+}
+
+function startDojoInsult(){
+  dojo.state='duel';
+  inputLocked=true;
+  startDialogue('Sword Instructor',[
+    "Hmph. Arrogant, are we? You think you don't need MY training?",
+    "Then draw your blade. Let's see if your confidence is earned - sword versus sword!"
+  ], ()=>{
+    inputLocked=false;
+    dojo.instructor={
+      x:650,y:GROUND_Y-70,r:26,hp:150,maxhp:150,alive:true,dmg:9,
+      speed:1.1, atkCooldown:0, flash:0
+    };
+  });
+}
+function onInstructorDefeated(){
+  inputLocked=true;
+  startDialogue('Sword Instructor',[
+    "Hah... impressive. You've earned my respect.",
+    "Take this - a Steel Greatsword, forged in my own dojo. Wield it well."
+  ], ()=>{
+    mergedWeapons['Steel Greatsword']={damage:35,color:'#b0b0c0'};
+    ownedWeapons.push('Steel Greatsword');
+    player.weapon='Steel Greatsword'; player.weaponDamage=35;
+    dojo.instructor=null;
+    dojo.state=null;
+    exitBuildingToWorld1('dojo');
+  });
+}
+function updateDojoInstructor(){
+  const ins=dojo.instructor;
+  if(!ins||!ins.alive) return;
+  const dx=player.x-ins.x;
+  const d=Math.abs(dx)||1;
+  if(d>60){ ins.x+=Math.sign(dx)*ins.speed; }
+  if(ins.atkCooldown>0) ins.atkCooldown--;
+  const contactD=Math.hypot(player.x-ins.x,(player.y+player.h/2)-ins.y);
+  if(contactD<ins.r+30 && ins.atkCooldown<=0 && player.invuln<=0){
+    player.hp-=ins.dmg; player.invuln=45; ins.atkCooldown=55;
+    if(player.hp<=0){ startDojoCutscene(); }
+  }
+  if(ins.flash>0) ins.flash--;
+}
+function updateDojoDummies(){
+  dojo.dummies.forEach(du=>{
+    if(!du.alive) return;
+    if(du.flash>0) du.flash--;
+    if(!du.damaging) return;
+    if(du.dmgCooldown>0){ du.dmgCooldown--; return; }
+    const d=Math.hypot(player.x-du.x,(player.y+player.h/2)-du.y);
+    if(d<du.r+30 && player.invuln<=0){
+      player.hp-=6; player.invuln=45; du.dmgCooldown=70;
+    }
+  });
+}
+function startDojoCutscene(){
+  scene='dojo_cutscene';
+  inputLocked=true;
+  dojo.instructor=null;
+  startDialogue('',[
+    "Your blade slips from your grasp as the Instructor's strike lands true.",
+    "The crowd of onlookers jeers as you're dragged to the center of the dojo courtyard.",
+    "\"This is what happens to those who scorn the sword arts,\" the Instructor announces.",
+    "You are forced to your knees before the gathered crowd, utterly humiliated.",
+    "The blade rises... and falls.",
+    "..."
+  ], ()=>{ triggerLose("You refused the training, challenged the master, and paid with your head."); });
+}
+
+function triggerYearsLater(){
+  inputLocked=true;
+  fadeLayer.style.opacity='1';
+  fadeLayer.textContent='';
+  setTimeout(()=>{ fadeLayer.textContent='Several Years Later...'; },1400);
+  setTimeout(()=>{
+    scene='world2';
+    player.x=150; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+    enemies=[]; projectiles=[];
+    fadeLayer.textContent='';
+    fadeLayer.style.opacity='0';
+    inputLocked=false;
+    setTimeout(()=>{
+      inputLocked=true;
+      startDialogue('???',["Huh? I must've walked around the whole world. Sure is decimated."], ()=>{ inputLocked=false; });
+    }, 800);
+  },3600);
+}
+
+function checkWorld2Trigger(){
+  const b=world2Building;
+  const cx=b.x+b.w/2, cy=b.y+b.h/2;
+  if(!checkWorld2Trigger.done && distTo(player.x+player.w/2,player.y+player.h/2,cx,cy)<70){
+    checkWorld2Trigger.done=true;
+    startFinalBossIntro();
+  }
+}
+
+function startFinalBossIntro(){
+  inputLocked=true;
+  scene='boss_intro';
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  if(player.frog){
+    startDialogue('Teacher',[
+      "...Is that a frog wearing your equipment?",
+      "I can sense the witch's curse upon you. I want a fair fight - shall I lift it?"
+    ], ()=>{
+      showChoices('Teacher',"Remove the frog curse for a fair fight?",[
+        {text:'Yes, cure me', action:()=>{ cureFrog(); proceedBossIntroDialogue(); }},
+        {text:'No, fight me as I am', action:()=>{
+          inputLocked=true;
+          startDialogue('Teacher',[
+            "Insolent creature! You'd mock me even now?",
+            "Then face the Multivariable Beam - inescapable, absolute!"
+          ], ()=>{ triggerLose("The Teacher's Multivariable Beam struck true. There was no escape."); });
+        }}
+      ]);
+    });
+  } else {
+    proceedBossIntroDialogue();
+  }
+}
+function proceedBossIntroDialogue(){
+  startDialogue('Teacher',[
+    "...You've returned. And you've grown strong.",
+    "I suppose it's time you learned the truth.",
+    "I was the final boss all along. I trained you myself... to see if you could ever beat me!",
+    "Show me everything you've learned!"
+  ], ()=>{ startBossPhase1(); });
+}
+
+function startBossPhase1(){
+  scene='boss1';
+  boss={ x:650,y:GROUND_Y-70,r:34,hp:400,maxhp:400,alive:true,
+    speed:1.0, shootCooldown:0, dmg:10, eqColor:'#ffcc33', eqLabel:'Precalc Bolt', phase:1 };
+  bossBarWrap.style.display='block';
+  bossNameEl.style.display='block';
+  bossNameEl.textContent='Teacher - Honors Precalc Blade';
+}
+function startBossPhase2(){
+  scene='boss2';
+  boss={ x:650,y:GROUND_Y-70,r:38,hp:600,maxhp:600,alive:true,
+    speed:1.3, shootCooldown:0, dmg:14, eqColor:'#cc66ff', eqLabel:'Multivar Bolt', phase:2, armored:true, flash:0 };
+  bossBarWrap.style.display='block';
+  bossNameEl.style.display='block';
+  bossNameEl.textContent='Teacher - Multivariable Calculus Blade (Phase 2)';
+}
+function onBossDefeated(){
+  bossBarWrap.style.display='none';
+  if(boss.phase===1){
+    inputLocked=true;
+    startDialogue('Teacher',[
+      "Hah... not bad at all. But I'm just getting started.",
+      "Behold my true power - the Multivariable Calculus Blade!"
+    ], ()=>{ startBossPhase2(); });
+  } else {
+    inputLocked=true;
+    startDialogue('Teacher',[
+      "Impossible... you've truly surpassed me.",
+      "Go forth. You no longer need a teacher."
+    ], ()=>{
+      scene='win';
+      winScreen.style.display='flex';
+      bossNameEl.style.display='none';
+    });
+  }
+}
+document.getElementById('restartBtn').addEventListener('click',()=>location.reload());
+document.getElementById('loseRestartBtn').addEventListener('click',()=>location.reload());
+
+function triggerLose(reason){
+  if(gameOver) return;
+  gameOver=true;
+  inputLocked=true;
+  bossBarWrap.style.display='none';
+  scene='lose';
+  loseText.textContent = reason || 'The wasteland claims another soul.';
+  loseScreen.style.display='flex';
+}
+
+// ================= Physics =================
+function updatePlayerPhysics(){
+  if(inputLocked){ player.vx=0; return; }
+  let move=0;
+  if(keys['a']||keys['arrowleft']){ move=-1; player.facing=-1; }
+  if(keys['d']||keys['arrowright']){ move=1; player.facing=1; }
+
+  if(!player.frog){
+    player.crouching = (keys['s']||keys['arrowdown']) && player.grounded;
+    const targetH = player.crouching? 40:64;
+    if(player.h!==targetH){
+      const feet=player.y+player.h;
+      player.h=targetH;
+      player.y=feet-player.h;
+    }
+  } else {
+    player.crouching=false;
+  }
+
+  const spd=player.crouching? player.speed*0.4 : player.speed;
+  player.vx=move*spd;
+  player.x+=player.vx;
+
+  if((keys['w']||keys['arrowup']||keys[' ']) && player.grounded && !player.crouching){
+    player.vy = player.jumpBoost ? FROG_JUMP_VEL : JUMP_VEL;
+    player.grounded=false;
+  }
+
+  player.vy+=GRAVITY;
+  player.y+=player.vy;
+
+  const feet=player.y+player.h;
+  if(feet>=GROUND_Y){
+    player.y=GROUND_Y-player.h;
+    player.vy=0;
+    player.grounded=true;
+  } else {
+    player.grounded=false;
+  }
+
+  // scene bounds
+  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'){
+    player.x=Math.max(60,Math.min(820,player.x));
+  } else {
+    player.x=Math.max(20,player.x);
+  }
+}
+
+// ================= Update =================
+function update(){
+  if(scene==='select'||scene==='lose'||scene==='win') return;
+  animTime++;
+
+  dayNightTimer++;
+  const cycle=DAY_LEN+NIGHT_LEN;
+  const t=dayNightTimer%cycle;
+  isNight = t>DAY_LEN;
+
+  player.skills.forEach(sk=>{ if(sk.cooldown>0) sk.cooldown--; });
+  if(player.attackCooldown>0) player.attackCooldown--;
+  if(player.swingTimer>0) player.swingTimer--;
+  if(player.invuln>0) player.invuln--;
+  enemies.forEach(en=>{ if(en.flash>0) en.flash--; });
+  if(boss && boss.flash>0) boss.flash--;
+  if(witchFight && witchFight.flash>0) witchFight.flash--;
+
+  updatePlayerPhysics();
+
+  if(scene==='world1'){ updateEnemies(); checkWorld1Triggers(); }
+  if(scene==='world2'){ updateEnemies(); checkWorld2Trigger(); }
+  if(scene==='dojo' && dojo.state==='training'){ updateDojoDummies(); }
+  if(scene==='dojo' && dojo.state==='duel'){ updateDojoInstructor(); }
+  if(scene==='witch_duel'){ updateWitchDuel(); }
+
+  if(scene==='boss1'||scene==='boss2'){
+    if(boss && boss.alive){
+      const dx=player.x-boss.x;
+      const d=Math.abs(dx)||1;
+      if(d>150){ boss.x+=Math.sign(dx)*boss.speed; }
+      boss.shootCooldown--;
+      if(boss.shootCooldown<=0){ bossShoot(); boss.shootCooldown= boss.phase===1?70:50; }
+    }
+  }
+
+  updateProjectiles();
+
+  const worldScene = (scene==='world1'||scene==='world2');
+  camera.x = worldScene ? player.x - W/2 : 0;
+
+  hpBarFill.style.width=Math.max(0,player.hp/player.maxhp*100)+'%';
+  if(scene==='witch_duel' && witchFight){
+    bossBarFill.style.width=Math.max(0,witchFight.hp/witchFight.maxhp*100)+'%';
+  } else if(boss){
+    bossBarFill.style.width=Math.max(0,boss.hp/boss.maxhp*100)+'%';
+  }
+
+  // death check - no respawns. Dojo duel and witch duel deaths are handled by their own scripted outcomes.
+  const scriptedDeath = (scene==='dojo' && dojo.state==='duel') || scene==='dojo_cutscene' || scene==='witch_duel';
+  if(player.hp<=0 && !scriptedDeath && !gameOver){
+    triggerLose();
+  }
+}
+
+// ================= Draw helpers =================
+function drawSky(camX){
+  const grad=ctx.createLinearGradient(0,0,0,GROUND_Y);
+  if(isNight){
+    grad.addColorStop(0,'#050814');
+    grad.addColorStop(0.55,'#0d1430');
+    grad.addColorStop(1,'#1c2440');
+  } else {
+    grad.addColorStop(0,'#3f7fc9');
+    grad.addColorStop(0.5,'#7ec9e8');
+    grad.addColorStop(1,'#cfe9ea');
+  }
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,0,W,GROUND_Y);
+
+  if(isNight){
+    // stars (deterministic twinkle field)
+    for(let i=0;i<70;i++){
+      const sxp=(i*137.5)%W;
+      const syp=(i*71.3)%(GROUND_Y-40);
+      const tw=0.5+0.5*Math.sin(animTime*0.03+i);
+      ctx.fillStyle='rgba(255,255,255,'+(0.25+0.5*tw)+')';
+      ctx.fillRect(sxp,syp, i%5===0?2:1, i%5===0?2:1);
+    }
+    // moon
+    const mx=W-120, my=90;
+    ctx.fillStyle='rgba(230,235,255,0.15)';
+    ctx.beginPath(); ctx.arc(mx,my,34,0,7); ctx.fill();
+    ctx.fillStyle='#eef1ff';
+    ctx.beginPath(); ctx.arc(mx,my,20,0,7); ctx.fill();
+    ctx.fillStyle='rgba(200,205,225,0.5)';
+    ctx.beginPath(); ctx.arc(mx-6,my-4,4,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(mx+7,my+6,3,0,7); ctx.fill();
+  } else {
+    // sun
+    const sx0=140, sy0=80;
+    ctx.fillStyle='rgba(255,235,150,0.25)';
+    ctx.beginPath(); ctx.arc(sx0,sy0,44,0,7); ctx.fill();
+    ctx.fillStyle='#fff2b0';
+    ctx.beginPath(); ctx.arc(sx0,sy0,24,0,7); ctx.fill();
+    // drifting clouds
+    ctx.fillStyle='rgba(255,255,255,0.75)';
+    const parC=camX*0.15;
+    for(let i=-1;i<5;i++){
+      const cx0=i*260 - (parC%260) + 40;
+      const cy0=70+((i*53)%40);
+      drawCloud(cx0,cy0);
+    }
+  }
+}
+function drawCloud(cx0,cy0){
+  ctx.beginPath();
+  ctx.ellipse(cx0,cy0,26,14,0,0,7);
+  ctx.ellipse(cx0+22,cy0-6,20,12,0,0,7);
+  ctx.ellipse(cx0+44,cy0,24,13,0,0,7);
+  ctx.fill();
+}
+
+function drawGround(camX){
+  drawSky(camX);
+  drawFarMountains(camX);
+  ctx.fillStyle=currentGroundColor();
+  ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+  // subtle vertical shading on ground for depth
+  const gGrad=ctx.createLinearGradient(0,GROUND_Y,0,H);
+  gGrad.addColorStop(0, isNight? 'rgba(0,0,0,0)':'rgba(255,255,255,0.06)');
+  gGrad.addColorStop(1, 'rgba(0,0,0,0.25)');
+  ctx.fillStyle=gGrad;
+  ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+  // dirt texture stripes tied to world position for scroll feel
+  ctx.fillStyle= isNight? '#1b150f':'#4a3a24';
+  const tile=40;
+  const offset = ((camX%tile)+tile)%tile;
+  for(let x=-offset;x<W;x+=tile){
+    ctx.fillRect(x,GROUND_Y+4,tile-4,H-GROUND_Y-4);
+  }
+  // patchy dead grass tufts along the surface
+  ctx.strokeStyle= isNight? '#33301f':'#7a8f3a';
+  ctx.lineWidth=2;
+  const tuftSpacing=34;
+  const toff=((camX%tuftSpacing)+tuftSpacing)%tuftSpacing;
+  for(let x=-toff;x<W;x+=tuftSpacing){
+    const seed=Math.abs(Math.floor((x+camX)/tuftSpacing));
+    if(seed%3===0) continue;
+    ctx.beginPath();
+    ctx.moveTo(x,GROUND_Y+2); ctx.lineTo(x-3,GROUND_Y-6);
+    ctx.moveTo(x+2,GROUND_Y+2); ctx.lineTo(x+2,GROUND_Y-8);
+    ctx.moveTo(x+5,GROUND_Y+2); ctx.lineTo(x+8,GROUND_Y-5);
+    ctx.stroke();
+  }
+  ctx.fillStyle= isNight? '#0e0a06':'#2e2414';
+  ctx.fillRect(0,GROUND_Y,W,6);
+  drawScenery(camX);
+  if(isNight){
+    ctx.fillStyle='rgba(0,0,20,0.22)';
+    ctx.fillRect(0,0,W,H);
+  }
+}
+
+function drawFarMountains(camX){
+  // back layer (lighter/hazier, slower parallax)
+  ctx.fillStyle= isNight? '#12172a':'#a9bcc4';
+  const parBack = camX*0.12;
+  const spacingBack=340;
+  for(let i=-2;i<Math.ceil(W/spacingBack)+3;i++){
+    const bx = i*spacingBack - (parBack%spacingBack);
+    ctx.beginPath();
+    ctx.moveTo(bx,GROUND_Y);
+    ctx.lineTo(bx+170,GROUND_Y-100);
+    ctx.lineTo(bx+340,GROUND_Y);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // front layer (darker, faster parallax)
+  ctx.fillStyle= isNight? '#161b2a':'#8fa8b0';
+  const par = camX*0.22;
+  const spacing=300;
+  for(let i=-2;i<Math.ceil(W/spacing)+3;i++){
+    const bx = i*spacing - (par%spacing);
+    ctx.beginPath();
+    ctx.moveTo(bx,GROUND_Y);
+    ctx.lineTo(bx+150,GROUND_Y-130);
+    ctx.lineTo(bx+300,GROUND_Y);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // hazy smoke smudges on the horizon for wasteland mood
+  ctx.fillStyle= isNight? 'rgba(40,40,60,0.25)':'rgba(90,90,90,0.18)';
+  const par2 = camX*0.35;
+  for(let i=-1;i<Math.ceil(W/220)+2;i++){
+    const bx = i*220 - (par2%220);
+    ctx.beginPath();
+    ctx.ellipse(bx,GROUND_Y-90,60,26,0,0,7);
+    ctx.fill();
+  }
+}
+
+function drawDeadTree(sx,gy){
+  ctx.strokeStyle='#241a12';
+  ctx.lineWidth=7;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(sx,gy);
+  ctx.lineTo(sx-5,gy-70);
+  ctx.stroke();
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(sx-5,gy-70); ctx.lineTo(sx-28,gy-102);
+  ctx.moveTo(sx-5,gy-70); ctx.lineTo(sx+20,gy-108);
+  ctx.moveTo(sx-3,gy-45); ctx.lineTo(sx-30,gy-60);
+  ctx.moveTo(sx-3,gy-45); ctx.lineTo(sx+22,gy-64);
+  ctx.stroke();
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(sx-28,gy-102); ctx.lineTo(sx-40,gy-118);
+  ctx.moveTo(sx+20,gy-108); ctx.lineTo(sx+32,gy-124);
+  ctx.stroke();
+}
+
+function drawCrashSite(sx,gy){
+  ctx.fillStyle='#3a3a3a';
+  ctx.fillRect(sx-34,gy-24,74,24);
+  ctx.fillStyle='#57575a';
+  ctx.fillRect(sx-8,gy-42,34,20);
+  ctx.fillStyle='#1e1e1e';
+  ctx.beginPath(); ctx.arc(sx-22,gy,9,0,7); ctx.fill();
+  ctx.beginPath(); ctx.arc(sx+24,gy,9,0,7); ctx.fill();
+  ctx.strokeStyle='#7a7a7a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(sx-34,gy-24); ctx.lineTo(sx-50,gy-40); ctx.stroke();
+  ctx.fillStyle='#8a1f1f';
+  ctx.fillRect(sx-30,gy-20,10,4);
+  drawFire(sx+8,gy-24,0.65);
+}
+
+function drawFire(sx,sy,scale){
+  scale=scale||1;
+  const flick=Math.sin(animTime*0.4+sx*0.1)*3*scale;
+  const flick2=Math.cos(animTime*0.33+sx*0.2)*2*scale;
+  // ambient light halo (stronger at night)
+  const glowR=isNight? 90*scale : 55*scale;
+  const glowA=isNight? 0.35 : 0.15;
+  const glow=ctx.createRadialGradient(sx,sy-10*scale,2,sx,sy-10*scale,glowR);
+  glow.addColorStop(0,'rgba(255,170,60,'+glowA+')');
+  glow.addColorStop(1,'rgba(255,170,60,0)');
+  ctx.fillStyle=glow;
+  ctx.beginPath(); ctx.arc(sx,sy-10*scale,glowR,0,7); ctx.fill();
+
+  ctx.fillStyle='rgba(255,140,0,0.35)';
+  ctx.beginPath(); ctx.ellipse(sx,sy+2,18*scale,7*scale,0,0,7); ctx.fill();
+  ctx.fillStyle='#ff8c00';
+  ctx.beginPath();
+  ctx.moveTo(sx,sy);
+  ctx.quadraticCurveTo(sx-11*scale,sy-20*scale+flick, sx, sy-40*scale+flick);
+  ctx.quadraticCurveTo(sx+11*scale, sy-20*scale+flick, sx, sy);
+  ctx.fill();
+  ctx.fillStyle='#ffd23f';
+  ctx.beginPath();
+  ctx.moveTo(sx,sy);
+  ctx.quadraticCurveTo(sx-5*scale,sy-13*scale+flick2, sx, sy-24*scale+flick2);
+  ctx.quadraticCurveTo(sx+5*scale, sy-13*scale+flick2, sx, sy);
+  ctx.fill();
+  // rising embers
+  for(let i=0;i<3;i++){
+    const t=((animTime*0.7+i*37)%60)/60;
+    const ex=sx+Math.sin(animTime*0.05+i*2)*8*scale;
+    const ey=sy-10*scale-t*46*scale;
+    ctx.fillStyle='rgba(255,180,90,'+(1-t)+')';
+    ctx.fillRect(ex,ey,2,2);
+  }
+}
+
+function drawWindSwayGrassPatch(sx,gy,seed){
+  const sway=Math.sin(animTime*0.05+seed)*3;
+  ctx.strokeStyle= isNight? '#2a3a1f':'#6a8f3a';
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(sx,gy); ctx.quadraticCurveTo(sx+sway,gy-10,sx-2+sway,gy-18);
+  ctx.moveTo(sx+5,gy); ctx.quadraticCurveTo(sx+5+sway,gy-8,sx+3+sway,gy-16);
+  ctx.stroke();
+}
+
+function drawScenery(camX){
+  const spacing=260;
+  const startTile=Math.floor((camX-100)/spacing);
+  const endTile=Math.floor((camX+W+100)/spacing);
+  for(let i=startTile;i<=endTile;i++){
+    const jitter=Math.abs(i*928371)%60;
+    const worldX=i*spacing+jitter;
+    const sx=worldX-camX;
+    if(sx<-80||sx>W+80) continue;
+    const typeSeed=Math.abs(i*2654435761)%4;
+    if(typeSeed===0) drawDeadTree(sx,GROUND_Y);
+    else if(typeSeed===1) drawCrashSite(sx,GROUND_Y);
+    else if(typeSeed===2) drawFire(sx,GROUND_Y,1);
+    else drawWindSwayGrassPatch(sx,GROUND_Y,i);
+  }
+}
+
+function drawPOI(poi){
+  const sx=poi.x-camera.x, sy=poi.y;
+  if(sx<-200||sx>W+200) return;
+  if(poi.id==='witch'){ drawHut(sx,sy,poi.w,poi.h,poi.label); return; }
+  if(poi.id==='building'){ drawSchoolBuilding(sx,sy,poi.w,poi.h,poi.label,false); return; }
+  if(poi.id==='world2building'){ drawSchoolBuilding(sx,sy,poi.w,poi.h,poi.label,true); return; }
+  if(poi.id==='blacksmith'){ drawForgeBuilding(sx,sy,poi.w,poi.h,poi.label); return; }
+  if(poi.id==='dojo'){ drawDojoBuilding(sx,sy,poi.w,poi.h,poi.label); return; }
+  ctx.fillStyle=poi.color||'#5a4a3a';
+  ctx.fillRect(sx,sy,poi.w,poi.h);
+  ctx.fillStyle='rgba(255,255,255,0.15)';
+  for(let i=0;i<poi.w;i+=20) ctx.fillRect(sx+i,sy,3,poi.h);
+  ctx.fillStyle='#3a2f24';
+  ctx.fillRect(sx+poi.w/2-18,sy+poi.h-46,36,46);
+  ctx.fillStyle='#fff';
+  ctx.font='13px Arial';
+  ctx.textAlign='center';
+  ctx.fillText(poi.label, sx+poi.w/2, sy-8);
+}
+
+function drawWindowGrid(sx,sy,w,h,cols,rows,lit){
+  const padX=w*0.12, padY=h*0.1;
+  const cw=(w-padX*2)/cols, ch=(h-padY*2)/rows;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const wx=sx+padX+c*cw+cw*0.15, wy=sy+padY+r*ch+ch*0.15;
+      const ww=cw*0.7, wh=ch*0.6;
+      ctx.fillStyle= lit? 'rgba(255,214,120,0.85)' : (isNight? 'rgba(30,40,60,0.9)':'rgba(180,210,220,0.8)');
+      ctx.fillRect(wx,wy,ww,wh);
+      ctx.strokeStyle='#241a12'; ctx.lineWidth=2;
+      ctx.strokeRect(wx,wy,ww,wh);
+      ctx.beginPath(); ctx.moveTo(wx+ww/2,wy); ctx.lineTo(wx+ww/2,wy+wh); ctx.stroke();
+    }
+  }
+}
+
+function drawSchoolBuilding(sx,sy,w,h,label,decayed){
+  // brick body
+  ctx.fillStyle= decayed? '#5a4438':'#8a5a3f';
+  ctx.fillRect(sx,sy+30,w,h-30);
+  ctx.strokeStyle= decayed? '#3a2c22':'#5c3a26'; ctx.lineWidth=1;
+  for(let ry=sy+40;ry<sy+h;ry+=10){
+    ctx.beginPath(); ctx.moveTo(sx,ry); ctx.lineTo(sx+w,ry); ctx.stroke();
+  }
+  // gabled roof
+  ctx.fillStyle= decayed? '#2e2420':'#3a2418';
+  ctx.beginPath();
+  ctx.moveTo(sx-14,sy+34); ctx.lineTo(sx+w/2,sy-16); ctx.lineTo(sx+w+14,sy+34);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle= decayed? '#241c18':'#2a1710';
+  ctx.fillRect(sx-14,sy+28,w+28,8);
+  // little bell tower / cupola
+  ctx.fillStyle= decayed? '#463a30':'#6a4530';
+  ctx.fillRect(sx+w/2-10,sy-40,20,26);
+  ctx.beginPath();
+  ctx.moveTo(sx+w/2-13,sy-40); ctx.lineTo(sx+w/2,sy-58); ctx.lineTo(sx+w/2+13,sy-40);
+  ctx.closePath(); ctx.fill();
+  if(!decayed){
+    ctx.strokeStyle='#2a1a10'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(sx+w/2,sy-27,5,0,7); ctx.stroke(); // bell outline
+  }
+  // windows showing chalkboard-green glow
+  drawWindowGrid(sx+w*0.08, sy+42, w*0.84, h*0.38, 3,1, !decayed);
+  // door
+  ctx.fillStyle= decayed? '#1c1512':'#2a1710';
+  ctx.fillRect(sx+w/2-16,sy+h-52,32,52);
+  ctx.strokeStyle='#0d0805'; ctx.lineWidth=2;
+  ctx.strokeRect(sx+w/2-16,sy+h-52,32,52);
+  ctx.beginPath(); ctx.arc(sx+w/2-16,sy+h-52,16,Math.PI,Math.PI*2); ctx.stroke();
+  // signage plaque
+  ctx.fillStyle= decayed? '#2a2420':'#e8dcc0';
+  ctx.fillRect(sx+w/2-38,sy+34,76,16);
+  ctx.fillStyle= decayed? '#665a4a':'#3a2a14';
+  ctx.font='bold 10px Arial'; ctx.textAlign='center';
+  ctx.fillText(decayed? 'S_H__L':'SCHOOL', sx+w/2, sy+46);
+  if(decayed){
+    // decay: cracks, vines, broken window
+    ctx.strokeStyle='rgba(20,15,10,0.8)'; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(sx+w*0.15,sy+40); ctx.lineTo(sx+w*0.22,sy+70); ctx.lineTo(sx+w*0.18,sy+100);
+    ctx.moveTo(sx+w*0.7,sy+50); ctx.lineTo(sx+w*0.75,sy+90);
+    ctx.stroke();
+    ctx.strokeStyle='#3a5a2a'; ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.moveTo(sx+w*0.85,sy+30);
+    ctx.quadraticCurveTo(sx+w*0.9,sy+80,sx+w*0.82,sy+h-20);
+    ctx.stroke();
+    for(let i=0;i<4;i++){
+      ctx.beginPath(); ctx.arc(sx+w*0.85+(i%2?4:-4), sy+50+i*30, 5,0,7); ctx.fillStyle='#4a7a34'; ctx.fill();
+    }
+  }
+  ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText(label, sx+w/2, sy-64);
+}
+
+function drawForgeBuilding(sx,sy,w,h,label){
+  // stone base
+  ctx.fillStyle='#4a4a4a';
+  ctx.fillRect(sx,sy+h*0.25,w,h*0.75);
+  ctx.fillStyle='rgba(0,0,0,0.15)';
+  for(let r=0;r<5;r++){
+    for(let c=0;c<4;c++){
+      ctx.strokeStyle='rgba(20,20,20,0.4)'; ctx.lineWidth=1;
+      ctx.strokeRect(sx+c*(w/4), sy+h*0.25+r*(h*0.75/5), w/4, h*0.75/5);
+    }
+  }
+  // sloped roof
+  ctx.fillStyle='#33241a';
+  ctx.beginPath();
+  ctx.moveTo(sx-10,sy+h*0.28); ctx.lineTo(sx+w*0.3,sy-6); ctx.lineTo(sx+w+10,sy+h*0.2); ctx.lineTo(sx+w+10,sy+h*0.3); ctx.lineTo(sx-10,sy+h*0.38);
+  ctx.closePath(); ctx.fill();
+  // chimney with forge smoke/embers
+  ctx.fillStyle='#3a3a3a';
+  ctx.fillRect(sx+w*0.72,sy-30,18,40);
+  const flick=Math.sin(animTime*0.2)*4;
+  ctx.fillStyle='rgba(120,120,120,0.5)';
+  ctx.beginPath(); ctx.ellipse(sx+w*0.72+9, sy-40+flick, 10,7,0,0,7); ctx.fill();
+  ctx.fillStyle='rgba(255,140,40,0.7)';
+  ctx.beginPath(); ctx.arc(sx+w*0.72+9, sy-34, 3,0,7); ctx.fill();
+  // open forge doorway with orange glow
+  ctx.fillStyle='#1a1a1a';
+  ctx.fillRect(sx+w/2-20,sy+h-56,40,56);
+  const glow=0.5+0.2*Math.sin(animTime*0.15);
+  ctx.fillStyle='rgba(255,120,30,'+glow+')';
+  ctx.fillRect(sx+w/2-14,sy+h-30,28,28);
+  ctx.strokeStyle='#000'; ctx.lineWidth=2;
+  ctx.strokeRect(sx+w/2-20,sy+h-56,40,56);
+  // anvil sign hanging above the door
+  ctx.fillStyle='#8a5a2a';
+  ctx.fillRect(sx+w/2-2,sy+h*0.28,4,18);
+  ctx.fillStyle='#2a2a2a';
+  ctx.fillRect(sx+w/2-14,sy+h*0.28+16,28,8);
+  ctx.fillRect(sx+w/2-4,sy+h*0.28+22,8,10);
+  drawWindowGrid(sx+w*0.1, sy+h*0.32, w*0.28, h*0.3, 1,1, true);
+  ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText(label, sx+w/2, sy-40);
+}
+
+function drawDojoBuilding(sx,sy,w,h,label){
+  // wooden body with red trim
+  ctx.fillStyle='#3a2a3a';
+  ctx.fillRect(sx,sy+h*0.32,w,h*0.68);
+  ctx.fillStyle='rgba(255,255,255,0.06)';
+  for(let i=0;i<w;i+=16) ctx.fillRect(sx+i,sy+h*0.32,2,h*0.68);
+  // red pillars
+  ctx.fillStyle='#7a1f2a';
+  ctx.fillRect(sx+6,sy+h*0.3,10,h*0.7);
+  ctx.fillRect(sx+w-16,sy+h*0.3,10,h*0.7);
+  // pagoda-style curved roof (two tiers)
+  ctx.fillStyle='#241222';
+  ctx.beginPath();
+  ctx.moveTo(sx-26,sy+h*0.36);
+  ctx.quadraticCurveTo(sx+w*0.15,sy+h*0.14, sx+w/2, sy+h*0.1);
+  ctx.quadraticCurveTo(sx+w*0.85,sy+h*0.14, sx+w+26, sy+h*0.36);
+  ctx.lineTo(sx+w+10,sy+h*0.4);
+  ctx.quadraticCurveTo(sx+w/2, sy+h*0.18, sx-10, sy+h*0.4);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#3a1c34';
+  ctx.beginPath();
+  ctx.moveTo(sx+w*0.12,sy+h*0.14);
+  ctx.quadraticCurveTo(sx+w/2, sy-30, sx+w*0.88, sy+h*0.14);
+  ctx.lineTo(sx+w*0.78,sy+h*0.16);
+  ctx.quadraticCurveTo(sx+w/2, sy-8, sx+w*0.22, sy+h*0.16);
+  ctx.closePath(); ctx.fill();
+  // lantern
+  ctx.fillStyle='#e0503a';
+  ctx.beginPath(); ctx.ellipse(sx+w*0.18, sy+h*0.5, 8,11,0,0,7); ctx.fill();
+  ctx.strokeStyle='#3a1c10'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(sx+w*0.18,sy+h*0.5-11); ctx.lineTo(sx+w*0.18,sy+h*0.3); ctx.stroke();
+  // door
+  ctx.fillStyle='#150d15';
+  ctx.fillRect(sx+w/2-16,sy+h-52,32,52);
+  ctx.strokeStyle='#7a1f2a'; ctx.lineWidth=2;
+  ctx.strokeRect(sx+w/2-16,sy+h-52,32,52);
+  // symbol plaque
+  ctx.fillStyle='#e8dcc0';
+  ctx.beginPath(); ctx.arc(sx+w/2,sy+h*0.44,14,0,7); ctx.fill();
+  ctx.strokeStyle='#7a1f2a'; ctx.lineWidth=2; ctx.stroke();
+  ctx.strokeStyle='#241222'; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(sx+w/2-6,sy+h*0.44); ctx.lineTo(sx+w/2+6,sy+h*0.44);
+  ctx.moveTo(sx+w/2,sy+h*0.44-6); ctx.lineTo(sx+w/2,sy+h*0.44+6);
+  ctx.stroke();
+  drawWindowGrid(sx+w*0.55, sy+h*0.4, w*0.3, h*0.22, 1,1, isNight);
+  ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText(label, sx+w/2, sy-4);
+}
+
+function drawHut(sx,sy,w,h,label){
+  // stilted round hut with a thatched cone roof
+  ctx.fillStyle='#5a4030';
+  ctx.fillRect(sx, sy+h*0.35, w, h*0.65);
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  for(let i=0;i<w;i+=14) ctx.fillRect(sx+i,sy+h*0.35,2,h*0.65);
+  // door
+  ctx.fillStyle='#241a12';
+  ctx.fillRect(sx+w/2-14, sy+h-46, 28,46);
+  ctx.strokeStyle='#0c0805'; ctx.lineWidth=2;
+  ctx.strokeRect(sx+w/2-14, sy+h-46, 28,46);
+  // round window with a faint witch-light glow
+  ctx.fillStyle='rgba(150,255,180,0.5)';
+  ctx.beginPath(); ctx.arc(sx+w*0.22, sy+h*0.6, 9,0,7); ctx.fill();
+  // roof (thatched cone)
+  ctx.fillStyle='#7a4a2a';
+  ctx.beginPath();
+  ctx.moveTo(sx-16, sy+h*0.4);
+  ctx.lineTo(sx+w/2, sy-14);
+  ctx.lineTo(sx+w+16, sy+h*0.4);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle='#4a2c14'; ctx.lineWidth=2;
+  for(let i=0;i<=5;i++){
+    const rx = sx-14 + i*((w+28)/5);
+    ctx.beginPath(); ctx.moveTo(rx, sy+h*0.38); ctx.lineTo(sx+w/2, sy-10); ctx.stroke();
+  }
+  // chimney + smoke
+  ctx.fillStyle='#4a3a2a';
+  ctx.fillRect(sx+w*0.68, sy+h*0.1, 10,22);
+  ctx.fillStyle='rgba(190,190,200,0.5)';
+  ctx.beginPath(); ctx.ellipse(sx+w*0.73, sy+h*0.05+Math.sin(animTime*0.05)*4, 9,6,0,0,7); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText(label, sx+w/2, sy-22);
+}
+
+function drawPlayerSprite(camX){
+  let sx=player.x-camX, sy=player.y;
+  const px=4;
+  const moving = Math.abs(player.vx)>0.2 && player.grounded;
+  let bob=0;
+  if(moving) bob=Math.sin(animTime*0.35)*2.5;
+  else if(player.grounded) bob=Math.sin(animTime*0.06)*1.2; // idle breathing sway
+  if(!player.grounded) bob=-3;
+  sy+=bob;
+  // soft ground shadow for depth
+  ctx.save();
+  ctx.globalAlpha=0.35;
+  ctx.fillStyle='#000';
+  ctx.beginPath();
+  ctx.ellipse(sx+player.w/2, GROUND_Y+4, player.w*0.4, 7, 0, 0, 7);
+  ctx.fill();
+  ctx.restore();
+
+  if(player.frog){
+    ctx.save();
+    if(player.invuln>0 && Math.floor(player.invuln/5)%2===0) ctx.globalAlpha=0.4;
+    drawPixelSpriteOutlined(FROG_ROWS, FROG_PALETTE, sx, sy, px, player.facing<0);
+    ctx.restore();
+    ctx.fillStyle='#fff';
+    ctx.font='11px Arial'; ctx.textAlign='center';
+    ctx.fillText(playerName+' (frog)', sx+player.w/2, sy-8);
+    return;
+  }
+
+  let rows;
+  if(player.crouching) rows=PLAYER_CROUCH_ROWS;
+  else if(moving) rows = Math.floor(animTime/7)%2===0 ? PLAYER_ROWS : PLAYER_ROWS_WALK;
+  else rows=PLAYER_ROWS;
+
+  ctx.save();
+  if(player.invuln>0 && Math.floor(player.invuln/5)%2===0) ctx.globalAlpha=0.4;
+  drawPixelSpriteOutlined(rows, playerPalette(chosenColor), sx, sy, px, player.facing<0);
+  ctx.restore();
+
+  // weapon swing animation
+  const wpColor=(mergedWeapons[player.weapon]||{color:'#ccc'}).color;
+  const cx = sx+player.w/2, cy = sy+player.h*0.5;
+  let swingProgress = player.swingTimer>0 ? (16-player.swingTimer)/16 : 0;
+  let angle;
+  if(player.swingTimer>0){
+    angle = (-70 + swingProgress*140) * Math.PI/180;
+  } else {
+    angle = (-10 + Math.sin(animTime*0.08)*4) * Math.PI/180; // subtle idle sway
+  }
+  const dir = player.facing;
+  ctx.save();
+  ctx.translate(cx + dir*player.w*0.45, cy);
+  ctx.rotate(dir>0? angle : Math.PI-angle);
+  ctx.fillStyle='#8a8a8a';
+  ctx.fillRect(-4,-2,6,4); // hilt
+  ctx.fillStyle=wpColor;
+  ctx.fillRect(0,-3,26,6);
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.fillRect(2,-3,22,1.5); // blade highlight
+  ctx.restore();
+
+  ctx.fillStyle='#fff';
+  ctx.font='11px Arial'; ctx.textAlign='center';
+  ctx.fillText(playerName, sx+player.w/2, sy-8);
+}
+
+function drawEnemies(camX){
+  enemies.forEach(en=>{
+    if(!en.alive) return;
+    const bob=Math.sin((animTime+en.bobSeed*20)*0.15)*3;
+    const walkFrame = Math.floor((animTime+en.bobSeed*20)/10)%2===0;
+    const sx=en.x-camX, sy=en.y-16+bob;
+    ctx.save();
+    ctx.globalAlpha=0.3; ctx.fillStyle='#000';
+    ctx.beginPath(); ctx.ellipse(sx,GROUND_Y-2,14,5,0,0,7); ctx.fill();
+    ctx.restore();
+    ctx.save();
+    if(en.flash>0) ctx.filter='brightness(2.2) saturate(0.3)';
+    drawPixelSprite(walkFrame?MONSTER_ROWS:MONSTER_ROWS_B, MONSTER_PALETTE, sx-16, sy-16, 4, false);
+    ctx.restore();
+    ctx.fillStyle='#f00'; ctx.fillRect(sx-16,sy-30,32,4);
+    ctx.fillStyle='#0f0'; ctx.fillRect(sx-16,sy-30, 32*Math.max(0,en.hp/en.maxhp),4);
+  });
+}
+
+function drawEquations(camX){
+  equations.forEach(eq=>{
+    if(!eq.alive) return;
+    const sx=eq.x-camX, sy=eq.y;
+    ctx.fillStyle='rgba(255,204,51,.92)';
+    ctx.beginPath(); ctx.arc(sx,sy,eq.r,0,7); ctx.fill();
+    ctx.strokeStyle='#7a5a00'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#221'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
+    ctx.fillText(eq.text.slice(0,14), sx, sy+4);
+  });
+}
+
+function drawProjectiles(camX){
+  projectiles.forEach(p=>{
+    const sx=p.x-camX, sy=p.y;
+    ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(sx,sy,p.r,0,7); ctx.fill();
+    if(p.label){ ctx.fillStyle='#fff'; ctx.font='9px Arial'; ctx.textAlign='center'; ctx.fillText(p.label, sx, sy-14); }
+  });
+}
+
+function drawTeacher(x,y){
+  drawPixelSpriteOutlined(TEACHER_ROWS, TEACHER_PALETTE, x, y, 4, false);
+}
+
+function drawBoss(camX){
+  if(!boss||!boss.alive) return;
+  const bob=Math.sin(animTime*0.06)*5;
+  const sx=boss.x-camX, sy=boss.y-70+bob;
+  const rows = boss.phase===1? BOSS1_ROWS : BOSS2_ROWS;
+  const pal = boss.phase===1? BOSS1_PALETTE : BOSS2_PALETTE;
+  const facingLeft = player.x<boss.x;
+  // ground shadow
+  ctx.save();
+  ctx.globalAlpha=0.35; ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.ellipse(sx,GROUND_Y-2,26,8,0,0,7); ctx.fill();
+  ctx.restore();
+  // fluttering cape for phase 2
+  if(boss.phase===2){
+    const flutter=Math.sin(animTime*0.12)*6;
+    ctx.fillStyle='#5a1414';
+    ctx.beginPath();
+    const cdir=facingLeft?1:-1;
+    ctx.moveTo(sx+cdir*14, sy+18);
+    ctx.lineTo(sx+cdir*(30+flutter), sy+70);
+    ctx.lineTo(sx+cdir*14, sy+78);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.save();
+  if(boss.flash>0) ctx.filter='brightness(2.5) saturate(0.2)';
+  drawPixelSpriteOutlined(rows, pal, sx-24, sy, 4, facingLeft);
+  ctx.restore();
+  ctx.fillStyle='#fff'; ctx.font='12px Arial'; ctx.textAlign='center';
+  ctx.fillText(boss.eqLabel, sx, sy-10);
+}
+
+function drawInteriorBase(wallColor,floorColor,accentColor){
+  const wallGrad=ctx.createLinearGradient(0,0,0,GROUND_Y);
+  wallGrad.addColorStop(0,wallColor[0]);
+  wallGrad.addColorStop(1,wallColor[1]);
+  ctx.fillStyle=wallGrad;
+  ctx.fillRect(0,0,W,GROUND_Y);
+  const floorGrad=ctx.createLinearGradient(0,GROUND_Y,0,H);
+  floorGrad.addColorStop(0,floorColor[0]);
+  floorGrad.addColorStop(1,floorColor[1]);
+  ctx.fillStyle=floorGrad;
+  ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+  // baseboard
+  ctx.fillStyle=accentColor;
+  ctx.fillRect(0,GROUND_Y-6,W,6);
+}
+
+function drawTorch(sx,sy){
+  ctx.fillStyle='#3a2a1a';
+  ctx.fillRect(sx-3,sy,6,26);
+  const flick=Math.sin(animTime*0.5+sx)*2;
+  const glow=ctx.createRadialGradient(sx,sy-8,2,sx,sy-8,50);
+  glow.addColorStop(0,'rgba(255,160,60,0.35)');
+  glow.addColorStop(1,'rgba(255,160,60,0)');
+  ctx.fillStyle=glow;
+  ctx.beginPath(); ctx.arc(sx,sy-8,50,0,7); ctx.fill();
+  ctx.fillStyle='#ff8c20';
+  ctx.beginPath();
+  ctx.moveTo(sx,sy);
+  ctx.quadraticCurveTo(sx-8+flick,sy-16,sx,sy-30+flick);
+  ctx.quadraticCurveTo(sx+8+flick,sy-16,sx,sy);
+  ctx.fill();
+  ctx.fillStyle='#ffd23f';
+  ctx.beginPath(); ctx.ellipse(sx,sy-12,4,8,0,0,7); ctx.fill();
+}
+
+function drawHangingLamp(sx,sy){
+  ctx.strokeStyle='#333'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(sx,0); ctx.lineTo(sx,sy); ctx.stroke();
+  const glow=ctx.createRadialGradient(sx,sy+10,2,sx,sy+10,70);
+  glow.addColorStop(0,'rgba(255,235,180,0.3)');
+  glow.addColorStop(1,'rgba(255,235,180,0)');
+  ctx.fillStyle=glow;
+  ctx.beginPath(); ctx.arc(sx,sy+10,70,0,7); ctx.fill();
+  ctx.fillStyle='#3a3a3a';
+  ctx.beginPath(); ctx.moveTo(sx-14,sy); ctx.lineTo(sx+14,sy); ctx.lineTo(sx,sy+16); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#ffe9a8';
+  ctx.beginPath(); ctx.arc(sx,sy+18,5,0,7); ctx.fill();
+}
+
+function drawTrainingScene(){
+  drawInteriorBase(['#2e2620','#1c1712'],['#4a3a28','#332619'],'#1c1510');
+  drawHangingLamp(680,0);
+  // chalkboard
+  ctx.fillStyle='#111';
+  ctx.fillRect(60,60,220,150);
+  ctx.strokeStyle='#8b5a2b'; ctx.lineWidth=10;
+  ctx.strokeRect(60,60,220,150);
+  ctx.fillStyle='#eee'; ctx.font='16px monospace'; ctx.textAlign='left';
+  ctx.fillText('d/dx sin(x) = cos(x)',80,100);
+  ctx.fillText('lim x->0 sinx/x = 1',80,130);
+  ctx.fillText('int x dx = x^2/2',80,160);
+  // chalk tray
+  ctx.fillStyle='#5a3c1c'; ctx.fillRect(60,208,220,8);
+  // world map poster
+  ctx.fillStyle='#3a2f22'; ctx.fillRect(720,70,120,90);
+  ctx.strokeStyle='#8b5a2b'; ctx.lineWidth=4; ctx.strokeRect(720,70,120,90);
+  ctx.fillStyle='#5a7a5a';
+  ctx.beginPath(); ctx.ellipse(760,100,20,14,0.3,0,7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(800,120,16,10,-0.2,0,7); ctx.fill();
+  // rows of desks silhouettes
+  ctx.fillStyle='#241c14';
+  for(let i=0;i<4;i++){
+    const dx=520+i*70;
+    ctx.fillRect(dx,GROUND_Y-34,44,20);
+    ctx.fillRect(dx+4,GROUND_Y-14,4,14);
+    ctx.fillRect(dx+36,GROUND_Y-14,4,14);
+  }
+  drawTeacher(320,GROUND_Y-110);
+  ctx.fillStyle='#222'; ctx.fillRect(390,GROUND_Y-90,18,26); // ipad
+  ctx.fillStyle='rgba(120,200,255,0.6)'; ctx.fillRect(392,GROUND_Y-88,14,20); // ipad screen glow
+  ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText('Teacher',348,GROUND_Y+16);
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(370,20,180,26);
+  ctx.strokeStyle='#8b5a2b'; ctx.lineWidth=2; ctx.strokeRect(370,20,180,26);
+  ctx.fillStyle='#ffcc33'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText('Round '+Math.min(training.round,training.maxRounds)+' / '+training.maxRounds, 460, 38);
+}
+
+function drawBossRoomScene(){
+  drawInteriorBase(['#241a24','#100a10'],['#3a2830','#221419'],'#150a10');
+  // grand arched windows glowing with dusk light
+  for(let i=0;i<3;i++){
+    const wx=90+i*280;
+    ctx.fillStyle='rgba(255,120,80,0.25)';
+    ctx.beginPath();
+    ctx.moveTo(wx,GROUND_Y-40); ctx.lineTo(wx,GROUND_Y-140);
+    ctx.quadraticCurveTo(wx+30,GROUND_Y-175,wx+60,GROUND_Y-140);
+    ctx.lineTo(wx+60,GROUND_Y-40);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#1a0e14'; ctx.lineWidth=5; ctx.stroke();
+  }
+  drawTorch(40,GROUND_Y-190);
+  drawTorch(W-46,GROUND_Y-190);
+  // tattered banners
+  ctx.fillStyle='#5a1a2a';
+  ctx.fillRect(230,10,50,140);
+  ctx.beginPath(); ctx.moveTo(230,150); ctx.lineTo(255,175); ctx.lineTo(280,150); ctx.fill();
+  ctx.fillStyle='#6a2a3a';
+  ctx.fillRect(600,10,50,140);
+  ctx.beginPath(); ctx.moveTo(600,150); ctx.lineTo(625,175); ctx.lineTo(650,150); ctx.fill();
+  ctx.fillStyle='rgba(212,175,55,0.6)'; ctx.font='bold 22px serif'; ctx.textAlign='center';
+  ctx.fillText('\u222B', 255, 90);
+  ctx.fillText('\u03A3', 625, 90);
+  if(scene==='boss_intro'){
+    drawTeacher(320,GROUND_Y-110);
+    ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+    ctx.fillText('Teacher',348,GROUND_Y+16);
+  }
+}
+
+const DUMMY_ROWS=[
+"  wwww  ",
+" wwwwww ",
+" wwwwww ",
+"  wwww  ",
+"  wwww  ",
+"  wwww  ",
+"  wwww  "
+];
+function drawDojoScene(){
+  drawInteriorBase(['#2a1c3a','#160e20'],['#5a3a20','#3a2414'],'#1a0e12');
+  // tatami floor grid
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=2;
+  for(let x=0;x<W;x+=60){
+    ctx.beginPath(); ctx.moveTo(x,GROUND_Y); ctx.lineTo(x,H); ctx.stroke();
+  }
+  for(let y=GROUND_Y;y<H;y+=22){
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  }
+  // red support pillars
+  ctx.fillStyle='#5a2f8a';
+  for(let i=0;i<W;i+=180){
+    ctx.fillRect(i,0,10,GROUND_Y);
+    ctx.fillStyle='#7a1f2a'; ctx.fillRect(i,0,10,10); ctx.fillStyle='#5a2f8a';
+  }
+  // weapon rack on the back wall
+  ctx.fillStyle='#3a2418'; ctx.fillRect(720,60,120,14);
+  ctx.strokeStyle='#8a8a90'; ctx.lineWidth=3;
+  for(let i=0;i<3;i++){
+    ctx.beginPath(); ctx.moveTo(740+i*30,60); ctx.lineTo(740+i*30,150); ctx.stroke();
+  }
+  // paper lantern glow
+  const lampGlow=ctx.createRadialGradient(120,90,2,120,90,60);
+  lampGlow.addColorStop(0,'rgba(255,200,140,0.35)');
+  lampGlow.addColorStop(1,'rgba(255,200,140,0)');
+  ctx.fillStyle=lampGlow; ctx.beginPath(); ctx.arc(120,90,60,0,7); ctx.fill();
+  ctx.fillStyle='#e0503a'; ctx.beginPath(); ctx.ellipse(120,90,14,18,0,0,7); ctx.fill();
+  ctx.strokeStyle='#3a1c10'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(120,72); ctx.lineTo(120,20); ctx.stroke();
+
+  if(dojo.state==='talk'||!dojo.state){
+    drawTeacher(320,GROUND_Y-110);
+    ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+    ctx.fillText('Instructor',348,GROUND_Y+16);
+  }
+  if(dojo.state==='training'){
+    dojo.dummies.forEach(du=>{
+      if(!du.alive) return;
+      const sx=du.x, sy=GROUND_Y-70;
+      ctx.save();
+      ctx.globalAlpha=0.3; ctx.fillStyle='#000';
+      ctx.beginPath(); ctx.ellipse(sx,GROUND_Y-2,16,5,0,0,7); ctx.fill();
+      ctx.restore();
+      ctx.save();
+      if(du.flash>0) ctx.filter='brightness(2.2)';
+      drawPixelSpriteOutlined(DUMMY_ROWS, {w: du.damaging? '#a83232':'#8a7050'}, sx-16, sy, 4, false);
+      ctx.restore();
+      ctx.fillStyle='#f00'; ctx.fillRect(sx-16,sy-10,32,4);
+      ctx.fillStyle='#0f0'; ctx.fillRect(sx-16,sy-10,32*Math.max(0,du.hp/du.maxhp),4);
+      ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.textAlign='center';
+      ctx.fillText(du.damaging?'Dummy (hits back)':'Dummy (safe)', sx, sy-14);
+    });
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(360,20,180,26);
+    ctx.strokeStyle='#5a2f8a'; ctx.lineWidth=2; ctx.strokeRect(360,20,180,26);
+    ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+    const totalDummies=dojo.totalNonDamaging+dojo.totalDamaging;
+    ctx.fillText('Defeated '+(dojo.spawned - dojo.dummies.filter(d=>d.alive).length)+' / '+totalDummies, 450, 38);
+  }
+  if(dojo.state==='duel' && dojo.instructor && dojo.instructor.alive){
+    const ins=dojo.instructor;
+    const sx=ins.x, sy=GROUND_Y-70;
+    ctx.save();
+    if(ins.flash>0) ctx.filter='brightness(2.2)';
+    drawPixelSpriteOutlined(TEACHER_ROWS, TEACHER_PALETTE, sx-20, sy, 4, player.x<ins.x);
+    ctx.restore();
+    ctx.fillStyle='#f00'; ctx.fillRect(sx-20,sy-14,40,5);
+    ctx.fillStyle='#0f0'; ctx.fillRect(sx-20,sy-14,40*Math.max(0,ins.hp/ins.maxhp),5);
+    ctx.fillStyle='#fff'; ctx.font='12px Arial'; ctx.textAlign='center';
+    ctx.fillText('Sword Instructor',sx,sy-20);
+  }
+}
+
+function drawWitchHutScene(){
+  drawInteriorBase(['#241533','#120a1c'],['#3a2a20','#241914'],'#150c10');
+  // faint magical motes drifting
+  ctx.fillStyle='rgba(150,255,180,0.06)';
+  for(let i=0;i<W;i+=70) ctx.fillRect(i,0,3,GROUND_Y);
+  for(let i=0;i<14;i++){
+    const mx=(i*67+animTime*0.3)%W;
+    const my=(i*53)%GROUND_Y;
+    ctx.fillStyle='rgba(150,255,190,'+(0.15+0.1*Math.sin(animTime*0.05+i))+')';
+    ctx.beginPath(); ctx.arc(mx,my,1.6,0,7); ctx.fill();
+  }
+  // shelves with potion bottles
+  ctx.fillStyle='#3a2a1c';
+  ctx.fillRect(700,60,150,10);
+  ctx.fillRect(700,110,150,10);
+  const bottleColors=['#66ccff','#ff77cc','#8affa0','#ffcc33','#cc88ff'];
+  for(let i=0;i<5;i++){
+    ctx.fillStyle=bottleColors[i];
+    ctx.fillRect(710+i*28,40,12,20);
+    ctx.fillRect(710+i*28,90,12,20);
+  }
+  // bubbling cauldron prop
+  const cauldGlow=ctx.createRadialGradient(180,GROUND_Y-20,2,180,GROUND_Y-20,70);
+  cauldGlow.addColorStop(0,'rgba(120,255,150,0.25)');
+  cauldGlow.addColorStop(1,'rgba(120,255,150,0)');
+  ctx.fillStyle=cauldGlow; ctx.beginPath(); ctx.arc(180,GROUND_Y-20,70,0,7); ctx.fill();
+  ctx.fillStyle='#222';
+  ctx.beginPath(); ctx.ellipse(180,GROUND_Y-14,26,14,0,0,7); ctx.fill();
+  ctx.fillStyle='rgba(120,255,150,0.6)';
+  ctx.beginPath(); ctx.ellipse(180,GROUND_Y-20+Math.sin(animTime*0.1)*3,16,6,0,0,7); ctx.fill();
+  // bubbles
+  for(let i=0;i<3;i++){
+    const bt=((animTime+i*20)%40)/40;
+    ctx.fillStyle='rgba(150,255,180,'+(1-bt)*0.6+')';
+    ctx.beginPath(); ctx.arc(170+i*10, GROUND_Y-24-bt*20, 2,0,7); ctx.fill();
+  }
+  // hanging dried herbs
+  ctx.strokeStyle='#3a2a1c'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(500,0); ctx.lineTo(500,30); ctx.stroke();
+  ctx.fillStyle='#5a7a3a';
+  ctx.beginPath(); ctx.ellipse(500,36,10,16,0,0,7); ctx.fill();
+
+  if(scene==='witch_hut'){
+    drawWitch(320,GROUND_Y-100);
+    ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+    ctx.fillText('Witch',352,GROUND_Y+16);
+  }
+  if(scene==='witch_duel' && witchFight && witchFight.alive){
+    const sx=witchFight.x, sy=GROUND_Y-70;
+    ctx.save();
+    if(witchFight.flash>0) ctx.filter='brightness(2.3)';
+    drawPixelSpriteOutlined(WITCH_ROWS, WITCH_PALETTE, sx-20, sy, 4, player.x<witchFight.x);
+    ctx.restore();
+    ctx.fillStyle='#f00'; ctx.fillRect(sx-20,sy-14,40,5);
+    ctx.fillStyle='#0f0'; ctx.fillRect(sx-20,sy-14,40*Math.max(0,witchFight.hp/witchFight.maxhp),5);
+    ctx.fillStyle='#fff'; ctx.font='12px Arial'; ctx.textAlign='center';
+    ctx.fillText('Witch',sx,sy-20);
+  }
+}
+function drawWitch(x,y){
+  drawPixelSpriteOutlined(WITCH_ROWS, WITCH_PALETTE, x, y, 4, false);
+}
+
+function drawCutsceneScene(){
+  const grad=ctx.createRadialGradient(W/2,GROUND_Y-40,40,W/2,GROUND_Y-40,500);
+  grad.addColorStop(0,'#2a1015');
+  grad.addColorStop(1,'#050202');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  // torchlit crowd silhouettes
+  ctx.fillStyle='#1a1014';
+  for(let i=0;i<10;i++){
+    const cx0=20+i*85;
+    ctx.fillRect(cx0,GROUND_Y-60,30,60);
+    ctx.beginPath(); ctx.arc(cx0+15,GROUND_Y-64,10,0,7); ctx.fill();
+  }
+  // player figure kneeling, spotlit
+  const spot=ctx.createRadialGradient(W/2,GROUND_Y-40,10,W/2,GROUND_Y-40,90);
+  spot.addColorStop(0,'rgba(255,220,180,0.25)');
+  spot.addColorStop(1,'rgba(255,220,180,0)');
+  ctx.fillStyle=spot; ctx.beginPath(); ctx.arc(W/2,GROUND_Y-40,90,0,7); ctx.fill();
+  ctx.fillStyle='#111';
+  ctx.fillRect(W/2-30,GROUND_Y-70,60,70);
+  ctx.beginPath(); ctx.arc(W/2,GROUND_Y-74,16,0,7); ctx.fill();
+  // instructor silhouette with raised blade
+  ctx.fillStyle='#0a0a0a';
+  ctx.fillRect(W/2+70,GROUND_Y-110,20,80);
+  ctx.beginPath(); ctx.arc(W/2+80,GROUND_Y-116,12,0,7); ctx.fill();
+  ctx.strokeStyle='#888'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(W/2+90,GROUND_Y-100); ctx.lineTo(W/2+130,GROUND_Y-150); ctx.stroke();
+  ctx.globalAlpha=0.45;
+  ctx.fillStyle='#400';
+  ctx.fillRect(0,0,W,H);
+  ctx.globalAlpha=1;
+}
+
+// ================= Draw =================
+function drawVignette(){
+  const vg=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.75);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,0.38)');
+  ctx.fillStyle=vg;
+  ctx.fillRect(0,0,W,H);
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  if(scene==='select'||scene==='lose') return;
+
+  if(scene==='classroom'){
+    drawTrainingScene();
+    drawEquations(0);
+    drawPlayerSprite(0);
+    drawProjectiles(0);
+    drawVignette();
+    return;
+  }
+  if(scene==='boss_intro'||scene==='boss1'||scene==='boss2'){
+    drawBossRoomScene();
+    drawBoss(0);
+    drawPlayerSprite(0);
+    drawProjectiles(0);
+    drawVignette();
+    return;
+  }
+  if(scene==='dojo'){
+    drawDojoScene();
+    drawPlayerSprite(0);
+    drawVignette();
+    return;
+  }
+  if(scene==='dojo_cutscene'){
+    drawCutsceneScene();
+    return;
+  }
+  if(scene==='witch_hut'||scene==='witch_duel'){
+    drawWitchHutScene();
+    drawPlayerSprite(0);
+    drawProjectiles(0);
+    drawVignette();
+    return;
+  }
+
+  drawGround(camera.x);
+  if(scene==='world1'){ world1POIs.forEach(drawPOI); }
+  if(scene==='world2'){ drawPOI({...world2Building,id:'world2building',label:'The Old Building'}); }
+  drawEnemies(camera.x);
+  drawProjectiles(camera.x);
+  drawPlayerSprite(camera.x);
+  drawVignette();
+}
+
+function loop(){
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+})();
+</script>
+</body>
+</html>
