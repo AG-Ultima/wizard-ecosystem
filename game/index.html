@@ -8,19 +8,34 @@
   #gameWrap{position:relative;width:900px;height:560px;margin:20px auto;box-shadow:0 0 40px rgba(0,0,0,.8);border-radius:6px;overflow:hidden;}
   canvas{display:block;background:#333;image-rendering:pixelated;cursor:crosshair;}
   .overlay{position:absolute;top:0;left:0;width:900px;height:560px;pointer-events:none;}
-  #dialogueBox{position:absolute;left:30px;bottom:20px;width:840px;min-height:90px;
-    background:linear-gradient(180deg, rgba(18,14,26,.92), rgba(8,6,14,.95));
-    border:3px solid #d4af37;border-radius:8px;color:#fff;padding:14px 18px;font-size:17px;line-height:1.4;
-    display:none;pointer-events:auto;box-shadow:0 0 22px rgba(0,0,0,.6), inset 0 0 18px rgba(212,175,55,.08);}
-  #dialogueName{color:#f2d375;font-weight:bold;margin-bottom:6px;font-size:15px;text-shadow:0 0 6px rgba(242,211,117,.5);}
-  #dialogueHint{position:absolute;right:16px;bottom:8px;font-size:12px;color:#aaa;}
+  #dialogueBox{position:absolute;left:30px;bottom:20px;width:840px;min-height:96px;
+    background:linear-gradient(180deg, rgba(16,13,22,.94), rgba(7,5,12,.97));
+    border:1px solid rgba(255,255,255,.12);border-left:5px solid var(--speakerColor,#d4af37);
+    border-radius:8px;color:#fff;padding:16px 20px 14px 22px;font-size:17px;line-height:1.45;
+    display:none;pointer-events:auto;box-shadow:0 8px 26px rgba(0,0,0,.55), inset 0 0 18px rgba(255,255,255,.03);
+    animation:dialogueIn .18s ease-out;}
+  @keyframes dialogueIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  #dialogueNameRow{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+  #dialogueIcon{font-size:17px;filter:drop-shadow(0 0 4px rgba(255,255,255,.3));}
+  #dialogueName{color:var(--speakerColor,#f2d375);font-weight:bold;font-size:14px;letter-spacing:1px;
+    text-transform:uppercase;text-shadow:0 0 8px var(--speakerColor,rgba(242,211,117,.6));}
+  #dialogueHint{position:absolute;right:16px;bottom:8px;font-size:11px;color:#889;letter-spacing:.5px;}
   #choiceBox{position:absolute;left:30px;bottom:20px;width:840px;
-    background:linear-gradient(180deg, rgba(18,14,26,.95), rgba(8,6,14,.97));
-    border:3px solid #d4af37;border-radius:8px;padding:14px;display:none;pointer-events:auto;
-    box-shadow:0 0 22px rgba(0,0,0,.6);}
-  #choiceBox button{display:block;width:100%;margin:6px 0;padding:10px;background:#1c1c22;border:2px solid #6a5a2a;
-    color:#fff;font-size:16px;border-radius:5px;cursor:pointer;transition:background .15s,border-color .15s;}
-  #choiceBox button:hover{background:#d4af37;color:#111;border-color:#f2d375;}
+    background:linear-gradient(180deg, rgba(16,13,22,.96), rgba(7,5,12,.98));
+    border:1px solid rgba(255,255,255,.12);border-left:5px solid var(--speakerColor,#d4af37);
+    border-radius:8px;padding:16px 20px;display:none;pointer-events:auto;
+    box-shadow:0 8px 26px rgba(0,0,0,.55);animation:dialogueIn .18s ease-out;}
+  #choiceHeader{color:var(--speakerColor,#f2d375);font-weight:bold;font-size:14px;letter-spacing:1px;
+    text-transform:uppercase;margin-bottom:4px;text-shadow:0 0 8px var(--speakerColor,rgba(242,211,117,.6));}
+  #choicePrompt{margin-bottom:10px;color:#ddd;}
+  #choiceBox button{display:flex;align-items:center;gap:10px;width:100%;margin:6px 0;padding:11px 14px;
+    background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.18);
+    color:#fff;font-size:15px;border-radius:6px;cursor:pointer;transition:transform .12s,background .15s,border-color .15s;
+    text-align:left;}
+  #choiceBox button .choiceNum{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;
+    border-radius:4px;background:rgba(255,255,255,.12);font-size:11px;color:#ccc;flex-shrink:0;}
+  #choiceBox button:hover{background:var(--speakerColor,#d4af37);color:#111;border-color:var(--speakerColor,#f2d375);transform:translateX(3px);}
+  #choiceBox button:hover .choiceNum{background:rgba(0,0,0,.25);color:#111;}
   #skillMenu{position:absolute;top:40px;left:150px;width:600px;
     background:
       repeating-linear-gradient(0deg, rgba(0,255,200,.03) 0px, rgba(0,255,200,.03) 1px, transparent 1px, transparent 26px),
@@ -171,13 +186,20 @@
   #honoredModal .panel{width:480px;max-height:420px;overflow-y:auto;background:linear-gradient(180deg,#0a1a10,#04100a);
     border:2px solid #39ff6a;border-radius:10px;padding:20px 26px;box-shadow:0 0 30px rgba(57,255,106,.3);
     font-family:'Courier New',monospace;color:#bfffdc;}
-  #honoredModal h2{color:#39ff6a;text-shadow:0 0 10px rgba(57,255,106,.6);margin-top:0;letter-spacing:2px;}
-  #honoredModal ol{padding-left:22px;margin:0 0 14px;}
-  #honoredModal li{margin:4px 0;}
+  #honoredModal h2{color:#39ff6a;text-shadow:0 0 10px rgba(57,255,106,.6);margin-top:0;letter-spacing:2px;
+    display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(57,255,106,.3);padding-bottom:10px;}
+  #honoredModal .honoredList{list-style:none;padding:0;margin:0 0 14px;}
+  #honoredModal .honoredList li{display:flex;align-items:center;gap:10px;padding:7px 10px;margin:4px 0;
+    background:rgba(57,255,106,.05);border-left:2px solid #39ff6a;border-radius:3px;}
+  #honoredModal .honoredList .rank{color:#39ff6a;font-weight:bold;min-width:26px;text-align:right;opacity:.8;}
   #honoredModal .empty{color:#5a8a6a;font-style:italic;}
+  #honoredModal .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(57,255,106,.25);
+    border-top-color:#39ff6a;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:-2px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
   #honoredModal button{padding:8px 20px;background:#0a2a16;color:#39ff6a;border:1px solid #39ff6a;border-radius:6px;cursor:pointer;}
   #honoredModal button:hover{background:#39ff6a;color:#04100a;}
 </style>
+
 </head>
 <body>
 <div id="gameWrap">
@@ -204,7 +226,7 @@
 
   <div id="honoredModal">
     <div class="panel">
-      <h2>Honored Ones</h2>
+      <h2>🏆 Honored Ones</h2>
       <div id="honoredListWrap"></div>
       <button id="honoredCloseBtn">Close</button>
     </div>
@@ -222,7 +244,7 @@
     <div id="skillKeys"></div>
     <div id="controlsHint">A/D move · W jump · S crouch · Left Click attack · K skills · H drink potion</div>
     <div id="dialogueBox">
-      <div id="dialogueName"></div>
+      <div id="dialogueNameRow"><span id="dialogueIcon"></span><span id="dialogueName"></span></div>
       <div id="dialogueText"></div>
       <div id="dialogueHint">[Press E / Click]</div>
     </div>
@@ -507,6 +529,7 @@ function drawPixelSpriteOn(context, rows, palette, x, y, px, flip){
 // ================= UI refs =================
 const dialogueBox=document.getElementById('dialogueBox');
 const dialogueName=document.getElementById('dialogueName');
+const dialogueIcon=document.getElementById('dialogueIcon');
 const dialogueText=document.getElementById('dialogueText');
 const choiceBox=document.getElementById('choiceBox');
 const skillMenu=document.getElementById('skillMenu');
@@ -560,14 +583,33 @@ let nonMergableWeapons=new Set();
 let arnavTimer=0;
 let glitchTimer=0;
 let orbReady=false;
-function loadHonoredOnes(){
-  try{ return JSON.parse(localStorage.getItem('honoredOnes')||'[]'); }
-  catch(e){ return []; }
+
+// Backend for the public "Honored Ones" leaderboard.
+// Leave as '' if this HTML is hosted on the same domain as your Flask API.
+// Otherwise set it to your API's origin, e.g. 'https://wizardecosystem.dev'
+const HONORED_API_BASE = 'https://arnav0928.pythonanywhere.com';
+
+async function loadHonoredOnes(){
+  try{
+    const res = await fetch(HONORED_API_BASE + '/api/honored-ones');
+    if(!res.ok) throw new Error('bad status '+res.status);
+    const data = await res.json();
+    return Array.isArray(data.names) ? data.names : [];
+  }catch(e){
+    console.error('Failed to load Honored Ones from server', e);
+    return null; // null signals "couldn't reach the server"
+  }
 }
-function saveHonoredOne(name){
-  const list=loadHonoredOnes();
-  list.push(name);
-  try{ localStorage.setItem('honoredOnes', JSON.stringify(list)); }catch(e){}
+async function saveHonoredOne(name){
+  try{
+    await fetch(HONORED_API_BASE + '/api/honored-ones', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name})
+    });
+  }catch(e){
+    console.error('Failed to save Honored One to server', e);
+  }
 }
 
 let enemies=[];
@@ -624,15 +666,20 @@ document.getElementById('startBtn').addEventListener('click',()=>{
   scene='world1';
   addSkillKeyHUD();
 });
-document.getElementById('honoredBtn').addEventListener('click',()=>{
+document.getElementById('honoredBtn').addEventListener('click', async ()=>{
   const wrap=document.getElementById('honoredListWrap');
-  const list=loadHonoredOnes();
-  if(list.length===0){
+  wrap.innerHTML='<p class="empty"><span class="spinner"></span>Loading the Honored Ones...</p>';
+  document.getElementById('honoredModal').style.display='flex';
+  const list=await loadHonoredOnes();
+  if(list===null){
+    wrap.innerHTML='<p class="empty">Could not reach the server. Check your connection and try again.</p>';
+  } else if(list.length===0){
     wrap.innerHTML='<p class="empty">No one has proven themselves a GOD... yet.</p>';
   } else {
-    wrap.innerHTML='<ol>'+list.map(n=>'<li>'+n.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</li>').join('')+'</ol>';
+    wrap.innerHTML='<ul class="honoredList">'+list.map((n,i)=>
+      '<li><span class="rank">#'+(i+1)+'</span><span>'+n.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span></li>'
+    ).join('')+'</ul>';
   }
-  document.getElementById('honoredModal').style.display='flex';
 });
 document.getElementById('honoredCloseBtn').addEventListener('click',()=>{
   document.getElementById('honoredModal').style.display='none';
@@ -659,9 +706,33 @@ dialogueBox.addEventListener('click',advanceDialogue);
 
 // ================= Dialogue =================
 let dq=[]; let dqIndex=0; let dqCallback=null; let dqActive=false; let inputLocked=false;
+
+const SPEAKER_THEMES={
+  'teacher':      {color:'#ffcc33', icon:'📐'},
+  'blacksmith':   {color:'#ff8a3f', icon:'🔨'},
+  'witch':        {color:'#8affa0', icon:'🧪'},
+  'sword instructor': {color:'#e05a5a', icon:'⚔️'},
+  'arnav (the developer)': {color:'#39ff6a', icon:'👨‍💻'},
+  'the developer':{color:'#39ff6a', icon:'💻'},
+};
+function speakerTheme(name){
+  const key=(name||'').toLowerCase();
+  if(SPEAKER_THEMES[key]) return SPEAKER_THEMES[key];
+  if(key===playerName.toLowerCase()) return {color:'#6cf', icon:'🧑'};
+  if(!name) return {color:'#aaa', icon:'…'};
+  return {color:'#d4af37', icon:'💬'};
+}
+function applySpeakerTheme(el, name){
+  const t=speakerTheme(name);
+  el.style.setProperty('--speakerColor', t.color);
+  return t;
+}
+
 function startDialogue(name, lines, callback){
   dq=lines; dqIndex=0; dqCallback=callback; dqActive=true; inputLocked=true;
   dialogueBox.style.display='block';
+  const t=applySpeakerTheme(dialogueBox, name);
+  dialogueIcon.textContent=t.icon;
   dialogueName.textContent=name;
   dialogueText.textContent=dq[0];
 }
@@ -679,10 +750,11 @@ function advanceDialogue(){
 function showChoices(name, text, options){
   inputLocked=true;
   choiceBox.style.display='block';
-  choiceBox.innerHTML='<div style="color:#d4af37;font-weight:bold;margin-bottom:6px;">'+name+'</div><div style="margin-bottom:10px;">'+text+'</div>';
-  options.forEach(opt=>{
+  applySpeakerTheme(choiceBox, name);
+  choiceBox.innerHTML='<div id="choiceHeader">'+name+'</div><div id="choicePrompt">'+text+'</div>';
+  options.forEach((opt,i)=>{
     const b=document.createElement('button');
-    b.textContent=opt.text;
+    b.innerHTML='<span class="choiceNum">'+(i+1)+'</span><span>'+opt.text+'</span>';
     b.onclick=()=>{ choiceBox.style.display='none'; inputLocked=false; opt.action(); };
     choiceBox.appendChild(b);
   });
@@ -1423,11 +1495,11 @@ function useOrb(){
   if(!orbReady) return;
   orbReady=false;
   inputLocked=true;
-  setTimeout(()=>{
+  setTimeout(async ()=>{
     let fullName = window.prompt("The orb glows warmly in your hand. Speak your full name to claim your place among the Honored Ones:");
     if(!fullName || !fullName.trim()){ fullName=playerName; }
     fullName=fullName.trim().slice(0,60);
-    saveHonoredOne(fullName);
+    await saveHonoredOne(fullName);
     triggerWinEnding(3);
   }, 50);
 }
