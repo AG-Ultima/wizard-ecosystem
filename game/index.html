@@ -22,24 +22,67 @@
     color:#fff;font-size:16px;border-radius:5px;cursor:pointer;transition:background .15s,border-color .15s;}
   #choiceBox button:hover{background:#d4af37;color:#111;border-color:#f2d375;}
   #skillMenu{position:absolute;top:40px;left:150px;width:600px;
-    background:linear-gradient(180deg, rgba(12,16,28,.97), rgba(6,9,16,.98));border:3px solid #6cf;
-    border-radius:10px;color:#fff;padding:20px;display:none;pointer-events:auto;box-shadow:0 0 30px rgba(0,0,0,.7);}
-  #skillMenu h2{margin-top:0;color:#6cf;text-shadow:0 0 8px rgba(102,204,255,.5);}
-  #skillMenu select,#skillMenu button{font-size:15px;padding:6px;margin:4px 4px 4px 0;border-radius:5px;border:1px solid #6cf;background:#111;color:#fff;}
-  #skillMenu button{cursor:pointer;background:#245;}
-  #skillMenu button:hover{background:#6cf;color:#111;}
-  #skillList{margin:10px 0;font-size:14px;}
-  #hud{position:absolute;top:10px;left:10px;color:#fff;font-size:14px;pointer-events:none;text-shadow:1px 1px 2px #000;
-    background:rgba(0,0,0,.35);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.12);}
-  #hpBarWrap{width:220px;height:18px;background:#300;border:2px solid #ddd;border-radius:4px;overflow:hidden;margin-top:4px;
-    box-shadow:inset 0 0 6px rgba(0,0,0,.6);}
-  #hpBarFill{height:100%;background:linear-gradient(90deg,#7fff7f,#2ba82b);width:100%;box-shadow:0 0 8px rgba(80,255,80,.5);transition:width .2s;}
-  #bossBarWrap{position:absolute;top:14px;left:200px;width:500px;height:22px;background:#200;border:2px solid #ddd;
-    border-radius:4px;overflow:hidden;display:none;box-shadow:inset 0 0 8px rgba(0,0,0,.7);}
+    background:
+      repeating-linear-gradient(0deg, rgba(0,255,200,.03) 0px, rgba(0,255,200,.03) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(90deg, rgba(0,255,200,.03) 0px, rgba(0,255,200,.03) 1px, transparent 1px, transparent 26px),
+      linear-gradient(160deg, rgba(6,14,24,.97), rgba(3,6,12,.99));
+    border:2px solid #05d9e8;border-radius:4px;color:#d6fbff;padding:22px;display:none;pointer-events:auto;
+    box-shadow:0 0 0 1px rgba(5,217,232,.15), 0 0 34px rgba(5,217,232,.35), inset 0 0 40px rgba(5,217,232,.06);
+    font-family:'Courier New',monospace;clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);}
+  #skillMenu::before{content:'SKILL // MODULE v2.1';position:absolute;top:-11px;left:16px;background:#040a10;
+    color:#05d9e8;font-size:10px;letter-spacing:3px;padding:0 8px;}
+  #skillMenu h2{margin-top:4px;color:#05d9e8;text-shadow:0 0 10px rgba(5,217,232,.8);letter-spacing:2px;
+    font-size:17px;border-bottom:1px solid rgba(5,217,232,.3);padding-bottom:8px;}
+  #skillMenu select,#skillMenu button{font-size:13px;padding:7px 10px;margin:4px 4px 4px 0;border-radius:2px;
+    border:1px solid rgba(5,217,232,.5);background:rgba(0,20,26,.8);color:#d6fbff;font-family:'Courier New',monospace;}
+  #skillMenu button{cursor:pointer;background:linear-gradient(180deg,#0a2a30,#05161a);letter-spacing:1px;
+    text-transform:uppercase;font-size:12px;transition:all .15s;}
+  #skillMenu button:hover{background:#05d9e8;color:#031014;box-shadow:0 0 14px rgba(5,217,232,.7);}
+  #skillMenu b{color:#ff2a9d;text-shadow:0 0 6px rgba(255,42,157,.6);font-size:12px;letter-spacing:1px;text-transform:uppercase;}
+  #skillList{margin:12px 0;font-size:13px;}
+  #skillList .skillRow{display:flex;align-items:center;gap:8px;padding:6px 8px;margin:4px 0;
+    background:rgba(5,217,232,.05);border-left:2px solid #05d9e8;border-radius:2px;}
+  #skillList .keyBadge{display:inline-block;min-width:20px;text-align:center;padding:2px 6px;
+    background:#05d9e8;color:#031014;font-weight:bold;border-radius:3px;font-size:11px;}
+  #mergeResult{font-family:'Courier New',monospace;letter-spacing:.5px;}
+  #hud{position:absolute;top:12px;left:12px;color:#fff;font-size:13px;pointer-events:none;
+    background:linear-gradient(135deg, rgba(10,14,20,.7), rgba(10,14,20,.35));
+    padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.15);
+    box-shadow:0 4px 18px rgba(0,0,0,.4), inset 0 0 12px rgba(255,255,255,.03);
+    backdrop-filter:blur(2px);min-width:150px;}
+  #hud .hpLabel{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;
+    letter-spacing:1.5px;color:#9fd8a0;text-transform:uppercase;margin-bottom:3px;}
+  #hpNumeric{color:#fff;font-weight:bold;font-size:12px;}
+  #hpBarWrap{width:220px;height:16px;background:#1a0505;border:1px solid rgba(255,255,255,.25);border-radius:3px;overflow:hidden;
+    box-shadow:inset 0 0 6px rgba(0,0,0,.6);position:relative;}
+  #hpBarFill{height:100%;background:linear-gradient(90deg,#8fff6a,#2ba82b);width:100%;box-shadow:0 0 8px rgba(80,255,80,.5);transition:width .2s;}
+  #hpBarWrap.critical #hpBarFill{background:linear-gradient(90deg,#ff8a5a,#c22);box-shadow:0 0 10px rgba(255,60,40,.7);animation:hpPulse 0.7s infinite;}
+  @keyframes hpPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.5);}}
+  #lowHpVignette{position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center, rgba(180,0,0,0) 55%, rgba(160,0,0,.55) 100%);
+    transition:opacity .3s;animation:lowHpThrob 1.1s infinite;}
+  @keyframes lowHpThrob{0%,100%{opacity:.35;}50%{opacity:.7;}}
+  #statusIcons{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .statusChip{display:flex;align-items:center;gap:4px;padding:3px 7px;border-radius:5px;font-size:11px;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);}
+  .statusChip.frogChip{color:#8fffa0;border-color:rgba(143,255,160,.4);}
+  .statusChip.buffChip{color:#ffcc55;border-color:rgba(255,204,85,.4);}
+  .statusChip.potionChip{color:#ff8fc0;border-color:rgba(255,143,192,.4);}
+  #bossBarWrap{position:absolute;top:16px;left:50%;transform:translateX(-50%);width:520px;height:20px;
+    background:#1a0505;border:1px solid rgba(255,255,255,.25);border-radius:3px;overflow:hidden;display:none;
+    box-shadow:0 4px 14px rgba(0,0,0,.5), inset 0 0 8px rgba(0,0,0,.7);}
   #bossBarFill{height:100%;background:linear-gradient(90deg,#ff6a4a,#a11);width:100%;box-shadow:0 0 10px rgba(255,90,60,.6);transition:width .2s;}
-  #bossName{position:absolute;top:-2px;left:210px;color:#fff;font-size:13px;display:none;text-shadow:1px 1px 2px #000;}
-  #skillKeys{position:absolute;bottom:8px;left:10px;color:#fff;font-size:12px;pointer-events:none;text-shadow:1px 1px 2px #000;}
-  #controlsHint{position:absolute;bottom:24px;left:10px;color:#ccc;font-size:11px;pointer-events:none;text-shadow:1px 1px 2px #000;}
+  #bossName{position:absolute;top:-24px;left:50%;transform:translateX(-50%);color:#ffd9c9;font-size:12px;
+    display:none;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 8px rgba(255,90,60,.6),1px 1px 2px #000;
+    background:rgba(20,6,6,.55);padding:3px 14px;border-radius:4px 4px 0 0;border:1px solid rgba(255,90,60,.3);border-bottom:none;}
+  #skillKeys{position:absolute;bottom:8px;left:12px;display:flex;gap:6px;pointer-events:none;flex-wrap:wrap;max-width:600px;}
+  .skillChip{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:5px;font-size:11px;
+    background:rgba(10,14,20,.65);border:1px solid rgba(255,255,255,.18);color:#eee;text-shadow:1px 1px 1px #000;}
+  .skillChip .keyDot{display:inline-block;min-width:15px;text-align:center;padding:1px 5px;border-radius:3px;
+    font-weight:bold;font-size:10px;color:#031014;}
+  .skillChip.attackChip .keyDot{background:#ccc;}
+  #controlsHint{position:absolute;bottom:34px;left:12px;color:#bcd;font-size:10.5px;pointer-events:none;
+    text-shadow:1px 1px 2px #000;letter-spacing:.3px;background:rgba(10,14,20,.45);padding:3px 9px;border-radius:5px;}
   #fadeLayer{position:absolute;top:0;left:0;width:900px;height:560px;background:#000;opacity:0;pointer-events:none;
     transition:opacity 1.5s;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;letter-spacing:2px;}
   #selectScreen{position:absolute;top:0;left:0;width:900px;height:560px;color:#fff;overflow:hidden;
@@ -78,9 +121,62 @@
   #startBtn:hover{background:#6cf;color:#111;}
   #dedication{position:absolute;left:0;right:0;bottom:14px;text-align:center;z-index:2;
     color:rgba(255,255,255,.55);font-size:13px;font-style:italic;letter-spacing:1px;}
-  #winScreen{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(0,0,0,.92);color:#fff;
-    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;text-align:center;}
-  #winScreen h1{color:#d4af37;font-size:42px;}
+  #winScreen{position:absolute;top:0;left:0;width:900px;height:560px;color:#fff;overflow:hidden;
+    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;text-align:center;
+    background:radial-gradient(ellipse at center, #2a2210 0%, #0d0a06 70%, #050402 100%);}
+  #winScreen::before{content:'';position:absolute;inset:0;pointer-events:none;
+    background-image:
+      radial-gradient(2px 2px at 15% 20%, rgba(255,230,150,.8), transparent),
+      radial-gradient(2px 2px at 35% 60%, rgba(255,230,150,.6), transparent),
+      radial-gradient(2px 2px at 55% 25%, rgba(255,230,150,.7), transparent),
+      radial-gradient(2px 2px at 75% 55%, rgba(255,230,150,.6), transparent),
+      radial-gradient(2px 2px at 85% 80%, rgba(255,230,150,.7), transparent),
+      radial-gradient(2px 2px at 25% 85%, rgba(255,230,150,.5), transparent);
+    animation:winSparkle 3s ease-in-out infinite alternate;}
+  @keyframes winSparkle{from{opacity:.4;}to{opacity:1;}}
+  #winScreen h1{color:#f2d375;font-size:46px;letter-spacing:6px;position:relative;z-index:2;
+    text-shadow:0 0 24px rgba(242,211,117,.8),0 0 4px #000;}
+  #winScreen p{position:relative;z-index:2;color:#e6d9b8;}
+  #winScreen button{position:relative;z-index:2;}
+  #loseScreen{position:absolute;top:0;left:0;width:900px;height:560px;color:#fff;overflow:hidden;
+    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;text-align:center;
+    background:radial-gradient(ellipse at center, #2a0a0a 0%, #100404 65%, #050202 100%);}
+  #loseScreen::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background-image:
+      radial-gradient(70px 140px at 20% 100%, rgba(40,10,10,.5), transparent),
+      radial-gradient(90px 160px at 45% 100%, rgba(40,10,10,.6), transparent),
+      radial-gradient(80px 150px at 70% 100%, rgba(40,10,10,.5), transparent),
+      radial-gradient(60px 130px at 90% 100%, rgba(40,10,10,.4), transparent);}
+  #loseScreen h1{color:#e14b4b;font-size:46px;letter-spacing:6px;position:relative;z-index:2;
+    text-shadow:0 0 26px rgba(225,75,75,.65),0 0 4px #000;}
+  #loseScreen p{position:relative;z-index:2;color:#d8b8b8;max-width:560px;}
+  #loseScreen button{position:relative;z-index:2;padding:12px 30px;font-size:16px;background:#3a1212;color:#fff;
+    border:2px solid #c33;border-radius:6px;cursor:pointer;box-shadow:0 0 14px rgba(200,40,40,.3);}
+  #loseScreen button:hover{background:#c33;}
+  .godText{font-family:'Courier New',monospace;font-weight:bold;font-size:1.3em;color:#39ff6a;
+    text-shadow:2px 0 #ff2a6d, -2px 0 #05d9e8, 0 0 18px #39ff6a;
+    animation:godGlitch 1.4s infinite steps(2,end);letter-spacing:6px;}
+  @keyframes godGlitch{
+    0%,100%{transform:translate(0,0) skewX(0deg);}
+    20%{transform:translate(-2px,1px) skewX(2deg);}
+    40%{transform:translate(2px,-1px) skewX(-2deg);}
+    60%{transform:translate(-1px,0) skewX(1deg);}
+    80%{transform:translate(1px,1px) skewX(-1deg);}
+  }
+  #honoredBtn{position:relative;z-index:2;margin-top:10px;padding:8px 18px;font-size:13px;letter-spacing:1px;
+    background:rgba(0,0,0,.3);color:#c9b98a;border:1px solid rgba(212,175,55,.5);border-radius:6px;cursor:pointer;}
+  #honoredBtn:hover{background:rgba(212,175,55,.2);color:#f2d375;}
+  #honoredModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(4,4,8,.92);
+    display:none;align-items:center;justify-content:center;z-index:40;}
+  #honoredModal .panel{width:480px;max-height:420px;overflow-y:auto;background:linear-gradient(180deg,#0a1a10,#04100a);
+    border:2px solid #39ff6a;border-radius:10px;padding:20px 26px;box-shadow:0 0 30px rgba(57,255,106,.3);
+    font-family:'Courier New',monospace;color:#bfffdc;}
+  #honoredModal h2{color:#39ff6a;text-shadow:0 0 10px rgba(57,255,106,.6);margin-top:0;letter-spacing:2px;}
+  #honoredModal ol{padding-left:22px;margin:0 0 14px;}
+  #honoredModal li{margin:4px 0;}
+  #honoredModal .empty{color:#5a8a6a;font-style:italic;}
+  #honoredModal button{padding:8px 20px;background:#0a2a16;color:#39ff6a;border:1px solid #39ff6a;border-radius:6px;cursor:pointer;}
+  #honoredModal button:hover{background:#39ff6a;color:#04100a;}
 </style>
 </head>
 <body>
@@ -102,13 +198,24 @@
     <input id="nameInput" type="text" placeholder="Enter your name" maxlength="16"
       style="position:relative;z-index:2;margin-top:16px;padding:8px 12px;font-size:16px;border-radius:6px;border:2px solid #6cf;background:#111;color:#fff;text-align:center;">
     <button id="startBtn">Begin Journey</button>
+    <button id="honoredBtn">🏆 Honored Ones</button>
     <div id="dedication">For Mr. Truong</div>
   </div>
 
+  <div id="honoredModal">
+    <div class="panel">
+      <h2>Honored Ones</h2>
+      <div id="honoredListWrap"></div>
+      <button id="honoredCloseBtn">Close</button>
+    </div>
+  </div>
+
   <div class="overlay">
+    <div id="lowHpVignette"></div>
     <div id="hud">
-      <div>HP</div>
+      <div class="hpLabel"><span>Vitality</span><span id="hpNumeric">100/100</span></div>
       <div id="hpBarWrap"><div id="hpBarFill"></div></div>
+      <div id="statusIcons"></div>
     </div>
     <div id="bossName"></div>
     <div id="bossBarWrap"><div id="bossBarFill"></div></div>
@@ -121,28 +228,27 @@
     </div>
     <div id="choiceBox"></div>
     <div id="skillMenu">
-      <h2>Skills (Press K to close)</h2>
+      <h2>&gt; SKILLS_LOADED [Press K to close]</h2>
       <div id="skillList"></div>
       <div>
-        <b>Merge a skill into a weapon:</b><br>
+        <b>&gt; Fuse Skill Into Weapon</b><br>
         Skill: <select id="mergeSkillSel"></select>
         Weapon: <select id="mergeWeaponSel"></select>
-        <button id="mergeBtn">Merge</button>
+        <button id="mergeBtn">Fuse ⚡</button>
       </div>
-      <div id="mergeResult" style="margin-top:10px;color:#9f9;"></div>
+      <div id="mergeResult" style="margin-top:10px;color:#39ff6a;"></div>
     </div>
   </div>
   <div id="fadeLayer"></div>
   <div id="winScreen">
     <h1>VICTORY</h1>
     <p>You surpassed your teacher and became the strongest.</p>
-    <button id="restartBtn" style="padding:10px 24px;font-size:16px;background:#245;color:#fff;border:2px solid #d4af37;border-radius:6px;cursor:pointer;">Play Again</button>
+    <button id="restartBtn" style="padding:12px 30px;font-size:16px;background:#3a2f10;color:#f2d375;border:2px solid #d4af37;border-radius:6px;cursor:pointer;box-shadow:0 0 14px rgba(212,175,55,.3);">Play Again</button>
   </div>
-  <div id="loseScreen" style="position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(0,0,0,.94);color:#fff;
-    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;text-align:center;">
-    <h1 style="color:#c33;font-size:44px;">YOU DIED</h1>
+  <div id="loseScreen">
+    <h1>YOU DIED</h1>
     <p id="loseText">The wasteland claims another soul.</p>
-    <button id="loseRestartBtn" style="padding:10px 24px;font-size:16px;background:#400;color:#fff;border:2px solid #c33;border-radius:6px;cursor:pointer;">Restart</button>
+    <button id="loseRestartBtn">Restart</button>
   </div>
 </div>
 
@@ -293,6 +399,11 @@ const WITCH_ROWS=[
 ];
 const WITCH_PALETTE={h:'#3a1a4a', g:'#2a1030', s:'#d9b28c', e:'#101010', r:'#5a2f8a', b:'#1c1c1c'};
 
+// Arnav (The Developer) - reuses TEACHER_ROWS silhouette, recolored matrix-hacker green/black
+const ARNAV_PALETTE={k:'#0a0a0a', s:'#cfe0cf', e:'#00ff66', w:'#0d1a10', t:'#00ff66', g:'#0e140e', b:'#050805', I:'#00c94f'};
+// Developer Boss (glitched final form) - reuses BOSS2_ROWS silhouette (armored), recolored matrix green
+const DEVELOPER_PALETTE={k:'#000000', s:'#cfe0cf', e:'#39ff6a', A:'#0a140c', C:'#00ff66', g:'#0a0f0a', b:'#000000', P:'#39ff6a'};
+
 // Monster (wasteland creature) 10x10, two-frame bob/walk
 const MONSTER_ROWS=[
 "  mmmm  ",
@@ -401,6 +512,10 @@ const choiceBox=document.getElementById('choiceBox');
 const skillMenu=document.getElementById('skillMenu');
 const skillList=document.getElementById('skillList');
 const hpBarFill=document.getElementById('hpBarFill');
+const hpBarWrap=document.getElementById('hpBarWrap');
+const hpNumeric=document.getElementById('hpNumeric');
+const lowHpVignette=document.getElementById('lowHpVignette');
+const statusIconsEl=document.getElementById('statusIcons');
 const bossBarWrap=document.getElementById('bossBarWrap');
 const bossBarFill=document.getElementById('bossBarFill');
 const bossNameEl=document.getElementById('bossName');
@@ -439,6 +554,21 @@ let witchFight=null;
 
 let mergedWeapons={'Sword':{damage:10,color:'#ccc'}};
 let ownedWeapons=['Sword'];
+let nonMergableWeapons=new Set();
+
+// ================= Post-Teacher story arc =================
+let arnavTimer=0;
+let glitchTimer=0;
+let orbReady=false;
+function loadHonoredOnes(){
+  try{ return JSON.parse(localStorage.getItem('honoredOnes')||'[]'); }
+  catch(e){ return []; }
+}
+function saveHonoredOne(name){
+  const list=loadHonoredOnes();
+  list.push(name);
+  try{ localStorage.setItem('honoredOnes', JSON.stringify(list)); }catch(e){}
+}
 
 let enemies=[];
 let projectiles=[];
@@ -448,6 +578,15 @@ let dayNightTimer=0;
 const DAY_LEN=2200;
 const NIGHT_LEN=1300;
 let isNight=false;
+let nightBlend=0; // 0 = full day, 1 = full night, smoothly interpolated near transitions
+
+function lerpColor(a,b,t){
+  const pa=parseInt(a.slice(1),16), pb=parseInt(b.slice(1),16);
+  const ar=(pa>>16)&255, ag=(pa>>8)&255, ab=pa&255;
+  const br=(pb>>16)&255, bg=(pb>>8)&255, bb=pb&255;
+  const r=Math.round(ar+(br-ar)*t), g=Math.round(ag+(bg-ag)*t), bch=Math.round(ab+(bb-ab)*t);
+  return 'rgb('+r+','+g+','+bch+')';
+}
 
 let world1POIs=[
   {id:'building', x:950, y:GROUND_Y-200, w:130,h:200, label:'Old Building', triggered:false},
@@ -485,12 +624,25 @@ document.getElementById('startBtn').addEventListener('click',()=>{
   scene='world1';
   addSkillKeyHUD();
 });
+document.getElementById('honoredBtn').addEventListener('click',()=>{
+  const wrap=document.getElementById('honoredListWrap');
+  const list=loadHonoredOnes();
+  if(list.length===0){
+    wrap.innerHTML='<p class="empty">No one has proven themselves a GOD... yet.</p>';
+  } else {
+    wrap.innerHTML='<ol>'+list.map(n=>'<li>'+n.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</li>').join('')+'</ol>';
+  }
+  document.getElementById('honoredModal').style.display='flex';
+});
+document.getElementById('honoredCloseBtn').addEventListener('click',()=>{
+  document.getElementById('honoredModal').style.display='none';
+});
 
 // ================= Input =================
 window.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   keys[k]=true;
-  if(k==='e'){ advanceDialogue(); }
+  if(k==='e'){ if(dqActive){ advanceDialogue(); } else if(scene==='orb_ready' && orbReady){ useOrb(); } }
   if(k==='k'){ toggleSkillMenu(); }
   if(k==='h'){ useHealthPotion(); }
   if(k===' '){ e.preventDefault(); }
@@ -538,9 +690,18 @@ function showChoices(name, text, options){
 
 // ================= Skills =================
 function addSkillKeyHUD(){
-  let s='Attack: Left Click';
-  player.skills.forEach(sk=>{ s+=' | ['+sk.key+'] '+sk.name; });
-  skillKeysEl.textContent=s;
+  let html='<div class="skillChip attackChip"><span class="keyDot">LMB</span>Attack</div>';
+  player.skills.forEach(sk=>{
+    html+='<div class="skillChip"><span class="keyDot" style="background:'+sk.color+';">'+sk.key+'</span>'+sk.name+'</div>';
+  });
+  skillKeysEl.innerHTML=html;
+}
+function updateStatusIcons(){
+  let html='';
+  if(player.frog) html+='<div class="statusChip frogChip">🐸 Frog Curse</div>';
+  if(player.swordBuff) html+='<div class="statusChip buffChip">⚔ Sword +30%</div>';
+  if(player.healthPotions>0) html+='<div class="statusChip potionChip">🧪 x'+player.healthPotions+' [H]</div>';
+  statusIconsEl.innerHTML=html;
 }
 function learnSkill(name,key,damage,color,type,baseCooldown){
   if(player.skills.find(s=>s.name===name)) return;
@@ -592,10 +753,14 @@ function toggleSkillMenu(){
   skillMenu.style.display='block';
 }
 function renderSkillMenu(){
-  skillList.innerHTML = player.skills.length? '' : '<i>No skills learned yet.</i>';
+  skillList.innerHTML = player.skills.length? '' : '<i style="color:#5a8a90;">No skills loaded. Explore the wasteland to acquire modules.</i>';
   player.skills.forEach(sk=>{
     const d=document.createElement('div');
-    d.textContent='['+sk.key+'] '+sk.name+' (dmg '+sk.damage+')';
+    d.className='skillRow';
+    const cd = sk.cooldown>0 ? ' <span style="color:#ff2a9d;">[cooling]</span>' : '';
+    d.innerHTML='<span class="keyBadge">'+sk.key+'</span> <span style="color:'+sk.color+';font-weight:bold;">'+sk.name+'</span>'
+      +' <span style="color:#5a8a90;margin-left:auto;">DMG '+sk.damage+cd+'</span>';
+    d.style.display='flex'; d.style.justifyContent='space-between';
     skillList.appendChild(d);
   });
   const mergeSkillSel=document.getElementById('mergeSkillSel');
@@ -605,7 +770,7 @@ function renderSkillMenu(){
     const o=document.createElement('option'); o.value=sk.name; o.textContent=sk.name;
     mergeSkillSel.appendChild(o);
   });
-  ownedWeapons.forEach(w=>{
+  ownedWeapons.filter(w=>!nonMergableWeapons.has(w)).forEach(w=>{
     const o=document.createElement('option'); o.value=w; o.textContent=w;
     mergeWeaponSel.appendChild(o);
   });
@@ -742,10 +907,12 @@ function bossShoot(){
   if(!boss||!boss.alive) return;
   const dx=player.x-boss.x, dy=(player.y+player.h/2)-boss.y;
   const len=Math.max(1,Math.hypot(dx,dy));
+  const isDigitShooter = boss.kind==='arnav'||boss.kind==='developer';
+  const label = isDigitShooter ? (Math.random()<0.5?'1':'0') : boss.eqLabel;
   projectiles.push({
     x:boss.x,y:boss.y, vx:dx/len*4.4, vy:dy/len*4.4,
     damage:boss.dmg, color:boss.eqColor, owner:'boss', life:220, r:14,
-    label: boss.eqLabel
+    label: label
   });
 }
 function updateProjectiles(){
@@ -902,7 +1069,7 @@ function triggerFrogCurse(){
   projectiles=projectiles.filter(p=>p.owner!=='witch');
   turnIntoFrog();
   exitBuildingToWorld1('witch');
-  startDialogue('???',[
+  startDialogue(playerName,[
     "Everything feels... smaller. And slimy.",
     "The witch's curse has turned you into a frog!"
   ], ()=>{});
@@ -1062,7 +1229,7 @@ function triggerYearsLater(){
     inputLocked=false;
     setTimeout(()=>{
       inputLocked=true;
-      startDialogue('???',["Huh? I must've walked around the whole world. Sure is decimated."], ()=>{ inputLocked=false; });
+      startDialogue(playerName,["Huh? I must've walked around the whole world. Sure is decimated."], ()=>{ inputLocked=false; });
     }, 800);
   },3600);
 }
@@ -1112,7 +1279,7 @@ function proceedBossIntroDialogue(){
 function startBossPhase1(){
   scene='boss1';
   boss={ x:650,y:GROUND_Y-70,r:34,hp:400,maxhp:400,alive:true,
-    speed:1.0, shootCooldown:0, dmg:10, eqColor:'#ffcc33', eqLabel:'Precalc Bolt', phase:1 };
+    speed:1.0, shootCooldown:0, shootRate:70, dmg:10, eqColor:'#ffcc33', eqLabel:'Precalc Bolt', phase:1, kind:'teacher1', flash:0 };
   bossBarWrap.style.display='block';
   bossNameEl.style.display='block';
   bossNameEl.textContent='Teacher - Honors Precalc Blade';
@@ -1120,30 +1287,169 @@ function startBossPhase1(){
 function startBossPhase2(){
   scene='boss2';
   boss={ x:650,y:GROUND_Y-70,r:38,hp:600,maxhp:600,alive:true,
-    speed:1.3, shootCooldown:0, dmg:14, eqColor:'#cc66ff', eqLabel:'Multivar Bolt', phase:2, armored:true, flash:0 };
+    speed:1.3, shootCooldown:0, shootRate:50, dmg:14, eqColor:'#cc66ff', eqLabel:'Multivar Bolt', phase:2, armored:true, kind:'teacher2', flash:0 };
   bossBarWrap.style.display='block';
   bossNameEl.style.display='block';
   bossNameEl.textContent='Teacher - Multivariable Calculus Blade (Phase 2)';
 }
 function onBossDefeated(){
   bossBarWrap.style.display='none';
-  if(boss.phase===1){
+  const kind=boss.kind;
+  if(kind==='teacher1'){
     inputLocked=true;
     startDialogue('Teacher',[
       "Hah... not bad at all. But I'm just getting started.",
       "Behold my true power - the Multivariable Calculus Blade!"
     ], ()=>{ startBossPhase2(); });
-  } else {
+  } else if(kind==='teacher2'){
     inputLocked=true;
+    bossNameEl.style.display='none';
+    player.hp=player.maxhp;
     startDialogue('Teacher',[
       "Impossible... you've truly surpassed me.",
-      "Go forth. You no longer need a teacher."
+      "I have nothing left to teach you. It's time I passed something on to you, "+playerName+'.',
+      "Will you accept the crown, and become the Teacher in my place?"
     ], ()=>{
-      scene='win';
-      winScreen.style.display='flex';
-      bossNameEl.style.display='none';
+      showChoices('Teacher',"Accept the crown?",[
+        {text:'No, I decline', action:()=>{ triggerWinEnding(1); }},
+        {text:'Yes, I accept', action:()=>{ acceptCrown(); }}
+      ]);
     });
+  } else if(kind==='arnav'){
+    startGlitchSequence();
+  } else if(kind==='developer'){
+    giveOrb();
   }
+}
+function acceptCrown(){
+  mergedWeapons['Multivariable Calculus Blade']={damage:40,color:'#cc66ff'};
+  ownedWeapons.push('Multivariable Calculus Blade');
+  nonMergableWeapons.add('Multivariable Calculus Blade');
+  player.weapon='Multivariable Calculus Blade'; player.weaponDamage=40;
+  inputLocked=true;
+  startDialogue('Teacher',[
+    "Then it is done. You are the Teacher now.",
+    "Take the Multivariable Calculus Blade - it answers to no one else.",
+    "...Something feels strange. Stay alert."
+  ], ()=>{
+    scene='post_crown';
+    arnavTimer=1800; // 30 seconds at 60fps
+    inputLocked=false;
+  });
+}
+
+// ================= Arnav (The Developer) story arc =================
+function enterArnavIntro(){
+  scene='arnav_intro';
+  inputLocked=true;
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  startDialogue('Arnav (The Developer)',[
+    "...",
+    "Hello, "+playerName+". I don't believe we've met.",
+    "My name is Arnav. I'm the Developer of this world - everything you see, I built.",
+    "And I have to say... you have committed hubris, wearing that crown.",
+    "I'll give you a choice, since I'm feeling generous today."
+  ], ()=>{
+    showChoices('Arnav (The Developer)',"What will you do?",[
+      {text:'Repent your sins and be forgiven', action:()=>{
+        startDialogue('Arnav (The Developer)',[
+          "Wise choice. I forgive you.",
+          "Go on, live out the rest of your days in peace."
+        ], ()=>{ triggerWinEnding(2); });
+      }},
+      {text:'Prove your worth', action:()=> startArnavDuelIntro() }
+    ]);
+  });
+}
+function startArnavDuelIntro(){
+  inputLocked=true;
+  startDialogue('Arnav (The Developer)',[
+    "Prove your worth? Bold words for someone standing in a world I wrote.",
+    "Very well. Let's see what you're made of."
+  ], ()=>{ startArnavDuel(); });
+}
+function startArnavDuel(){
+  scene='arnav_fight';
+  player.hp=player.maxhp;
+  boss={ x:650,y:GROUND_Y-70,r:36,hp:500,maxhp:500,alive:true,
+    speed:1.2, shootCooldown:0, shootRate:45, dmg:18, eqColor:'#39ff6a', eqLabel:'SYSTEM.EXE', kind:'arnav', flash:0 };
+  bossBarWrap.style.display='block';
+  bossNameEl.style.display='block';
+  bossNameEl.textContent='Arnav (The Developer)';
+}
+function startGlitchSequence(){
+  scene='glitch_transition';
+  inputLocked=true;
+  bossBarWrap.style.display='none';
+  bossNameEl.style.display='none';
+  glitchTimer=150;
+}
+function startDeveloperIntroDialogue(){
+  scene='developer_intro';
+  inputLocked=true;
+  player.hp=player.maxhp;
+  startDialogue('The Developer',[
+    "...",
+    "Impressive. But that was only me holding back.",
+    "It is impossible for you to beat me. This world - your sword, your skills, your very heartbeat - all of it runs on my code.",
+    "Let me show you what real power looks like."
+  ], ()=>{ startDeveloperDuel(); });
+}
+function startDeveloperDuel(){
+  scene='developer_fight';
+  player.hp=player.maxhp;
+  boss={ x:650,y:GROUND_Y-70,r:42,hp:900,maxhp:900,alive:true,
+    speed:1.5, shootCooldown:0, shootRate:32, dmg:24, eqColor:'#39ff6a', eqLabel:'ROOT.ACCESS', kind:'developer', flash:0 };
+  bossBarWrap.style.display='block';
+  bossNameEl.style.display='block';
+  bossNameEl.textContent='The Developer';
+}
+function giveOrb(){
+  bossBarWrap.style.display='none';
+  bossNameEl.style.display='none';
+  inputLocked=true;
+  startDialogue('The Developer',[
+    "...What? That's... not possible.",
+    "No matter what I am, in the end, I suppose I'm still just... code.",
+    "Take this. A glowing orb - the last thing I have left to give.",
+    "Press [E] when you're ready to use it."
+  ], ()=>{
+    scene='orb_ready';
+    orbReady=true;
+    inputLocked=false;
+  });
+}
+function useOrb(){
+  if(!orbReady) return;
+  orbReady=false;
+  inputLocked=true;
+  setTimeout(()=>{
+    let fullName = window.prompt("The orb glows warmly in your hand. Speak your full name to claim your place among the Honored Ones:");
+    if(!fullName || !fullName.trim()){ fullName=playerName; }
+    fullName=fullName.trim().slice(0,60);
+    saveHonoredOne(fullName);
+    triggerWinEnding(3);
+  }, 50);
+}
+function triggerWinEnding(num){
+  scene='win';
+  inputLocked=true;
+  bossBarWrap.style.display='none';
+  bossNameEl.style.display='none';
+  const titleEl=document.querySelector('#winScreen h1');
+  const descEl=document.querySelector('#winScreen p');
+  titleEl.className='';
+  if(num===1){
+    titleEl.textContent='YOU WIN';
+    descEl.textContent='You declined the crown and walked quietly into the wasteland. A humble, uneventful ending.';
+  } else if(num===2){
+    titleEl.textContent='YOU WIN';
+    descEl.textContent='You repented before the Developer, and he let you go. A safe ending - but was it really a victory?';
+  } else if(num===3){
+    titleEl.innerHTML='<span class="godText">GOD</span>';
+    descEl.textContent='You defeated the Developer himself. Your name is now etched among the Honored Ones, forever.';
+  }
+  winScreen.style.display='flex';
 }
 document.getElementById('restartBtn').addEventListener('click',()=>location.reload());
 document.getElementById('loseRestartBtn').addEventListener('click',()=>location.reload());
@@ -1199,7 +1505,7 @@ function updatePlayerPhysics(){
   }
 
   // scene bounds
-  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'){
+  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='orb_ready'){
     player.x=Math.max(60,Math.min(820,player.x));
   } else {
     player.x=Math.max(20,player.x);
@@ -1214,7 +1520,15 @@ function update(){
   dayNightTimer++;
   const cycle=DAY_LEN+NIGHT_LEN;
   const t=dayNightTimer%cycle;
-  isNight = t>DAY_LEN;
+  const TRANS=250;
+  if(t<DAY_LEN){
+    nightBlend = (t> DAY_LEN-TRANS) ? (t-(DAY_LEN-TRANS))/TRANS : 0;
+  } else {
+    const nt=t-DAY_LEN;
+    nightBlend = (nt > NIGHT_LEN-TRANS) ? 1-(nt-(NIGHT_LEN-TRANS))/TRANS : 1;
+  }
+  nightBlend=Math.max(0,Math.min(1,nightBlend));
+  isNight = nightBlend>0.5;
 
   player.skills.forEach(sk=>{ if(sk.cooldown>0) sk.cooldown--; });
   if(player.attackCooldown>0) player.attackCooldown--;
@@ -1232,14 +1546,23 @@ function update(){
   if(scene==='dojo' && dojo.state==='duel'){ updateDojoInstructor(); }
   if(scene==='witch_duel'){ updateWitchDuel(); }
 
-  if(scene==='boss1'||scene==='boss2'){
+  if(scene==='boss1'||scene==='boss2'||scene==='arnav_fight'||scene==='developer_fight'){
     if(boss && boss.alive){
       const dx=player.x-boss.x;
       const d=Math.abs(dx)||1;
       if(d>150){ boss.x+=Math.sign(dx)*boss.speed; }
       boss.shootCooldown--;
-      if(boss.shootCooldown<=0){ bossShoot(); boss.shootCooldown= boss.phase===1?70:50; }
+      if(boss.shootCooldown<=0){ bossShoot(); boss.shootCooldown=boss.shootRate||60; }
     }
+  }
+
+  if(scene==='post_crown'){
+    arnavTimer--;
+    if(arnavTimer<=0){ enterArnavIntro(); }
+  }
+  if(scene==='glitch_transition'){
+    glitchTimer--;
+    if(glitchTimer<=0){ startDeveloperIntroDialogue(); }
   }
 
   updateProjectiles();
@@ -1247,7 +1570,13 @@ function update(){
   const worldScene = (scene==='world1'||scene==='world2');
   camera.x = worldScene ? player.x - W/2 : 0;
 
-  hpBarFill.style.width=Math.max(0,player.hp/player.maxhp*100)+'%';
+  const hpPct=Math.max(0,player.hp/player.maxhp*100);
+  hpBarFill.style.width=hpPct+'%';
+  hpNumeric.textContent=Math.max(0,Math.round(player.hp))+'/'+player.maxhp;
+  const critical = hpPct<=25 && hpPct>0;
+  hpBarWrap.classList.toggle('critical', critical);
+  lowHpVignette.style.opacity = critical ? '1' : '0';
+  updateStatusIcons();
   if(scene==='witch_duel' && witchFight){
     bossBarFill.style.width=Math.max(0,witchFight.hp/witchFight.maxhp*100)+'%';
   } else if(boss){
@@ -1263,8 +1592,18 @@ function update(){
 
 // ================= Draw helpers =================
 function drawSky(camX){
+  const nb=nightBlend;
+  const dusk = nb>0.05 && nb<0.95; // in transition window
   const grad=ctx.createLinearGradient(0,0,0,GROUND_Y);
-  if(isNight){
+  if(dusk){
+    // blend day->amber dusk->night for a proper sunset/sunrise feel
+    const duskTop=lerpColor('#3f7fc9','#2a1030', Math.min(1,nb*1.6));
+    const duskMid=lerpColor('#7ec9e8','#c9663f', 1-Math.abs(nb-0.5)*2>0.3? (1-Math.abs(nb-0.5)*2):0.3);
+    const nightTop=lerpColor(duskTop,'#050814', Math.max(0,(nb-0.6)/0.4));
+    grad.addColorStop(0,nightTop);
+    grad.addColorStop(0.5,duskMid);
+    grad.addColorStop(1,lerpColor('#cfe9ea','#1c2440',nb));
+  } else if(isNight){
     grad.addColorStop(0,'#050814');
     grad.addColorStop(0.55,'#0d1430');
     grad.addColorStop(1,'#1c2440');
@@ -1276,16 +1615,18 @@ function drawSky(camX){
   ctx.fillStyle=grad;
   ctx.fillRect(0,0,W,GROUND_Y);
 
-  if(isNight){
-    // stars (deterministic twinkle field)
+  // stars fade in/out with nightBlend
+  if(nb>0.15){
     for(let i=0;i<70;i++){
       const sxp=(i*137.5)%W;
       const syp=(i*71.3)%(GROUND_Y-40);
       const tw=0.5+0.5*Math.sin(animTime*0.03+i);
-      ctx.fillStyle='rgba(255,255,255,'+(0.25+0.5*tw)+')';
+      ctx.fillStyle='rgba(255,255,255,'+((0.25+0.5*tw)*Math.min(1,(nb-0.15)/0.4))+')';
       ctx.fillRect(sxp,syp, i%5===0?2:1, i%5===0?2:1);
     }
-    // moon
+  }
+  if(nb>0.1){
+    ctx.save(); ctx.globalAlpha=Math.min(1,nb);
     const mx=W-120, my=90;
     ctx.fillStyle='rgba(230,235,255,0.15)';
     ctx.beginPath(); ctx.arc(mx,my,34,0,7); ctx.fill();
@@ -1294,14 +1635,17 @@ function drawSky(camX){
     ctx.fillStyle='rgba(200,205,225,0.5)';
     ctx.beginPath(); ctx.arc(mx-6,my-4,4,0,7); ctx.fill();
     ctx.beginPath(); ctx.arc(mx+7,my+6,3,0,7); ctx.fill();
-  } else {
-    // sun
+    ctx.restore();
+  }
+  if(nb<0.9){
+    ctx.save(); ctx.globalAlpha=Math.min(1,(1-nb)*1.3);
     const sx0=140, sy0=80;
-    ctx.fillStyle='rgba(255,235,150,0.25)';
+    // sun glows amber during dusk transitions, bright yellow at midday
+    const sunColor = dusk? lerpColor('#fff2b0','#ff8a3f',Math.min(1,nb*2)) : '#fff2b0';
+    ctx.fillStyle='rgba(255,180,120,0.22)';
     ctx.beginPath(); ctx.arc(sx0,sy0,44,0,7); ctx.fill();
-    ctx.fillStyle='#fff2b0';
+    ctx.fillStyle=sunColor;
     ctx.beginPath(); ctx.arc(sx0,sy0,24,0,7); ctx.fill();
-    // drifting clouds
     ctx.fillStyle='rgba(255,255,255,0.75)';
     const parC=camX*0.15;
     for(let i=-1;i<5;i++){
@@ -1309,6 +1653,7 @@ function drawSky(camX){
       const cy0=70+((i*53)%40);
       drawCloud(cx0,cy0);
     }
+    ctx.restore();
   }
 }
 function drawCloud(cx0,cy0){
@@ -1798,10 +2143,23 @@ function drawEnemies(camX){
     ctx.globalAlpha=0.3; ctx.fillStyle='#000';
     ctx.beginPath(); ctx.ellipse(sx,GROUND_Y-2,14,5,0,0,7); ctx.fill();
     ctx.restore();
+    // eerie glow around the creature at night
+    if(isNight){
+      const eg=ctx.createRadialGradient(sx,sy-8,2,sx,sy-8,32);
+      eg.addColorStop(0,'rgba(150,60,220,0.28)');
+      eg.addColorStop(1,'rgba(150,60,220,0)');
+      ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(sx,sy-8,32,0,7); ctx.fill();
+    }
     ctx.save();
     if(en.flash>0) ctx.filter='brightness(2.2) saturate(0.3)';
-    drawPixelSprite(walkFrame?MONSTER_ROWS:MONSTER_ROWS_B, MONSTER_PALETTE, sx-16, sy-16, 4, false);
+    drawPixelSpriteOutlined(walkFrame?MONSTER_ROWS:MONSTER_ROWS_B, MONSTER_PALETTE, sx-16, sy-16, 4, false);
     ctx.restore();
+    // pulsing red eye glow
+    const pulse=0.6+0.4*Math.sin(animTime*0.2+en.bobSeed);
+    ctx.fillStyle='rgba(255,60,60,'+pulse+')';
+    ctx.beginPath(); ctx.arc(sx-6,sy-14,2.2,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx+6,sy-14,2.2,0,7); ctx.fill();
+    ctx.fillStyle='rgba(20,0,0,0.6)'; ctx.fillRect(sx-17,sy-31,34,6);
     ctx.fillStyle='#f00'; ctx.fillRect(sx-16,sy-30,32,4);
     ctx.fillStyle='#0f0'; ctx.fillRect(sx-16,sy-30, 32*Math.max(0,en.hp/en.maxhp),4);
   });
@@ -1811,17 +2169,52 @@ function drawEquations(camX){
   equations.forEach(eq=>{
     if(!eq.alive) return;
     const sx=eq.x-camX, sy=eq.y;
-    ctx.fillStyle='rgba(255,204,51,.92)';
-    ctx.beginPath(); ctx.arc(sx,sy,eq.r,0,7); ctx.fill();
-    ctx.strokeStyle='#7a5a00'; ctx.lineWidth=2; ctx.stroke();
-    ctx.fillStyle='#221'; ctx.font='bold 11px Arial'; ctx.textAlign='center';
-    ctx.fillText(eq.text.slice(0,14), sx, sy+4);
+    const bob=Math.sin(animTime*0.08+eq.x)*3;
+    // torn parchment scroll instead of a plain circle
+    ctx.save();
+    ctx.translate(sx,sy+bob);
+    ctx.rotate(Math.sin(animTime*0.05+eq.x)*0.08);
+    const grad=ctx.createRadialGradient(0,0,2,0,0,eq.r+6);
+    grad.addColorStop(0,'#fff6da');
+    grad.addColorStop(1,'#e8cf8a');
+    ctx.fillStyle=grad;
+    ctx.beginPath();
+    ctx.moveTo(-eq.r,-eq.r*0.5);
+    ctx.quadraticCurveTo(0,-eq.r*1.15,eq.r,-eq.r*0.5);
+    ctx.quadraticCurveTo(eq.r*1.1,0,eq.r,eq.r*0.5);
+    ctx.quadraticCurveTo(0,eq.r*1.15,-eq.r,eq.r*0.5);
+    ctx.quadraticCurveTo(-eq.r*1.1,0,-eq.r,-eq.r*0.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle='#9a7a3a'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#3a2a10'; ctx.font='bold 11px Georgia'; ctx.textAlign='center';
+    ctx.fillText(eq.text.slice(0,14), 0, 4);
+    // faint glowing rune ring to signal "attack me"
+    ctx.strokeStyle='rgba(255,204,51,0.55)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(0,0,eq.r+7+Math.sin(animTime*0.15)*1.5,0,7); ctx.stroke();
+    ctx.restore();
   });
 }
 
 function drawProjectiles(camX){
   projectiles.forEach(p=>{
     const sx=p.x-camX, sy=p.y;
+    // motion trail
+    for(let i=1;i<=3;i++){
+      const tx=sx-p.vx*i*1.6, ty=sy-p.vy*i*1.6;
+      ctx.globalAlpha=0.22*(4-i)/3;
+      ctx.fillStyle=p.color;
+      ctx.beginPath(); ctx.arc(tx,ty,p.r*(1-i*0.18),0,7); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    // outer glow
+    const glow=ctx.createRadialGradient(sx,sy,1,sx,sy,p.r*2.4);
+    glow.addColorStop(0,p.color);
+    glow.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=glow;
+    ctx.beginPath(); ctx.arc(sx,sy,p.r*2.4,0,7); ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(sx,sy,p.r*0.4,0,7); ctx.fill();
     ctx.fillStyle=p.color;
     ctx.beginPath(); ctx.arc(sx,sy,p.r,0,7); ctx.fill();
     if(p.label){ ctx.fillStyle='#fff'; ctx.font='9px Arial'; ctx.textAlign='center'; ctx.fillText(p.label, sx, sy-14); }
@@ -1831,23 +2224,94 @@ function drawProjectiles(camX){
 function drawTeacher(x,y){
   drawPixelSpriteOutlined(TEACHER_ROWS, TEACHER_PALETTE, x, y, 4, false);
 }
+function drawArnavFigure(x,y,isDeveloper){
+  const rows = isDeveloper? BOSS2_ROWS : TEACHER_ROWS;
+  const pal = isDeveloper? DEVELOPER_PALETTE : ARNAV_PALETTE;
+  drawMatrixAura(x+24, y+40, isDeveloper? 66:52);
+  drawPixelSpriteOutlined(rows, pal, x, y, 4, false);
+  ctx.fillStyle='#39ff6a'; ctx.font='13px monospace'; ctx.textAlign='center';
+  ctx.fillText(isDeveloper? 'The Developer' : 'Arnav (The Developer)', x+24, y-8);
+}
+function drawGlitchTransition(){
+  const shakeX=(Math.random()-0.5)*16;
+  const shakeY=(Math.random()-0.5)*16;
+  ctx.save();
+  ctx.translate(shakeX,shakeY);
+  drawBossRoomScene();
+  drawBoss(0);
+  drawPlayerSprite(0);
+  // scrambled color glitch bars
+  for(let i=0;i<16;i++){
+    if(Math.random()<0.5){
+      const gy=Math.random()*H;
+      const gh=3+Math.random()*22;
+      const gc=Math.random()<0.5? 'rgba(0,255,102,0.35)':'rgba(255,0,120,0.25)';
+      ctx.fillStyle=gc;
+      ctx.fillRect(0,gy,W,gh);
+    }
+  }
+  // spinning breaking squares
+  for(let i=0;i<6;i++){
+    ctx.save();
+    const px0=(i*151)%W, py0=(i*97)%H;
+    ctx.translate(px0,py0);
+    ctx.rotate(animTime*0.1+i);
+    ctx.fillStyle='rgba(57,255,106,0.4)';
+    ctx.fillRect(-10,-10,20,20);
+    ctx.restore();
+  }
+  ctx.restore();
+  if(Math.random()<0.7){
+    ctx.fillStyle= Math.random()<0.5? '#39ff6a':'#fff';
+    ctx.font='bold 34px monospace'; ctx.textAlign='center';
+    ctx.fillText('SYSTEM ERROR', W/2+(Math.random()-0.5)*14, H/2+(Math.random()-0.5)*14);
+  }
+  if(Math.random()<0.15){
+    ctx.fillStyle='rgba(255,255,255,0.7)';
+    ctx.fillRect(0,0,W,H);
+  }
+}
+
+function drawMatrixAura(cx,cy,radius){
+  const cols=9;
+  for(let c=0;c<cols;c++){
+    const colX=cx-radius+ (c/(cols-1))*radius*2;
+    for(let r=0;r<6;r++){
+      const speed=1.2+ (c%3)*0.4;
+      const yPos = ((animTime*speed + r*26 + c*13) % (radius*2.4)) - radius*1.1;
+      const digit = (Math.floor(animTime*0.1+c*3+r)%2)===0?'1':'0';
+      const alpha = 0.15 + 0.5*(1-Math.abs(yPos)/(radius*1.1));
+      if(alpha<=0) continue;
+      ctx.fillStyle='rgba(0,255,102,'+Math.max(0,alpha)+')';
+      ctx.font='11px monospace'; ctx.textAlign='center';
+      ctx.fillText(digit, colX, cy+yPos);
+    }
+  }
+}
 
 function drawBoss(camX){
   if(!boss||!boss.alive) return;
   const bob=Math.sin(animTime*0.06)*5;
   const sx=boss.x-camX, sy=boss.y-70+bob;
-  const rows = boss.phase===1? BOSS1_ROWS : BOSS2_ROWS;
-  const pal = boss.phase===1? BOSS1_PALETTE : BOSS2_PALETTE;
+  const isMatrixKind = boss.kind==='arnav'||boss.kind==='developer';
+  let rows,pal;
+  if(boss.kind==='arnav'){ rows=TEACHER_ROWS; pal=ARNAV_PALETTE; }
+  else if(boss.kind==='developer'){ rows=BOSS2_ROWS; pal=DEVELOPER_PALETTE; }
+  else { rows = boss.phase===1? BOSS1_ROWS : BOSS2_ROWS; pal = boss.phase===1? BOSS1_PALETTE : BOSS2_PALETTE; }
   const facingLeft = player.x<boss.x;
   // ground shadow
   ctx.save();
   ctx.globalAlpha=0.35; ctx.fillStyle='#000';
   ctx.beginPath(); ctx.ellipse(sx,GROUND_Y-2,26,8,0,0,7); ctx.fill();
   ctx.restore();
-  // fluttering cape for phase 2
-  if(boss.phase===2){
+  // matrix code aura for Arnav / Developer
+  if(isMatrixKind){
+    drawMatrixAura(sx, sy+30, boss.kind==='developer'? 66:52);
+  }
+  // fluttering cape for phase 2 teacher and the Developer boss
+  if(boss.phase===2 || boss.kind==='developer'){
     const flutter=Math.sin(animTime*0.12)*6;
-    ctx.fillStyle='#5a1414';
+    ctx.fillStyle= boss.kind==='developer' ? 'rgba(0,255,102,0.55)' : '#5a1414';
     ctx.beginPath();
     const cdir=facingLeft?1:-1;
     ctx.moveTo(sx+cdir*14, sy+18);
@@ -1859,7 +2323,9 @@ function drawBoss(camX){
   if(boss.flash>0) ctx.filter='brightness(2.5) saturate(0.2)';
   drawPixelSpriteOutlined(rows, pal, sx-24, sy, 4, facingLeft);
   ctx.restore();
-  ctx.fillStyle='#fff'; ctx.font='12px Arial'; ctx.textAlign='center';
+  ctx.fillStyle= isMatrixKind? '#39ff6a':'#fff';
+  ctx.font= isMatrixKind? 'bold 12px monospace':'12px Arial';
+  ctx.textAlign='center';
   ctx.fillText(boss.eqLabel, sx, sy-10);
 }
 
@@ -2035,14 +2501,22 @@ function drawDojoScene(){
       ctx.globalAlpha=0.3; ctx.fillStyle='#000';
       ctx.beginPath(); ctx.ellipse(sx,GROUND_Y-2,16,5,0,0,7); ctx.fill();
       ctx.restore();
+      // wooden support post
+      ctx.fillStyle='#3a2a18';
+      ctx.fillRect(sx-3,sy+28,6,GROUND_Y-(sy+28));
       ctx.save();
       if(du.flash>0) ctx.filter='brightness(2.2)';
       drawPixelSpriteOutlined(DUMMY_ROWS, {w: du.damaging? '#a83232':'#8a7050'}, sx-16, sy, 4, false);
       ctx.restore();
+      // painted target rings on the chest
+      ctx.strokeStyle= du.damaging? '#3a1010':'#5a4030'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(sx,sy+14,8,0,7); ctx.stroke();
+      ctx.beginPath(); ctx.arc(sx,sy+14,4,0,7); ctx.stroke();
+      ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(sx-16,sy-11,32,5);
       ctx.fillStyle='#f00'; ctx.fillRect(sx-16,sy-10,32,4);
       ctx.fillStyle='#0f0'; ctx.fillRect(sx-16,sy-10,32*Math.max(0,du.hp/du.maxhp),4);
       ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.textAlign='center';
-      ctx.fillText(du.damaging?'Dummy (hits back)':'Dummy (safe)', sx, sy-14);
+      ctx.fillText(du.damaging?'Dummy (hits back)':'Dummy (safe)', sx, sy-15);
     });
     ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(360,20,180,26);
     ctx.strokeStyle='#5a2f8a'; ctx.lineWidth=2; ctx.strokeRect(360,20,180,26);
@@ -2179,12 +2653,36 @@ function draw(){
     drawVignette();
     return;
   }
-  if(scene==='boss_intro'||scene==='boss1'||scene==='boss2'){
+  if(scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='developer_intro'||scene==='developer_fight'||scene==='orb_ready'){
     drawBossRoomScene();
+    if(scene==='post_crown'){
+      const secsLeft=Math.max(0,Math.ceil(arnavTimer/60));
+      ctx.fillStyle='rgba(0,0,0,0.4)'; ctx.fillRect(W/2-90,16,180,28);
+      ctx.fillStyle='#39ff6a'; ctx.font='bold 14px monospace'; ctx.textAlign='center';
+      ctx.fillText('...something approaches: '+secsLeft+'s', W/2, 35);
+    }
+    if(scene==='arnav_intro'||scene==='developer_intro'){
+      drawArnavFigure(320,GROUND_Y-110, scene==='developer_intro');
+    }
     drawBoss(0);
+    if(scene==='orb_ready'){
+      const oy=GROUND_Y-120+Math.sin(animTime*0.08)*8;
+      const glow=ctx.createRadialGradient(450,oy,2,450,oy,50);
+      glow.addColorStop(0,'rgba(120,255,180,0.55)');
+      glow.addColorStop(1,'rgba(120,255,180,0)');
+      ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(450,oy,50,0,7); ctx.fill();
+      ctx.fillStyle='#bfffdc'; ctx.beginPath(); ctx.arc(450,oy,14,0,7); ctx.fill();
+      ctx.strokeStyle='#39ff6a'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(450,oy,18,0,7); ctx.stroke();
+      ctx.fillStyle='#39ff6a'; ctx.font='bold 13px monospace'; ctx.textAlign='center';
+      ctx.fillText('Press [E] to use the orb', 450, oy-32);
+    }
     drawPlayerSprite(0);
     drawProjectiles(0);
     drawVignette();
+    return;
+  }
+  if(scene==='glitch_transition'){
+    drawGlitchTransition();
     return;
   }
   if(scene==='dojo'){
