@@ -198,6 +198,38 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   #honoredModal button{padding:8px 20px;background:#0a2a16;color:#39ff6a;border:1px solid #39ff6a;border-radius:6px;cursor:pointer;}
   #honoredModal button:hover{background:#39ff6a;color:#04100a;}
+
+  #laptopModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(0,0,0,.85);
+    display:none;align-items:center;justify-content:center;z-index:45;}
+  .macbook{width:640px;background:linear-gradient(180deg,#161618,#0a0a0b);border-radius:16px 16px 5px 5px;
+    padding:12px 12px 22px;box-shadow:0 30px 70px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.05);}
+  .mbCam{width:6px;height:6px;border-radius:50%;background:#222;margin:0 auto 8px;box-shadow:0 0 3px rgba(80,120,255,.4);}
+  .mbTabs{display:flex;align-items:center;gap:6px;background:#dcdde3;border-radius:8px 8px 0 0;padding:7px 10px 0;}
+  .mbTab{display:flex;align-items:center;gap:6px;background:#fff;border-radius:6px 6px 0 0;padding:6px 14px;font-size:11px;
+    color:#444;font-family:Arial,sans-serif;box-shadow:0 -1px 0 rgba(0,0,0,.05);}
+  .mbTab .vLogo{width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%, #ff5252, #b30f0f);}
+  .mbTopBar{display:flex;align-items:center;gap:8px;background:#fff;padding:8px 10px;}
+  .mbDots{display:flex;gap:6px;margin-right:4px;}
+  .mbDot{width:10px;height:10px;border-radius:50%;}
+  .mbDot.r{background:#ff5f57;} .mbDot.y{background:#febc2e;} .mbDot.g{background:#28c840;}
+  .mbUrl{flex:1;background:#f1f2f5;border-radius:5px;padding:5px 12px;font-family:'Courier New',monospace;font-size:12px;
+    color:#333;overflow:hidden;white-space:nowrap;letter-spacing:.3px;}
+  .glitchChar{color:#e0114a;display:inline-block;animation:glitchFlicker .35s infinite steps(2);}
+  @keyframes glitchFlicker{0%,100%{transform:translate(0,0);opacity:1;}50%{transform:translate(1px,-1px);opacity:.5;}}
+  .mbScreen{background:linear-gradient(180deg,#fafbff,#eef0f6);color:#222;padding:26px 32px 30px;min-height:220px;
+    font-family:Arial,sans-serif;border-top:1px solid #ddd;}
+  .mbScreen h3{margin:0 0 2px;font-size:22px;color:#111;}
+  .mbScreen h4{margin:0 0 14px;color:#666;font-weight:normal;font-size:14px;}
+  .mbScreen p{font-size:13px;color:#444;line-height:1.55;margin:0 0 10px;}
+  .mbScreen label{display:block;margin-top:14px;margin-bottom:8px;font-size:13px;color:#222;font-weight:bold;}
+  .mbInputRow{display:flex;gap:8px;}
+  #laptopNameInput{flex:1;padding:9px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;background:#fff;color:#111;}
+  #laptopNameInput:focus{outline:2px solid #2a5adf;border-color:#2a5adf;}
+  #laptopSubmitBtn{padding:9px 18px;border:none;background:#2a5adf;color:#fff;border-radius:6px;cursor:pointer;
+    font-size:14px;font-weight:bold;}
+  #laptopSubmitBtn:hover{background:#1c43b8;}
+  .mbBase{height:13px;background:linear-gradient(180deg,#1c1c1e,#050505);border-radius:0 0 8px 8px;margin:0 -4px;
+    box-shadow:0 6px 14px rgba(0,0,0,.5);}
 </style>
 
 </head>
@@ -242,7 +274,7 @@
     <div id="bossName"></div>
     <div id="bossBarWrap"><div id="bossBarFill"></div></div>
     <div id="skillKeys"></div>
-    <div id="controlsHint">A/D move · W jump · S crouch · Left Click attack · K skills · H drink potion</div>
+    <div id="controlsHint">A/D move · W/↑ jump · S crouch · Left Click or Space attack · K skills · H drink potion</div>
     <div id="dialogueBox">
       <div id="dialogueNameRow"><span id="dialogueIcon"></span><span id="dialogueName"></span></div>
       <div id="dialogueText"></div>
@@ -582,7 +614,8 @@ let nonMergableWeapons=new Set();
 // ================= Post-Teacher story arc =================
 let arnavTimer=0;
 let glitchTimer=0;
-let orbReady=false;
+let glitchSevere=false;
+let itemReady=false;
 
 // Backend for the public "Honored Ones" leaderboard.
 // Leave as '' if this HTML is hosted on the same domain as your Flask API.
@@ -687,12 +720,16 @@ document.getElementById('honoredCloseBtn').addEventListener('click',()=>{
 
 // ================= Input =================
 window.addEventListener('keydown',e=>{
+  const laptopModalEl=document.getElementById('laptopModal');
+  if(laptopModalEl && laptopModalEl.style.display==='flex'){
+    return; // the laptop modal has its own input handling; don't leak keys to the game
+  }
   const k=e.key.toLowerCase();
   keys[k]=true;
-  if(k==='e'){ if(dqActive){ advanceDialogue(); } else if(scene==='orb_ready' && orbReady){ useOrb(); } }
+  if(k==='e'){ if(dqActive){ advanceDialogue(); } else if(scene==='laptop_ready' && itemReady){ useLaptop(); } }
   if(k==='k'){ toggleSkillMenu(); }
   if(k==='h'){ useHealthPotion(); }
-  if(k===' '){ e.preventDefault(); }
+  if(k===' '){ e.preventDefault(); swordSwing(); }
   handleSkillKey(e.key);
 });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
@@ -847,6 +884,7 @@ function renderSkillMenu(){
     mergeWeaponSel.appendChild(o);
   });
 }
+const MAX_SWORD_DAMAGE=150;
 document.getElementById('mergeBtn').addEventListener('click',()=>{
   const skName=document.getElementById('mergeSkillSel').value;
   const wpName=document.getElementById('mergeWeaponSel').value;
@@ -854,11 +892,12 @@ document.getElementById('mergeBtn').addEventListener('click',()=>{
   const sk=player.skills.find(s=>s.name===skName);
   const base=mergedWeapons[wpName]||{damage:10,color:'#ccc'};
   const newName= skName+' '+ (wpName.includes('Sword')?'Sword':wpName);
-  const newDamage=Math.round(base.damage + sk.damage*0.6);
+  const newDamage=Math.min(MAX_SWORD_DAMAGE, Math.round(base.damage + sk.damage*0.6));
   mergedWeapons[newName]={damage:newDamage,color:sk.color};
   if(!ownedWeapons.includes(newName)) ownedWeapons.push(newName);
   player.weapon=newName; player.weaponDamage=newDamage;
-  document.getElementById('mergeResult').textContent='Created "'+newName+'"! Equipped. Damage: '+newDamage;
+  const cappedNote = newDamage>=MAX_SWORD_DAMAGE ? ' (damage capped at max!)' : '';
+  document.getElementById('mergeResult').textContent='Created "'+newName+'"! Equipped. Damage: '+newDamage+cappedNote;
   renderSkillMenu();
 });
 
@@ -867,6 +906,7 @@ function currentWeaponDamage(){
   const w=mergedWeapons[player.weapon]||{damage:10};
   let dmg=w.damage;
   if(player.swordBuff && player.weapon.toLowerCase().includes('sword')) dmg=Math.round(dmg*1.3);
+  dmg=Math.min(MAX_SWORD_DAMAGE, dmg);
   if(player.frog) dmg=Math.round(dmg*0.25);
   return dmg;
 }
@@ -1390,7 +1430,7 @@ function onBossDefeated(){
   } else if(kind==='arnav'){
     startGlitchSequence();
   } else if(kind==='developer'){
-    giveOrb();
+    startFinalGlitchSequence();
   }
 }
 function acceptCrown(){
@@ -1454,6 +1494,7 @@ function startGlitchSequence(){
   inputLocked=true;
   bossBarWrap.style.display='none';
   bossNameEl.style.display='none';
+  glitchSevere=false;
   glitchTimer=150;
 }
 function startDeveloperIntroDialogue(){
@@ -1476,33 +1517,70 @@ function startDeveloperDuel(){
   bossNameEl.style.display='block';
   bossNameEl.textContent='The Developer';
 }
-function giveOrb(){
+function startFinalGlitchSequence(){
+  scene='final_glitch';
+  inputLocked=true;
   bossBarWrap.style.display='none';
   bossNameEl.style.display='none';
+  glitchSevere=true;
+  glitchTimer=260;
+}
+function startDeveloperFinalDialogue(){
+  scene='developer_final';
   inputLocked=true;
   startDialogue('The Developer',[
-    "...What? That's... not possible.",
-    "No matter what I am, in the end, I suppose I'm still just... code.",
-    "Take this. A glowing orb - the last thing I have left to give.",
-    "Press [E] when you're ready to use it."
+    "It is clear that you have surpassed anything this code has to offer,",
+    "...but this talent is fake. Everything you see is fake. Return to reality.",
+    "This laptop I am giving you will etch your name as a hero,...",
+    "...but is that what you want? Leave with dignity.",
+    "You must escape the simulation and return to reality.",
+    "Go touch some grass. REAL grass. Exit this world a true hero.",
+    "Now, you must choose: Is it the laptop you desire to become a hero, or is it your return to the real world. Rest assured, if you choose the latter option, you will be rewarded with the knowledge of your victory. No need to gloat."
   ], ()=>{
-    scene='orb_ready';
-    orbReady=true;
+    showChoices('The Developer',"What do you choose?",[
+      {text:'Take the laptop and become a hero', action:()=>{ giveLaptop(); }},
+      {text:'Return to reality', action:()=>{ triggerWinEnding(4); }}
+    ]);
+  });
+}
+function giveLaptop(){
+  inputLocked=true;
+  startDialogue('The Developer',[
+    "So be it. Take this - a laptop, space black, still warm from the portal.",
+    "Open it whenever you're ready. Press [E] to use it."
+  ], ()=>{
+    scene='laptop_ready';
+    itemReady=true;
     inputLocked=false;
   });
 }
-function useOrb(){
-  if(!orbReady) return;
-  orbReady=false;
+function useLaptop(){
+  if(!itemReady) return;
+  itemReady=false;
   inputLocked=true;
-  setTimeout(async ()=>{
-    let fullName = window.prompt("The orb glows warmly in your hand. Speak your full name to claim your place among the Honored Ones:");
-    if(!fullName || !fullName.trim()){ fullName=playerName; }
-    fullName=fullName.trim().slice(0,60);
-    await saveHonoredOne(fullName);
-    triggerWinEnding(3);
-  }, 50);
+  openLaptopModal();
 }
+function openLaptopModal(){
+  const modal=document.getElementById('laptopModal');
+  const input=document.getElementById('laptopNameInput');
+  input.value='';
+  modal.style.display='flex';
+  setTimeout(()=>input.focus(), 60);
+}
+async function submitLaptopName(){
+  const modal=document.getElementById('laptopModal');
+  const input=document.getElementById('laptopNameInput');
+  const val=input.value.trim();
+  const fullName = (val ? val : playerName).slice(0,60);
+  modal.style.display='none';
+  await saveHonoredOne(fullName);
+  triggerWinEnding(3);
+}
+document.getElementById('laptopSubmitBtn').addEventListener('click', submitLaptopName);
+document.getElementById('laptopNameInput').addEventListener('keydown', e=>{
+  e.stopPropagation();
+  if(e.key==='Enter'){ e.preventDefault(); submitLaptopName(); }
+});
 function triggerWinEnding(num){
   scene='win';
   inputLocked=true;
@@ -1520,6 +1598,9 @@ function triggerWinEnding(num){
   } else if(num===3){
     titleEl.innerHTML='<span class="godText">GOD</span>';
     descEl.textContent='You defeated the Developer himself. Your name is now etched among the Honored Ones, forever.';
+  } else if(num===4){
+    titleEl.textContent='YOU WIN';
+    descEl.textContent='You closed the laptop and walked away from the simulation. No fanfare, no list of names - just the quiet knowledge that you were strong enough to beat the Developer himself. No need to gloat.';
   }
   winScreen.style.display='flex';
 }
@@ -1559,7 +1640,7 @@ function updatePlayerPhysics(){
   player.vx=move*spd;
   player.x+=player.vx;
 
-  if((keys['w']||keys['arrowup']||keys[' ']) && player.grounded && !player.crouching){
+  if((keys['w']||keys['arrowup']) && player.grounded && !player.crouching){
     player.vy = player.jumpBoost ? FROG_JUMP_VEL : JUMP_VEL;
     player.grounded=false;
   }
@@ -1577,7 +1658,7 @@ function updatePlayerPhysics(){
   }
 
   // scene bounds
-  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='orb_ready'){
+  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='final_glitch'||scene==='developer_final'||scene==='laptop_ready'){
     player.x=Math.max(60,Math.min(820,player.x));
   } else {
     player.x=Math.max(20,player.x);
@@ -1635,6 +1716,10 @@ function update(){
   if(scene==='glitch_transition'){
     glitchTimer--;
     if(glitchTimer<=0){ startDeveloperIntroDialogue(); }
+  }
+  if(scene==='final_glitch'){
+    glitchTimer--;
+    if(glitchTimer<=0){ startDeveloperFinalDialogue(); }
   }
 
   updateProjectiles();
@@ -2304,41 +2389,61 @@ function drawArnavFigure(x,y,isDeveloper){
   ctx.fillStyle='#39ff6a'; ctx.font='13px monospace'; ctx.textAlign='center';
   ctx.fillText(isDeveloper? 'The Developer' : 'Arnav (The Developer)', x+24, y-8);
 }
-function drawGlitchTransition(){
-  const shakeX=(Math.random()-0.5)*16;
-  const shakeY=(Math.random()-0.5)*16;
+function drawGlitchTransition(severe){
+  const intensity = severe? 32 : 16;
+  const shakeX=(Math.random()-0.5)*intensity;
+  const shakeY=(Math.random()-0.5)*intensity;
   ctx.save();
   ctx.translate(shakeX,shakeY);
   drawBossRoomScene();
   drawBoss(0);
   drawPlayerSprite(0);
   // scrambled color glitch bars
-  for(let i=0;i<16;i++){
-    if(Math.random()<0.5){
+  const barCount = severe? 26 : 16;
+  for(let i=0;i<barCount;i++){
+    if(Math.random()<(severe?0.65:0.5)){
       const gy=Math.random()*H;
-      const gh=3+Math.random()*22;
+      const gh=3+Math.random()*(severe?34:22);
       const gc=Math.random()<0.5? 'rgba(0,255,102,0.35)':'rgba(255,0,120,0.25)';
       ctx.fillStyle=gc;
       ctx.fillRect(0,gy,W,gh);
     }
   }
   // spinning breaking squares
-  for(let i=0;i<6;i++){
+  const squareCount = severe? 12 : 6;
+  for(let i=0;i<squareCount;i++){
     ctx.save();
-    const px0=(i*151)%W, py0=(i*97)%H;
+    const px0=(i*151+ (severe? animTime*2:0))%W, py0=(i*97)%H;
     ctx.translate(px0,py0);
-    ctx.rotate(animTime*0.1+i);
-    ctx.fillStyle='rgba(57,255,106,0.4)';
-    ctx.fillRect(-10,-10,20,20);
+    ctx.rotate(animTime*(severe?0.16:0.1)+i);
+    ctx.fillStyle= severe? 'rgba(255,0,120,0.4)' : 'rgba(57,255,106,0.4)';
+    ctx.fillRect(-10,-10, severe?16:20, severe?16:20);
     ctx.restore();
   }
-  ctx.restore();
-  if(Math.random()<0.7){
-    ctx.fillStyle= Math.random()<0.5? '#39ff6a':'#fff';
-    ctx.font='bold 34px monospace'; ctx.textAlign='center';
-    ctx.fillText('SYSTEM ERROR', W/2+(Math.random()-0.5)*14, H/2+(Math.random()-0.5)*14);
+  if(severe){
+    // horizontal RGB channel split slices for extra chaos
+    for(let i=0;i<8;i++){
+      const gy=Math.random()*H;
+      const gh=4+Math.random()*10;
+      const off=(Math.random()-0.5)*24;
+      ctx.save();
+      ctx.globalAlpha=0.25;
+      ctx.drawImage(canvas, 0, gy, W, gh, off, gy, W, gh);
+      ctx.restore();
+    }
   }
-  if(Math.random()<0.15){
+  ctx.restore();
+  const textChance = severe? 0.85 : 0.7;
+  if(Math.random()<textChance){
+    const messages = severe
+      ? ['REALITY.EXE HAS STOPPED RESPONDING','SIMULATION UNSTABLE','SYSTEM ERROR','SEGFAULT AT 0x00000000']
+      : ['SYSTEM ERROR'];
+    const msg = messages[Math.floor(Math.random()*messages.length)];
+    ctx.fillStyle= Math.random()<0.5? '#39ff6a':'#fff';
+    ctx.font='bold '+(severe?30:34)+'px monospace'; ctx.textAlign='center';
+    ctx.fillText(msg, W/2+(Math.random()-0.5)*(severe?24:14), H/2+(Math.random()-0.5)*(severe?24:14));
+  }
+  if(Math.random()<(severe?0.22:0.15)){
     ctx.fillStyle='rgba(255,255,255,0.7)';
     ctx.fillRect(0,0,W,H);
   }
@@ -2725,7 +2830,7 @@ function draw(){
     drawVignette();
     return;
   }
-  if(scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='developer_intro'||scene==='developer_fight'||scene==='orb_ready'){
+  if(scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='developer_intro'||scene==='developer_fight'||scene==='developer_final'||scene==='laptop_ready'){
     drawBossRoomScene();
     if(scene==='post_crown'){
       const secsLeft=Math.max(0,Math.ceil(arnavTimer/60));
@@ -2733,20 +2838,33 @@ function draw(){
       ctx.fillStyle='#39ff6a'; ctx.font='bold 14px monospace'; ctx.textAlign='center';
       ctx.fillText('...something approaches: '+secsLeft+'s', W/2, 35);
     }
-    if(scene==='arnav_intro'||scene==='developer_intro'){
-      drawArnavFigure(320,GROUND_Y-110, scene==='developer_intro');
+    if(scene==='arnav_intro'||scene==='developer_intro'||scene==='developer_final'){
+      drawArnavFigure(320,GROUND_Y-110, scene==='developer_intro'||scene==='developer_final');
     }
     drawBoss(0);
-    if(scene==='orb_ready'){
-      const oy=GROUND_Y-120+Math.sin(animTime*0.08)*8;
-      const glow=ctx.createRadialGradient(450,oy,2,450,oy,50);
-      glow.addColorStop(0,'rgba(120,255,180,0.55)');
-      glow.addColorStop(1,'rgba(120,255,180,0)');
-      ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(450,oy,50,0,7); ctx.fill();
-      ctx.fillStyle='#bfffdc'; ctx.beginPath(); ctx.arc(450,oy,14,0,7); ctx.fill();
-      ctx.strokeStyle='#39ff6a'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(450,oy,18,0,7); ctx.stroke();
+    if(scene==='laptop_ready'){
+      const oy=GROUND_Y-120+Math.sin(animTime*0.08)*6;
+      const ox=450;
+      ctx.save();
+      ctx.translate(ox,oy);
+      ctx.rotate(Math.sin(animTime*0.04)*0.03);
+      // space-black laptop icon: base + glowing screen
+      ctx.fillStyle='#0a0a0c';
+      ctx.fillRect(-26,4,52,7);
+      ctx.fillStyle='#141416';
+      ctx.fillRect(-24,-30,48,34);
+      const sglow=ctx.createRadialGradient(0,-13,2,0,-13,30);
+      sglow.addColorStop(0,'rgba(57,255,106,0.35)');
+      sglow.addColorStop(1,'rgba(57,255,106,0)');
+      ctx.fillStyle=sglow; ctx.beginPath(); ctx.arc(0,-13,30,0,7); ctx.fill();
+      ctx.fillStyle='#050506';
+      ctx.fillRect(-20,-26,40,26);
+      ctx.fillStyle='rgba(57,255,106,0.5)';
+      ctx.font='7px monospace'; ctx.textAlign='left';
+      for(let i=0;i<3;i++){ ctx.fillText('01001', -18, -20+i*8); }
+      ctx.restore();
       ctx.fillStyle='#39ff6a'; ctx.font='bold 13px monospace'; ctx.textAlign='center';
-      ctx.fillText('Press [E] to use the orb', 450, oy-32);
+      ctx.fillText('Press [E] to open the laptop', ox, oy-42);
     }
     drawPlayerSprite(0);
     drawProjectiles(0);
@@ -2754,7 +2872,11 @@ function draw(){
     return;
   }
   if(scene==='glitch_transition'){
-    drawGlitchTransition();
+    drawGlitchTransition(false);
+    return;
+  }
+  if(scene==='final_glitch'){
+    drawGlitchTransition(true);
     return;
   }
   if(scene==='dojo'){
