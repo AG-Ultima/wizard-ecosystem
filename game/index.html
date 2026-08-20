@@ -3,9 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <title>Wasteland Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Chakra+Petch:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  html,body{margin:0;padding:0;background:#000;overflow:hidden;font-family:'Trebuchet MS',Arial,sans-serif;}
-  #gameWrap{position:relative;width:900px;height:560px;margin:20px auto;box-shadow:0 0 40px rgba(0,0,0,.8);border-radius:6px;overflow:hidden;}
+  :root{
+    --gold:#d4af37; --gold-bright:#f2d375;
+    --cyan:#6cf; --cyan-bright:#bfe8ff;
+    --green:#39ff6a; --green-dim:#0a2a16;
+    --red:#ff3b3b; --red-dim:#3a0f0f;
+    --ink:#050608; --panel:#0c0f14;
+    --radius:10px;
+    --font-display:'Orbitron', 'Trebuchet MS', sans-serif;
+    --font-body:'Chakra Petch', 'Trebuchet MS', Arial, sans-serif;
+    --font-mono:'Courier New', monospace;
+  }
+  html,body{margin:0;padding:0;overflow:hidden;font-family:var(--font-body);
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(60,80,160,.10), transparent 45%),
+      radial-gradient(ellipse at 85% 80%, rgba(160,60,120,.08), transparent 50%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.015) 0px, rgba(255,255,255,.015) 1px, transparent 1px, transparent 34px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.015) 0px, rgba(255,255,255,.015) 1px, transparent 1px, transparent 34px),
+      #030305;
+    min-height:100vh;}
+  ::selection{background:var(--gold); color:#111;}
+  ::-webkit-scrollbar{width:9px;height:9px;}
+  ::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:5px;}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.3);}
+  h1,h2,h3,button{font-family:var(--font-display);}
+  #gameWrap{position:relative;width:900px;height:560px;margin:30px auto;border-radius:8px;overflow:visible;
+    box-shadow:0 20px 60px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.06);}
+  #gameFrame{position:absolute;inset:0;border-radius:8px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);}
+  .hudCorner{position:absolute;width:26px;height:26px;pointer-events:none;z-index:5;opacity:.55;}
+  .hudCorner::before,.hudCorner::after{content:'';position:absolute;background:var(--gold-bright);}
+  .hudCorner.tl{top:-8px;left:-8px;} .hudCorner.tr{top:-8px;right:-8px;transform:scaleX(-1);}
+  .hudCorner.bl{bottom:-8px;left:-8px;transform:scaleY(-1);} .hudCorner.br{bottom:-8px;right:-8px;transform:scale(-1,-1);}
+  .hudCorner::before{top:0;left:0;width:2px;height:16px;}
+  .hudCorner::after{top:0;left:0;width:16px;height:2px;}
   canvas{display:block;background:#333;image-rendering:pixelated;cursor:crosshair;}
   .overlay{position:absolute;top:0;left:0;width:900px;height:560px;pointer-events:none;}
   #dialogueBox{position:absolute;left:30px;bottom:20px;width:840px;min-height:96px;
@@ -181,6 +216,9 @@
   #honoredBtn{position:relative;z-index:2;margin-top:10px;padding:8px 18px;font-size:13px;letter-spacing:1px;
     background:rgba(0,0,0,.3);color:#c9b98a;border:1px solid rgba(212,175,55,.5);border-radius:6px;cursor:pointer;}
   #honoredBtn:hover{background:rgba(212,175,55,.2);color:#f2d375;}
+  #versionLogBtn{position:relative;z-index:2;margin-top:8px;margin-left:8px;padding:8px 18px;font-size:13px;letter-spacing:1px;
+    background:rgba(0,0,0,.3);color:#9fc9d8;border:1px solid rgba(108,204,255,.5);border-radius:6px;cursor:pointer;}
+  #versionLogBtn:hover{background:rgba(108,204,255,.15);color:#bfe8ff;}
   #honoredModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(4,4,8,.92);
     display:none;align-items:center;justify-content:center;z-index:40;}
   #honoredModal .panel{width:480px;max-height:420px;overflow-y:auto;background:linear-gradient(180deg,#0a1a10,#04100a);
@@ -198,6 +236,41 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   #honoredModal button{padding:8px 20px;background:#0a2a16;color:#39ff6a;border:1px solid #39ff6a;border-radius:6px;cursor:pointer;}
   #honoredModal button:hover{background:#39ff6a;color:#04100a;}
+
+  #versionModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(4,4,8,.92);
+    display:none;align-items:center;justify-content:center;z-index:40;}
+  .versionPanel{width:560px;max-height:460px;overflow-y:auto;background:linear-gradient(180deg,#0a1420,#04080f);
+    border:2px solid #6cf;border-radius:10px;padding:20px 26px;box-shadow:0 0 30px rgba(108,204,255,.3);
+    font-family:'Courier New',monospace;color:#cfe8ff;}
+  .versionPanel h2{color:#6cf;text-shadow:0 0 10px rgba(108,204,255,.6);margin-top:0;letter-spacing:2px;
+    display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(108,204,255,.3);padding-bottom:10px;}
+  .versionEntry{margin:0 0 16px;padding:10px 14px;background:rgba(108,204,255,.05);border-left:2px solid #6cf;border-radius:3px;}
+  .versionEntry .vTag{color:#6cf;font-weight:bold;font-size:13px;letter-spacing:1px;}
+  .versionEntry ul{margin:6px 0 0;padding-left:18px;font-size:12.5px;color:#b8d8ee;line-height:1.5;}
+  .versionEntry.current .vTag{color:#f2d375;}
+  .versionEntry.current{border-left-color:#f2d375;background:rgba(242,211,117,.06);}
+  #versionModal button{padding:8px 20px;background:#0a1e2a;color:#6cf;border:1px solid #6cf;border-radius:6px;cursor:pointer;}
+  #versionModal button:hover{background:#6cf;color:#04100a;}
+
+  #pinModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(0,0,0,.88);
+    display:none;align-items:center;justify-content:center;z-index:46;}
+  .pinPanel{width:300px;background:linear-gradient(180deg,#170a0a,#0a0404);border:2px solid #ff3b3b;border-radius:10px;
+    padding:22px 24px;box-shadow:0 0 30px rgba(255,59,59,.35);font-family:'Courier New',monospace;color:#ffd6d6;text-align:center;}
+  .pinPanel .pinHeader{color:#ff5a5a;font-weight:bold;letter-spacing:2px;font-size:13px;text-shadow:0 0 8px rgba(255,90,90,.6);margin-bottom:8px;}
+  .pinPanel .pinDesc{font-size:12px;color:#e0b0b0;margin:0 0 12px;}
+  #pinInput{width:100%;box-sizing:border-box;padding:10px;font-size:22px;letter-spacing:10px;text-align:center;
+    background:#1a0d0d;color:#ff8a8a;border:1px solid rgba(255,59,59,.5);border-radius:6px;font-family:'Courier New',monospace;}
+  #pinInput:focus{outline:none;border-color:#ff5a5a;}
+  .pinError{min-height:16px;color:#ff5a5a;font-size:11px;margin-top:8px;letter-spacing:.5px;}
+  .pinBtnRow{display:flex;gap:8px;margin-top:10px;}
+  .pinBtnRow button{flex:1;padding:9px 0;border-radius:6px;border:1px solid rgba(255,59,59,.5);cursor:pointer;font-size:13px;}
+  #pinCancelBtn{background:#1a0d0d;color:#ccc;}
+  #pinCancelBtn:hover{background:#2a1414;}
+  #pinSubmitBtn{background:#3a0f0f;color:#ff8a8a;}
+  #pinSubmitBtn:hover{background:#ff3b3b;color:#1a0404;}
+  .pinWarn{margin-top:12px;font-size:10px;color:#8a5a5a;}
+  @keyframes shakeError{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-5px);}80%{transform:translateX(5px);}}
+  .pinPanel.shakeError{animation:shakeError .35s;}
 
   #laptopModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(0,0,0,.85);
     display:none;align-items:center;justify-content:center;z-index:45;}
@@ -235,6 +308,7 @@
 </head>
 <body>
 <div id="gameWrap">
+<div id="gameFrame">
   <canvas id="game" width="900" height="560"></canvas>
 
   <div id="selectScreen">
@@ -253,6 +327,7 @@
       style="position:relative;z-index:2;margin-top:16px;padding:8px 12px;font-size:16px;border-radius:6px;border:2px solid #6cf;background:#111;color:#fff;text-align:center;">
     <button id="startBtn">Begin Journey</button>
     <button id="honoredBtn">🏆 Honored Ones</button>
+    <button id="versionLogBtn">📜 Version Log</button>
     <div id="dedication">For Mr. Truong</div>
   </div>
 
@@ -272,13 +347,13 @@
       </div>
       <div class="mbTopBar">
         <div class="mbDots"><span class="mbDot r"></span><span class="mbDot y"></span><span class="mbDot g"></span></div>
-        <div class="mbUrl">h<span class="glitchChar">wasteland-adventure.</span>tps://va<span class="glitchChar">u</span>ltimate.<span class="glitchChar">exe</span>/?id=<span class="glitchChar">67xFF3A</span>&session=<span class="glitchChar">corrupt</span></div>
+        <div class="mbUrl">h<span class="glitchChar">t</span>tps://va<span class="glitchChar">u</span>lt.<span class="glitchChar">exe</span>/?id=<span class="glitchChar">0xFF3A</span>&session=<span class="glitchChar">corrupt</span></div>
       </div>
       <div class="mbScreen">
         <h3>For Mr. Truong.</h3>
         <h4>By Arnav Gupta</h4>
-        <p>Built for the final boss logic that is <strong>math</strong> at Basis Phoenix.</p>
-        <p>If you're reading this, you made it further than most players ever will. Consider yourself part of this project. But to be honest, you should have chosen dignity.<br>To revisit the real world, getting off the device, is the biggest reward.<br></p>
+        <p>Built across way too many late nights, way too much caffeine, and one increasingly unhinged scope creep - every boss, every glitch, and every terrible calculus pun was made with one person in mind.</p>
+        <p>If you're reading this, you made it further than most people ever will. Consider yourself part of something small, dumb, and made with love.</p>
         <label>Enter your name to be etched among the Honored Ones, forever:</label>
         <div class="mbInputRow">
           <input id="laptopNameInput" type="text" placeholder="Your full name" maxlength="60">
@@ -286,6 +361,28 @@
         </div>
       </div>
       <div class="mbBase"></div>
+    </div>
+  </div>
+
+  <div id="pinModal">
+    <div class="pinPanel">
+      <div class="pinHeader">&gt; ACCESS_CONTROL</div>
+      <p class="pinDesc">Enter the 4-digit override code.</p>
+      <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+      <div id="pinError" class="pinError"></div>
+      <div class="pinBtnRow">
+        <button id="pinCancelBtn">Cancel</button>
+        <button id="pinSubmitBtn">Submit</button>
+      </div>
+      <div class="pinWarn">⚠ 3 failed attempts will trigger a failsafe.</div>
+    </div>
+  </div>
+
+  <div id="versionModal">
+    <div class="panel versionPanel">
+      <h2>📜 Version Log</h2>
+      <div id="versionListWrap"></div>
+      <button id="versionCloseBtn">Close</button>
     </div>
   </div>
 
@@ -299,7 +396,7 @@
     <div id="bossName"></div>
     <div id="bossBarWrap"><div id="bossBarFill"></div></div>
     <div id="skillKeys"></div>
-    <div id="controlsHint">A/D move · W/↑ jump · S crouch · Left Click or Space attack · K skills · H drink potion · Q instant death</div>
+    <div id="controlsHint">A/D move · W/↑ jump · S crouch · Left Click or Space attack · K skills · H drink potion</div>
     <div id="dialogueBox">
       <div id="dialogueNameRow"><span id="dialogueIcon"></span><span id="dialogueName"></span></div>
       <div id="dialogueText"></div>
@@ -329,6 +426,11 @@
     <p id="loseText">The wasteland claims another soul.</p>
     <button id="loseRestartBtn">Restart</button>
   </div>
+</div>
+<div class="hudCorner tl"></div>
+<div class="hudCorner tr"></div>
+<div class="hudCorner bl"></div>
+<div class="hudCorner br"></div>
 </div>
 
 <script>
@@ -615,6 +717,46 @@ let chosenColor='#5aa9e6';
 let playerName='Wanderer';
 let gameOver=false;
 let devDamageBoost=false;
+let pinAttempts=0;
+const DEV_PIN='0928';
+let damageNumbers=[];
+function spawnDamageNumber(x,y,text,color,isCrit){
+  damageNumbers.push({x, y:y-10, text, color, life: isCrit?58:46, vy: isCrit?-1.7:-1.3, crit:!!isCrit});
+}
+function updateDamageNumbers(){
+  damageNumbers.forEach(d=>{ d.y+=d.vy; d.vy*=0.94; d.life--; });
+  damageNumbers=damageNumbers.filter(d=>d.life>0);
+}
+function drawDamageNumbers(camX){
+  damageNumbers.forEach(d=>{
+    const sx=d.x-camX, sy=d.y;
+    ctx.save();
+    ctx.globalAlpha=Math.max(0,Math.min(1,d.life/20));
+    ctx.font= d.crit? 'bold 21px Arial' : 'bold 16px Arial';
+    ctx.textAlign='center';
+    ctx.lineWidth= d.crit? 4:3;
+    ctx.strokeStyle='rgba(0,0,0,0.65)';
+    if(d.crit){ ctx.shadowColor='rgba(255,224,102,0.8)'; ctx.shadowBlur=10; }
+    ctx.strokeText(d.text, sx, sy);
+    ctx.fillStyle=d.color;
+    ctx.fillText(d.text, sx, sy);
+    ctx.restore();
+  });
+}
+
+// ================= Screen shake =================
+let shakeTime=0, shakeMag=0;
+function triggerScreenShake(mag, duration){
+  shakeMag=Math.max(shakeMag,mag);
+  shakeTime=Math.max(shakeTime,duration);
+}
+function updateScreenShake(){
+  if(shakeTime>0) shakeTime--; else shakeMag=0;
+}
+function getShakeOffset(){
+  if(shakeTime<=0) return {x:0,y:0};
+  return { x:(Math.random()-0.5)*shakeMag, y:(Math.random()-0.5)*shakeMag };
+}
 
 const player={
   x:150,y:GROUND_Y-64,w:40,h:64,vx:0,vy:0,speed:3.1,facing:1,
@@ -744,6 +886,101 @@ safeOn('honoredCloseBtn','click',()=>{
   document.getElementById('honoredModal').style.display='none';
 });
 
+const VERSION_LOG=[
+  { tag:'v1.0', notes:[
+    'Initial prototype: character select, wasteland exploration, day/night cycle',
+    'Classroom training minigame teaching the "Honors Precalculus" skill',
+    'Skill system with keybinds, Blacksmith (Fireball or M1 Sword) and Witch Hut (Ice skill)',
+    'Skill+weapon merging, "Several Years Later" time skip, Teacher final boss (2 phases), win screen'
+  ]},
+  { tag:'v1.1', notes:[
+    'Rebuilt movement as a real platformer: gravity, ground collision, jump, crouch'
+  ]},
+  { tag:'v1.2', notes:[
+    'Full pixel-art sprite pass replacing placeholder rectangles for player, Teacher, monsters, bosses'
+  ]},
+  { tag:'v1.3', notes:[
+    'Animation pass: walk cycles, idle sway, sword swing arcs, hit-flash, drop shadows, boss cape flutter'
+  ]},
+  { tag:'v1.4', notes:[
+    'Permadeath: no respawns, proper "YOU DIED" screen',
+    'Player name entry, name shown above the player instead of the weapon',
+    'The Dojo of the Sword Arts: dummy gauntlet path or instructor duel path (Steel Greatsword / humiliation cutscene)'
+  ]},
+  { tag:'v1.5', notes:[
+    'Fixed buildings dropping the player back at spawn on exit',
+    'Background scenery: dead trees, crash sites, campfires',
+    'Lightning Sword replacing the M1 Sword, pre-merged with the Lightning skill'
+  ]},
+  { tag:'v1.6', notes:[
+    'Full visual overhaul: gradient skies, sun/moon, stars, clouds, parallax mountains',
+    'Distinct, "accurate" building art for the school, forge, dojo pagoda and witch hut',
+    'Title screen redesign with the "For Mr. Truong" dedication'
+  ]},
+  { tag:'v1.7', notes:[
+    'Dynamic lighting: campfire glow/embers, torches, redressed interiors for every building',
+    'Cinematic decapitation cutscene, general HUD glow polish'
+  ]},
+  { tag:'v1.8', notes:[
+    'Witch Hut redesign: 3-way choice (Ice skill / health potion / refuse)',
+    'Witch duel (ice bolts) with a frog-curse punishment for losing',
+    'Frog curse mechanic (reduced size/damage, boosted jump) with a cure option before the final boss'
+  ]},
+  { tag:'v1.9', notes:[
+    'HUD overhaul: Vitality bar with numeric readout, critical-HP pulse/vignette, status chips, skill badges'
+  ]},
+  { tag:'v2.0', notes:[
+    'Post-Teacher storyline: crown-passing choice, Multivariable Calculus Blade',
+    'Arnav "The Developer" NPC and boss fight, glitch transition effects, Developer Boss fight',
+    'First version of the Honored Ones list, dialogue speaker names fixed throughout'
+  ]},
+  { tag:'v2.1', notes:[
+    'Cyberpunk redesign of the Skills menu',
+    'Smooth day/night gradient transitions, upgraded monster/dummy/equation/projectile visuals, new win/lose screens'
+  ]},
+  { tag:'v2.2', notes:[
+    'Real shared Honored Ones leaderboard: Flask model + API routes, replacing local-only storage'
+  ]},
+  { tag:'v2.3', notes:[
+    'Dialogue system redesign: speaker-based accent colors and icons, numbered choice buttons',
+    'Honored Ones modal restyled with ranked trophy rows; production API base URL wired in'
+  ]},
+  { tag:'v2.4', notes:[
+    'Space-black laptop replacing the glowing orb, with a severe glitch sequence and a real "return to reality" choice',
+    'MacBook/Vivaldi-styled naming modal for joining the Honored Ones',
+    'Space remapped to attack, jump now exclusively W/Up, sword damage capped at 150 (infinite merging kept)'
+  ]},
+  { tag:'v2.5', notes:[
+    'Hardened every button listener against missing elements so one bad reference can no longer crash the whole game'
+  ]},
+  { tag:'v2.6', notes:[
+    'Floating combat damage numbers across every fight in the game'
+  ]},
+  { tag:'v2.7', notes:[
+    'PIN-protected override modal (replacing the old plain test key) - 3 failed attempts trigger an instant-death failsafe',
+    'This Version Log, viewable from the title screen'
+  ]},
+  { tag:'v2.8', notes:[
+    'Critical hits (chance-based 1.75x damage) and a reusable screen-shake system on crits and boss kills'
+  ]},
+  { tag:'v2.9', notes:[
+    'Unified art direction pass: a signature display font, themed scrollbars, a decorative HUD-bracket frame around the game, and an atmospheric page background tying every screen together into one consistent look',
+    'Established a standing practice: this log now gets a new entry for every meaningful update going forward'
+  ]},
+];
+safeOn('versionLogBtn','click',()=>{
+  const wrap=document.getElementById('versionListWrap');
+  wrap.innerHTML = VERSION_LOG.map((v,i)=>{
+    const isCurrent = i===VERSION_LOG.length-1;
+    return '<div class="versionEntry'+(isCurrent?' current':'')+'"><span class="vTag">'+v.tag+(isCurrent?' (current)':'')+'</span>'
+      +'<ul>'+v.notes.map(n=>'<li>'+n+'</li>').join('')+'</ul></div>';
+  }).join('');
+  document.getElementById('versionModal').style.display='flex';
+});
+safeOn('versionCloseBtn','click',()=>{
+  document.getElementById('versionModal').style.display='none';
+});
+
 function safeOn(id, evt, handler, opts){
   const el = document.getElementById(id);
   if(el){ el.addEventListener(evt, handler, opts); }
@@ -754,8 +991,9 @@ function safeOn(id, evt, handler, opts){
 // ================= Input =================
 window.addEventListener('keydown',e=>{
   const laptopModalEl=document.getElementById('laptopModal');
-  if(laptopModalEl && laptopModalEl.style.display==='flex'){
-    return; // the laptop modal has its own input handling; don't leak keys to the game
+  const pinModalEl=document.getElementById('pinModal');
+  if((laptopModalEl && laptopModalEl.style.display==='flex') || (pinModalEl && pinModalEl.style.display==='flex')){
+    return; // modal has its own input handling; don't leak keys to the game
   }
   const k=e.key.toLowerCase();
   keys[k]=true;
@@ -763,7 +1001,7 @@ window.addEventListener('keydown',e=>{
   if(k==='k'){ toggleSkillMenu(); }
   if(k==='h'){ useHealthPotion(); }
   if(k===' '){ e.preventDefault(); swordSwing(); }
-  if(k==='q'){ devDamageBoost=!devDamageBoost; }
+  if(k==='q'){ openPinModal(); }
   handleSkillKey(e.key);
 });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
@@ -874,6 +1112,7 @@ function handlePotionSkill(sk){
   const isHeal = Math.random()<0.5;
   if(isHeal){
     player.hp=Math.min(player.maxhp, player.hp+20);
+    spawnDamageNumber(player.x+player.w/2,player.y-6,'+20','#7fff7f');
   } else {
     const px=player.x+player.w/2, py=player.y+player.h/2;
     const dx=(mouse.x+camera.x) - px;
@@ -953,7 +1192,14 @@ function swordSwing(){
   player.swingTimer=16;
   const range=60;
   const px=player.x+player.w/2, py=player.y+player.h/2;
-  const dmg=currentWeaponDamage();
+  let dmg=currentWeaponDamage();
+  const isCrit = !devDamageBoost && Math.random()<0.15;
+  if(isCrit){
+    dmg=Math.min(MAX_SWORD_DAMAGE, Math.round(dmg*1.75));
+    triggerScreenShake(5,10);
+  }
+  const dmgColor = isCrit ? '#ffe066' : '#fff';
+  const dmgText = isCrit ? 'CRIT -'+dmg : '-'+dmg;
 
   equations.forEach(eq=>{
     if(!eq.alive) return;
@@ -963,31 +1209,33 @@ function swordSwing(){
   enemies.forEach(en=>{
     if(!en.alive) return;
     const d=Math.hypot(en.x-px,en.y-py);
-    if(d<range+en.r){ en.hp-=dmg; en.flash=8; if(en.hp<=0) en.alive=false; }
+    if(d<range+en.r){ en.hp-=dmg; en.flash=8; spawnDamageNumber(en.x,en.y-24,dmgText,dmgColor,isCrit); if(en.hp<=0) en.alive=false; }
   });
   if(boss && boss.alive){
     const d=Math.hypot(boss.x-px, boss.y-py);
-    if(d<range+boss.r){ damageBoss(dmg); }
+    if(d<range+boss.r){ damageBoss(dmg,isCrit); }
   }
   dojo.dummies.forEach(du=>{
     if(!du.alive) return;
     const d=Math.hypot(du.x-px,du.y-py);
-    if(d<range+du.r){ du.hp-=dmg; du.flash=8; if(du.hp<=0){ du.alive=false; onDummyKilled(); } }
+    if(d<range+du.r){ du.hp-=dmg; du.flash=8; spawnDamageNumber(du.x,du.y-30,dmgText,dmgColor,isCrit); if(du.hp<=0){ du.alive=false; onDummyKilled(); } }
   });
   if(dojo.instructor && dojo.instructor.alive){
     const ins=dojo.instructor;
     const d=Math.hypot(ins.x-px,ins.y-py);
-    if(d<range+ins.r){ ins.hp-=dmg; ins.flash=8; if(ins.hp<=0){ ins.alive=false; onInstructorDefeated(); } }
+    if(d<range+ins.r){ ins.hp-=dmg; ins.flash=8; spawnDamageNumber(ins.x,ins.y-50,dmgText,dmgColor,isCrit); if(ins.hp<=0){ ins.alive=false; onInstructorDefeated(); } }
   }
   if(witchFight && witchFight.alive){
     const d=Math.hypot(witchFight.x-px, witchFight.y-py);
-    if(d<range+witchFight.r){ damageWitch(dmg); }
+    if(d<range+witchFight.r){ damageWitch(dmg,isCrit); }
   }
 }
-function damageBoss(dmg){
+function damageBoss(dmg,isCrit){
   boss.hp-=dmg;
   boss.flash=10;
-  if(boss.hp<=0){ boss.hp=0; boss.alive=false; onBossDefeated(); }
+  const color = isCrit? '#ffe066' : (boss.kind==='arnav'||boss.kind==='developer' ? '#39ff6a':'#ffcc66');
+  spawnDamageNumber(boss.x,boss.y-70,(isCrit?'CRIT -':'-')+dmg, color, isCrit);
+  if(boss.hp<=0){ boss.hp=0; boss.alive=false; triggerScreenShake(6,14); onBossDefeated(); }
 }
 
 // ================= Monsters =================
@@ -1013,6 +1261,7 @@ function updateEnemies(){
     const d2=Math.hypot(player.x-en.x,(player.y+player.h/2)-en.y);
     if(d2<en.r+22 && en.dmgCooldown<=0 && player.invuln<=0){
       player.hp-=8; player.invuln=50; en.dmgCooldown=60;
+      spawnDamageNumber(player.x+player.w/2,player.y-6,'-8','#ff5a5a');
     }
   });
   enemies=enemies.filter(en=>en.alive);
@@ -1067,13 +1316,17 @@ function updateProjectiles(){
     p.x+=p.vx; p.y+=p.vy; p.life--;
     if(p.owner==='player'){
       enemies.forEach(en=>{
-        if(en.alive && Math.hypot(en.x-p.x,en.y-p.y)<en.r+p.r){ en.hp-=p.damage; if(en.hp<=0) en.alive=false; p.life=0; }
+        if(en.alive && Math.hypot(en.x-p.x,en.y-p.y)<en.r+p.r){
+          en.hp-=p.damage; en.flash=8; spawnDamageNumber(en.x,en.y-24,'-'+p.damage,p.color||'#fff');
+          if(en.hp<=0) en.alive=false; p.life=0;
+        }
       });
       if(boss&&boss.alive && Math.hypot(boss.x-p.x,boss.y-p.y)<boss.r+p.r){ damageBoss(p.damage); p.life=0; }
       if(witchFight&&witchFight.alive && Math.hypot(witchFight.x-p.x,witchFight.y-p.y)<witchFight.r+p.r){ damageWitch(p.damage); p.life=0; }
     } else if(p.owner==='boss'||p.owner==='witch'){
       if(player.invuln<=0 && Math.hypot(player.x+player.w/2-p.x,player.y+player.h/2-p.y)<18+p.r){
         player.hp-=p.damage; player.invuln=40; p.life=0;
+        spawnDamageNumber(player.x+player.w/2,player.y-6,'-'+p.damage,'#ff5a5a');
       }
     }
   });
@@ -1180,11 +1433,12 @@ function witchShoot(){
     damage:witchFight.dmg, color:'#66ccff', owner:'witch', life:220, r:12, label:'Ice Bolt'
   });
 }
-function damageWitch(dmg){
+function damageWitch(dmg,isCrit){
   if(!witchFight) return;
   witchFight.hp-=dmg;
   witchFight.flash=10;
-  if(witchFight.hp<=0){ witchFight.hp=0; witchFight.alive=false; onWitchDefeated(); }
+  spawnDamageNumber(witchFight.x,witchFight.y-70,(isCrit?'CRIT -':'-')+dmg, isCrit?'#ffe066':'#66ccff', isCrit);
+  if(witchFight.hp<=0){ witchFight.hp=0; witchFight.alive=false; triggerScreenShake(6,14); onWitchDefeated(); }
 }
 function updateWitchDuel(){
   if(!witchFight||!witchFight.alive) return;
@@ -1241,6 +1495,7 @@ function useHealthPotion(){
   if(player.healthPotions>0){
     player.healthPotions--;
     player.hp=player.maxhp;
+    spawnDamageNumber(player.x+player.w/2,player.y-6,'FULL HEAL','#7fff7f');
   }
 }
 
@@ -1332,6 +1587,7 @@ function updateDojoInstructor(){
   const contactD=Math.hypot(player.x-ins.x,(player.y+player.h/2)-ins.y);
   if(contactD<ins.r+30 && ins.atkCooldown<=0 && player.invuln<=0){
     player.hp-=ins.dmg; player.invuln=45; ins.atkCooldown=55;
+    spawnDamageNumber(player.x+player.w/2,player.y-6,'-'+ins.dmg,'#ff5a5a');
     if(player.hp<=0){ startDojoCutscene(); }
   }
   if(ins.flash>0) ins.flash--;
@@ -1345,6 +1601,7 @@ function updateDojoDummies(){
     const d=Math.hypot(player.x-du.x,(player.y+player.h/2)-du.y);
     if(d<du.r+30 && player.invuln<=0){
       player.hp-=6; player.invuln=45; du.dmgCooldown=70;
+      spawnDamageNumber(player.x+player.w/2,player.y-6,'-6','#ff5a5a');
     }
   });
 }
@@ -1617,6 +1874,54 @@ safeOn('laptopNameInput','keydown', e=>{
   e.stopPropagation();
   if(e.key==='Enter'){ e.preventDefault(); submitLaptopName(); }
 });
+
+// ================= Hidden test-code modal =================
+function openPinModal(){
+  const modal=document.getElementById('pinModal');
+  const input=document.getElementById('pinInput');
+  const err=document.getElementById('pinError');
+  if(!modal || !input) return;
+  if(modal.style.display==='flex') return;
+  input.value='';
+  if(err) err.textContent='';
+  modal.style.display='flex';
+  setTimeout(()=>input.focus(), 40);
+}
+function closePinModal(){
+  const modal=document.getElementById('pinModal');
+  if(modal) modal.style.display='none';
+}
+function submitPin(){
+  const input=document.getElementById('pinInput');
+  const err=document.getElementById('pinError');
+  const val = input ? input.value.trim() : '';
+  if(val===DEV_PIN){
+    devDamageBoost=true;
+    closePinModal();
+    return;
+  }
+  pinAttempts++;
+  if(pinAttempts>=3){
+    closePinModal();
+    triggerLose('An intrusion countermeasure triggered. Three failed access attempts - the failsafe did not hesitate.');
+    return;
+  }
+  if(err) err.textContent='ACCESS DENIED - '+(3-pinAttempts)+' attempt(s) remaining';
+  if(input){ input.value=''; input.focus(); }
+  const panel=document.querySelector('#pinModal .pinPanel');
+  if(panel){
+    panel.classList.remove('shakeError');
+    void panel.offsetWidth;
+    panel.classList.add('shakeError');
+  }
+}
+safeOn('pinSubmitBtn','click', submitPin);
+safeOn('pinInput','keydown', e=>{
+  e.stopPropagation();
+  if(e.key==='Enter'){ e.preventDefault(); submitPin(); }
+});
+safeOn('pinCancelBtn','click', closePinModal);
+
 function triggerWinEnding(num){
   scene='win';
   inputLocked=true;
@@ -1759,6 +2064,8 @@ function update(){
   }
 
   updateProjectiles();
+  updateDamageNumbers();
+  updateScreenShake();
 
   const worldScene = (scene==='world1'||scene==='world2');
   camera.x = worldScene ? player.x - W/2 : 0;
@@ -2855,7 +3162,14 @@ function drawVignette(){
   ctx.fillRect(0,0,W,H);
 }
 function draw(){
+  ctx.save();
   ctx.clearRect(0,0,W,H);
+  const shake=getShakeOffset();
+  ctx.translate(shake.x, shake.y);
+  drawSceneContent();
+  ctx.restore();
+}
+function drawSceneContent(){
   if(scene==='select'||scene==='lose') return;
 
   if(scene==='classroom'){
@@ -2863,6 +3177,7 @@ function draw(){
     drawEquations(0);
     drawPlayerSprite(0);
     drawProjectiles(0);
+    drawDamageNumbers(0);
     drawVignette();
     return;
   }
@@ -2904,6 +3219,7 @@ function draw(){
     }
     drawPlayerSprite(0);
     drawProjectiles(0);
+    drawDamageNumbers(0);
     drawVignette();
     return;
   }
@@ -2918,6 +3234,7 @@ function draw(){
   if(scene==='dojo'){
     drawDojoScene();
     drawPlayerSprite(0);
+    drawDamageNumbers(0);
     drawVignette();
     return;
   }
@@ -2929,6 +3246,7 @@ function draw(){
     drawWitchHutScene();
     drawPlayerSprite(0);
     drawProjectiles(0);
+    drawDamageNumbers(0);
     drawVignette();
     return;
   }
@@ -2938,6 +3256,7 @@ function draw(){
   if(scene==='world2'){ drawPOI({...world2Building,id:'world2building',label:'The Old Building'}); }
   drawEnemies(camera.x);
   drawProjectiles(camera.x);
+  drawDamageNumbers(camera.x);
   drawPlayerSprite(camera.x);
   drawVignette();
 }
