@@ -614,6 +614,7 @@ let scene='select';
 let chosenColor='#5aa9e6';
 let playerName='Wanderer';
 let gameOver=false;
+let devDamageBoost=false;
 
 const player={
   x:150,y:GROUND_Y-64,w:40,h:64,vx:0,vy:0,speed:3.1,facing:1,
@@ -762,6 +763,7 @@ window.addEventListener('keydown',e=>{
   if(k==='k'){ toggleSkillMenu(); }
   if(k==='h'){ useHealthPotion(); }
   if(k===' '){ e.preventDefault(); swordSwing(); }
+  if(k==='q'){ devDamageBoost=!devDamageBoost; }
   handleSkillKey(e.key);
 });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
@@ -935,6 +937,7 @@ safeOn('mergeBtn','click',()=>{
 
 // ================= Combat =================
 function currentWeaponDamage(){
+  if(devDamageBoost) return 300;
   const w=mergedWeapons[player.weapon]||{damage:10};
   let dmg=w.damage;
   if(player.swordBuff && player.weapon.toLowerCase().includes('sword')) dmg=Math.round(dmg*1.3);
