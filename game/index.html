@@ -264,6 +264,31 @@
     </div>
   </div>
 
+  <div id="laptopModal">
+    <div class="macbook">
+      <div class="mbCam"></div>
+      <div class="mbTabs">
+        <div class="mbTab"><span class="vLogo"></span>New Tab<span class="glitchChar">_</span></div>
+      </div>
+      <div class="mbTopBar">
+        <div class="mbDots"><span class="mbDot r"></span><span class="mbDot y"></span><span class="mbDot g"></span></div>
+        <div class="mbUrl">h<span class="glitchChar">t</span>tps://va<span class="glitchChar">u</span>lt.<span class="glitchChar">exe</span>/?id=<span class="glitchChar">0xFF3A</span>&session=<span class="glitchChar">corrupt</span></div>
+      </div>
+      <div class="mbScreen">
+        <h3>For Mr. Truong.</h3>
+        <h4>By Arnav Gupta</h4>
+        <p>Built across way too many late nights, way too much caffeine, and one increasingly unhinged scope creep - every boss, every glitch, and every terrible calculus pun was made with one person in mind.</p>
+        <p>If you're reading this, you made it further than most people ever will. Consider yourself part of something small, dumb, and made with love.</p>
+        <label>Enter your name to be etched among the Honored Ones, forever:</label>
+        <div class="mbInputRow">
+          <input id="laptopNameInput" type="text" placeholder="Your full name" maxlength="60">
+          <button id="laptopSubmitBtn">Submit ↵</button>
+        </div>
+      </div>
+      <div class="mbBase"></div>
+    </div>
+  </div>
+
   <div class="overlay">
     <div id="lowHpVignette"></div>
     <div id="hud">
@@ -692,14 +717,14 @@ document.querySelectorAll('.charOption').forEach(el=>{
     chosenColor=el.dataset.color;
   });
 });
-document.getElementById('startBtn').addEventListener('click',()=>{
+safeOn('startBtn','click',()=>{
   const nameVal=document.getElementById('nameInput').value.trim();
   if(nameVal) playerName=nameVal.slice(0,16);
   selectScreen.style.display='none';
   scene='world1';
   addSkillKeyHUD();
 });
-document.getElementById('honoredBtn').addEventListener('click', async ()=>{
+safeOn('honoredBtn','click', async ()=>{
   const wrap=document.getElementById('honoredListWrap');
   wrap.innerHTML='<p class="empty"><span class="spinner"></span>Loading the Honored Ones...</p>';
   document.getElementById('honoredModal').style.display='flex';
@@ -714,9 +739,16 @@ document.getElementById('honoredBtn').addEventListener('click', async ()=>{
     ).join('')+'</ul>';
   }
 });
-document.getElementById('honoredCloseBtn').addEventListener('click',()=>{
+safeOn('honoredCloseBtn','click',()=>{
   document.getElementById('honoredModal').style.display='none';
 });
+
+function safeOn(id, evt, handler, opts){
+  const el = document.getElementById(id);
+  if(el){ el.addEventListener(evt, handler, opts); }
+  else { console.warn('[wasteland-adventure] missing element for listener:', id); }
+  return el;
+}
 
 // ================= Input =================
 window.addEventListener('keydown',e=>{
@@ -885,7 +917,7 @@ function renderSkillMenu(){
   });
 }
 const MAX_SWORD_DAMAGE=150;
-document.getElementById('mergeBtn').addEventListener('click',()=>{
+safeOn('mergeBtn','click',()=>{
   const skName=document.getElementById('mergeSkillSel').value;
   const wpName=document.getElementById('mergeWeaponSel').value;
   if(!skName||!wpName) return;
@@ -1563,6 +1595,7 @@ function useLaptop(){
 function openLaptopModal(){
   const modal=document.getElementById('laptopModal');
   const input=document.getElementById('laptopNameInput');
+  if(!modal || !input){ console.warn('[wasteland-adventure] laptop modal elements missing'); triggerWinEnding(3); return; }
   input.value='';
   modal.style.display='flex';
   setTimeout(()=>input.focus(), 60);
@@ -1570,14 +1603,14 @@ function openLaptopModal(){
 async function submitLaptopName(){
   const modal=document.getElementById('laptopModal');
   const input=document.getElementById('laptopNameInput');
-  const val=input.value.trim();
+  const val = input ? input.value.trim() : '';
   const fullName = (val ? val : playerName).slice(0,60);
-  modal.style.display='none';
+  if(modal) modal.style.display='none';
   await saveHonoredOne(fullName);
   triggerWinEnding(3);
 }
-document.getElementById('laptopSubmitBtn').addEventListener('click', submitLaptopName);
-document.getElementById('laptopNameInput').addEventListener('keydown', e=>{
+safeOn('laptopSubmitBtn','click', submitLaptopName);
+safeOn('laptopNameInput','keydown', e=>{
   e.stopPropagation();
   if(e.key==='Enter'){ e.preventDefault(); submitLaptopName(); }
 });
@@ -1604,8 +1637,8 @@ function triggerWinEnding(num){
   }
   winScreen.style.display='flex';
 }
-document.getElementById('restartBtn').addEventListener('click',()=>location.reload());
-document.getElementById('loseRestartBtn').addEventListener('click',()=>location.reload());
+safeOn('restartBtn','click',()=>location.reload());
+safeOn('loseRestartBtn','click',()=>location.reload());
 
 function triggerLose(reason){
   if(gameOver) return;
