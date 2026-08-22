@@ -224,6 +224,29 @@
   #versionLogBtn{position:relative;z-index:2;margin-top:8px;margin-left:8px;padding:8px 18px;font-size:13px;letter-spacing:1px;
     background:rgba(0,0,0,.3);color:#9fc9d8;border:1px solid rgba(108,204,255,.5);border-radius:6px;cursor:pointer;}
   #versionLogBtn:hover{background:rgba(108,204,255,.15);color:#bfe8ff;}
+  #difficultyBtn{position:relative;z-index:2;margin-top:8px;margin-left:8px;padding:8px 18px;font-size:13px;letter-spacing:1px;
+    background:rgba(0,0,0,.3);color:#e0a8a8;border:1px solid rgba(255,90,90,.5);border-radius:6px;cursor:pointer;}
+  #difficultyBtn:hover{background:rgba(255,90,90,.15);color:#ffcdcd;}
+  #difficultyModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(4,4,8,.92);
+    display:none;align-items:center;justify-content:center;z-index:40;}
+  .difficultyPanel{width:480px;background:linear-gradient(180deg,#1a0e0e,#0c0505);
+    border:2px solid #ff5a5a;border-radius:10px;padding:20px 26px;box-shadow:0 0 30px rgba(255,90,90,.3);
+    font-family:var(--font-mono);color:#ffd6d6;}
+  .difficultyPanel h2{color:#ff5a5a;text-shadow:0 0 10px rgba(255,90,90,.6);margin-top:0;letter-spacing:2px;
+    display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,90,90,.3);padding-bottom:10px;}
+  .difficultyDesc{font-size:12px;color:#e0b0b0;margin:10px 0 14px;line-height:1.5;}
+  #difficultyOptions{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .diffOption{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;
+    background:rgba(255,90,90,.05);border:1px solid rgba(255,90,90,.3);border-radius:6px;cursor:pointer;
+    transition:background .15s,border-color .15s;}
+  .diffOption:hover{background:rgba(255,90,90,.15);border-color:#ff8a8a;}
+  .diffOption.activeDiff{background:rgba(255,90,90,.28);border-color:#ff5a5a;box-shadow:0 0 12px rgba(255,90,90,.4);}
+  .diffOption .diffName{font-weight:bold;letter-spacing:1px;color:#ffd6d6;}
+  .diffOption .diffDesc{font-size:10.5px;color:#c99;margin-top:2px;}
+  .diffOption .diffCheck{color:#ff5a5a;font-size:14px;visibility:hidden;}
+  .diffOption.activeDiff .diffCheck{visibility:visible;}
+  #difficultyModal button#difficultyCloseBtn{padding:8px 20px;background:#2a0f0f;color:#ff8a8a;border:1px solid #ff5a5a;border-radius:6px;cursor:pointer;}
+  #difficultyModal button#difficultyCloseBtn:hover{background:#ff5a5a;color:#1a0404;}
   #honoredModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(4,4,8,.92);
     display:none;align-items:center;justify-content:center;z-index:40;}
   #honoredModal .panel{width:480px;max-height:420px;overflow-y:auto;background:linear-gradient(180deg,#0a1a10,#04100a);
@@ -352,6 +375,7 @@
     <button id="startBtn">Begin Journey</button>
     <button id="honoredBtn">🏆 Honored Ones</button>
     <button id="versionLogBtn">📜 Version Log</button>
+    <button id="difficultyBtn">🎚 Difficulty</button>
     <div id="dedication">For Mr. Truong</div>
   </div>
 
@@ -376,8 +400,8 @@
       <div class="mbScreen">
         <h3>For Mr. Truong.</h3>
         <h4>By Arnav Gupta</h4>
-        <p>Built for the boss logic of math.</p>
-        <p>If you're reading this, you made it further than most people ever will. Many would fail fighting the teacher.</p>
+        <p>Built across way too many late nights, way too much caffeine, and one increasingly unhinged scope creep - every boss, every glitch, and every terrible calculus pun was made with one person in mind.</p>
+        <p>If you're reading this, you made it further than most people ever will. Consider yourself part of something small, dumb, and made with love.</p>
         <label>Enter your name to be etched among the Honored Ones, forever:</label>
         <div class="mbInputRow">
           <input id="laptopNameInput" type="text" placeholder="Your full name" maxlength="60">
@@ -407,6 +431,15 @@
       <h2>📜 Version Log</h2>
       <div id="versionListWrap"></div>
       <button id="versionCloseBtn">Close</button>
+    </div>
+  </div>
+
+  <div id="difficultyModal">
+    <div class="panel difficultyPanel">
+      <h2>🎚 Choose Difficulty</h2>
+      <p class="difficultyDesc">Higher difficulty means tougher bosses and monsters, more Precalculus training rounds, and less damage from your own weapons.</p>
+      <div id="difficultyOptions"></div>
+      <button id="difficultyCloseBtn">Close</button>
     </div>
   </div>
 
@@ -444,8 +477,7 @@
     <h1>VICTORY</h1>
     <p>You surpassed your teacher and became the strongest.</p>
     <div id="winBtnRow" style="position:relative;z-index:2;display:flex;gap:12px;margin-top:6px;">
-      <button id="restartBtn" style="padding:12px 26px;font-size:15px;background:#3a2f10;color:#f2d375;border:2px solid #d4af37;border-radius:6px;cursor:pointer;box-shadow:0 0 14px rgba(212,175,55,.3);">Restart (Easy)</button>
-      <button id="ngPlusBtn" style="padding:12px 26px;font-size:15px;background:#0a2a30;color:#6cf;border:2px solid #6cf;border-radius:6px;cursor:pointer;box-shadow:0 0 14px rgba(108,204,255,.3);">New Game+ →</button>
+      <button id="restartBtn" style="padding:12px 26px;font-size:15px;background:#3a2f10;color:#f2d375;border:2px solid #d4af37;border-radius:6px;cursor:pointer;box-shadow:0 0 14px rgba(212,175,55,.3);">Play Again</button>
     </div>
   </div>
   <div id="loseScreen">
@@ -776,17 +808,16 @@ let scene='select';
 let chosenColor='#5aa9e6';
 let chosenCharKey='wanderer';
 
-// ================= Difficulty / New Game+ (in-memory only, never persisted) =================
-let playthroughIndex=0; // 0 = Easy (1st run), 1 = Medium (2nd run), 2 = Hard (3rd run), 3+ keeps scaling
-const DIFFICULTY_NAMES=['Easy','Medium','Hard'];
+// ================= Difficulty (chosen up front via title-screen button, in-memory only, never persisted) =================
+let playthroughIndex=0; // 0 = Easy, 1 = Medium, 2 = Hard, 3 = Nightmare, 4 = Impossible
+const DIFFICULTY_NAMES=['Easy','Medium','Hard','Nightmare','Impossible'];
 function difficultyName(idx){
-  if(idx<DIFFICULTY_NAMES.length) return DIFFICULTY_NAMES[idx];
-  return 'Nightmare +'+(idx-DIFFICULTY_NAMES.length+1);
+  return DIFFICULTY_NAMES[Math.max(0,Math.min(DIFFICULTY_NAMES.length-1,idx))];
 }
-function diffHealthMult(idx){ return 1 + idx*0.5; }        // Easy x1.0, Medium x1.5, Hard x2.0, +0.5/tier after
-function diffEnemyDmgMult(idx){ return 1 + idx*0.25; }     // enemies/bosses hit harder each tier
+function diffHealthMult(idx){ return 1 + idx*0.5; }        // Easy x1.0, Medium x1.5, Hard x2.0, Nightmare x2.5, Impossible x3.0
+function diffEnemyDmgMult(idx){ return 1 + idx*0.25; }     // enemies/bosses hit harder at higher difficulty
 function diffPlayerDmgMult(idx){ return Math.max(0.4, 1 - idx*0.15); } // player's own damage shrinks, floor 0.4x
-function diffPrecalcRounds(idx){ return 5 + idx; }         // one extra Honors Precalculus round per tier
+function diffPrecalcRounds(idx){ return 5 + idx; }         // extra Honors Precalculus rounds at higher difficulty
 function scaleHp(base){ return Math.round(base*diffHealthMult(playthroughIndex)); }
 function scaleEnemyDmg(base){ return Math.round(base*diffEnemyDmgMult(playthroughIndex)); }
 let playerName='Wanderer';
@@ -931,6 +962,7 @@ document.querySelectorAll('.charSwatch').forEach(cnv=>{
   const parentKey = cnv.closest('.charOption') ? cnv.closest('.charOption').dataset.key : null;
   drawSwatch(cnv, cnv.dataset.c, parentKey);
 });
+refreshDifficultyBadge();
 document.querySelectorAll('.charOption').forEach(el=>{
   el.addEventListener('click',()=>{
     document.querySelectorAll('.charOption').forEach(o=>o.classList.remove('sel'));
@@ -1047,12 +1079,14 @@ const VERSION_LOG=[
     'Established a standing practice: this log now gets a new entry for every meaningful update going forward'
   ]},
   { tag:'v3.0', notes:[
-    'New Game+ system: beating the game offers a "New Game+" continue that raises the difficulty tier (Easy -> Medium -> Hard -> Nightmare+N) - tracked purely in memory, never saved to disk or localStorage',
-    'Difficulty scaling: every boss/NPC/monster hits harder and has more HP each tier, Honors Precalculus gains an extra training round per tier, and the player\'s own damage output is reduced to keep runs challenging',
-    'The title screen now shows a "NEW GAME+" badge with the current difficulty when replaying',
+    'Difficulty selector: choose your difficulty (Easy/Medium/Hard/Nightmare/Impossible) from the title screen, no need to beat the game first',
+    'Difficulty scaling: every boss/NPC/monster hits harder and has more HP at higher difficulty, Honors Precalculus gains extra training rounds, and the player\'s own damage output is reduced to keep runs challenging',
     'Honored Ones entries are now tagged with the difficulty they were earned on (e.g. "[Hard]") directly in the name',
-    'Character/NPC art pass: the Teacher now wears glasses (across every appearance, including both boss forms), the Sword Instructor got his own distinct look instead of reusing the Teacher\'s sprite, Arnav got green-tinted glasses, and all 4 playable archetypes (Scholar, Wanderer, Rebel, Coder) now have a unique visual accessory',
-    'Hidden test code changed from 0928 to 1234'
+    'Character/NPC art pass: the Teacher now wears glasses (across every appearance, including both boss forms), the Sword Instructor got his own distinct look instead of reusing the Teacher\'s sprite, Arnav got green-tinted glasses, and all 4 playable archetypes (Scholar, Wanderer, Rebel, Coder) now have a unique visual accessory'
+  ]},
+  { tag:'v3.1', notes:[
+    'The Developer boss fight no longer happens in the Teacher\'s castle - choosing to "Prove your worth" now portals the player straight to the Developer\'s Castle: a matrix-rain server fortress with a completely different backdrop from the Teacher\'s domain',
+    'Difficulty is now chosen up front via a title-screen button instead of being unlocked through a New Game+ loop'
   ]},
 ];
 safeOn('versionLogBtn','click',()=>{
@@ -1066,6 +1100,38 @@ safeOn('versionLogBtn','click',()=>{
 });
 safeOn('versionCloseBtn','click',()=>{
   document.getElementById('versionModal').style.display='none';
+});
+
+const DIFFICULTY_DESCS=[
+  'The standard experience. A fair fight.',
+  'Tougher enemies, one extra Precalc round, your blade bites a little less.',
+  'Serious challenge. Bosses hit hard and take a beating to bring down.',
+  'Brutal. Only attempt this if Hard felt too easy.',
+  'The wasteland does not want you to win.'
+];
+function renderDifficultyOptions(){
+  const wrap=document.getElementById('difficultyOptions');
+  wrap.innerHTML = DIFFICULTY_NAMES.map((name,i)=>{
+    const active = i===playthroughIndex;
+    return '<div class="diffOption'+(active?' activeDiff':'')+'" data-idx="'+i+'">'
+      +'<div><div class="diffName">'+name+'</div><div class="diffDesc">'+DIFFICULTY_DESCS[i]+'</div></div>'
+      +'<div class="diffCheck">✓ SELECTED</div>'
+      +'</div>';
+  }).join('');
+  wrap.querySelectorAll('.diffOption').forEach(el=>{
+    el.addEventListener('click',()=>{
+      playthroughIndex=parseInt(el.dataset.idx,10);
+      refreshDifficultyBadge();
+      renderDifficultyOptions();
+    });
+  });
+}
+safeOn('difficultyBtn','click',()=>{
+  renderDifficultyOptions();
+  document.getElementById('difficultyModal').style.display='flex';
+});
+safeOn('difficultyCloseBtn','click',()=>{
+  document.getElementById('difficultyModal').style.display='none';
 });
 
 function safeOn(id, evt, handler, opts){
@@ -1868,12 +1934,20 @@ function startArnavDuelIntro(){
   inputLocked=true;
   startDialogue('Arnav (The Developer)',[
     "Prove your worth? Bold words for someone standing in a world I wrote.",
-    "Very well. Let's see what you're made of."
-  ], ()=>{ startArnavDuel(); });
+    "Very well. Let's see what you're made of - but not here. This is the Teacher's world. Let's go to mine."
+  ], ()=>{ startPortalTeleport(); });
+}
+let portalTimer=0;
+function startPortalTeleport(){
+  scene='portal_tp';
+  inputLocked=true;
+  portalTimer=90;
 }
 function startArnavDuel(){
   scene='arnav_fight';
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
   player.hp=player.maxhp;
+  inputLocked=false;
   const hp=scaleHp(500), dmg=scaleEnemyDmg(18);
   boss={ x:650,y:GROUND_Y-70,r:36,hp:hp,maxhp:hp,alive:true,
     speed:1.2, shootCooldown:0, shootRate:45, dmg:dmg, eqColor:'#39ff6a', eqLabel:'SYSTEM.EXE', kind:'arnav', flash:0 };
@@ -2046,14 +2120,11 @@ function triggerWinEnding(num){
     titleEl.textContent='YOU WIN';
     descEl.textContent='You closed the laptop and walked away from the simulation. No fanfare, no list of names - just the quiet knowledge that you were strong enough to beat the Developer himself. No need to gloat.';
   }
-  const ngBtn=document.getElementById('ngPlusBtn');
-  if(ngBtn) ngBtn.textContent='New Game+ ('+difficultyName(playthroughIndex+1)+') →';
   winScreen.style.display='flex';
 }
 
-// ================= New Game+ (in-memory soft reset - no storage of any kind) =================
-function softResetForNewGamePlus(){
-  playthroughIndex++;
+// ================= Restart run (in-memory soft reset - no storage of any kind) =================
+function restartRun(){
   scene='select';
   gameOver=false;
   pinAttempts=0;
@@ -2084,6 +2155,7 @@ function softResetForNewGamePlus(){
   camera={x:0,y:0};
 
   winScreen.style.display='none';
+  loseScreen.style.display='none';
   bossBarWrap.style.display='none';
   bossNameEl.style.display='none';
   selectScreen.style.display='flex';
@@ -2094,16 +2166,11 @@ function softResetForNewGamePlus(){
 function refreshDifficultyBadge(){
   const badge=document.getElementById('difficultyBadge');
   if(!badge) return;
-  if(playthroughIndex>0){
-    badge.style.display='block';
-    badge.textContent='NEW GAME+ · Now playing: '+difficultyName(playthroughIndex).toUpperCase();
-  } else {
-    badge.style.display='none';
-  }
+  badge.style.display='block';
+  badge.textContent='DIFFICULTY: '+difficultyName(playthroughIndex).toUpperCase();
 }
-safeOn('ngPlusBtn','click', softResetForNewGamePlus);
-safeOn('restartBtn','click',()=>location.reload());
-safeOn('loseRestartBtn','click',()=>location.reload());
+safeOn('restartBtn','click', restartRun);
+safeOn('loseRestartBtn','click', restartRun);
 
 function triggerLose(reason){
   if(gameOver) return;
@@ -2156,7 +2223,7 @@ function updatePlayerPhysics(){
   }
 
   // scene bounds
-  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='final_glitch'||scene==='developer_final'||scene==='laptop_ready'){
+  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='final_glitch'||scene==='developer_final'||scene==='laptop_ready'||scene==='portal_tp'){
     player.x=Math.max(60,Math.min(820,player.x));
   } else {
     player.x=Math.max(20,player.x);
@@ -2210,6 +2277,10 @@ function update(){
   if(scene==='post_crown'){
     arnavTimer--;
     if(arnavTimer<=0){ enterArnavIntro(); }
+  }
+  if(scene==='portal_tp'){
+    portalTimer--;
+    if(portalTimer<=0){ startArnavDuel(); }
   }
   if(scene==='glitch_transition'){
     glitchTimer--;
@@ -2922,7 +2993,7 @@ function drawGlitchTransition(severe){
   const shakeY=(Math.random()-0.5)*intensity;
   ctx.save();
   ctx.translate(shakeX,shakeY);
-  drawBossRoomScene();
+  drawDeveloperCastleScene();
   drawBoss(0);
   drawPlayerSprite(0);
   // scrambled color glitch bars
@@ -3155,6 +3226,128 @@ function drawBossRoomScene(){
   }
 }
 
+function drawDeveloperCastleScene(){
+  // dark server-fortress interior with a green matrix-rain backdrop
+  drawInteriorBase(['#040806','#020403'],['#0a120c','#050a07'],'#020a05');
+  // matrix rain columns across the whole back wall
+  ctx.save();
+  ctx.font='12px monospace'; ctx.textAlign='center';
+  for(let col=0; col<26; col++){
+    const cx0 = col*(W/26) + (W/52);
+    const speed = 1.4 + (col%5)*0.5;
+    const streamLen = 6 + (col%4);
+    for(let r=0;r<streamLen;r++){
+      const yPos = ((animTime*speed + r*22 + col*37) % (GROUND_Y+40)) - 20;
+      const alpha = Math.max(0, 1 - r/streamLen);
+      const digit = (Math.floor(animTime*0.08+col*3+r)%2)===0 ? '1':'0';
+      ctx.fillStyle='rgba(0,255,102,'+ (0.08+alpha*0.22) +')';
+      ctx.fillText(digit, cx0, yPos);
+    }
+  }
+  ctx.restore();
+  // neon grid floor with perspective lines
+  ctx.strokeStyle='rgba(57,255,106,0.18)'; ctx.lineWidth=1;
+  for(let i=-6;i<=6;i++){
+    ctx.beginPath();
+    ctx.moveTo(W/2 + i*30, GROUND_Y);
+    ctx.lineTo(W/2 + i*140, H);
+    ctx.stroke();
+  }
+  for(let yy=GROUND_Y+8; yy<H; yy+=16){
+    ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(W,yy); ctx.stroke();
+  }
+  // server racks along the walls with blinking status lights
+  for(let side=0; side<2; side++){
+    const rx = side===0 ? 20 : W-70;
+    ctx.fillStyle='#0a0f0c';
+    ctx.fillRect(rx, GROUND_Y-180, 50, 180);
+    ctx.strokeStyle='rgba(57,255,106,0.3)'; ctx.lineWidth=1;
+    ctx.strokeRect(rx, GROUND_Y-180, 50, 180);
+    for(let i=0;i<9;i++){
+      const ly=GROUND_Y-172+i*19;
+      const blink = (Math.floor(animTime*0.15+i+side*3)%3)===0;
+      ctx.fillStyle = blink? 'rgba(57,255,106,0.9)' : 'rgba(57,255,106,0.25)';
+      ctx.fillRect(rx+6, ly, 5, 5);
+      ctx.fillStyle='rgba(57,255,106,0.15)';
+      ctx.fillRect(rx+16, ly+1, 26, 3);
+    }
+  }
+  // large holographic panel behind the throne with a shifting circuit pattern
+  ctx.save();
+  ctx.globalAlpha=0.5;
+  const hg=ctx.createLinearGradient(0,GROUND_Y-220,0,GROUND_Y-20);
+  hg.addColorStop(0,'rgba(0,40,20,0.5)');
+  hg.addColorStop(1,'rgba(0,10,5,0.1)');
+  ctx.fillStyle=hg;
+  ctx.fillRect(W/2-160, GROUND_Y-220, 320, 200);
+  ctx.strokeStyle='rgba(57,255,106,0.4)'; ctx.lineWidth=2;
+  ctx.strokeRect(W/2-160, GROUND_Y-220, 320, 200);
+  ctx.strokeStyle='rgba(57,255,106,0.15)'; ctx.lineWidth=1;
+  for(let i=0;i<6;i++){
+    ctx.beginPath();
+    ctx.moveTo(W/2-160, GROUND_Y-220+i*33);
+    ctx.lineTo(W/2+160, GROUND_Y-220+i*33);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // ambient green glow rising from the floor
+  const floorGlow=ctx.createRadialGradient(W/2,H,10,W/2,H,300);
+  floorGlow.addColorStop(0,'rgba(57,255,106,0.12)');
+  floorGlow.addColorStop(1,'rgba(57,255,106,0)');
+  ctx.fillStyle=floorGlow;
+  ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+}
+
+function drawPortalTeleport(){
+  // dark void backdrop
+  ctx.fillStyle='#020203';
+  ctx.fillRect(0,0,W,H);
+  const t = 1 - Math.max(0, Math.min(1, portalTimer/90));
+  const cx0=W/2, cy0=H/2;
+  // swirling portal rings
+  for(let i=0;i<5;i++){
+    const r = 30 + i*26 + Math.sin(animTime*0.06+i)*6;
+    ctx.save();
+    ctx.translate(cx0,cy0);
+    ctx.rotate(animTime*0.04*(i%2===0?1:-1) + i);
+    ctx.strokeStyle='rgba(57,255,106,'+(0.55-i*0.08)+')';
+    ctx.lineWidth=3;
+    ctx.beginPath();
+    ctx.ellipse(0,0,r, r*0.4, 0, 0, Math.PI*2*Math.min(1, t*1.5+0.2));
+    ctx.stroke();
+    ctx.restore();
+  }
+  // bright core
+  const coreGlow=ctx.createRadialGradient(cx0,cy0,2,cx0,cy0,90);
+  coreGlow.addColorStop(0,'rgba(180,255,200,0.9)');
+  coreGlow.addColorStop(0.5,'rgba(57,255,106,0.5)');
+  coreGlow.addColorStop(1,'rgba(57,255,106,0)');
+  ctx.fillStyle=coreGlow;
+  ctx.beginPath(); ctx.arc(cx0,cy0,90,0,7); ctx.fill();
+  // player silhouette being pulled in, shrinking toward the core
+  const shrink = 1 - t*0.7;
+  const px0 = player.x*0 + cx0 + (1-t)*(-140);
+  ctx.save();
+  ctx.globalAlpha = Math.max(0, 1-t*1.1);
+  ctx.translate(px0, cy0+40);
+  ctx.scale(shrink, shrink);
+  drawPixelSpriteOutlined(PLAYER_ROWS, playerPalette(chosenColor), -20, -64, 4, false);
+  ctx.restore();
+  // scattering code fragments
+  for(let i=0;i<18;i++){
+    const ang = i*0.35 + animTime*0.05;
+    const dist = 100 + (i%4)*30 + t*80;
+    const fx = cx0 + Math.cos(ang)*dist;
+    const fy = cy0 + Math.sin(ang)*dist*0.5;
+    ctx.fillStyle='rgba(57,255,106,'+(0.5*(1-t))+')';
+    ctx.font='10px monospace'; ctx.textAlign='center';
+    ctx.fillText((i%2===0)?'1':'0', fx, fy);
+  }
+  ctx.fillStyle='rgba(200,255,220,0.85)';
+  ctx.font='bold 15px monospace'; ctx.textAlign='center';
+  ctx.fillText('TELEPORTING...', cx0, cy0+130);
+}
+
 const DUMMY_ROWS=[
 "  wwww  ",
 " wwwwww ",
@@ -3367,7 +3560,7 @@ function drawSceneContent(){
     drawVignette();
     return;
   }
-  if(scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='developer_intro'||scene==='developer_fight'||scene==='developer_final'||scene==='laptop_ready'){
+  if(scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='post_crown'||scene==='arnav_intro'){
     drawBossRoomScene();
     if(scene==='post_crown'){
       const secsLeft=Math.max(0,Math.ceil(arnavTimer/60));
@@ -3375,8 +3568,24 @@ function drawSceneContent(){
       ctx.fillStyle='#39ff6a'; ctx.font='bold 14px monospace'; ctx.textAlign='center';
       ctx.fillText('...something approaches: '+secsLeft+'s', W/2, 35);
     }
-    if(scene==='arnav_intro'||scene==='developer_intro'||scene==='developer_final'){
-      drawArnavFigure(320,GROUND_Y-110, scene==='developer_intro'||scene==='developer_final');
+    if(scene==='arnav_intro'){
+      drawArnavFigure(320,GROUND_Y-110, false);
+    }
+    drawBoss(0);
+    drawPlayerSprite(0);
+    drawProjectiles(0);
+    drawDamageNumbers(0);
+    drawVignette();
+    return;
+  }
+  if(scene==='portal_tp'){
+    drawPortalTeleport();
+    return;
+  }
+  if(scene==='arnav_fight'||scene==='developer_intro'||scene==='developer_fight'||scene==='developer_final'||scene==='laptop_ready'){
+    drawDeveloperCastleScene();
+    if(scene==='developer_intro'||scene==='developer_final'){
+      drawArnavFigure(320,GROUND_Y-110, true);
     }
     drawBoss(0);
     if(scene==='laptop_ready'){
