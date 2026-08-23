@@ -96,6 +96,34 @@
   #skillList .keyBadge{display:inline-block;min-width:20px;text-align:center;padding:2px 6px;
     background:#05d9e8;color:#031014;font-weight:bold;border-radius:3px;font-size:11px;}
   #mergeResult{font-family:'Courier New',monospace;letter-spacing:.5px;}
+  #inventoryMenu{position:absolute;top:40px;left:150px;width:620px;max-height:460px;overflow-y:auto;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,204,51,.03) 0px, rgba(255,204,51,.03) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(90deg, rgba(255,204,51,.03) 0px, rgba(255,204,51,.03) 1px, transparent 1px, transparent 26px),
+      linear-gradient(160deg, rgba(24,18,6,.97), rgba(12,8,3,.99));
+    border:2px solid #f2c14e;border-radius:4px;color:#ffe9b8;padding:22px;display:none;pointer-events:auto;
+    box-shadow:0 0 0 1px rgba(242,193,78,.15), 0 0 34px rgba(242,193,78,.3), inset 0 0 40px rgba(242,193,78,.06);
+    font-family:'Courier New',monospace;clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);}
+  #inventoryMenu::before{content:'LOADOUT // WEAPONS v1.0';position:absolute;top:-11px;left:16px;background:#140f04;
+    color:#f2c14e;font-size:10px;letter-spacing:3px;padding:0 8px;}
+  #inventoryMenu h2{margin-top:4px;color:#f2c14e;text-shadow:0 0 10px rgba(242,193,78,.8);letter-spacing:2px;
+    font-size:17px;border-bottom:1px solid rgba(242,193,78,.3);padding-bottom:8px;}
+  #inventoryList{margin:12px 0;font-size:13px;display:flex;flex-direction:column;gap:8px;}
+  .invRow{display:flex;align-items:center;gap:10px;padding:10px 12px;
+    background:rgba(242,193,78,.05);border-left:2px solid #f2c14e;border-radius:2px;flex-wrap:wrap;}
+  .invRow.equippedRow{background:rgba(242,193,78,.16);border-left-color:#fff2cc;box-shadow:0 0 12px rgba(242,193,78,.25);}
+  .invSwatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;box-shadow:0 0 6px currentColor;}
+  .invName{font-weight:bold;color:#ffe9b8;min-width:150px;}
+  .invStats{display:flex;gap:12px;font-size:11.5px;color:#c9a870;flex:1;}
+  .invStats b{color:#f2c14e;}
+  .invTag{font-size:9.5px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border-radius:3px;}
+  .invTag.mergableTag{background:rgba(102,204,255,.15);color:#6cf;}
+  .invTag.lockedTag{background:rgba(255,90,90,.15);color:#ff8a8a;}
+  .invEquipBtn{margin-left:auto;font-size:11px;padding:6px 12px;border-radius:2px;cursor:pointer;
+    border:1px solid rgba(242,193,78,.5);background:linear-gradient(180deg,#3a2a0a,#1a1204);color:#ffe9b8;
+    font-family:'Courier New',monospace;letter-spacing:1px;text-transform:uppercase;transition:all .15s;}
+  .invEquipBtn:hover{background:#f2c14e;color:#1a1204;box-shadow:0 0 12px rgba(242,193,78,.6);}
+  .invEquipBtn:disabled{opacity:.5;cursor:default;background:rgba(242,193,78,.08);color:#c9a870;}
   #hud{position:absolute;top:12px;left:12px;color:#fff;font-size:13px;pointer-events:none;
     background:linear-gradient(135deg, rgba(10,14,20,.7), rgba(10,14,20,.35));
     padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.15);
@@ -457,7 +485,7 @@
     <div id="bossName"></div>
     <div id="bossBarWrap"><div id="bossBarFill"></div></div>
     <div id="skillKeys"></div>
-    <div id="controlsHint">A/D move · W/↑ jump · S crouch · Left Click or Space attack · K skills · H drink potion</div>
+    <div id="controlsHint">A/D move · W/↑ jump · S crouch · Left Click or Space attack · K skills · I inventory · H drink potion</div>
     <div id="dialogueBox">
       <div id="dialogueNameRow"><span id="dialogueIcon"></span><span id="dialogueName"></span></div>
       <div id="dialogueText"></div>
@@ -474,6 +502,10 @@
         <button id="mergeBtn">Fuse ⚡</button>
       </div>
       <div id="mergeResult" style="margin-top:10px;color:#39ff6a;"></div>
+    </div>
+    <div id="inventoryMenu">
+      <h2>&gt; LOADOUT [Press I to close]</h2>
+      <div id="inventoryList"></div>
     </div>
   </div>
   <div id="fadeLayer"></div>
@@ -805,6 +837,7 @@ const dialogueText=document.getElementById('dialogueText');
 const choiceBox=document.getElementById('choiceBox');
 const skillMenu=document.getElementById('skillMenu');
 const skillList=document.getElementById('skillList');
+const inventoryMenu=document.getElementById('inventoryMenu');
 const hpBarFill=document.getElementById('hpBarFill');
 const hpBarWrap=document.getElementById('hpBarWrap');
 const hpNumeric=document.getElementById('hpNumeric');
@@ -1172,6 +1205,7 @@ window.addEventListener('keydown',e=>{
   keys[k]=true;
   if(k==='e'){ if(dqActive){ advanceDialogue(); } else if(scene==='laptop_ready' && itemReady){ useLaptop(); } }
   if(k==='k'){ toggleSkillMenu(); }
+  if(k==='i'){ toggleInventoryMenu(); }
   if(k==='h'){ useHealthPotion(); }
   if(k===' '){ e.preventDefault(); swordSwing(); }
   if(k==='q'){ openPinModal(); }
@@ -1197,10 +1231,16 @@ const SPEAKER_THEMES={
   'arnav (the developer)': {color:'#39ff6a', icon:'👨‍💻'},
   'the developer':{color:'#39ff6a', icon:'💻'},
 };
+const CHAR_THEMES={
+  scholar:  {color:'#e6b45a', icon:'📖'},
+  wanderer: {color:'#5aa9e6', icon:'🥾'},
+  rebel:    {color:'#e65a5a', icon:'🔥'},
+  coder:    {color:'#39ff6a', icon:'🧑‍💻'},
+};
 function speakerTheme(name){
   const key=(name||'').toLowerCase();
   if(SPEAKER_THEMES[key]) return SPEAKER_THEMES[key];
-  if(key===playerName.toLowerCase()) return {color:'#6cf', icon:'🧑'};
+  if(key===playerName.toLowerCase()) return CHAR_THEMES[chosenCharKey] || {color:'#6cf', icon:'🧑'};
   if(!name) return {color:'#aaa', icon:'…'};
   return {color:'#d4af37', icon:'💬'};
 }
@@ -1237,9 +1277,52 @@ function showChoices(name, text, options){
   options.forEach((opt,i)=>{
     const b=document.createElement('button');
     b.innerHTML='<span class="choiceNum">'+(i+1)+'</span><span>'+opt.text+'</span>';
-    b.onclick=()=>{ choiceBox.style.display='none'; inputLocked=false; opt.action(); };
+    b.onclick=()=>{
+      choiceBox.style.display='none';
+      // show the player actually saying what they picked before resolving it
+      startDialogue(playerName, [opt.text], opt.action);
+    };
     choiceBox.appendChild(b);
   });
+}
+
+// Archetype-specific flavor lines the player can say to certain NPCs on first meeting them.
+const ARCHETYPE_NPC_LINES={
+  teacher: {
+    scholar: "Finally - someone who might actually explain the multivariable stuff properly.",
+    wanderer: "Another teacher in the ruins. This world really doesn't let go of its habits.",
+    rebel: "A teacher giving pop quizzes at the end of the world. Sure. Why not.",
+    coder: "Precalculus? I was hoping for something a little more... compiled."
+  },
+  blacksmith: {
+    scholar: "Interesting - hand-forged weapons, in an age that clearly used to have better manufacturing.",
+    wanderer: "A forge still burning out here. Somebody's keeping the old ways alive.",
+    rebel: "Free gear, no strings attached? I don't trust it, but I'll take it.",
+    coder: "No enchantment menu, no loot table - just an actual blacksmith. Refreshing."
+  },
+  witch: {
+    scholar: "Folk magic, or applied chemistry? I'd love to see her notes.",
+    wanderer: "A witch's hut, way out here. I've heard stories like this before.",
+    rebel: "Great, a witch. Let's see if she's actually dangerous or just theatrical.",
+    coder: "Something about her doesn't run on normal rules. I'll be watching for glitches."
+  },
+  instructor: {
+    scholar: "Combat training. Not my specialty, but principles are principles.",
+    wanderer: "A dojo, still standing after everything. Someone here is disciplined.",
+    rebel: "An instructor who gets offended if you say no? Charming.",
+    coder: "Let's see if this guy patches his own weaknesses."
+  },
+  arnav: {
+    scholar: "Wait... 'Developer'? As in - he built this world? That would explain a few inconsistencies.",
+    wanderer: "I've walked this whole ruined world, and now the person who supposedly made it just... shows up?",
+    rebel: "Oh, so THAT'S who's been in charge this whole time. Perfect. I have questions.",
+    coder: "A developer. Finally, someone who might actually speak my language."
+  }
+};
+function archetypeLine(context){
+  const lines=ARCHETYPE_NPC_LINES[context];
+  if(!lines) return null;
+  return lines[chosenCharKey] || null;
 }
 
 // ================= Skills =================
@@ -1305,9 +1388,47 @@ function handlePotionSkill(sk){
 function toggleSkillMenu(){
   if(inputLocked && skillMenu.style.display!=='block') return;
   if(skillMenu.style.display==='block'){ skillMenu.style.display='none'; inputLocked=false; return; }
+  inventoryMenu.style.display='none';
   inputLocked=true;
   renderSkillMenu();
   skillMenu.style.display='block';
+}
+function toggleInventoryMenu(){
+  if(inputLocked && inventoryMenu.style.display!=='block') return;
+  if(inventoryMenu.style.display==='block'){ inventoryMenu.style.display='none'; inputLocked=false; return; }
+  skillMenu.style.display='none';
+  inputLocked=true;
+  renderInventoryMenu();
+  inventoryMenu.style.display='block';
+}
+function renderInventoryMenu(){
+  const wrap=document.getElementById('inventoryList');
+  const weapons=ownedWeapons.slice().sort((a,b)=>{
+    const da=(mergedWeapons[a]||{damage:0}).damage;
+    const db=(mergedWeapons[b]||{damage:0}).damage;
+    return db-da;
+  });
+  wrap.innerHTML='';
+  weapons.forEach(name=>{
+    const w=mergedWeapons[name]||{damage:10,color:'#ccc'};
+    const isEquipped = player.weapon===name;
+    const isLocked = nonMergableWeapons.has(name);
+    const capped = w.damage>=MAX_SWORD_DAMAGE;
+    const row=document.createElement('div');
+    row.className='invRow'+(isEquipped?' equippedRow':'');
+    row.innerHTML=
+      '<div class="invSwatch" style="background:'+w.color+';color:'+w.color+';"></div>'
+      +'<div class="invName">'+name+(isEquipped?' <span style="color:#f2c14e;">★</span>':'')+'</div>'
+      +'<div class="invStats"><span><b>DMG</b> '+w.damage+(capped?' (max)':'')+'</span>'
+      +(isLocked?'<span class="invTag lockedTag">Non-mergable</span>':'<span class="invTag mergableTag">Mergable</span>')
+      +'</div>';
+    const btn=document.createElement('button');
+    btn.className='invEquipBtn';
+    if(isEquipped){ btn.textContent='Equipped'; btn.disabled=true; }
+    else { btn.textContent='Equip'; btn.onclick=()=>{ player.weapon=name; player.weaponDamage=w.damage; renderInventoryMenu(); }; }
+    row.appendChild(btn);
+    wrap.appendChild(row);
+  });
 }
 function renderSkillMenu(){
   skillList.innerHTML = player.skills.length? '' : '<i style="color:#5a8a90;">No skills loaded. Explore the wasteland to acquire modules.</i>';
@@ -1539,10 +1660,18 @@ function enterClassroomIntro(){
   player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
   startDialogue('Teacher',[
     "Ah, a traveler! Welcome in from the wasteland, it's not safe out there.",
-    "My name matters little. What matters is your strength - or lack of it.",
-    "I plan on training you myself... to defeat the final boss that awaits at the end of your journey.",
-    "Let's begin. Strike down these equations as I write them!"
-  ], ()=>{ startTraining(); });
+    "My name matters little. What matters is your strength - or lack of it."
+  ], ()=>{
+    const continueToTraining=()=>{
+      startDialogue('Teacher',[
+        "I plan on training you myself... to defeat the final boss that awaits at the end of your journey.",
+        "Let's begin. Strike down these equations as I write them!"
+      ], ()=>{ startTraining(); });
+    };
+    const line=archetypeLine('teacher');
+    if(line){ startDialogue(playerName,[line], continueToTraining); }
+    else { continueToTraining(); }
+  });
 }
 
 function enterBlacksmith(){
@@ -1551,19 +1680,24 @@ function enterBlacksmith(){
     "Well met, traveler. Not many make it this far into the wastes.",
     "I've got two things I can give you for free, take your pick - choose wisely."
   ], ()=>{
-    showChoices('Blacksmith',"Which will it be?",[
-      {text:'Take the Fireball skill', action:()=>{
-        learnSkill('Fireball','2',20,'#ff5522','projectile');
-        startDialogue('Blacksmith',["A fine choice. Press [2] to hurl it at your foes."],()=>{});
-      }},
-      {text:'Take the Lightning Sword', action:()=>{
-        learnSkill('Lightning','4',5,'#66eaff','projectile',30);
-        mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff'};
-        ownedWeapons.push('Lightning Sword');
-        player.weapon='Lightning Sword'; player.weaponDamage=13;
-        startDialogue('Blacksmith',["A blade already humming with storm magic. Press [4] to unleash a quick Lightning bolt - fast cooldown, low damage."],()=>{});
-      }}
-    ]);
+    const showBlacksmithChoice=()=>{
+      showChoices('Blacksmith',"Which will it be?",[
+        {text:'Take the Fireball skill', action:()=>{
+          learnSkill('Fireball','2',20,'#ff5522','projectile');
+          startDialogue('Blacksmith',["A fine choice. Press [2] to hurl it at your foes."],()=>{});
+        }},
+        {text:'Take the Lightning Sword', action:()=>{
+          learnSkill('Lightning','4',5,'#66eaff','projectile',30);
+          mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff'};
+          ownedWeapons.push('Lightning Sword');
+          player.weapon='Lightning Sword'; player.weaponDamage=13;
+          startDialogue('Blacksmith',["A blade already humming with storm magic. Press [4] to unleash a quick Lightning bolt - fast cooldown, low damage."],()=>{});
+        }}
+      ]);
+    };
+    const line=archetypeLine('blacksmith');
+    if(line){ startDialogue(playerName,[line], showBlacksmithChoice); }
+    else { showBlacksmithChoice(); }
   });
 }
 
@@ -1575,17 +1709,22 @@ function enterWitchHut(){
     "Mmm... fresh blood, still warm with hope.",
     "I'll gift you something from the frost realms. No charge, traveler... unless you're too proud to accept."
   ], ()=>{
-    showChoices('Witch',"What will you take?",[
-      {text:'Learn the Ice skill', action:()=>{
-        learnSkill('Ice','3',18,'#66ccff','projectile');
-        startDialogue('Witch',["You've learned the skill: Ice. Press [3] to unleash it."],()=>{ exitBuildingToWorld1('witch'); });
-      }},
-      {text:'Take a Health Potion', action:()=>{
-        player.healthPotions+=1;
-        startDialogue('Witch',["A single vial of restorative brew. Press [H] to drink it when you need it most."],()=>{ exitBuildingToWorld1('witch'); });
-      }},
-      {text:'Refuse her gift', action:()=> startWitchInsult() }
-    ]);
+    const showWitchChoice=()=>{
+      showChoices('Witch',"What will you take?",[
+        {text:'Learn the Ice skill', action:()=>{
+          learnSkill('Ice','3',18,'#66ccff','projectile');
+          startDialogue('Witch',["You've learned the skill: Ice. Press [3] to unleash it."],()=>{ exitBuildingToWorld1('witch'); });
+        }},
+        {text:'Take a Health Potion', action:()=>{
+          player.healthPotions+=1;
+          startDialogue('Witch',["A single vial of restorative brew. Press [H] to drink it when you need it most."],()=>{ exitBuildingToWorld1('witch'); });
+        }},
+        {text:'Refuse her gift', action:()=> startWitchInsult() }
+      ]);
+    };
+    const line=archetypeLine('witch');
+    if(line){ startDialogue(playerName,[line], showWitchChoice); }
+    else { showWitchChoice(); }
   });
 }
 
@@ -1689,10 +1828,15 @@ function enterDojo(){
     "You there! I saw you crossing the wastes.",
     "This is the Dojo of the Sword Arts. Would you like to train under me?"
   ], ()=>{
-    showChoices('Sword Instructor',"Train with me?",[
-      {text:'Yes, train me', action:()=> startDojoTraining()},
-      {text:'No, I do not need training', action:()=> startDojoInsult()}
-    ]);
+    const showInstructorChoice=()=>{
+      showChoices('Sword Instructor',"Train with me?",[
+        {text:'Yes, train me', action:()=> startDojoTraining()},
+        {text:'No, I do not need training', action:()=> startDojoInsult()}
+      ]);
+    };
+    const line=archetypeLine('instructor');
+    if(line){ startDialogue(playerName,[line], showInstructorChoice); }
+    else { showInstructorChoice(); }
   });
 }
 
@@ -1935,19 +2079,27 @@ function enterArnavIntro(){
   startDialogue('Arnav (The Developer)',[
     "...",
     "Hello, "+playerName+". I don't believe we've met.",
-    "My name is Arnav. I'm the Developer of this world - everything you see, I built.",
-    "And I have to say... you have committed hubris, wearing that crown.",
-    "I'll give you a choice, since I'm feeling generous today."
+    "My name is Arnav. I'm the Developer of this world - everything you see, I built."
   ], ()=>{
-    showChoices('Arnav (The Developer)',"What will you do?",[
-      {text:'Repent your sins and be forgiven', action:()=>{
-        startDialogue('Arnav (The Developer)',[
-          "Wise choice. I forgive you.",
-          "Go on, live out the rest of your days in peace."
-        ], ()=>{ triggerWinEnding(2); });
-      }},
-      {text:'Prove your worth', action:()=> startArnavDuelIntro() }
-    ]);
+    const continueArnavIntro=()=>{
+      startDialogue('Arnav (The Developer)',[
+        "And I have to say... you have committed hubris, wearing that crown.",
+        "I'll give you a choice, since I'm feeling generous today."
+      ], ()=>{
+        showChoices('Arnav (The Developer)',"What will you do?",[
+          {text:'Repent your sins and be forgiven', action:()=>{
+            startDialogue('Arnav (The Developer)',[
+              "Wise choice. I forgive you.",
+              "Go on, live out the rest of your days in peace."
+            ], ()=>{ triggerWinEnding(2); });
+          }},
+          {text:'Prove your worth', action:()=> startArnavDuelIntro() }
+        ]);
+      });
+    };
+    const line=archetypeLine('arnav');
+    if(line){ startDialogue(playerName,[line], continueArnavIntro); }
+    else { continueArnavIntro(); }
   });
 }
 function startArnavDuelIntro(){
