@@ -238,6 +238,17 @@
   #loseScreen button{position:relative;z-index:2;padding:12px 30px;font-size:16px;background:#3a1212;color:#fff;
     border:2px solid #c33;border-radius:6px;cursor:pointer;box-shadow:0 0 14px rgba(200,40,40,.3);}
   #loseScreen button:hover{background:#c33;}
+  #bossRushCompleteScreen{position:absolute;top:0;left:0;width:900px;height:560px;color:#fff;overflow:hidden;
+    display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;text-align:center;
+    background:radial-gradient(ellipse at center, #241a05 0%, #0d0a06 65%, #050402 100%);}
+  #bossRushCompleteScreen h1{color:#f2d375;font-size:36px;letter-spacing:3px;
+    text-shadow:0 0 24px rgba(242,211,117,.7),0 0 4px #000;}
+  #bossRushCompleteScreen p{color:#e6d9b8;}
+  .bossRushBigTime{font-family:var(--font-display);font-size:44px;color:#fff;letter-spacing:2px;
+    margin:14px 0 22px;text-shadow:0 0 18px rgba(242,211,117,.5);}
+  #bossRushRestartBtn{padding:12px 30px;font-size:15px;background:#3a2f10;color:#f2d375;
+    border:2px solid #d4af37;border-radius:6px;cursor:pointer;box-shadow:0 0 14px rgba(212,175,55,.3);}
+  #bossRushRestartBtn:hover{background:#4a3a14;}
   .godText{font-family:'Courier New',monospace;font-weight:bold;font-size:1.3em;color:#39ff6a;
     text-shadow:2px 0 #ff2a6d, -2px 0 #05d9e8, 0 0 18px #39ff6a;
     animation:godGlitch 1.4s infinite steps(2,end);letter-spacing:6px;}
@@ -251,6 +262,15 @@
   #honoredBtn{position:relative;z-index:2;padding:8px 16px;font-size:12.5px;letter-spacing:1px;
     background:rgba(0,0,0,.3);color:#c9b98a;border:1px solid rgba(212,175,55,.5);border-radius:6px;cursor:pointer;}
   #honoredBtn:hover{background:rgba(212,175,55,.2);color:#f2d375;}
+  .muteBtn{padding:8px 12px;font-size:14px;background:rgba(0,0,0,.3);color:#ddd;border:1px solid rgba(255,255,255,.35);
+    border-radius:6px;cursor:pointer;}
+  .muteBtn:hover{background:rgba(255,255,255,.12);}
+  #hudMuteBtn{position:absolute;top:12px;right:12px;z-index:6;pointer-events:auto;
+    padding:6px 10px;font-size:15px;background:rgba(0,0,0,.4);color:#ddd;border:1px solid rgba(255,255,255,.3);border-radius:6px;cursor:pointer;}
+  #hudMuteBtn:hover{background:rgba(255,255,255,.15);}
+  #bossRushTimer{position:absolute;top:44px;right:12px;z-index:6;display:none;
+    font-family:var(--font-display);font-size:15px;letter-spacing:1px;color:#f2d375;
+    text-shadow:0 0 8px rgba(242,211,117,.6);background:rgba(0,0,0,.4);padding:5px 10px;border-radius:6px;}
   #versionLogBtn{position:relative;z-index:2;padding:8px 16px;font-size:12.5px;letter-spacing:1px;
     background:rgba(0,0,0,.3);color:#9fc9d8;border:1px solid rgba(108,204,255,.5);border-radius:6px;cursor:pointer;}
   #versionLogBtn:hover{background:rgba(108,204,255,.15);color:#bfe8ff;}
@@ -275,25 +295,64 @@
   .diffOption .diffDesc{font-size:10.5px;color:#c99;margin-top:2px;}
   .diffOption .diffCheck{color:#ff5a5a;font-size:14px;visibility:hidden;}
   .diffOption.activeDiff .diffCheck{visibility:visible;}
+  #bossRushToggleRow{margin:14px 0;padding:10px 12px;background:rgba(242,211,117,.06);
+    border:1px solid rgba(242,211,117,.35);border-radius:6px;}
+  #bossRushLabel{display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;color:#f2d375;line-height:1.4;}
+  #bossRushLabel input{margin-top:2px;accent-color:#f2d375;cursor:pointer;flex-shrink:0;}
   #difficultyModal button#difficultyCloseBtn{padding:8px 20px;background:#2a0f0f;color:#ff8a8a;border:1px solid #ff5a5a;border-radius:6px;cursor:pointer;}
   #difficultyModal button#difficultyCloseBtn:hover{background:#ff5a5a;color:#1a0404;}
-  #honoredModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(4,4,8,.92);
+  #honoredModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(2,4,3,.94);
     display:none;align-items:center;justify-content:center;z-index:40;}
-  #honoredModal .panel{width:480px;max-height:420px;overflow-y:auto;background:linear-gradient(180deg,#0a1a10,#04100a);
-    border:2px solid #39ff6a;border-radius:10px;padding:20px 26px;box-shadow:0 0 30px rgba(57,255,106,.3);
+  #honoredModal .panel{position:relative;width:620px;max-height:480px;overflow-y:auto;overflow-x:hidden;
+    background:radial-gradient(ellipse at 30% -10%, rgba(57,255,106,.14), transparent 55%),
+      linear-gradient(180deg,#0a1a10,#030805 70%);
+    border:2px solid #39ff6a;border-radius:12px;padding:24px 28px 22px;
+    box-shadow:0 0 0 1px rgba(57,255,106,.15), 0 0 50px rgba(57,255,106,.35), inset 0 0 60px rgba(57,255,106,.05);
     font-family:'Courier New',monospace;color:#bfffdc;}
-  #honoredModal h2{color:#39ff6a;text-shadow:0 0 10px rgba(57,255,106,.6);margin-top:0;letter-spacing:2px;
-    display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(57,255,106,.3);padding-bottom:10px;}
-  #honoredModal .honoredList{list-style:none;padding:0;margin:0 0 14px;}
-  #honoredModal .honoredList li{display:flex;align-items:center;gap:10px;padding:7px 10px;margin:4px 0;
-    background:rgba(57,255,106,.05);border-left:2px solid #39ff6a;border-radius:3px;}
-  #honoredModal .honoredList .rank{color:#39ff6a;font-weight:bold;min-width:26px;text-align:right;opacity:.8;}
-  #honoredModal .empty{color:#5a8a6a;font-style:italic;}
+  #honoredModal .panel::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background-image:repeating-linear-gradient(0deg, rgba(57,255,106,.025) 0px, rgba(57,255,106,.025) 1px, transparent 1px, transparent 3px);}
+  #honoredModal h2{position:relative;color:#39ff6a;text-shadow:0 0 14px rgba(57,255,106,.8);margin-top:0;
+    letter-spacing:3px;font-size:19px;display:flex;align-items:center;gap:10px;
+    border-bottom:1px solid rgba(57,255,106,.35);padding-bottom:12px;}
+  #honoredModal h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(57,255,106,.5),transparent);}
+  #honoredTabRow{position:relative;display:flex;gap:5px;flex-wrap:wrap;margin:16px 0 16px;}
+  .honoredTab{flex:1;min-width:76px;padding:9px 4px 8px;font-size:10px;letter-spacing:.5px;text-align:center;
+    background:rgba(57,255,106,.05);border:1px solid rgba(57,255,106,.25);border-radius:6px;color:#7bc99a;
+    cursor:pointer;font-family:'Courier New',monospace;transition:all .18s;text-transform:uppercase;
+    display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .honoredTab .tabIcon{font-size:15px;filter:grayscale(.4);transition:filter .18s;}
+  .honoredTab:hover{background:rgba(57,255,106,.14);color:#d8ffe8;transform:translateY(-1px);}
+  .honoredTab.activeTab{background:linear-gradient(180deg,rgba(57,255,106,.32),rgba(57,255,106,.12));
+    border-color:#39ff6a;color:#eaffef;font-weight:bold;box-shadow:0 0 14px rgba(57,255,106,.5), inset 0 0 10px rgba(57,255,106,.15);}
+  .honoredTab.activeTab .tabIcon{filter:none;}
+  #honoredCount{position:relative;font-size:10.5px;color:#5a9a76;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;}
+  #honoredModal .honoredList{list-style:none;padding:0;margin:0 0 16px;position:relative;}
+  #honoredModal .honoredList li{display:flex;align-items:center;gap:12px;padding:9px 12px;margin:5px 0;
+    background:rgba(57,255,106,.045);border-left:2px solid rgba(57,255,106,.5);border-radius:4px;
+    opacity:0;transform:translateX(-8px);animation:honoredRowIn .35s ease-out forwards;transition:background .15s;}
+  #honoredModal .honoredList li:hover{background:rgba(57,255,106,.1);}
+  @keyframes honoredRowIn{to{opacity:1;transform:translateX(0);}}
+  #honoredModal .honoredList li.medalRow{border-left-width:3px;padding:11px 14px;}
+  #honoredModal .honoredList li.medal-1{background:linear-gradient(90deg,rgba(255,214,79,.16),rgba(57,255,106,.04));
+    border-left-color:#ffd64f;box-shadow:0 0 14px rgba(255,214,79,.2);}
+  #honoredModal .honoredList li.medal-2{background:linear-gradient(90deg,rgba(210,220,230,.13),rgba(57,255,106,.04));
+    border-left-color:#d2dce6;}
+  #honoredModal .honoredList li.medal-3{background:linear-gradient(90deg,rgba(214,150,90,.14),rgba(57,255,106,.04));
+    border-left-color:#d6965a;}
+  #honoredModal .honoredList .rank{color:#39ff6a;font-weight:bold;min-width:30px;text-align:center;opacity:.85;font-size:12px;}
+  #honoredModal .honoredList .medalIcon{min-width:30px;text-align:center;font-size:17px;filter:drop-shadow(0 0 4px rgba(255,214,79,.5));}
+  #honoredModal .honoredList .hName{flex:1;color:#eaffef;font-size:12.5px;letter-spacing:.3px;}
+  #honoredModal .honoredList .hTime{color:#ffe066;font-size:12.5px;font-weight:bold;flex-shrink:0;
+    text-shadow:0 0 6px rgba(255,224,102,.4);}
+  #honoredModal .honoredList .bestTag{font-size:8.5px;letter-spacing:1px;color:#ffd64f;background:rgba(255,214,79,.15);
+    border:1px solid rgba(255,214,79,.4);padding:1px 5px;border-radius:3px;margin-left:6px;text-transform:uppercase;}
+  #honoredModal .empty{color:#5a8a6a;font-style:italic;font-size:12.5px;}
   #honoredModal .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(57,255,106,.25);
     border-top-color:#39ff6a;border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:-2px;}
   @keyframes spin{to{transform:rotate(360deg);}}
-  #honoredModal button{padding:8px 20px;background:#0a2a16;color:#39ff6a;border:1px solid #39ff6a;border-radius:6px;cursor:pointer;}
-  #honoredModal button:hover{background:#39ff6a;color:#04100a;}
+  #honoredModal button{position:relative;padding:9px 22px;background:#0a2a16;color:#39ff6a;border:1px solid #39ff6a;
+    border-radius:6px;cursor:pointer;letter-spacing:1px;font-family:'Courier New',monospace;transition:all .15s;}
+  #honoredModal button:hover{background:#39ff6a;color:#04100a;box-shadow:0 0 14px rgba(57,255,106,.5);}
 
   #versionModal{position:absolute;top:0;left:0;width:900px;height:560px;background:rgba(4,4,8,.92);
     display:none;align-items:center;justify-content:center;z-index:40;}
@@ -407,6 +466,7 @@
       <button id="honoredBtn">🏆 Honored Ones</button>
       <button id="versionLogBtn">📜 Version Log</button>
       <button id="difficultyBtn">🎚 Difficulty</button>
+      <button id="titleMuteBtn" class="muteBtn">🔊</button>
     </div>
     <div id="dedication">For Mr. Truong</div>
   </div>
@@ -414,6 +474,8 @@
   <div id="honoredModal">
     <div class="panel">
       <h2>🏆 Honored Ones</h2>
+      <div id="honoredTabRow"></div>
+      <div id="honoredCount"></div>
       <div id="honoredListWrap"></div>
       <button id="honoredCloseBtn">Close</button>
     </div>
@@ -471,12 +533,19 @@
       <h2>🎚 Choose Difficulty</h2>
       <p class="difficultyDesc">Higher difficulty means tougher bosses and monsters, more Precalculus training rounds, and less damage from your own weapons.</p>
       <div id="difficultyOptions"></div>
+      <div id="bossRushToggleRow">
+        <label id="bossRushLabel">
+          <input type="checkbox" id="bossRushCheckbox">
+          <span>🏃 Boss Rush Mode - skip the story, fight Teacher → Arnav → The Developer back-to-back on a timer</span>
+        </label>
+      </div>
       <button id="difficultyCloseBtn">Close</button>
     </div>
   </div>
 
   <div class="overlay">
     <div id="lowHpVignette"></div>
+    <button id="hudMuteBtn" class="muteBtn">🔊</button>
     <div id="hud">
       <div class="hpLabel"><span>Vitality</span><span id="hpNumeric">100/100</span></div>
       <div id="hpBarWrap"><div id="hpBarFill"></div></div>
@@ -484,6 +553,7 @@
     </div>
     <div id="bossName"></div>
     <div id="bossBarWrap"><div id="bossBarFill"></div></div>
+    <div id="bossRushTimer"></div>
     <div id="skillKeys"></div>
     <div id="controlsHint">A/D move · W/↑ jump · S crouch · Left Click or Space attack · K skills · I inventory · H drink potion</div>
     <div id="dialogueBox">
@@ -521,6 +591,12 @@
     <p id="loseText">The wasteland claims another soul.</p>
     <button id="loseRestartBtn">Restart</button>
   </div>
+  <div id="bossRushCompleteScreen">
+    <h1>🏃 BOSS RUSH COMPLETE</h1>
+    <p>You cleared the Teacher, Arnav, and The Developer back-to-back.</p>
+    <div id="bossRushTimeText" class="bossRushBigTime">00.00s</div>
+    <button id="bossRushRestartBtn">Play Again</button>
+  </div>
 </div>
 <div class="hudCorner tl"></div>
 <div class="hudCorner tr"></div>
@@ -551,6 +627,135 @@ function updateGameScale(){
 window.addEventListener('resize', updateGameScale);
 window.addEventListener('orientationchange', updateGameScale);
 updateGameScale();
+
+// ================= Audio Engine =================
+// Everything here is procedurally synthesized with the Web Audio API - no
+// external files, so the whole game stays a single self-contained HTML file.
+// PUBLIC API (safe to call from anywhere below):
+//   sfx.swing()              - sword swing whoosh
+//   sfx.hit(isCrit)          - impact thud; pass true for a sharper "crit" version
+//   sfx.jump()                - jump whoosh
+//   sfx.heal()                - potion/heal chime
+//   sfx.skill()                - skill-cast zap
+//   sfx.uiClick()              - menu/button blip
+//   sfx.death()                - permadeath tone
+//   sfx.win()                  - victory fanfare (also used for boss kills)
+//   sfx.glitch()               - harsh digital noise burst
+//   sfx.portal()               - sweeping teleport whoosh
+//   setMusicMood(key)          - crossfade background music; keys: 'title','overworld',
+//                                 'danger','mystic','boss','matrix','victory', or null for silence
+//   toggleMute()               - mutes/unmutes everything (music + sfx)
+// To add a new sound: write a small function using playTone(freq,duration,waveType,gain,sweepToFreq)
+// or playNoise(duration,gain,lowpassFreq) and attach it to the `sfx` object below.
+// To add a new music mood: add an entry to MUSIC_MOODS with {root, scale (semitone offsets), tempo(ms), wave, bass}.
+let audioCtx=null, masterGain=null, musicGain=null, sfxGain=null;
+let masterMuted=false;
+function initAudio(){
+  if(audioCtx) return;
+  try{
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    masterGain=audioCtx.createGain(); masterGain.gain.value = masterMuted?0:0.7;
+    masterGain.connect(audioCtx.destination);
+    musicGain=audioCtx.createGain(); musicGain.gain.value=0.55; musicGain.connect(masterGain);
+    sfxGain=audioCtx.createGain(); sfxGain.gain.value=0.9; sfxGain.connect(masterGain);
+  }catch(e){ console.warn('[wasteland-adventure] Web Audio unavailable', e); }
+}
+document.addEventListener('click', initAudio, {once:true});
+document.addEventListener('keydown', initAudio, {once:true});
+
+function playTone(freq, duration, type, gainVal, sweepTo){
+  if(!audioCtx) return;
+  const osc=audioCtx.createOscillator();
+  osc.type=type||'square';
+  osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  if(sweepTo) osc.frequency.exponentialRampToValueAtTime(Math.max(20,sweepTo), audioCtx.currentTime+duration);
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(gainVal||0.15, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+duration);
+  osc.connect(g).connect(sfxGain);
+  osc.start(); osc.stop(audioCtx.currentTime+duration+0.02);
+}
+function playNoise(duration, gainVal, filterFreq){
+  if(!audioCtx) return;
+  const bufferSize=Math.max(1,Math.floor(audioCtx.sampleRate*duration));
+  const buffer=audioCtx.createBuffer(1,bufferSize,audioCtx.sampleRate);
+  const data=buffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++){ data[i]=Math.random()*2-1; }
+  const src=audioCtx.createBufferSource(); src.buffer=buffer;
+  const filter=audioCtx.createBiquadFilter(); filter.type='lowpass'; filter.frequency.value=filterFreq||2000;
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(gainVal||0.2, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+duration);
+  src.connect(filter).connect(g).connect(sfxGain);
+  src.start();
+}
+
+const sfx={
+  swing:()=>playTone(500,0.08,'square',0.09,280),
+  hit:(isCrit)=>{ playNoise(0.12,0.2,isCrit?4200:1400); if(isCrit) playTone(1300,0.16,'triangle',0.12,1900); },
+  jump:()=>playTone(320,0.14,'sine',0.09,640),
+  heal:()=>playTone(520,0.28,'sine',0.11,940),
+  skill:()=>playTone(720,0.16,'sawtooth',0.1,220),
+  uiClick:()=>playTone(600,0.05,'square',0.06),
+  death:()=>playTone(320,0.65,'sawtooth',0.16,55),
+  win:()=>{ [0,4,7,12].forEach((n,i)=>setTimeout(()=>playTone(392*Math.pow(2,n/12),0.32,'triangle',0.13),i*120)); },
+  glitch:()=>playNoise(0.22,0.22,6000),
+  portal:()=>playNoise(0.4,0.16,3000),
+};
+
+const MUSIC_MOODS={
+  title:    {root:220,    scale:[0,3,5,7,10],  tempo:420, wave:'triangle', bass:110},
+  overworld:{root:293.66, scale:[0,2,4,7,9],   tempo:380, wave:'triangle', bass:98},
+  danger:   {root:196,    scale:[0,1,3,6,8],   tempo:260, wave:'sawtooth', bass:65.4},
+  mystic:   {root:246.94, scale:[0,3,5,8,10],  tempo:500, wave:'sine',     bass:82.4},
+  boss:     {root:174.6,  scale:[0,1,4,6,7],   tempo:200, wave:'square',   bass:58},
+  matrix:   {root:220,    scale:[0,3,6,7,10],  tempo:150, wave:'square',   bass:55},
+  victory:  {root:392,    scale:[0,4,7,9,12],  tempo:300, wave:'triangle', bass:130.8},
+};
+let musicIntervalId=null, musicOscillators=[], currentMusicMood=null;
+function stopMusicLoop(){
+  if(musicIntervalId){ clearInterval(musicIntervalId); musicIntervalId=null; }
+  musicOscillators.forEach(o=>{ try{o.stop();}catch(e){} });
+  musicOscillators=[];
+}
+function startMusicLoop(moodKey){
+  stopMusicLoop();
+  if(!audioCtx) return;
+  const cfg=MUSIC_MOODS[moodKey]; if(!cfg) return;
+  const bass=audioCtx.createOscillator();
+  bass.type='sine'; bass.frequency.value=cfg.bass;
+  const bassGain=audioCtx.createGain(); bassGain.gain.value=0.05;
+  bass.connect(bassGain).connect(musicGain);
+  bass.start();
+  musicOscillators.push(bass);
+  const arp=audioCtx.createOscillator();
+  arp.type=cfg.wave;
+  const arpGain=audioCtx.createGain(); arpGain.gain.value=0.0;
+  arp.connect(arpGain).connect(musicGain);
+  arp.start();
+  musicOscillators.push(arp);
+  let step=0;
+  musicIntervalId=setInterval(()=>{
+    if(!audioCtx) return;
+    const note=cfg.scale[step%cfg.scale.length];
+    const freq=cfg.root*Math.pow(2, note/12);
+    arp.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.01);
+    arpGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    arpGain.gain.setValueAtTime(0.09, audioCtx.currentTime);
+    arpGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+cfg.tempo/1000*0.9);
+    step++;
+  }, cfg.tempo);
+}
+function setMusicMood(moodKey){
+  if(moodKey===currentMusicMood) return;
+  currentMusicMood=moodKey;
+  if(moodKey) startMusicLoop(moodKey); else stopMusicLoop();
+}
+function toggleMute(){
+  masterMuted=!masterMuted;
+  if(masterGain) masterGain.gain.value = masterMuted?0:0.7;
+  document.querySelectorAll('.muteBtn').forEach(b=>{ b.textContent = masterMuted? '🔇':'🔊'; });
+}
 
 const GRAVITY=0.62;
 const JUMP_VEL=-11.5;
@@ -873,6 +1078,9 @@ function diffPlayerDmgMult(idx){ return Math.max(0.4, 1 - idx*0.15); } // player
 function diffPrecalcRounds(idx){ return 5 + idx; }         // extra Honors Precalculus rounds at higher difficulty
 function scaleHp(base){ return Math.round(base*diffHealthMult(playthroughIndex)); }
 function scaleEnemyDmg(base){ return Math.round(base*diffEnemyDmgMult(playthroughIndex)); }
+let bossRushMode=false;
+let bossRushActive=false;
+let currentRunStartTime=0;
 let playerName='Wanderer';
 let gameOver=false;
 let devDamageBoost=false;
@@ -954,18 +1162,18 @@ async function loadHonoredOnes(){
     const res = await fetch(HONORED_API_BASE + '/api/honored-ones');
     if(!res.ok) throw new Error('bad status '+res.status);
     const data = await res.json();
-    return Array.isArray(data.names) ? data.names : [];
+    return Array.isArray(data.entries) ? data.entries : [];
   }catch(e){
     console.error('Failed to load Honored Ones from server', e);
     return null; // null signals "couldn't reach the server"
   }
 }
-async function saveHonoredOne(name){
+async function saveHonoredOne(name, category, timeSeconds){
   try{
     await fetch(HONORED_API_BASE + '/api/honored-ones', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({name})
+      body: JSON.stringify({name, category, time_seconds:timeSeconds})
     });
   }catch(e){
     console.error('Failed to save Honored One to server', e);
@@ -1028,23 +1236,72 @@ safeOn('startBtn','click',()=>{
   const nameVal=document.getElementById('nameInput').value.trim();
   if(nameVal) playerName=nameVal.slice(0,16);
   selectScreen.style.display='none';
-  scene='world1';
+  currentRunStartTime=performance.now();
+  if(bossRushMode){ startBossRush(); }
+  else { scene='world1'; }
   addSkillKeyHUD();
 });
-safeOn('honoredBtn','click', async ()=>{
+safeOn('bossRushCheckbox','change', e=>{ bossRushMode=e.target.checked; });
+const HONORED_TABS=[
+  {key:'easy', label:'Easy', icon:'🟢'},
+  {key:'medium', label:'Medium', icon:'🟡'},
+  {key:'hard', label:'Hard', icon:'🟠'},
+  {key:'nightmare', label:'Nightmare', icon:'🔴'},
+  {key:'impossible', label:'Impossible', icon:'💀'},
+  {key:'speedrun', label:'Speedrun', icon:'🏃'},
+];
+const MEDALS=['🥇','🥈','🥉'];
+let honoredEntriesCache=null;
+let honoredActiveTab='easy';
+function renderHonoredTab(){
   const wrap=document.getElementById('honoredListWrap');
+  const countEl=document.getElementById('honoredCount');
+  document.querySelectorAll('.honoredTab').forEach(t=>{
+    t.classList.toggle('activeTab', t.dataset.key===honoredActiveTab);
+  });
+  if(honoredEntriesCache===null){
+    if(countEl) countEl.textContent='';
+    wrap.innerHTML='<p class="empty">Could not reach the server. Check your connection and try again.</p>';
+    return;
+  }
+  const entries=honoredEntriesCache.filter(e=>e.category===honoredActiveTab);
+  entries.sort((a,b)=>(a.time_seconds||Infinity)-(b.time_seconds||Infinity));
+  if(entries.length===0){
+    if(countEl) countEl.textContent='';
+    wrap.innerHTML='<p class="empty">No one has cleared this yet... yet.</p>';
+    return;
+  }
+  if(countEl) countEl.textContent=entries.length+' hero'+(entries.length===1?'':'es')+' have proven themselves here';
+  wrap.innerHTML='<ul class="honoredList">'+entries.map((e,i)=>{
+    const safeName=(e.name||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const timeStr=(typeof e.time_seconds==='number')? formatTime(e.time_seconds*1000) : '—';
+    const medal=MEDALS[i];
+    const rankMarkup=medal
+      ? '<span class="medalIcon">'+medal+'</span>'
+      : '<span class="rank">#'+(i+1)+'</span>';
+    const bestTag = i===0 ? '<span class="bestTag">Best</span>' : '';
+    const rowClass = medal ? ' medalRow medal-'+(i+1) : '';
+    const delay = Math.min(i,10)*0.04;
+    return '<li class="'+rowClass+'" style="animation-delay:'+delay+'s;">'+rankMarkup
+      +'<span class="hName">'+safeName+bestTag+'</span>'
+      +'<span class="hTime">'+timeStr+'</span></li>';
+  }).join('')+'</ul>';
+}
+safeOn('honoredBtn','click', async ()=>{
+  const tabRow=document.getElementById('honoredTabRow');
+  const wrap=document.getElementById('honoredListWrap');
+  const countEl=document.getElementById('honoredCount');
+  tabRow.innerHTML=HONORED_TABS.map(t=>
+    '<div class="honoredTab" data-key="'+t.key+'"><span class="tabIcon">'+t.icon+'</span>'+t.label+'</div>'
+  ).join('');
+  tabRow.querySelectorAll('.honoredTab').forEach(el=>{
+    el.addEventListener('click',()=>{ sfx.uiClick(); honoredActiveTab=el.dataset.key; renderHonoredTab(); });
+  });
+  if(countEl) countEl.textContent='';
   wrap.innerHTML='<p class="empty"><span class="spinner"></span>Loading the Honored Ones...</p>';
   document.getElementById('honoredModal').style.display='flex';
-  const list=await loadHonoredOnes();
-  if(list===null){
-    wrap.innerHTML='<p class="empty">Could not reach the server. Check your connection and try again.</p>';
-  } else if(list.length===0){
-    wrap.innerHTML='<p class="empty">No one has proven themselves a GOD... yet.</p>';
-  } else {
-    wrap.innerHTML='<ul class="honoredList">'+list.map((n,i)=>
-      '<li><span class="rank">#'+(i+1)+'</span><span>'+n.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span></li>'
-    ).join('')+'</ul>';
-  }
+  honoredEntriesCache=await loadHonoredOnes();
+  renderHonoredTab();
 });
 safeOn('honoredCloseBtn','click',()=>{
   document.getElementById('honoredModal').style.display='none';
@@ -1186,6 +1443,8 @@ safeOn('difficultyBtn','click',()=>{
 safeOn('difficultyCloseBtn','click',()=>{
   document.getElementById('difficultyModal').style.display='none';
 });
+safeOn('titleMuteBtn','click', toggleMute);
+safeOn('hudMuteBtn','click', toggleMute);
 
 function safeOn(id, evt, handler, opts){
   const el = document.getElementById(id);
@@ -1278,6 +1537,7 @@ function showChoices(name, text, options){
     const b=document.createElement('button');
     b.innerHTML='<span class="choiceNum">'+(i+1)+'</span><span>'+opt.text+'</span>';
     b.onclick=()=>{
+      sfx.uiClick();
       choiceBox.style.display='none';
       // show the player actually saying what they picked before resolving it
       startDialogue(playerName, [opt.text], opt.action);
@@ -1354,6 +1614,7 @@ function useSkill(sk){
   if(sk.cooldown>0) return;
   sk.cooldown=sk.baseCooldown||45;
   if(sk.type==='potion'){ handlePotionSkill(sk); return; }
+  sfx.skill();
   const px=player.x+player.w/2, py=player.y+player.h/2;
   const dx=(mouse.x+camera.x) - px;
   const dy=mouse.y - py;
@@ -1369,8 +1630,10 @@ function handlePotionSkill(sk){
   const isHeal = Math.random()<0.5;
   if(isHeal){
     player.hp=Math.min(player.maxhp, player.hp+20);
+    sfx.heal();
     spawnDamageNumber(player.x+player.w/2,player.y-6,'+20','#7fff7f');
   } else {
+    sfx.skill();
     const px=player.x+player.w/2, py=player.y+player.h/2;
     const dx=(mouse.x+camera.x) - px;
     const dy=mouse.y - py;
@@ -1487,6 +1750,7 @@ function swordSwing(){
   if(player.attackCooldown>0) return;
   player.attackCooldown=22;
   player.swingTimer=16;
+  sfx.swing();
   const range=60;
   const px=player.x+player.w/2, py=player.y+player.h/2;
   let dmg=currentWeaponDamage();
@@ -1497,35 +1761,37 @@ function swordSwing(){
   }
   const dmgColor = isCrit ? '#ffe066' : '#fff';
   const dmgText = isCrit ? 'CRIT -'+dmg : '-'+dmg;
+  let anyHit=false;
 
   equations.forEach(eq=>{
     if(!eq.alive) return;
     const d=Math.hypot(eq.x-px, eq.y-py);
-    if(d<range+eq.r){ eq.alive=false; onEquationKilled(); }
+    if(d<range+eq.r){ eq.alive=false; anyHit=true; onEquationKilled(); }
   });
   enemies.forEach(en=>{
     if(!en.alive) return;
     const d=Math.hypot(en.x-px,en.y-py);
-    if(d<range+en.r){ en.hp-=dmg; en.flash=8; spawnDamageNumber(en.x,en.y-24,dmgText,dmgColor,isCrit); if(en.hp<=0) en.alive=false; }
+    if(d<range+en.r){ en.hp-=dmg; en.flash=8; anyHit=true; spawnDamageNumber(en.x,en.y-24,dmgText,dmgColor,isCrit); if(en.hp<=0) en.alive=false; }
   });
   if(boss && boss.alive){
     const d=Math.hypot(boss.x-px, boss.y-py);
-    if(d<range+boss.r){ damageBoss(dmg,isCrit); }
+    if(d<range+boss.r){ damageBoss(dmg,isCrit); anyHit=true; }
   }
   dojo.dummies.forEach(du=>{
     if(!du.alive) return;
     const d=Math.hypot(du.x-px,du.y-py);
-    if(d<range+du.r){ du.hp-=dmg; du.flash=8; spawnDamageNumber(du.x,du.y-30,dmgText,dmgColor,isCrit); if(du.hp<=0){ du.alive=false; onDummyKilled(); } }
+    if(d<range+du.r){ du.hp-=dmg; du.flash=8; anyHit=true; spawnDamageNumber(du.x,du.y-30,dmgText,dmgColor,isCrit); if(du.hp<=0){ du.alive=false; onDummyKilled(); } }
   });
   if(dojo.instructor && dojo.instructor.alive){
     const ins=dojo.instructor;
     const d=Math.hypot(ins.x-px,ins.y-py);
-    if(d<range+ins.r){ ins.hp-=dmg; ins.flash=8; spawnDamageNumber(ins.x,ins.y-50,dmgText,dmgColor,isCrit); if(ins.hp<=0){ ins.alive=false; onInstructorDefeated(); } }
+    if(d<range+ins.r){ ins.hp-=dmg; ins.flash=8; anyHit=true; spawnDamageNumber(ins.x,ins.y-50,dmgText,dmgColor,isCrit); if(ins.hp<=0){ ins.alive=false; onInstructorDefeated(); } }
   }
   if(witchFight && witchFight.alive){
     const d=Math.hypot(witchFight.x-px, witchFight.y-py);
-    if(d<range+witchFight.r){ damageWitch(dmg,isCrit); }
+    if(d<range+witchFight.r){ damageWitch(dmg,isCrit); anyHit=true; }
   }
+  if(anyHit) sfx.hit(isCrit);
 }
 function damageBoss(dmg,isCrit){
   boss.hp-=dmg;
@@ -1814,6 +2080,7 @@ function useHealthPotion(){
   if(player.healthPotions>0){
     player.healthPotions--;
     player.hp=player.maxhp;
+    sfx.heal();
     spawnDamageNumber(player.x+player.w/2,player.y-6,'FULL HEAL','#7fff7f');
   }
 }
@@ -2007,6 +2274,33 @@ function proceedBossIntroDialogue(){
   ], ()=>{ startBossPhase1(); });
 }
 
+function startBossRush(){
+  bossRushActive=true;
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  player.hp=player.maxhp;
+  inputLocked=false;
+  learnSkill('Fireball','2',20,'#ff5522','projectile');
+  learnSkill('Ice','3',18,'#66ccff','projectile');
+  learnSkill('Lightning','4',5,'#66eaff','projectile',30);
+  if(!mergedWeapons['Lightning Sword']){
+    mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff'};
+    ownedWeapons.push('Lightning Sword');
+  }
+  startBossPhase1();
+}
+async function finishBossRush(){
+  bossBarWrap.style.display='none';
+  bossNameEl.style.display='none';
+  bossRushActive=false;
+  scene='bossrush_complete';
+  inputLocked=true;
+  const elapsedMs=performance.now()-currentRunStartTime;
+  const timeText=document.getElementById('bossRushTimeText');
+  if(timeText) timeText.textContent=formatTime(elapsedMs);
+  const screen=document.getElementById('bossRushCompleteScreen');
+  if(screen) screen.style.display='flex';
+  await saveHonoredOne(playerName, 'speedrun', elapsedMs/1000);
+}
 function startBossPhase1(){
   scene='boss1';
   const hp=scaleHp(400), dmg=scaleEnemyDmg(10);
@@ -2028,6 +2322,12 @@ function startBossPhase2(){
 function onBossDefeated(){
   bossBarWrap.style.display='none';
   const kind=boss.kind;
+  if(bossRushActive){
+    if(kind==='teacher1'){ startBossPhase2(); return; }
+    if(kind==='teacher2'){ bossNameEl.style.display='none'; player.hp=player.maxhp; startArnavDuel(); return; }
+    if(kind==='arnav'){ player.hp=player.maxhp; startDeveloperDuel(); return; }
+    if(kind==='developer'){ finishBossRush(); return; }
+  }
   if(kind==='teacher1'){
     inputLocked=true;
     startDialogue('Teacher',[
@@ -2114,6 +2414,7 @@ function startPortalTeleport(){
   scene='portal_tp';
   inputLocked=true;
   portalTimer=90;
+  sfx.portal();
 }
 function startArnavDuel(){
   scene='arnav_fight';
@@ -2134,6 +2435,7 @@ function startGlitchSequence(){
   bossNameEl.style.display='none';
   glitchSevere=false;
   glitchTimer=150;
+  sfx.glitch();
 }
 function startDeveloperIntroDialogue(){
   scene='developer_intro';
@@ -2163,6 +2465,8 @@ function startFinalGlitchSequence(){
   bossNameEl.style.display='none';
   glitchSevere=true;
   glitchTimer=260;
+  sfx.glitch();
+  setTimeout(()=>{ if(scene==='final_glitch') sfx.glitch(); }, 700);
 }
 function startDeveloperFinalDialogue(){
   scene='developer_final';
@@ -2207,15 +2511,21 @@ function openLaptopModal(){
   modal.style.display='flex';
   setTimeout(()=>input.focus(), 60);
 }
+function formatTime(ms){
+  const totalSec=ms/1000;
+  const m=Math.floor(totalSec/60);
+  const s=(totalSec%60).toFixed(2);
+  return (m>0? m+'m ':'')+s+'s';
+}
 async function submitLaptopName(){
   const modal=document.getElementById('laptopModal');
   const input=document.getElementById('laptopNameInput');
   const val = input ? input.value.trim() : '';
-  const baseName = (val ? val : playerName);
-  const diffTag = ' ['+difficultyName(playthroughIndex)+']';
-  const fullName = baseName.slice(0, Math.max(1,60-diffTag.length)) + diffTag;
+  const fullName = (val ? val : playerName).slice(0,60);
+  const elapsedSec = Math.max(0,(performance.now()-currentRunStartTime)/1000);
+  const category = DIFFICULTY_NAMES[playthroughIndex].toLowerCase();
   if(modal) modal.style.display='none';
-  await saveHonoredOne(fullName);
+  await saveHonoredOne(fullName, category, elapsedSec);
   triggerWinEnding(3);
 }
 safeOn('laptopSubmitBtn','click', submitLaptopName);
@@ -2293,6 +2603,7 @@ function triggerWinEnding(num){
     descEl.textContent='You closed the laptop and walked away from the simulation. No fanfare, no list of names - just the quiet knowledge that you were strong enough to beat the Developer himself. No need to gloat.';
   }
   winScreen.style.display='flex';
+  sfx.win();
 }
 
 // ================= Restart run (in-memory soft reset - no storage of any kind) =================
@@ -2328,21 +2639,29 @@ function restartRun(){
 
   winScreen.style.display='none';
   loseScreen.style.display='none';
+  const brScreen=document.getElementById('bossRushCompleteScreen');
+  if(brScreen) brScreen.style.display='none';
+  bossRushActive=false;
+  const timerEl=document.getElementById('bossRushTimer');
+  if(timerEl) timerEl.style.display='none';
   bossBarWrap.style.display='none';
   bossNameEl.style.display='none';
   selectScreen.style.display='flex';
   addSkillKeyHUD();
   updateStatusIcons();
   refreshDifficultyBadge();
+  const brCheckbox=document.getElementById('bossRushCheckbox');
+  if(brCheckbox) brCheckbox.checked=bossRushMode;
 }
 function refreshDifficultyBadge(){
   const badge=document.getElementById('difficultyBadge');
   if(!badge) return;
   badge.style.display='block';
-  badge.textContent='DIFFICULTY: '+difficultyName(playthroughIndex).toUpperCase();
+  badge.textContent='DIFFICULTY: '+difficultyName(playthroughIndex).toUpperCase()+(bossRushMode?' · BOSS RUSH':'');
 }
 safeOn('restartBtn','click', restartRun);
 safeOn('loseRestartBtn','click', restartRun);
+safeOn('bossRushRestartBtn','click', restartRun);
 
 function triggerLose(reason){
   if(gameOver) return;
@@ -2350,6 +2669,7 @@ function triggerLose(reason){
   inputLocked=true;
   bossBarWrap.style.display='none';
   scene='lose';
+  sfx.death();
   loseText.textContent = reason || 'The wasteland claims another soul.';
   loseScreen.style.display='flex';
 }
@@ -2380,6 +2700,7 @@ function updatePlayerPhysics(){
   if((keys['w']||keys['arrowup']) && player.grounded && !player.crouching){
     player.vy = player.jumpBoost ? FROG_JUMP_VEL : JUMP_VEL;
     player.grounded=false;
+    sfx.jump();
   }
 
   player.vy+=GRAVITY;
@@ -2403,8 +2724,30 @@ function updatePlayerPhysics(){
 }
 
 // ================= Update =================
+function musicMoodForScene(){
+  if(scene==='select') return 'title';
+  if(scene==='win') return 'victory';
+  if(scene==='lose') return null;
+  if(scene==='boss1'||scene==='boss2'||scene==='witch_duel') return 'boss';
+  if(scene==='dojo' && dojo.state==='duel') return 'boss';
+  if(scene==='arnav_fight'||scene==='developer_fight'||scene==='developer_intro'||scene==='developer_final'||
+     scene==='glitch_transition'||scene==='final_glitch'||scene==='portal_tp'||scene==='laptop_ready') return 'matrix';
+  if(scene==='classroom'||scene==='witch_hut'||scene==='dojo') return 'mystic';
+  if(scene==='world1'||scene==='world2') return isNight? 'danger':'overworld';
+  return 'mystic';
+}
 function update(){
-  if(scene==='select'||scene==='lose'||scene==='win') return;
+  setMusicMood(musicMoodForScene());
+  const timerEl=document.getElementById('bossRushTimer');
+  if(timerEl){
+    if(bossRushActive){
+      timerEl.style.display='block';
+      timerEl.textContent='⏱ '+formatTime(performance.now()-currentRunStartTime);
+    } else if(scene!=='bossrush_complete'){
+      timerEl.style.display='none';
+    }
+  }
+  if(scene==='select'||scene==='lose'||scene==='win'||scene==='bossrush_complete') return;
   animTime++;
 
   dayNightTimer++;
