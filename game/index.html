@@ -494,7 +494,7 @@
       <div class="mbScreen">
         <h3>For Mr. Truong.</h3>
         <h4>By Arnav Gupta</h4>
-        <p>If you're reading this, you made it further than most people ever will. Consider yourself part of the winning pool.</p>
+        <p>If you're reading this, you made it further than most people ever will.</p>
         <label>Enter your name to be etched among the Honored Ones, forever:</label>
         <div class="mbInputRow">
           <input id="laptopNameInput" type="text" placeholder="Your full name" maxlength="60">
@@ -535,7 +535,7 @@
       <div id="bossRushToggleRow">
         <label id="bossRushLabel">
           <input type="checkbox" id="bossRushCheckbox">
-          <span>🏃 Speedrun Mode - skip the story, fight Teacher → Arnav → The Developer back-to-back on a timer</span>
+          <span>🏃 Boss Rush Mode - skip the story, fight Teacher → Arnav → The Developer back-to-back on a timer</span>
         </label>
       </div>
       <button id="difficultyCloseBtn">Close</button>
@@ -554,7 +554,7 @@
     <div id="bossBarWrap"><div id="bossBarFill"></div></div>
     <div id="bossRushTimer"></div>
     <div id="skillKeys"></div>
-    <div id="controlsHint">A/D move · W/↑ jump · S crouch · Left Click or Space attack · K skills · I inventory · H drink potion</div>
+    <div id="controlsHint">A/D move · W/↑ jump · S crouch · Shift dash · Left Click or Space attack · K skills · I inventory · H drink potion</div>
     <div id="dialogueBox">
       <div id="dialogueNameRow"><span id="dialogueIcon"></span><span id="dialogueName"></span></div>
       <div id="dialogueText"></div>
@@ -700,6 +700,10 @@ const sfx={
   win:()=>{ [0,4,7,12].forEach((n,i)=>setTimeout(()=>playTone(392*Math.pow(2,n/12),0.32,'triangle',0.13),i*120)); },
   glitch:()=>playNoise(0.22,0.22,6000),
   portal:()=>playNoise(0.4,0.16,3000),
+  dash:()=>{ playNoise(0.1,0.12,2500); playTone(400,0.1,'sine',0.06,150); },
+  freeze:()=>playTone(900,0.12,'sine',0.08,300),
+  burn:()=>playNoise(0.08,0.1,1000),
+  chain:()=>playTone(1000,0.08,'square',0.07,1600),
 };
 
 const MUSIC_MOODS={
@@ -1137,7 +1141,21 @@ const player={
   invuln:0,
   frog:false, jumpBoost:false,
   healthPotions:0,
+  dashing:0, dashCooldownTimer:0,
 };
+let dashTrail=[];
+const DASH_SPEED=9.5, DASH_DURATION=9, DASH_COOLDOWN=42, DASH_INVULN=16;
+function attemptDash(){
+  if(scene==='select') return;
+  if(inputLocked) return;
+  if(player.dashCooldownTimer>0) return;
+  if(player.dashing>0) return;
+  player.dashing=DASH_DURATION;
+  player.dashCooldownTimer=DASH_COOLDOWN;
+  player.vx=player.facing*DASH_SPEED;
+  player.invuln=Math.max(player.invuln,DASH_INVULN);
+  sfx.dash();
+}
 
 let witchFight=null;
 
@@ -1466,6 +1484,7 @@ window.addEventListener('keydown',e=>{
   if(k==='i'){ toggleInventoryMenu(); }
   if(k==='h'){ useHealthPotion(); }
   if(k===' '){ e.preventDefault(); swordSwing(); }
+  if(k==='shift'){ attemptDash(); }
   if(k==='q'){ openPinModal(); }
   handleSkillKey(e.key);
 });
@@ -1715,6 +1734,14 @@ function renderSkillMenu(){
     mergeWeaponSel.appendChild(o);
   });
 }
+function procTypeForSkill(name){
+  const n=(name||'').toLowerCase();
+  if(n.includes('ice')) return 'freeze';
+  if(n.includes('lightning')) return 'chain';
+  if(n.includes('fireball')) return 'burn';
+  return null;
+}
+const PROC_LABELS={freeze:'❄️ Freeze', chain:'⚡ Chain', burn:'🔥 Burn'};
 const MAX_SWORD_DAMAGE=150;
 safeOn('mergeBtn','click',()=>{
   const skName=document.getElementById('mergeSkillSel').value;
@@ -1724,11 +1751,13 @@ safeOn('mergeBtn','click',()=>{
   const base=mergedWeapons[wpName]||{damage:10,color:'#ccc'};
   const newName= skName+' '+ (wpName.includes('Sword')?'Sword':wpName);
   const newDamage=Math.min(MAX_SWORD_DAMAGE, Math.round(base.damage + sk.damage*0.6));
-  mergedWeapons[newName]={damage:newDamage,color:sk.color};
+  const proc=procTypeForSkill(skName);
+  mergedWeapons[newName]={damage:newDamage,color:sk.color,proc:proc};
   if(!ownedWeapons.includes(newName)) ownedWeapons.push(newName);
   player.weapon=newName; player.weaponDamage=newDamage;
   const cappedNote = newDamage>=MAX_SWORD_DAMAGE ? ' (damage capped at max!)' : '';
-  document.getElementById('mergeResult').textContent='Created "'+newName+'"! Equipped. Damage: '+newDamage+cappedNote;
+  const procNote = proc ? ' Passive: '+PROC_LABELS[proc]+'!' : '';
+  document.getElementById('mergeResult').textContent='Created "'+newName+'"! Equipped. Damage: '+newDamage+cappedNote+procNote;
   renderSkillMenu();
 });
 
@@ -1743,6 +1772,51 @@ function currentWeaponDamage(){
   dmg=Math.round(dmg*diffPlayerDmgMult(playthroughIndex));
   return dmg;
 }
+
+// ================= Weapon procs =================
+function applyElementalProc(target){
+  const w=mergedWeapons[player.weapon];
+  if(!w||!w.proc) return;
+  if(w.proc==='freeze'){
+    target.frozen=Math.max(target.frozen||0, 90);
+    sfx.freeze();
+  } else if(w.proc==='burn'){
+    target.burnTicks=(target.burnTicks||0)+4;
+    target.burnDmg=Math.max(3, Math.round(currentWeaponDamage()*0.15));
+    if(target.burnCooldown===undefined) target.burnCooldown=0;
+    sfx.burn();
+  }
+}
+function applyChainProc(sourceX, sourceY, excludeTarget){
+  const w=mergedWeapons[player.weapon];
+  if(!w||w.proc!=='chain') return;
+  let nearest=null, nd=170;
+  enemies.forEach(en=>{
+    if(!en.alive || en===excludeTarget) return;
+    const d=Math.hypot(en.x-sourceX,en.y-sourceY);
+    if(d<nd){ nd=d; nearest=en; }
+  });
+  if(nearest){
+    const chainDmg=Math.max(1, Math.round(currentWeaponDamage()*0.5));
+    nearest.hp-=chainDmg; nearest.flash=8;
+    spawnDamageNumber(nearest.x, nearest.y-24, 'CHAIN -'+chainDmg, '#66eaff');
+    sfx.chain();
+    if(nearest.hp<=0) nearest.alive=false;
+  }
+}
+function tickBurn(target, dealDamageFn){
+  if(!target) return;
+  if(target.frozen>0) target.frozen--;
+  if(target.burnTicks>0){
+    if(target.burnCooldown>0){ target.burnCooldown--; }
+    else {
+      target.burnTicks--;
+      target.burnCooldown=20;
+      dealDamageFn(target.burnDmg);
+    }
+  }
+}
+
 function swordSwing(){
   if(scene==='select') return;
   if(inputLocked) return;
@@ -1953,7 +2027,7 @@ function enterBlacksmith(){
         }},
         {text:'Take the Lightning Sword', action:()=>{
           learnSkill('Lightning','4',5,'#66eaff','projectile',30);
-          mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff'};
+          mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff',proc:'chain'};
           ownedWeapons.push('Lightning Sword');
           player.weapon='Lightning Sword'; player.weaponDamage=13;
           startDialogue('Blacksmith',["A blade already humming with storm magic. Press [4] to unleash a quick Lightning bolt - fast cooldown, low damage."],()=>{});
@@ -2282,7 +2356,7 @@ function startBossRush(){
   learnSkill('Ice','3',18,'#66ccff','projectile');
   learnSkill('Lightning','4',5,'#66eaff','projectile',30);
   if(!mergedWeapons['Lightning Sword']){
-    mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff'};
+    mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff',proc:'chain'};
     ownedWeapons.push('Lightning Sword');
   }
   startBossPhase1();
@@ -2692,9 +2766,15 @@ function updatePlayerPhysics(){
     player.crouching=false;
   }
 
-  const spd=player.crouching? player.speed*0.4 : player.speed;
-  player.vx=move*spd;
-  player.x+=player.vx;
+  if(player.dashing>0){
+    dashTrail.push({x:player.x,y:player.y,w:player.w,h:player.h,life:14,color:chosenColor});
+    player.x+=player.vx;
+    player.dashing--;
+  } else {
+    const spd=player.crouching? player.speed*0.4 : player.speed;
+    player.vx=move*spd;
+    player.x+=player.vx;
+  }
 
   if((keys['w']||keys['arrowup']) && player.grounded && !player.crouching){
     player.vy = player.jumpBoost ? FROG_JUMP_VEL : JUMP_VEL;
@@ -2766,6 +2846,9 @@ function update(){
   if(player.attackCooldown>0) player.attackCooldown--;
   if(player.swingTimer>0) player.swingTimer--;
   if(player.invuln>0) player.invuln--;
+  if(player.dashCooldownTimer>0) player.dashCooldownTimer--;
+  dashTrail.forEach(t=>{ t.life--; });
+  dashTrail=dashTrail.filter(t=>t.life>0);
   enemies.forEach(en=>{ if(en.flash>0) en.flash--; });
   if(boss && boss.flash>0) boss.flash--;
   if(witchFight && witchFight.flash>0) witchFight.flash--;
@@ -3312,6 +3395,14 @@ function drawHut(sx,sy,w,h,label){
 function drawPlayerSprite(camX){
   let sx=player.x-camX, sy=player.y;
   const px=4;
+  // fading afterimage trail from a recent dash
+  dashTrail.forEach(t=>{
+    ctx.save();
+    ctx.globalAlpha=Math.max(0,t.life/14)*0.35;
+    ctx.fillStyle=t.color;
+    ctx.fillRect(t.x-camX, t.y, t.w, t.h);
+    ctx.restore();
+  });
   const moving = Math.abs(player.vx)>0.2 && player.grounded;
   let bob=0;
   if(moving) bob=Math.sin(animTime*0.35)*2.5;
