@@ -420,6 +420,85 @@
   #laptopSubmitBtn:hover{background:#1c43b8;}
   .mbBase{height:13px;background:linear-gradient(180deg,#1c1c1e,#050505);border-radius:0 0 8px 8px;margin:0 -4px;
     box-shadow:0 6px 14px rgba(0,0,0,.5);}
+
+  /* ================= PREMIUM UI POLISH ================= */
+  /* Shared button chrome: glossy gradient body + top highlight + sweep-on-hover shine.
+     Layered on top of each button's existing color scheme via currentColor-friendly overlays,
+     so per-button accent colors (gold/cyan/red/green) are preserved. */
+  button{ position:relative; overflow:hidden; letter-spacing:.4px;
+    transition:transform .16s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease, filter .2s ease, background-position .5s ease; }
+  button::before{ content:''; position:absolute; inset:0 0 55% 0; pointer-events:none;
+    background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0));
+    border-radius:inherit; }
+  button::after{ content:''; position:absolute; top:0; left:-60%; width:40%; height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,.35), transparent);
+    transform:skewX(-18deg); pointer-events:none; opacity:0; transition:opacity .2s ease; }
+  button:hover:not(:disabled)::after{ opacity:1; animation:btnShine 1.1s ease forwards; }
+  button:hover:not(:disabled){ transform:translateY(-1.5px); filter:brightness(1.08); }
+  button:active:not(:disabled){ transform:translateY(0px) scale(.98); filter:brightness(.95); }
+  button:disabled{ cursor:default; }
+  @keyframes btnShine{ from{ left:-60%; } to{ left:130%; } }
+
+  #startBtn{ background:linear-gradient(180deg,#2c5a78,#173049); border:2px solid #6cf;
+    box-shadow:0 4px 0 #0d1c2c, 0 8px 22px rgba(102,204,255,.35), inset 0 1px 0 rgba(255,255,255,.25);
+    text-shadow:0 0 10px rgba(191,232,255,.7); font-weight:700; }
+  #startBtn:hover{ background:linear-gradient(180deg,#3a729a,#1c3c5c); box-shadow:0 4px 0 #0d1c2c, 0 10px 28px rgba(102,204,255,.55), inset 0 1px 0 rgba(255,255,255,.3); }
+  #startBtn:active{ box-shadow:0 1px 0 #0d1c2c, 0 4px 12px rgba(102,204,255,.4); }
+
+  .muteBtn, #honoredBtn, #versionLogBtn, #difficultyBtn{
+    box-shadow:0 3px 0 rgba(0,0,0,.45), 0 6px 16px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+    backdrop-filter:blur(3px); font-weight:600; }
+  .muteBtn:hover, #honoredBtn:hover, #versionLogBtn:hover, #difficultyBtn:hover{
+    box-shadow:0 3px 0 rgba(0,0,0,.45), 0 8px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.14); }
+  .muteBtn:active, #honoredBtn:active, #versionLogBtn:active, #difficultyBtn:active{ box-shadow:0 1px 0 rgba(0,0,0,.4); }
+
+  #restartBtn, #loseRestartBtn, #bossRushRestartBtn, #mergeBtn, #laptopSubmitBtn, #pinSubmitBtn, #versionModal button, #honoredModal button, #difficultyModal button#difficultyCloseBtn{
+    box-shadow:0 3px 0 rgba(0,0,0,.5), 0 8px 20px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+    font-weight:700; }
+  #restartBtn:active, #loseRestartBtn:active, #bossRushRestartBtn:active, #mergeBtn:active, #laptopSubmitBtn:active, #pinSubmitBtn:active{
+    box-shadow:0 1px 0 rgba(0,0,0,.4); }
+
+  /* Glass-panel treatment for every floating panel: crisper border, deeper layered shadow,
+     soft top-edge highlight so panels read as physical glass rather than flat rectangles. */
+  #skillMenu, #inventoryMenu, .difficultyPanel, .versionPanel, #honoredModal .panel, .pinPanel, .macbook{
+    box-shadow:0 20px 50px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.05) inset, 0 0 0 1px rgba(255,255,255,.04) inset,
+      var(--panel-glow, 0 0 40px rgba(255,255,255,.06)); }
+  #skillMenu{ --panel-glow:0 0 46px rgba(5,217,232,.22); }
+  #inventoryMenu{ --panel-glow:0 0 46px rgba(242,193,78,.2); }
+  .difficultyPanel{ --panel-glow:0 0 46px rgba(255,90,90,.2); }
+  .versionPanel{ --panel-glow:0 0 46px rgba(108,204,255,.2); }
+  #honoredModal .panel{ --panel-glow:0 0 46px rgba(57,255,106,.2); }
+  .pinPanel{ --panel-glow:0 0 46px rgba(255,59,59,.22); }
+
+  /* Richer, glossy HUD bars with a moving highlight sheen */
+  #hpBarWrap, #bossBarWrap{ box-shadow:inset 0 0 8px rgba(0,0,0,.7), inset 0 2px 4px rgba(0,0,0,.5), 0 2px 6px rgba(0,0,0,.4); }
+  #hpBarFill, #bossBarFill{ position:relative; background-size:200% 100%; }
+  #hpBarFill::after, #bossBarFill::after{ content:''; position:absolute; inset:0; border-radius:2px;
+    background:linear-gradient(180deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.05) 45%, transparent 55%); }
+  #hud{ border-radius:12px; box-shadow:0 6px 22px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.06), inset 0 0 16px rgba(255,255,255,.02);
+    backdrop-filter:blur(6px) saturate(1.2); }
+  #bossName{ box-shadow:0 -2px 10px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08); }
+
+  /* Dialogue & choice chrome: crisper depth, refined choice-number badges */
+  #dialogueBox, #choiceBox{ box-shadow:0 14px 34px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.06), inset 0 0 30px rgba(255,255,255,.015); }
+  #choiceBox button{ box-shadow:0 2px 8px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.05); }
+  #choiceBox button:hover{ box-shadow:0 4px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.2); }
+  #choiceBox button .choiceNum{ box-shadow:inset 0 1px 0 rgba(255,255,255,.15), 0 1px 3px rgba(0,0,0,.3); }
+
+  /* Selection / inventory rows: subtle lift + refined shadow on hover for tactile feel */
+  .charOption{ box-shadow:0 4px 14px rgba(0,0,0,.3); transition:border-color .15s,background .15s,box-shadow .2s,transform .15s; }
+  .charOption:hover, .charOption.sel{ box-shadow:0 8px 22px rgba(0,0,0,.4), 0 0 20px rgba(102,204,255,.15); }
+  .invRow, .skillRow, .honoredTab, .diffOption{ transition:box-shadow .18s ease, transform .15s ease, background .15s, border-color .15s; }
+  .invRow:hover{ box-shadow:0 3px 10px rgba(0,0,0,.25); transform:translateX(2px); }
+  .invEquipBtn, #hudMuteBtn{ box-shadow:0 2px 6px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1); }
+
+  /* Refined scrollbar with a subtle gradient thumb */
+  ::-webkit-scrollbar-thumb{ background:linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.12)); }
+  ::-webkit-scrollbar-thumb:hover{ background:linear-gradient(180deg, rgba(255,255,255,.4), rgba(255,255,255,.2)); }
+
+  /* Title-screen frame: slightly deeper vignette and crisper corner brackets */
+  .hudCorner::before, .hudCorner::after{ box-shadow:0 0 8px rgba(242,211,117,.5); }
+  #selectScreen .titleWrap{ box-shadow:0 16px 44px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08); }
 </style>
 
 </head>
@@ -655,7 +734,22 @@ function initAudio(){
     audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     masterGain=audioCtx.createGain(); masterGain.gain.value = masterMuted?0:0.7;
     masterGain.connect(audioCtx.destination);
-    musicGain=audioCtx.createGain(); musicGain.gain.value=0.55; musicGain.connect(masterGain);
+    musicGain=audioCtx.createGain(); musicGain.gain.value=0.5;
+    // Gentle lowpass warms the whole music bus so square/saw waves don't feel harsh.
+    const musicFilter=audioCtx.createBiquadFilter(); musicFilter.type='lowpass'; musicFilter.frequency.value=2400;
+    musicGain.connect(musicFilter);
+    musicFilter.connect(masterGain);
+    // A short feedback delay gives the music a sense of space instead of sounding dry/flat.
+    const delay=audioCtx.createDelay(1.0); delay.delayTime.value=0.26;
+    const feedback=audioCtx.createGain(); feedback.gain.value=0.25;
+    const delayFilter=audioCtx.createBiquadFilter(); delayFilter.type='lowpass'; delayFilter.frequency.value=1600;
+    const delayWet=audioCtx.createGain(); delayWet.gain.value=0.3;
+    musicFilter.connect(delay);
+    delay.connect(delayFilter);
+    delayFilter.connect(feedback);
+    feedback.connect(delay);
+    delayFilter.connect(delayWet);
+    delayWet.connect(masterGain);
     sfxGain=audioCtx.createGain(); sfxGain.gain.value=0.9; sfxGain.connect(masterGain);
   }catch(e){ console.warn('[wasteland-adventure] Web Audio unavailable', e); }
 }
@@ -706,47 +800,151 @@ const sfx={
   chain:()=>playTone(1000,0.08,'square',0.07,1600),
 };
 
+// Each mood now carries a chord progression (for a sustained pad underneath the
+// lead) in addition to its melodic scale, plus a "perc" flag for moods that
+// should get a light kick/hihat pulse under the tension.
 const MUSIC_MOODS={
-  title:    {root:220,    scale:[0,3,5,7,10],  tempo:420, wave:'triangle', bass:110},
-  overworld:{root:293.66, scale:[0,2,4,7,9],   tempo:380, wave:'triangle', bass:98},
-  danger:   {root:196,    scale:[0,1,3,6,8],   tempo:260, wave:'sawtooth', bass:65.4},
-  mystic:   {root:246.94, scale:[0,3,5,8,10],  tempo:500, wave:'sine',     bass:82.4},
-  boss:     {root:174.6,  scale:[0,1,4,6,7],   tempo:200, wave:'square',   bass:58},
-  matrix:   {root:220,    scale:[0,3,6,7,10],  tempo:150, wave:'square',   bass:55},
-  victory:  {root:392,    scale:[0,4,7,9,12],  tempo:300, wave:'triangle', bass:130.8},
+  title:    {root:220,    scale:[0,3,5,7,10,12,10,7], tempo:420, wave:'triangle', bass:110,
+             chords:[[0,7,12],[5,9,12],[7,10,14],[3,7,10]], perc:false},
+  overworld:{root:293.66, scale:[0,4,7,11,12,11,9,7], tempo:340, wave:'triangle', bass:98,
+             chords:[[0,4,7],[9,12,16],[7,11,14],[5,9,12]], perc:false,
+             counter:[0,7,4,9,-5,0,4,-1], counterEvery:2, counterWave:'sine'},
+  danger:   {root:196,    scale:[0,1,3,6,8,10,8,6],   tempo:260, wave:'sawtooth', bass:65.4,
+             chords:[[0,3,6],[1,4,8],[6,9,12],[1,4,8]], perc:true},
+  mystic:   {root:246.94, scale:[0,3,5,8,10,12,10,8], tempo:500, wave:'sine',     bass:82.4,
+             chords:[[0,5,8],[3,7,10],[8,12,15],[3,7,10]], perc:false},
+  boss:     {root:174.6,  scale:[0,1,4,6,7,10,7,4],   tempo:200, wave:'square',   bass:58,
+             chords:[[0,6,10],[1,7,11],[4,10,13],[1,7,11]], perc:true},
+  matrix:   {root:220,    scale:[0,3,6,7,10,12,10,7], tempo:150, wave:'square',   bass:55,
+             chords:[[0,6,10],[3,9,12],[7,13,16],[3,9,12]], perc:true},
+  victory:  {root:392,    scale:[0,4,7,9,12,16,12,9], tempo:300, wave:'triangle', bass:130.8,
+             chords:[[0,4,7],[5,9,12],[7,11,14],[0,4,7]], perc:false},
 };
-let musicIntervalId=null, musicOscillators=[], currentMusicMood=null;
+let musicIntervalId=null, musicOscillators=[], currentMusicMood=null, musicStepIndex=0, musicChordIndex=0;
 function stopMusicLoop(){
   if(musicIntervalId){ clearInterval(musicIntervalId); musicIntervalId=null; }
   musicOscillators.forEach(o=>{ try{o.stop();}catch(e){} });
   musicOscillators=[];
 }
+function playKick(vel){
+  if(!audioCtx||!musicGain) return;
+  vel = vel===undefined ? 1 : vel;
+  const o=audioCtx.createOscillator(); o.type='sine';
+  o.frequency.setValueAtTime(120,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(42,audioCtx.currentTime+0.15);
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(0.32*vel,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.18);
+  o.connect(g).connect(musicGain);
+  o.start(); o.stop(audioCtx.currentTime+0.2);
+}
+function playHat(vel){
+  if(!audioCtx||!musicGain) return;
+  vel = vel===undefined ? 0.1 : vel;
+  const bufferSize=Math.max(1,Math.floor(audioCtx.sampleRate*0.05));
+  const buffer=audioCtx.createBuffer(1,bufferSize,audioCtx.sampleRate);
+  const data=buffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++){ data[i]=Math.random()*2-1; }
+  const src=audioCtx.createBufferSource(); src.buffer=buffer;
+  const filter=audioCtx.createBiquadFilter(); filter.type='highpass'; filter.frequency.value=6000;
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(vel,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.05);
+  src.connect(filter).connect(g).connect(musicGain);
+  src.start();
+}
 function startMusicLoop(moodKey){
   stopMusicLoop();
   if(!audioCtx) return;
   const cfg=MUSIC_MOODS[moodKey]; if(!cfg) return;
+  musicStepIndex=0; musicChordIndex=0;
+
+  // Sustained bass pedal, one octave below the chord root.
   const bass=audioCtx.createOscillator();
   bass.type='sine'; bass.frequency.value=cfg.bass;
-  const bassGain=audioCtx.createGain(); bassGain.gain.value=0.05;
+  const bassGain=audioCtx.createGain(); bassGain.gain.value=0.06;
   bass.connect(bassGain).connect(musicGain);
   bass.start();
   musicOscillators.push(bass);
+
+  // Three-voice pad for harmony, slightly detuned for warmth/width, crossfaded
+  // between chords instead of hard-cutting.
+  const padOscs=[];
+  const padGain=audioCtx.createGain(); padGain.gain.value=0.0;
+  padGain.connect(musicGain);
+  for(let i=0;i<3;i++){
+    const o=audioCtx.createOscillator();
+    o.type = i===1 ? 'triangle' : 'sine';
+    o.detune.value=(i-1)*7;
+    o.connect(padGain);
+    o.start();
+    padOscs.push(o);
+    musicOscillators.push(o);
+  }
+  function playChord(){
+    const chord=cfg.chords[musicChordIndex % cfg.chords.length];
+    padOscs.forEach((o,i)=>{
+      const semis=chord[i%chord.length];
+      const freq=(cfg.root*Math.pow(2, semis/12))/2;
+      o.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.35);
+    });
+    const now=audioCtx.currentTime;
+    padGain.gain.cancelScheduledValues(now);
+    padGain.gain.setValueAtTime(padGain.gain.value, now);
+    padGain.gain.linearRampToValueAtTime(0.05, now+0.5);
+    padGain.gain.linearRampToValueAtTime(0.03, now+cfg.tempo*4/1000);
+  }
+  playChord();
+
+  // Lead arp, filtered for a plucky-but-soft timbre rather than a raw buzzy wave.
   const arp=audioCtx.createOscillator();
   arp.type=cfg.wave;
+  const arpFilter=audioCtx.createBiquadFilter(); arpFilter.type='lowpass'; arpFilter.frequency.value=1500; arpFilter.Q.value=1.1;
   const arpGain=audioCtx.createGain(); arpGain.gain.value=0.0;
-  arp.connect(arpGain).connect(musicGain);
+  arp.connect(arpFilter).connect(arpGain).connect(musicGain);
   arp.start();
   musicOscillators.push(arp);
-  let step=0;
+
+  // Optional slower-moving countermelody voice (currently used by 'overworld')
+  // that sings a separate call-and-response line under the arp, so the theme
+  // reads as an actual composed melody rather than one repeating arpeggio.
+  let counterOsc=null, counterGain=null, counterFilter=null;
+  if(cfg.counter){
+    counterOsc=audioCtx.createOscillator();
+    counterOsc.type=cfg.counterWave||'triangle';
+    counterFilter=audioCtx.createBiquadFilter(); counterFilter.type='lowpass'; counterFilter.frequency.value=1300;
+    counterGain=audioCtx.createGain(); counterGain.gain.value=0.0;
+    counterOsc.connect(counterFilter).connect(counterGain).connect(musicGain);
+    counterOsc.start();
+    musicOscillators.push(counterOsc);
+  }
+
   musicIntervalId=setInterval(()=>{
     if(!audioCtx) return;
-    const note=cfg.scale[step%cfg.scale.length];
+    if(musicStepIndex>0 && musicStepIndex%4===0){ musicChordIndex++; playChord(); }
+    const note=cfg.scale[musicStepIndex%cfg.scale.length];
     const freq=cfg.root*Math.pow(2, note/12);
-    arp.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.01);
+    arpFilter.frequency.setTargetAtTime(1100+Math.sin(musicStepIndex*0.7)*450, audioCtx.currentTime, 0.05);
+    arp.frequency.setTargetAtTime(freq, audioCtx.currentTime, 0.008);
     arpGain.gain.cancelScheduledValues(audioCtx.currentTime);
-    arpGain.gain.setValueAtTime(0.09, audioCtx.currentTime);
-    arpGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+cfg.tempo/1000*0.9);
-    step++;
+    arpGain.gain.setValueAtTime(0.085, audioCtx.currentTime);
+    arpGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+cfg.tempo/1000*0.85);
+    if(cfg.counter && counterOsc && musicStepIndex%cfg.counterEvery===0){
+      const cIdx=Math.floor(musicStepIndex/cfg.counterEvery)%cfg.counter.length;
+      const cNote=cfg.counter[cIdx];
+      const cFreq=cfg.root*Math.pow(2, cNote/12);
+      counterOsc.frequency.setTargetAtTime(cFreq, audioCtx.currentTime, 0.03);
+      counterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+      counterGain.gain.setValueAtTime(0.07, audioCtx.currentTime);
+      counterGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+(cfg.tempo*cfg.counterEvery)/1000*0.8);
+    }
+    if(cfg.perc){
+      const beat=musicStepIndex%4;
+      if(beat===0) playKick(1);
+      if(beat===2) playKick(0.55);
+      if(beat%2===1) playHat(0.08);
+    }
+    musicStepIndex++;
   }, cfg.tempo);
 }
 function setMusicMood(moodKey){
@@ -882,6 +1080,9 @@ const TEACHER_PALETTE={k:'#111111', s:'#f1c39a', e:'#101010', w:'#e8e8e8', t:'#7
 
 // Sword Instructor - reuses TEACHER_ROWS silhouette but a distinct gi + brown hair so he doesn't look like the Teacher
 const INSTRUCTOR_PALETTE={k:'#4a2f1a', s:'#e8b98a', e:'#101010', w:'#d8cdb0', t:'#8a1f1f', g:'#2b2320', b:'#1c1712', I:'#2b2320'};
+
+// Market merchant - reuses TEACHER_ROWS silhouette, dark grimy robes and eerie red eyes for the shady stall-keeper
+const MERCHANT_PALETTE={k:'#1a1a1a', s:'#c9a06a', e:'#ff2222', w:'#2a1010', t:'#000000', g:'#150606', b:'#0a0a0a', I:'#3a0a0a'};
 
 // Small round-glasses overlay, drawn over a TEACHER_ROWS-shaped head (eyes sit at row 3, cols 3 & 5)
 function drawGlasses(x,y,px,color){
@@ -1128,6 +1329,98 @@ function getShakeOffset(){
   return { x:(Math.random()-0.5)*shakeMag, y:(Math.random()-0.5)*shakeMag };
 }
 
+// ================= Ambient dust / atmosphere =================
+// Soft floating motes drifting upward through every scene - cheap, but reads as
+// "the air has depth" rather than empty flat backgrounds.
+let dustMotes=[];
+(function initDustMotes(){
+  for(let i=0;i<34;i++){
+    dustMotes.push({
+      x:Math.random()*W, y:Math.random()*GROUND_Y,
+      r:0.6+Math.random()*1.7, spd:0.12+Math.random()*0.3,
+      drift:(Math.random()-0.5)*0.5, alpha:0.12+Math.random()*0.28, phase:Math.random()*10
+    });
+  }
+})();
+function updateDustMotes(){
+  dustMotes.forEach(d=>{
+    d.y-=d.spd;
+    d.x+=Math.sin(animTime*0.012+d.phase)*d.drift*0.2;
+    if(d.y<-6){ d.y=GROUND_Y+6+Math.random()*20; d.x=Math.random()*W; }
+  });
+}
+function drawAmbientDust(){
+  dustMotes.forEach(d=>{
+    const tw=0.7+0.3*Math.sin(animTime*0.05+d.phase);
+    ctx.fillStyle='rgba(255,238,205,'+(d.alpha*tw*(isNight?0.55:1))+')';
+    ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,7); ctx.fill();
+  });
+}
+
+// ================= Soft layered shadows =================
+// Replaces flat single-alpha ellipses with a 3-layer blurred falloff so grounded
+// characters feel lit and rooted instead of pasted onto the floor.
+function drawSoftShadow(cx,cy,rx,ry,strength){
+  strength = strength===undefined ? 1 : strength;
+  ctx.save();
+  ctx.fillStyle='rgba(0,0,0,'+(0.14*strength)+')';
+  ctx.beginPath(); ctx.ellipse(cx,cy,rx*1.7,ry*1.7,0,0,7); ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,'+(0.20*strength)+')';
+  ctx.beginPath(); ctx.ellipse(cx,cy,rx*1.2,ry*1.2,0,0,7); ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,'+(0.30*strength)+')';
+  ctx.beginPath(); ctx.ellipse(cx,cy,rx*0.7,ry*0.7,0,0,7); ctx.fill();
+  ctx.restore();
+}
+
+// ================= Cinematic post-process =================
+// A cheap full-frame grade pass: gentle teal-shadow/warm-highlight tint,
+// animated film grain, and an extra soft edge vignette on top of any
+// per-scene vignette already drawn. Applied once per frame in screen space
+// (outside the screen-shake transform) so it never jitters.
+let grainCanvas=null, grainCtx=null, grainPattern=null, grainFrame=0;
+function ensureGrain(){
+  if(!grainCanvas){
+    grainCanvas=document.createElement('canvas');
+    grainCanvas.width=128; grainCanvas.height=128;
+    grainCtx=grainCanvas.getContext('2d');
+  }
+  if(grainFrame%4===0){
+    const img=grainCtx.createImageData(128,128);
+    for(let i=0;i<img.data.length;i+=4){
+      const v=Math.random()*255;
+      img.data[i]=v; img.data[i+1]=v; img.data[i+2]=v; img.data[i+3]=14;
+    }
+    grainCtx.putImageData(img,0,0);
+    grainPattern=ctx.createPattern(grainCanvas,'repeat');
+  }
+  grainFrame++;
+}
+function drawCinematicGrade(){
+  ctx.save();
+  ctx.globalCompositeOperation='overlay';
+  const grade=ctx.createLinearGradient(0,0,0,H);
+  grade.addColorStop(0,'rgba(255,214,170,0.05)');
+  grade.addColorStop(0.55,'rgba(120,140,160,0.03)');
+  grade.addColorStop(1,'rgba(20,30,45,0.10)');
+  ctx.fillStyle=grade;
+  ctx.fillRect(0,0,W,H);
+  ctx.restore();
+  ensureGrain();
+  if(grainPattern){
+    ctx.save();
+    ctx.globalAlpha=0.5;
+    ctx.globalCompositeOperation='overlay';
+    ctx.fillStyle=grainPattern;
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+  const vg=ctx.createRadialGradient(W/2,H/2,H*0.32,W/2,H/2,H*0.82);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,'rgba(0,0,0,0.26)');
+  ctx.fillStyle=vg;
+  ctx.fillRect(0,0,W,H);
+}
+
 const player={
   x:150,y:GROUND_Y-64,w:40,h:64,vx:0,vy:0,speed:3.1,facing:1,
   grounded:false, crouching:false,
@@ -1158,6 +1451,7 @@ function attemptDash(){
 }
 
 let witchFight=null;
+let marketSwordBlessing=false;
 
 let mergedWeapons={'Sword':{damage:10,color:'#ccc'}};
 let ownedWeapons=['Sword'];
@@ -1219,6 +1513,7 @@ let world1POIs=[
   {id:'building', x:950, y:GROUND_Y-200, w:130,h:200, label:'Old Building', triggered:false},
   {id:'blacksmith', x:1900, y:GROUND_Y-150, w:110,h:150, label:'Blacksmith', triggered:false},
   {id:'witch', x:2850, y:GROUND_Y-150, w:110,h:150, label:'Witch Hut', triggered:false},
+  {id:'market', x:3300, y:GROUND_Y-140, w:100,h:140, label:'Market Stall', triggered:false},
   {id:'dojo', x:3700, y:GROUND_Y-220, w:150,h:220, label:'Purple Dojo', triggered:false, color:'#5a2f8a'},
 ];
 let world1End=4500;
@@ -1505,6 +1800,7 @@ const SPEAKER_THEMES={
   'blacksmith':   {color:'#ff8a3f', icon:'🔨'},
   'witch':        {color:'#8affa0', icon:'🧪'},
   'sword instructor': {color:'#e05a5a', icon:'⚔️'},
+  'merchant':     {color:'#ff3b3b', icon:'🎭'},
   'arnav (the developer)': {color:'#39ff6a', icon:'👨‍💻'},
   'the developer':{color:'#39ff6a', icon:'💻'},
 };
@@ -1590,6 +1886,12 @@ const ARCHETYPE_NPC_LINES={
     rebel: "An instructor who gets offended if you say no? Charming.",
     coder: "Let's see if this guy patches his own weaknesses."
   },
+  merchant: {
+    scholar: "A stall out here with no visible stock? That's not a merchant, that's a front.",
+    wanderer: "I've passed a hundred stalls like this. None of them ever whispered at me before.",
+    rebel: "Shady guy, dead eyes, waving me over. Yeah, obviously I'm going in.",
+    coder: "Zero listed inventory and he's beckoning me into a back room. Red flag, but... noted."
+  },
   arnav: {
     scholar: "Wait... 'Developer'? As in - he built this world? That would explain a few inconsistencies.",
     wanderer: "I've walked this whole ruined world, and now the person who supposedly made it just... shows up?",
@@ -1615,6 +1917,7 @@ function updateStatusIcons(){
   let html='';
   if(player.frog) html+='<div class="statusChip frogChip">🐸 Frog Curse</div>';
   if(player.swordBuff) html+='<div class="statusChip buffChip">⚔ Sword +30%</div>';
+  if(marketSwordBlessing) html+='<div class="statusChip buffChip" style="color:#ff5a5a;border-color:rgba(255,90,90,.4);">🔴 Sword Blessing (250)</div>';
   if(player.healthPotions>0) html+='<div class="statusChip potionChip">🧪 x'+player.healthPotions+' [H]</div>';
   statusIconsEl.innerHTML=html;
 }
@@ -1768,6 +2071,7 @@ function currentWeaponDamage(){
   let dmg=w.damage;
   if(player.swordBuff && player.weapon.toLowerCase().includes('sword')) dmg=Math.round(dmg*1.3);
   dmg=Math.min(MAX_SWORD_DAMAGE, dmg);
+  if(marketSwordBlessing && player.weapon.toLowerCase().includes('sword')) dmg=250;
   if(player.frog) dmg=Math.round(dmg*0.25);
   dmg=Math.round(dmg*diffPlayerDmgMult(playthroughIndex));
   return dmg;
@@ -1828,8 +2132,9 @@ function swordSwing(){
   const px=player.x+player.w/2, py=player.y+player.h/2;
   let dmg=currentWeaponDamage();
   const isCrit = !devDamageBoost && Math.random()<0.15;
+  const blessedSword = marketSwordBlessing && player.weapon.toLowerCase().includes('sword');
   if(isCrit){
-    dmg=Math.min(MAX_SWORD_DAMAGE, Math.round(dmg*1.75));
+    dmg = blessedSword ? Math.round(dmg*1.75) : Math.min(MAX_SWORD_DAMAGE, Math.round(dmg*1.75));
     triggerScreenShake(5,10);
   }
   const dmgColor = isCrit ? '#ffe066' : '#fff';
@@ -1984,6 +2289,7 @@ function checkWorld1Triggers(){
       if(poi.id==='building') enterClassroomIntro();
       if(poi.id==='blacksmith') enterBlacksmith();
       if(poi.id==='witch') enterWitchHut();
+      if(poi.id==='market') enterMarket();
       if(poi.id==='dojo') enterDojo();
     }
   });
@@ -2156,6 +2462,67 @@ function useHealthPotion(){
     sfx.heal();
     spawnDamageNumber(player.x+player.w/2,player.y-6,'FULL HEAL','#7fff7f');
   }
+}
+
+// ================= Market Stall =================
+function enterMarket(){
+  inputLocked=true;
+  scene='market_stall';
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  startDialogue('Merchant',[
+    "Psst. You there.",
+    "Shh! Come inside, quickly - before anyone sees."
+  ], ()=>{
+    const enterRoom=()=>{ enterMarketRoom(); };
+    const line=archetypeLine('merchant');
+    if(line){ startDialogue(playerName,[line], enterRoom); }
+    else { enterRoom(); }
+  });
+}
+function enterMarketRoom(){
+  scene='market_room';
+  inputLocked=true;
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  startDialogue('Merchant',[
+    "Listen close, because I will only say this once.",
+    "This world - everything you've walked through - it's a simulation. Lines of code, nothing more.",
+    "I have something that can bend those lines. A headset. Put it on, and you can will your sword to greatness.",
+    "But choose carefully, traveler. Some things can't be unseen."
+  ], ()=>{
+    showChoices('Merchant',"Put on the headset?",[
+      {text:'Accept the headset', action:()=> acceptHeadset()},
+      {text:'Decline and leave', action:()=> declineHeadset()}
+    ]);
+  });
+}
+function acceptHeadset(){
+  inputLocked=true;
+  scene='market_flash';
+  sfx.portal();
+  fadeLayer.style.background='#fff';
+  fadeLayer.style.opacity='1';
+  fadeLayer.textContent='';
+  setTimeout(()=>{
+    marketSwordBlessing=true;
+    updateStatusIcons();
+    fadeLayer.style.opacity='0';
+  },450);
+  setTimeout(()=>{
+    fadeLayer.style.background='#000';
+    scene='market_room';
+    startDialogue('Merchant',[
+      "...",
+      "Feel that? That's power given form. Every blade you carry now cuts like judgment itself.",
+      "Now get out of here before someone sees the light."
+    ], ()=>{ exitBuildingToWorld1('market'); });
+  }, 1500);
+}
+function declineHeadset(){
+  inputLocked=true;
+  startDialogue('Merchant',[
+    "...Fine. Suit yourself.",
+    "You never saw me."
+  ], ()=>{ exitBuildingToWorld1('market'); });
 }
 
 // ================= Dojo =================
@@ -2685,6 +3052,7 @@ function restartRun(){
   gameOver=false;
   pinAttempts=0;
   devDamageBoost=false;
+  marketSwordBlessing=false;
   damageNumbers=[];
   witchFight=null;
   mergedWeapons={'Sword':{damage:10,color:'#ccc'}};
@@ -2795,7 +3163,7 @@ function updatePlayerPhysics(){
   }
 
   // scene bounds
-  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='final_glitch'||scene==='developer_final'||scene==='laptop_ready'||scene==='portal_tp'){
+  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='final_glitch'||scene==='developer_final'||scene==='laptop_ready'||scene==='portal_tp'||scene==='market_stall'||scene==='market_room'||scene==='market_flash'){
     player.x=Math.max(60,Math.min(820,player.x));
   } else {
     player.x=Math.max(20,player.x);
@@ -2811,7 +3179,8 @@ function musicMoodForScene(){
   if(scene==='dojo' && dojo.state==='duel') return 'boss';
   if(scene==='arnav_fight'||scene==='developer_fight'||scene==='developer_intro'||scene==='developer_final'||
      scene==='glitch_transition'||scene==='final_glitch'||scene==='portal_tp'||scene==='laptop_ready') return 'matrix';
-  if(scene==='classroom'||scene==='witch_hut'||scene==='dojo') return 'mystic';
+  if(scene==='market_room'||scene==='market_flash') return 'danger';
+  if(scene==='classroom'||scene==='witch_hut'||scene==='dojo'||scene==='market_stall') return 'mystic';
   if(scene==='world1'||scene==='world2') return isNight? 'danger':'overworld';
   return 'mystic';
 }
@@ -2891,6 +3260,7 @@ function update(){
   updateProjectiles();
   updateDamageNumbers();
   updateScreenShake();
+  updateDustMotes();
 
   const worldScene = (scene==='world1'||scene==='world2');
   camera.x = worldScene ? player.x - W/2 : 0;
@@ -3176,6 +3546,7 @@ function drawPOI(poi){
   if(poi.id==='building'){ drawSchoolBuilding(sx,sy,poi.w,poi.h,poi.label,false); return; }
   if(poi.id==='world2building'){ drawSchoolBuilding(sx,sy,poi.w,poi.h,poi.label,true); return; }
   if(poi.id==='blacksmith'){ drawForgeBuilding(sx,sy,poi.w,poi.h,poi.label); return; }
+  if(poi.id==='market'){ drawMarketStallExterior(sx,sy,poi.w,poi.h,poi.label); return; }
   if(poi.id==='dojo'){ drawDojoBuilding(sx,sy,poi.w,poi.h,poi.label); return; }
   ctx.fillStyle=poi.color||'#5a4a3a';
   ctx.fillRect(sx,sy,poi.w,poi.h);
@@ -3307,6 +3678,54 @@ function drawForgeBuilding(sx,sy,w,h,label){
   ctx.fillText(label, sx+w/2, sy-40);
 }
 
+function drawMarketStallExterior(sx,sy,w,h,label){
+  // wooden posts + counter
+  ctx.fillStyle='#3a2a1a';
+  ctx.fillRect(sx+6,sy+h*0.3,10,h*0.7);
+  ctx.fillRect(sx+w-16,sy+h*0.3,10,h*0.7);
+  ctx.fillStyle='#5a4028';
+  ctx.fillRect(sx,sy+h*0.62,w,h*0.14);
+  ctx.strokeStyle='#241a10'; ctx.lineWidth=2;
+  ctx.strokeRect(sx,sy+h*0.62,w,h*0.14);
+  // tattered red awning cloth
+  ctx.fillStyle='#5a1414';
+  ctx.beginPath();
+  ctx.moveTo(sx-10,sy+h*0.3);
+  ctx.lineTo(sx+w/2,sy);
+  ctx.lineTo(sx+w+10,sy+h*0.3);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#3a0a0a';
+  for(let i=0;i<4;i++){
+    const tx=sx-6+i*(w+12)/4;
+    ctx.beginPath();
+    ctx.moveTo(tx,sy+h*0.3);
+    ctx.lineTo(tx+(w+12)/8,sy+h*0.3+10);
+    ctx.lineTo(tx+(w+12)/4,sy+h*0.3);
+    ctx.closePath(); ctx.fill();
+  }
+  // dim red interior glow beneath the counter, hinting something's off
+  const glow=0.35+0.15*Math.sin(animTime*0.1);
+  const rg=ctx.createRadialGradient(sx+w/2,sy+h*0.7,4,sx+w/2,sy+h*0.7,50);
+  rg.addColorStop(0,'rgba(180,10,10,'+glow+')');
+  rg.addColorStop(1,'rgba(180,10,10,0)');
+  ctx.fillStyle=rg;
+  ctx.beginPath(); ctx.arc(sx+w/2,sy+h*0.7,50,0,7); ctx.fill();
+  // crates
+  ctx.fillStyle='#4a3520';
+  ctx.fillRect(sx+8,sy+h-30,22,30);
+  ctx.strokeStyle='#241a10'; ctx.lineWidth=1;
+  ctx.strokeRect(sx+8,sy+h-30,22,30);
+  // sign with a crossed-out price tag (no real goods for sale, just a front)
+  ctx.fillStyle='#1a1010';
+  ctx.fillRect(sx+w/2-34,sy+h*0.34,68,16);
+  ctx.strokeStyle='#8a1414'; ctx.lineWidth=1.5;
+  ctx.strokeRect(sx+w/2-34,sy+h*0.34,68,16);
+  ctx.fillStyle='#e05050'; ctx.font='bold 10px Arial'; ctx.textAlign='center';
+  ctx.fillText('???', sx+w/2, sy+h*0.34+12);
+  ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText(label, sx+w/2, sy-6);
+}
+
 function drawDojoBuilding(sx,sy,w,h,label){
   // wooden body with red trim
   ctx.fillStyle='#3a2a3a';
@@ -3410,13 +3829,7 @@ function drawPlayerSprite(camX){
   if(!player.grounded) bob=-3;
   sy+=bob;
   // soft ground shadow for depth
-  ctx.save();
-  ctx.globalAlpha=0.35;
-  ctx.fillStyle='#000';
-  ctx.beginPath();
-  ctx.ellipse(sx+player.w/2, GROUND_Y+4, player.w*0.4, 7, 0, 0, 7);
-  ctx.fill();
-  ctx.restore();
+  drawSoftShadow(sx+player.w/2, GROUND_Y+4, player.w*0.4, 7, 0.9);
 
   if(player.frog){
     ctx.save();
@@ -3497,10 +3910,7 @@ function drawEnemies(camX){
     const bob=Math.sin((animTime+en.bobSeed*20)*0.15)*3;
     const walkFrame = Math.floor((animTime+en.bobSeed*20)/10)%2===0;
     const sx=en.x-camX, sy=en.y-16+bob;
-    ctx.save();
-    ctx.globalAlpha=0.3; ctx.fillStyle='#000';
-    ctx.beginPath(); ctx.ellipse(sx,GROUND_Y-2,14,5,0,0,7); ctx.fill();
-    ctx.restore();
+    drawSoftShadow(sx,GROUND_Y-2,14,5,0.85);
     // eerie glow around the creature at night
     if(isNight){
       const eg=ctx.createRadialGradient(sx,sy-8,2,sx,sy-8,32);
@@ -3680,10 +4090,7 @@ function drawBoss(camX){
   else { rows = boss.phase===1? BOSS1_ROWS : BOSS2_ROWS; pal = boss.phase===1? BOSS1_PALETTE : BOSS2_PALETTE; }
   const facingLeft = player.x<boss.x;
   // ground shadow
-  ctx.save();
-  ctx.globalAlpha=0.35; ctx.fillStyle='#000';
-  ctx.beginPath(); ctx.ellipse(sx,GROUND_Y-2,26,8,0,0,7); ctx.fill();
-  ctx.restore();
+  drawSoftShadow(sx,GROUND_Y-2,26,8,1.1);
   // matrix code aura for Arnav / Developer
   if(isMatrixKind){
     drawMatrixAura(sx, sy+30, boss.kind==='developer'? 66:52);
@@ -4105,6 +4512,84 @@ function drawWitch(x,y){
   drawPixelSpriteOutlined(WITCH_ROWS, WITCH_PALETTE, x, y, 4, false);
 }
 
+const MARKET_STREAKS=(function(){
+  const arr=[];
+  for(let i=0;i<22;i++){
+    const seed=i*928371%97;
+    arr.push({
+      x1: (seed*13)%W, y1:(seed*37)%GROUND_Y,
+      x2: (seed*13+ (seed%2===0?60:-60) + (seed%37))%W, y2:((seed*37)+ 80+(seed%140))%GROUND_Y,
+      w: 2+(seed%4)
+    });
+  }
+  return arr;
+})();
+function drawMarketRoomScene(){
+  // pure black walls with jagged blood-red streaks - deliberately claustrophobic and wrong
+  ctx.fillStyle='#050505';
+  ctx.fillRect(0,0,W,GROUND_Y);
+  ctx.fillStyle='#0a0808';
+  ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+  MARKET_STREAKS.forEach(s=>{
+    ctx.strokeStyle='rgba('+(120+((s.w*13)%80))+',10,10,'+(0.35+0.25*Math.sin(animTime*0.03+s.x1))+')';
+    ctx.lineWidth=s.w;
+    ctx.beginPath();
+    ctx.moveTo(s.x1,s.y1);
+    ctx.lineTo((s.x1+s.x2)/2 + Math.sin(animTime*0.02+s.y1)*4, (s.y1+s.y2)/2);
+    ctx.lineTo(s.x2,s.y2);
+    ctx.stroke();
+  });
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,GROUND_Y-4,W,4);
+  // single swinging bulb, the only real light source
+  const swing=Math.sin(animTime*0.03)*10;
+  ctx.strokeStyle='#3a0a0a'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(W/2,0); ctx.lineTo(W/2+swing,90); ctx.stroke();
+  const bulbGlow=ctx.createRadialGradient(W/2+swing,96,2,W/2+swing,96,140);
+  bulbGlow.addColorStop(0,'rgba(255,80,60,0.28)');
+  bulbGlow.addColorStop(1,'rgba(255,80,60,0)');
+  ctx.fillStyle=bulbGlow; ctx.beginPath(); ctx.arc(W/2+swing,96,140,0,7); ctx.fill();
+  ctx.fillStyle='#ffb090'; ctx.beginPath(); ctx.arc(W/2+swing,96,5,0,7); ctx.fill();
+
+  drawPixelSpriteOutlined(TEACHER_ROWS, MERCHANT_PALETTE, 320, GROUND_Y-110, 4, false);
+  ctx.fillStyle='#ff5050'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText('Merchant',348,GROUND_Y+16);
+  // a small table with a faintly glowing headset prop
+  ctx.fillStyle='#1a1010';
+  ctx.fillRect(420,GROUND_Y-40,60,10);
+  ctx.fillRect(430,GROUND_Y-30,4,30);
+  ctx.fillRect(466,GROUND_Y-30,4,30);
+  if(scene!=='market_flash'){
+    const hGlow=ctx.createRadialGradient(450,GROUND_Y-52,2,450,GROUND_Y-52,30);
+    hGlow.addColorStop(0,'rgba(255,60,60,0.5)');
+    hGlow.addColorStop(1,'rgba(255,60,60,0)');
+    ctx.fillStyle=hGlow; ctx.beginPath(); ctx.arc(450,GROUND_Y-52,30,0,7); ctx.fill();
+    ctx.strokeStyle='#8a1414'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(450,GROUND_Y-56,14,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+    ctx.fillStyle='#1a0808';
+    ctx.beginPath(); ctx.arc(437,GROUND_Y-48,4,0,7); ctx.fill();
+    ctx.beginPath(); ctx.arc(463,GROUND_Y-48,4,0,7); ctx.fill();
+  }
+}
+
+function drawMarketStallInterior(){
+  // ordinary-looking front room before the merchant pulls you into the back
+  drawInteriorBase(['#241a14','#12100c'],['#3a2c20','#221812'],'#180f0a');
+  ctx.fillStyle='#3a2a1c';
+  ctx.fillRect(650,80,180,140);
+  ctx.strokeStyle='#1c1208'; ctx.lineWidth=3; ctx.strokeRect(650,80,180,140);
+  const trinketColors=['#8a1414','#5a4020','#2a2a2a','#6a2a3a'];
+  for(let i=0;i<4;i++){
+    ctx.fillStyle=trinketColors[i];
+    ctx.fillRect(665+i*40,140,26,26);
+  }
+  ctx.fillStyle='rgba(255,60,60,0.06)';
+  ctx.fillRect(0,0,W,GROUND_Y);
+  drawPixelSpriteOutlined(TEACHER_ROWS, MERCHANT_PALETTE, 320, GROUND_Y-110, 4, false);
+  ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText('Merchant',348,GROUND_Y+16);
+}
+
 function drawCutsceneScene(){
   const grad=ctx.createRadialGradient(W/2,GROUND_Y-40,40,W/2,GROUND_Y-40,500);
   grad.addColorStop(0,'#2a1015');
@@ -4151,7 +4636,9 @@ function draw(){
   const shake=getShakeOffset();
   ctx.translate(shake.x, shake.y);
   drawSceneContent();
+  if(scene!=='select' && scene!=='lose') drawAmbientDust();
   ctx.restore();
+  if(scene!=='select' && scene!=='lose') drawCinematicGrade();
 }
 function drawSceneContent(){
   if(scene==='select'||scene==='lose') return;
@@ -4185,6 +4672,20 @@ function drawSceneContent(){
   }
   if(scene==='portal_tp'){
     drawPortalTeleport();
+    return;
+  }
+  if(scene==='market_stall'){
+    drawMarketStallInterior();
+    drawPlayerSprite(0);
+    drawDamageNumbers(0);
+    drawVignette();
+    return;
+  }
+  if(scene==='market_room'||scene==='market_flash'){
+    drawMarketRoomScene();
+    drawPlayerSprite(0);
+    drawDamageNumbers(0);
+    drawVignette();
     return;
   }
   if(scene==='arnav_fight'||scene==='developer_intro'||scene==='developer_fight'||scene==='developer_final'||scene==='laptop_ready'){
