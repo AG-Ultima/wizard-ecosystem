@@ -535,7 +535,7 @@
       <div id="bossRushToggleRow">
         <label id="bossRushLabel">
           <input type="checkbox" id="bossRushCheckbox">
-          <span>🏃 Boss Rush Mode - skip the story, fight Teacher → Arnav → The Developer back-to-back on a timer</span>
+          <span>🏃 Speedrun Mode - skip the story, fight Teacher → Arnav → The Developer back-to-back on a timer</span>
         </label>
       </div>
       <button id="difficultyCloseBtn">Close</button>
@@ -591,7 +591,7 @@
     <button id="loseRestartBtn">Restart</button>
   </div>
   <div id="bossRushCompleteScreen">
-    <h1>🏃 BOSS RUSH COMPLETE</h1>
+    <h1>🏃 SPEEDRUN COMPLETE</h1>
     <p>You cleared the Teacher, Arnav, and The Developer back-to-back.</p>
     <div id="bossRushTimeText" class="bossRushBigTime">00.00s</div>
     <button id="bossRushRestartBtn">Play Again</button>
@@ -1763,7 +1763,7 @@ safeOn('mergeBtn','click',()=>{
 
 // ================= Combat =================
 function currentWeaponDamage(){
-  if(devDamageBoost) return 300;
+  if(devDamageBoost) return 500;
   const w=mergedWeapons[player.weapon]||{damage:10};
   let dmg=w.damage;
   if(player.swordBuff && player.weapon.toLowerCase().includes('sword')) dmg=Math.round(dmg*1.3);
