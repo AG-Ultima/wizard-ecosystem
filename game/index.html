@@ -2066,7 +2066,7 @@ safeOn('mergeBtn','click',()=>{
 
 // ================= Combat =================
 function currentWeaponDamage(){
-  if(devDamageBoost) return 500;
+  if(devDamageBoost) return 670;
   const w=mergedWeapons[player.weapon]||{damage:10};
   let dmg=w.damage;
   if(player.swordBuff && player.weapon.toLowerCase().includes('sword')) dmg=Math.round(dmg*1.3);
