@@ -108,6 +108,36 @@
     color:#f2c14e;font-size:10px;letter-spacing:3px;padding:0 8px;}
   #inventoryMenu h2{margin-top:4px;color:#f2c14e;text-shadow:0 0 10px rgba(242,193,78,.8);letter-spacing:2px;
     font-size:17px;border-bottom:1px solid rgba(242,193,78,.3);padding-bottom:8px;}
+  #marketShopMenu{position:absolute;top:40px;left:150px;width:620px;max-height:460px;overflow-y:auto;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,59,59,.03) 0px, rgba(255,59,59,.03) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(90deg, rgba(255,59,59,.03) 0px, rgba(255,59,59,.03) 1px, transparent 1px, transparent 26px),
+      linear-gradient(160deg, rgba(20,4,4,.97), rgba(8,2,2,.99));
+    border:2px solid #ff3b3b;border-radius:4px;color:#ffd6d6;padding:22px;display:none;pointer-events:auto;
+    box-shadow:0 0 0 1px rgba(255,59,59,.15), 0 0 34px rgba(255,59,59,.32), inset 0 0 40px rgba(255,59,59,.06);
+    font-family:'Courier New',monospace;clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);}
+  #marketShopMenu::before{content:'BLACK MARKET // NO REFUNDS';position:absolute;top:-11px;left:16px;background:#140404;
+    color:#ff5a5a;font-size:10px;letter-spacing:3px;padding:0 8px;}
+  #marketShopMenu h2{margin-top:4px;color:#ff5a5a;text-shadow:0 0 10px rgba(255,90,90,.8);letter-spacing:2px;
+    font-size:17px;border-bottom:1px solid rgba(255,90,90,.3);padding-bottom:8px;}
+  #shopCurrency{margin:10px 0;font-size:12.5px;color:#ffd76a;letter-spacing:1px;}
+  #shopList{margin:12px 0;display:flex;flex-direction:column;gap:8px;}
+  .shopRow{display:flex;align-items:center;gap:10px;padding:10px 12px;
+    background:rgba(255,59,59,.05);border-left:2px solid #ff5a5a;border-radius:2px;flex-wrap:wrap;}
+  .shopSwatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;box-shadow:0 0 6px currentColor;}
+  .shopInfo{flex:1;min-width:150px;}
+  .shopName{font-weight:bold;color:#ffd6d6;}
+  .shopTag{font-size:11px;color:#c98a8a;margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+  .shopCost{font-size:12.5px;color:#ffd76a;font-weight:bold;white-space:nowrap;}
+  .shopBuyBtn{font-size:11px;padding:6px 12px;border-radius:2px;cursor:pointer;
+    border:1px solid rgba(255,90,90,.5);background:linear-gradient(180deg,#3a0f0f,#1a0505);color:#ffd6d6;
+    font-family:'Courier New',monospace;letter-spacing:1px;text-transform:uppercase;transition:all .15s;}
+  .shopBuyBtn:hover:not(:disabled){background:#ff5a5a;color:#1a0404;box-shadow:0 0 12px rgba(255,90,90,.6);}
+  .shopBuyBtn:disabled{opacity:.5;cursor:default;background:rgba(255,90,90,.08);color:#c98a8a;}
+  #shopLeaveBtn{margin-top:6px;padding:8px 18px;border-radius:4px;cursor:pointer;
+    border:1px solid rgba(255,90,90,.5);background:linear-gradient(180deg,#2a0a0a,#140404);color:#ff8a8a;
+    font-family:'Courier New',monospace;letter-spacing:1px;text-transform:uppercase;}
+  #shopLeaveBtn:hover{background:#ff3b3b;color:#1a0404;}
   #inventoryList{margin:12px 0;font-size:13px;display:flex;flex-direction:column;gap:8px;}
   .invRow{display:flex;align-items:center;gap:10px;padding:10px 12px;
     background:rgba(242,193,78,.05);border-left:2px solid #f2c14e;border-radius:2px;flex-wrap:wrap;}
@@ -515,6 +545,8 @@
       <p>Choose your character</p>
       <div id="difficultyBadge" style="display:none;font-family:var(--font-display);font-size:12px;letter-spacing:2px;
         color:#f2d375;text-shadow:0 0 8px rgba(242,211,117,.6);margin-top:2px;"></div>
+      <div id="stashBadge" style="display:none;font-family:var(--font-display);font-size:11px;letter-spacing:1px;
+        color:#ffd76a;text-shadow:0 0 8px rgba(255,214,106,.5);margin-top:4px;"></div>
     </div>
     <div id="charOptions">
       <div class="charOption" data-color="#e6b45a" data-key="scholar" style="--optColor:#e6b45a;">
@@ -628,6 +660,12 @@
       <div class="hpLabel"><span>Vitality</span><span id="hpNumeric">100/100</span></div>
       <div id="hpBarWrap"><div id="hpBarFill"></div></div>
       <div id="statusIcons"></div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+        <span id="currencyDisplay" style="font-size:12.5px;color:#ffd76a;letter-spacing:.5px;text-shadow:0 0 6px rgba(255,214,106,.5);">💰 0 scrap</span>
+        <button id="withdrawStashBtn" style="display:none;pointer-events:auto;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;
+          border:1px solid rgba(255,214,106,.5);background:linear-gradient(180deg,#3a2a0a,#1a1204);color:#ffd76a;
+          font-family:'Courier New',monospace;letter-spacing:.5px;">Withdraw +10</button>
+      </div>
     </div>
     <div id="bossName"></div>
     <div id="bossBarWrap"><div id="bossBarFill"></div></div>
@@ -654,6 +692,12 @@
     <div id="inventoryMenu">
       <h2>&gt; LOADOUT [Press I to close]</h2>
       <div id="inventoryList"></div>
+    </div>
+    <div id="marketShopMenu">
+      <h2>&gt; BLACK MARKET</h2>
+      <div id="shopCurrency">💰 0 scrap</div>
+      <div id="shopList"></div>
+      <button id="shopLeaveBtn">Leave</button>
     </div>
   </div>
   <div id="fadeLayer"></div>
@@ -1452,6 +1496,68 @@ function attemptDash(){
 
 let witchFight=null;
 let marketSwordBlessing=false;
+let marketDeclined=false;
+
+// ================= Currency =================
+// Per-run scrap is in-memory only, same as everything else in this game (no
+// respawns, no save/load). The ONE exception: a small persistent "stash" in
+// localStorage that grows by 30 scrap each time the player earns a genuine
+// Honored Ones entry (beating the Developer, or a completed speedrun) - and
+// is wiped back to 0 the moment the player dies. Every other ending, and
+// every ordinary loss of a run, never touches it.
+const SCRAP_STASH_KEY='wastelandAdventureScrapStash';
+function getStashedScrap(){
+  try{
+    const v=parseInt(localStorage.getItem(SCRAP_STASH_KEY)||'0',10);
+    return isNaN(v)? 0 : Math.max(0,v);
+  }catch(e){ return 0; }
+}
+function setStashedScrap(v){
+  try{ localStorage.setItem(SCRAP_STASH_KEY, String(Math.max(0,v))); }catch(e){}
+}
+function addStashedScrap(amount){ setStashedScrap(getStashedScrap()+amount); }
+function wipeStashedScrap(){ setStashedScrap(0); }
+function refreshStashBadge(){
+  const el=document.getElementById('stashBadge');
+  if(!el) return;
+  const amt=getStashedScrap();
+  if(amt>0){ el.style.display='block'; el.textContent='💰 Banked scrap: '+amt+' (lost if you die)'; }
+  else { el.style.display='none'; el.textContent=''; }
+}
+let currency=getStashedScrap();
+function updateCurrencyHUD(){
+  const el=document.getElementById('currencyDisplay');
+  const btn=document.getElementById('withdrawStashBtn');
+  const banked=getStashedScrap();
+  if(el){
+    el.textContent = banked>0
+      ? '💰 '+currency+' scrap   🏦 '+banked+' banked'
+      : '💰 '+currency+' scrap';
+  }
+  if(btn){ btn.style.display = banked>0 ? 'inline-block' : 'none'; }
+}
+function withdrawStash(){
+  if(scene==='select') return;
+  const banked=getStashedScrap();
+  if(banked<=0) return;
+  const amt=Math.min(10, banked);
+  setStashedScrap(banked-amt);
+  currency+=amt;
+  updateCurrencyHUD();
+  sfx.uiClick();
+}
+safeOn('withdrawStashBtn','click', withdrawStash);
+function awardCurrency(amount, x, y){
+  currency+=amount;
+  updateCurrencyHUD();
+  if(x!==undefined && y!==undefined){ spawnDamageNumber(x,y,'+'+amount+' scrap','#ffd76a'); }
+}
+function spendCurrency(cost){
+  if(currency>=cost){ currency-=cost; updateCurrencyHUD(); return true; }
+  return false;
+}
+function hasSkill(name){ return player.skills.some(s=>s.name===name); }
+function hasWeapon(name){ return ownedWeapons.includes(name); }
 
 let mergedWeapons={'Sword':{damage:10,color:'#ccc'}};
 let ownedWeapons=['Sword'];
@@ -1536,6 +1642,7 @@ document.querySelectorAll('.charSwatch').forEach(cnv=>{
   drawSwatch(cnv, cnv.dataset.c, parentKey);
 });
 refreshDifficultyBadge();
+refreshStashBadge();
 document.querySelectorAll('.charOption').forEach(el=>{
   el.addEventListener('click',()=>{
     document.querySelectorAll('.charOption').forEach(o=>o.classList.remove('sel'));
@@ -2014,6 +2121,76 @@ function renderInventoryMenu(){
     wrap.appendChild(row);
   });
 }
+
+// ================= Market Black-Market Shop =================
+// Unlocked only after declining the merchant's headset once; revisiting the
+// stall from then on opens this instead of the scam intro. Skills use keys
+// '6'/'7', kept clear of every other skill's keybind in the game.
+const MARKET_SHOP_ITEMS=[
+  {id:'shrapnel', kind:'skill', name:'Shrapnel Blast', cost:50, key:'6', damage:24, color:'#ff9944', skillType:'projectile'},
+  {id:'voidbolt', kind:'skill', name:'Void Bolt', cost:70, key:'7', damage:28, color:'#aa66ff', skillType:'projectile'},
+  {id:'obsidian', kind:'weapon', name:'Obsidian Dagger', cost:40, damage:20, color:'#3a2a4a'},
+  {id:'vampiric', kind:'weapon', name:'Vampiric Edge', cost:75, damage:28, color:'#8a1a3a'},
+  {id:'potion', kind:'potion', name:'Health Potion', cost:15, repeatable:true},
+];
+function renderShopMenu(){
+  const wrap=document.getElementById('shopList');
+  const curEl=document.getElementById('shopCurrency');
+  if(curEl) curEl.textContent='💰 '+currency+' scrap';
+  if(!wrap) return;
+  wrap.innerHTML='';
+  MARKET_SHOP_ITEMS.forEach(item=>{
+    let owned=false;
+    if(item.kind==='skill') owned=hasSkill(item.name);
+    if(item.kind==='weapon') owned=hasWeapon(item.name);
+    const kindLabel = item.kind==='skill'?'Skill':(item.kind==='weapon'?'Weapon':'Potion');
+    const statLabel = (item.kind!=='potion' && item.damage) ? (' · DMG '+item.damage) : '';
+    const row=document.createElement('div');
+    row.className='shopRow';
+    row.innerHTML=
+      '<div class="shopSwatch" style="background:'+(item.color||'#ff5a5a')+';color:'+(item.color||'#ff5a5a')+';"></div>'
+      +'<div class="shopInfo"><div class="shopName">'+item.name+'</div><div class="shopTag">'+kindLabel+statLabel+'</div></div>'
+      +'<div class="shopCost">'+item.cost+' scrap</div>';
+    const btn=document.createElement('button');
+    btn.className='shopBuyBtn';
+    if(owned && !item.repeatable){
+      btn.textContent='Owned'; btn.disabled=true;
+    } else {
+      btn.textContent='Buy';
+      btn.disabled = currency<item.cost;
+      btn.onclick=()=>{ buyShopItem(item); };
+    }
+    row.appendChild(btn);
+    wrap.appendChild(row);
+  });
+}
+function buyShopItem(item){
+  if(!spendCurrency(item.cost)){ renderShopMenu(); return; }
+  if(item.kind==='skill'){
+    learnSkill(item.name, item.key, item.damage, item.color, item.skillType);
+  } else if(item.kind==='weapon'){
+    mergedWeapons[item.name]={damage:item.damage,color:item.color};
+    if(!ownedWeapons.includes(item.name)) ownedWeapons.push(item.name);
+  } else if(item.kind==='potion'){
+    player.healthPotions+=1;
+  }
+  sfx.uiClick();
+  renderShopMenu();
+}
+function openShopMenu(){
+  inputLocked=true;
+  renderShopMenu();
+  const menu=document.getElementById('marketShopMenu');
+  if(menu) menu.style.display='block';
+}
+function closeShopMenu(){
+  const menu=document.getElementById('marketShopMenu');
+  if(menu) menu.style.display='none';
+  inputLocked=false;
+  exitBuildingToWorld1('market');
+}
+safeOn('shopLeaveBtn','click', closeShopMenu);
+
 function renderSkillMenu(){
   skillList.innerHTML = player.skills.length? '' : '<i style="color:#5a8a90;">No skills loaded. Explore the wasteland to acquire modules.</i>';
   player.skills.forEach(sk=>{
@@ -2066,7 +2243,7 @@ safeOn('mergeBtn','click',()=>{
 
 // ================= Combat =================
 function currentWeaponDamage(){
-  if(devDamageBoost) return 670;
+  if(devDamageBoost) return 500;
   const w=mergedWeapons[player.weapon]||{damage:10};
   let dmg=w.damage;
   if(player.swordBuff && player.weapon.toLowerCase().includes('sword')) dmg=Math.round(dmg*1.3);
@@ -2105,7 +2282,7 @@ function applyChainProc(sourceX, sourceY, excludeTarget){
     nearest.hp-=chainDmg; nearest.flash=8;
     spawnDamageNumber(nearest.x, nearest.y-24, 'CHAIN -'+chainDmg, '#66eaff');
     sfx.chain();
-    if(nearest.hp<=0) nearest.alive=false;
+    if(nearest.hp<=0){ nearest.alive=false; awardCurrency(4+Math.floor(Math.random()*5), nearest.x, nearest.y-40); }
   }
 }
 function tickBurn(target, dealDamageFn){
@@ -2149,7 +2326,7 @@ function swordSwing(){
   enemies.forEach(en=>{
     if(!en.alive) return;
     const d=Math.hypot(en.x-px,en.y-py);
-    if(d<range+en.r){ en.hp-=dmg; en.flash=8; anyHit=true; spawnDamageNumber(en.x,en.y-24,dmgText,dmgColor,isCrit); if(en.hp<=0) en.alive=false; }
+    if(d<range+en.r){ en.hp-=dmg; en.flash=8; anyHit=true; spawnDamageNumber(en.x,en.y-24,dmgText,dmgColor,isCrit); if(en.hp<=0){ en.alive=false; awardCurrency(4+Math.floor(Math.random()*5), en.x, en.y-40); } }
   });
   if(boss && boss.alive){
     const d=Math.hypot(boss.x-px, boss.y-py);
@@ -2262,7 +2439,7 @@ function updateProjectiles(){
       enemies.forEach(en=>{
         if(en.alive && Math.hypot(en.x-p.x,en.y-p.y)<en.r+p.r){
           en.hp-=p.damage; en.flash=8; spawnDamageNumber(en.x,en.y-24,'-'+p.damage,p.color||'#fff');
-          if(en.hp<=0) en.alive=false; p.life=0;
+          if(en.hp<=0){ en.alive=false; awardCurrency(4+Math.floor(Math.random()*5), en.x, en.y-40); } p.life=0;
         }
       });
       if(boss&&boss.alive && Math.hypot(boss.x-p.x,boss.y-p.y)<boss.r+p.r){ damageBoss(p.damage); p.life=0; }
@@ -2282,14 +2459,32 @@ function distTo(px,py,ox,oy){ return Math.hypot(px-ox,py-oy); }
 
 function checkWorld1Triggers(){
   world1POIs.forEach(poi=>{
-    if(poi.triggered) return;
     const cx=poi.x+poi.w/2, cy=poi.y+poi.h/2;
-    if(distTo(player.x+player.w/2,player.y+player.h/2,cx,cy) < 70){
+    const near = distTo(player.x+player.w/2,player.y+player.h/2,cx,cy) < 70;
+    if(poi.id==='market'){
+      if(near && !poi.nearby){
+        poi.nearby=true;
+        if(!poi.triggered){ poi.triggered=true; enterMarket(); }
+        else if(marketDeclined){ enterMarketShop(); }
+      }
+      if(!near) poi.nearby=false;
+      return;
+    }
+    if(poi.id==='blacksmith' || poi.id==='witch'){
+      // Shops: revisitable any time (proximity enter/exit), not a one-shot trigger,
+      // so the player can come back once they've farmed enough scrap.
+      if(near && !poi.nearby){
+        poi.nearby=true;
+        if(poi.id==='blacksmith') enterBlacksmith();
+        else enterWitchHut();
+      }
+      if(!near) poi.nearby=false;
+      return;
+    }
+    if(poi.triggered) return;
+    if(near){
       poi.triggered=true;
       if(poi.id==='building') enterClassroomIntro();
-      if(poi.id==='blacksmith') enterBlacksmith();
-      if(poi.id==='witch') enterWitchHut();
-      if(poi.id==='market') enterMarket();
       if(poi.id==='dojo') enterDojo();
     }
   });
@@ -2323,21 +2518,34 @@ function enterBlacksmith(){
   inputLocked=true;
   startDialogue('Blacksmith',[
     "Well met, traveler. Not many make it this far into the wastes.",
-    "I've got two things I can give you for free, take your pick - choose wisely."
+    "Scrap is scrap - I don't work for free anymore. Here's what I've got, if you can pay."
   ], ()=>{
     const showBlacksmithChoice=()=>{
-      showChoices('Blacksmith',"Which will it be?",[
-        {text:'Take the Fireball skill', action:()=>{
-          learnSkill('Fireball','2',20,'#ff5522','projectile');
-          startDialogue('Blacksmith',["A fine choice. Press [2] to hurl it at your foes."],()=>{});
+      const fireballOwned=hasSkill('Fireball');
+      const lightningOwned=hasWeapon('Lightning Sword');
+      showChoices('Blacksmith',"You have "+currency+" scrap. What'll it be?",[
+        {text:(fireballOwned?'Fireball skill (already yours)':'Buy the Fireball skill - 30 scrap'), action:()=>{
+          if(fireballOwned){ startDialogue('Blacksmith',["You already carry that fire, friend."],()=>{}); return; }
+          if(spendCurrency(30)){
+            learnSkill('Fireball','2',20,'#ff5522','projectile');
+            startDialogue('Blacksmith',["A fine choice. Press [2] to hurl it at your foes."],()=>{});
+          } else {
+            startDialogue('Blacksmith',["Come back when your pockets are heavier - "+(30-currency)+" scrap short."],()=>{});
+          }
         }},
-        {text:'Take the Lightning Sword', action:()=>{
-          learnSkill('Lightning','4',5,'#66eaff','projectile',30);
-          mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff',proc:'chain'};
-          ownedWeapons.push('Lightning Sword');
-          player.weapon='Lightning Sword'; player.weaponDamage=13;
-          startDialogue('Blacksmith',["A blade already humming with storm magic. Press [4] to unleash a quick Lightning bolt - fast cooldown, low damage."],()=>{});
-        }}
+        {text:(lightningOwned?'Lightning Sword (already yours)':'Buy the Lightning Sword - 45 scrap'), action:()=>{
+          if(lightningOwned){ startDialogue('Blacksmith',["Already yours, remember?"],()=>{}); return; }
+          if(spendCurrency(45)){
+            learnSkill('Lightning','4',5,'#66eaff','projectile',30);
+            mergedWeapons['Lightning Sword']={damage:13,color:'#66eaff',proc:'chain'};
+            ownedWeapons.push('Lightning Sword');
+            player.weapon='Lightning Sword'; player.weaponDamage=13;
+            startDialogue('Blacksmith',["A blade already humming with storm magic. Press [4] to unleash a quick Lightning bolt - fast cooldown, low damage."],()=>{});
+          } else {
+            startDialogue('Blacksmith',["That one costs more than you're carrying - "+(45-currency)+" scrap short."],()=>{});
+          }
+        }},
+        {text:'Never mind', action:()=>{}}
       ]);
     };
     const line=archetypeLine('blacksmith');
@@ -2352,17 +2560,27 @@ function enterWitchHut(){
   player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
   startDialogue('Witch',[
     "Mmm... fresh blood, still warm with hope.",
-    "I'll gift you something from the frost realms. No charge, traveler... unless you're too proud to accept."
+    "I don't give my brews away for free anymore, traveler. Scrap buys favors here."
   ], ()=>{
     const showWitchChoice=()=>{
-      showChoices('Witch',"What will you take?",[
-        {text:'Learn the Ice skill', action:()=>{
-          learnSkill('Ice','3',18,'#66ccff','projectile');
-          startDialogue('Witch',["You've learned the skill: Ice. Press [3] to unleash it."],()=>{ exitBuildingToWorld1('witch'); });
+      const iceOwned=hasSkill('Ice');
+      showChoices('Witch',"You have "+currency+" scrap. What will you take?",[
+        {text:(iceOwned?'Ice skill (already yours)':'Buy the Ice skill - 25 scrap'), action:()=>{
+          if(iceOwned){ startDialogue('Witch',["That frost already answers to you."],()=>{ exitBuildingToWorld1('witch'); }); return; }
+          if(spendCurrency(25)){
+            learnSkill('Ice','3',18,'#66ccff','projectile');
+            startDialogue('Witch',["You've learned the skill: Ice. Press [3] to unleash it."],()=>{ exitBuildingToWorld1('witch'); });
+          } else {
+            startDialogue('Witch',["Not enough scrap, dear - "+(25-currency)+" short."],()=>{ exitBuildingToWorld1('witch'); });
+          }
         }},
-        {text:'Take a Health Potion', action:()=>{
-          player.healthPotions+=1;
-          startDialogue('Witch',["A single vial of restorative brew. Press [H] to drink it when you need it most."],()=>{ exitBuildingToWorld1('witch'); });
+        {text:'Buy a Health Potion - 15 scrap', action:()=>{
+          if(spendCurrency(15)){
+            player.healthPotions+=1;
+            startDialogue('Witch',["A single vial of restorative brew. Press [H] to drink it when you need it most."],()=>{ exitBuildingToWorld1('witch'); });
+          } else {
+            startDialogue('Witch',["Not enough scrap, dear - "+(15-currency)+" short."],()=>{ exitBuildingToWorld1('witch'); });
+          }
         }},
         {text:'Refuse her gift', action:()=> startWitchInsult() }
       ]);
@@ -2418,6 +2636,7 @@ function onWitchDefeated(){
   bossBarWrap.style.display='none';
   bossNameEl.style.display='none';
   inputLocked=true;
+  awardCurrency(40);
   learnSkill("Witch's Brew",'5',20,'#ff77cc','potion',300);
   startDialogue('Witch',[
     "Hmph! A fine showing... take my brew as your prize.",
@@ -2519,10 +2738,20 @@ function acceptHeadset(){
 }
 function declineHeadset(){
   inputLocked=true;
+  marketDeclined=true;
   startDialogue('Merchant',[
     "...Fine. Suit yourself.",
-    "You never saw me."
+    "You never saw me.",
+    "...ah, forget the theatrics. Since you already know I'm not selling produce - come back anytime, and I'll show you what I've actually got."
   ], ()=>{ exitBuildingToWorld1('market'); });
+}
+function enterMarketShop(){
+  inputLocked=true;
+  scene='market_stall';
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  startDialogue('Merchant',[
+    "Back again? Good. Take a look - real stock, this time."
+  ], ()=>{ openShopMenu(); });
 }
 
 // ================= Dojo =================
@@ -2598,6 +2827,7 @@ function startDojoInsult(){
 }
 function onInstructorDefeated(){
   inputLocked=true;
+  awardCurrency(35);
   startDialogue('Sword Instructor',[
     "Hah... impressive. You've earned my respect.",
     "Take this - a Steel Greatsword, forged in my own dojo. Wield it well."
@@ -2740,6 +2970,7 @@ async function finishBossRush(){
   const screen=document.getElementById('bossRushCompleteScreen');
   if(screen) screen.style.display='flex';
   await saveHonoredOne(playerName, 'speedrun', elapsedMs/1000);
+  addStashedScrap(30);
 }
 function startBossPhase1(){
   scene='boss1';
@@ -2770,12 +3001,14 @@ function onBossDefeated(){
   }
   if(kind==='teacher1'){
     inputLocked=true;
+    awardCurrency(30);
     startDialogue('Teacher',[
       "Hah... not bad at all. But I'm just getting started.",
       "Behold my true power - the Multivariable Calculus Blade!"
     ], ()=>{ startBossPhase2(); });
   } else if(kind==='teacher2'){
     inputLocked=true;
+    awardCurrency(60);
     bossNameEl.style.display='none';
     player.hp=player.maxhp;
     startDialogue('Teacher',[
@@ -2789,8 +3022,10 @@ function onBossDefeated(){
       ]);
     });
   } else if(kind==='arnav'){
+    awardCurrency(70);
     startGlitchSequence();
   } else if(kind==='developer'){
+    awardCurrency(120);
     startFinalGlitchSequence();
   }
 }
@@ -2966,6 +3201,7 @@ async function submitLaptopName(){
   const category = DIFFICULTY_NAMES[playthroughIndex].toLowerCase();
   if(modal) modal.style.display='none';
   await saveHonoredOne(fullName, category, elapsedSec);
+  addStashedScrap(30);
   triggerWinEnding(3);
 }
 safeOn('laptopSubmitBtn','click', submitLaptopName);
@@ -3053,6 +3289,8 @@ function restartRun(){
   pinAttempts=0;
   devDamageBoost=false;
   marketSwordBlessing=false;
+  marketDeclined=false;
+  currency=getStashedScrap();
   damageNumbers=[];
   witchFight=null;
   mergedWeapons={'Sword':{damage:10,color:'#ccc'}};
@@ -3064,7 +3302,7 @@ function restartRun(){
   boss=null;
   training={active:false, round:0, maxRounds:diffPrecalcRounds(playthroughIndex)};
   dojo={ state:null, dummies:[], spawned:0, totalNonDamaging:3, totalDamaging:10, instructor:null, cutsceneStep:0 };
-  world1POIs.forEach(p=>{ p.triggered=false; });
+  world1POIs.forEach(p=>{ p.triggered=false; p.nearby=false; });
   yearsLaterTriggered=false;
   if(checkWorld2Trigger) checkWorld2Trigger.done=false;
 
@@ -3087,10 +3325,14 @@ function restartRun(){
   if(timerEl) timerEl.style.display='none';
   bossBarWrap.style.display='none';
   bossNameEl.style.display='none';
+  const shopEl=document.getElementById('marketShopMenu');
+  if(shopEl) shopEl.style.display='none';
   selectScreen.style.display='flex';
   addSkillKeyHUD();
   updateStatusIcons();
+  updateCurrencyHUD();
   refreshDifficultyBadge();
+  refreshStashBadge();
   const brCheckbox=document.getElementById('bossRushCheckbox');
   if(brCheckbox) brCheckbox.checked=bossRushMode;
 }
@@ -3111,6 +3353,7 @@ function triggerLose(reason){
   bossBarWrap.style.display='none';
   scene='lose';
   sfx.death();
+  wipeStashedScrap();
   loseText.textContent = reason || 'The wasteland claims another soul.';
   loseScreen.style.display='flex';
 }
