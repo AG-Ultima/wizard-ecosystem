@@ -185,6 +185,23 @@
   #ultimateBarFill::after{content:'';position:absolute;inset:0;border-radius:2px;
     background:linear-gradient(180deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.05) 45%, transparent 55%);}
   #ultimateHint{font-size:9.5px;color:#ffcc88;margin-top:2px;letter-spacing:.3px;}
+
+  #comboDisplay{position:absolute;top:56px;left:50%;transform:translate(-50%,0);display:none;
+    font-family:var(--font-display);font-weight:900;letter-spacing:2px;pointer-events:none;
+    text-shadow:0 0 14px currentColor, 2px 2px 0 rgba(0,0,0,.6);z-index:5;white-space:nowrap;}
+  #comboDisplay.comboPop{animation:comboPop .18s ease-out;}
+  @keyframes comboPop{0%{transform:translate(-50%,0) scale(1.35);}100%{transform:translate(-50%,0) scale(1);}}
+
+  #achievementToasts{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:8px;z-index:8;pointer-events:none;max-width:260px;}
+  .achToast{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;
+    background:linear-gradient(135deg, rgba(20,16,8,.92), rgba(10,8,4,.92));
+    border:1px solid rgba(242,211,117,.5);box-shadow:0 6px 18px rgba(0,0,0,.5), 0 0 16px rgba(242,211,117,.2);
+    color:#f2d375;font-family:var(--font-display);font-size:11.5px;letter-spacing:.5px;
+    animation:achIn .3s ease-out;}
+  .achToast.achOut{animation:achOut .4s ease-in forwards;}
+  .achIcon{font-size:16px;flex-shrink:0;}
+  @keyframes achIn{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+  @keyframes achOut{from{opacity:1;transform:translateX(0);}to{opacity:0;transform:translateX(30px);}}
   #statusIcons{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
   .statusChip{display:flex;align-items:center;gap:4px;padding:3px 7px;border-radius:5px;font-size:11px;
     background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);}
@@ -687,6 +704,8 @@
       </div>
     </div>
     <div id="bossName"></div>
+    <div id="comboDisplay"></div>
+    <div id="achievementToasts"></div>
     <div id="bossBarWrap"><div id="bossBarFill"></div></div>
     <div id="bossRushTimer"></div>
     <div id="skillKeys"></div>
@@ -1327,6 +1346,7 @@ const loseText=document.getElementById('loseText');
 
 // ================= Game State =================
 let keys={};
+let jumpRequested=false;
 let mouse={x:0,y:0,down:false};
 let camera={x:0,y:0};
 let scene='select';
@@ -1404,6 +1424,7 @@ function triggerExecution(x,y){
   slowMoTimer=Math.max(slowMoTimer,24);
   triggerScreenShake(7,18);
   spawnDamageNumber(x,y-30,'EXECUTED','#ff2a4a',true);
+  unlockAchievement('first_execution','Executioner','💀');
   for(let i=0;i<16;i++){
     const ang=Math.random()*Math.PI*2;
     const spd=1.4+Math.random()*3.8;
@@ -1434,9 +1455,11 @@ function drawExecutionParticles(camX){
 // out only once HP climbs back above 35%) so it doesn't flicker on/off.
 let rageActive=false;
 function updateRageMode(){
+  const wasActive=rageActive;
   if(!rageActive && player.hp>0 && player.hp<=player.maxhp*0.25){ rageActive=true; }
   else if(rageActive && player.hp>player.maxhp*0.35){ rageActive=false; }
   if(player.hp<=0) rageActive=false;
+  if(rageActive && !wasActive) unlockAchievement('first_rage','Berserker Awakened','🔥');
   lowHpVignette.classList.toggle('rageMode', rageActive);
 }
 function rageDamageMult(){ return rageActive ? 1.25 : 1; }
@@ -1455,6 +1478,7 @@ function triggerUltimate(){
   if(scene==='select' || inputLocked) return;
   if(!player.hasUltimate || player.ultimateCharge<100) return;
   player.ultimateCharge=0;
+  unlockAchievement('first_ultimate','Cataclysm Unleashed','☄️');
   const px=player.x+player.w/2, py=player.y+player.h/2;
   const dmg=120+Math.round(currentWeaponDamage()*0.5);
   triggerScreenShake(11,28);
@@ -1481,7 +1505,7 @@ function triggerUltimate(){
     spawnDamageNumber(ins.x,ins.y-50,'ULTIMATE -'+dmg,'#ffcc33',true);
     if(ins.hp<=0){ ins.alive=false; onInstructorDefeated(); }
   }
-  if(anyHit) sfx.hit(true);
+  if(anyHit){ sfx.hit(true); registerComboHit(); }
 }
 let ultimateFlashTimer=0;
 function drawUltimateFlash(){
@@ -1614,8 +1638,80 @@ const player={
   healthPotions:0,
   dashing:0, dashCooldownTimer:0,
   hasUltimate:false, ultimateCharge:0,
+  hasDoubleJump:false, jumpsUsed:0,
 };
 let dashTrail=[];
+
+// ================= Combo counter =================
+// Any successful attack keeps the combo alive for ~1.6s; taking any damage
+// (detected as a frame-over-frame HP drop, so it works uniformly across
+// every damage source without touching each site) breaks it instantly.
+// Higher combos pay out more scrap, rewarding aggressive, unhit play.
+let comboCount=0, comboTimer=0, comboBest=0, lastPlayerHpForCombo=100;
+function registerComboHit(){
+  comboCount++;
+  comboTimer=95;
+  if(comboCount>comboBest) comboBest=comboCount;
+  updateComboHUD();
+}
+function updateCombo(){
+  if(comboTimer>0){
+    comboTimer--;
+    if(comboTimer<=0 && comboCount>0){ comboCount=0; updateComboHUD(); }
+  }
+  if(player.hp<lastPlayerHpForCombo && comboCount>0){ comboCount=0; comboTimer=0; updateComboHUD(); }
+  lastPlayerHpForCombo=player.hp;
+}
+function comboScrapMult(){
+  if(comboCount>=20) return 1.5;
+  if(comboCount>=10) return 1.3;
+  if(comboCount>=5) return 1.15;
+  return 1;
+}
+function updateComboHUD(){
+  const el=document.getElementById('comboDisplay');
+  if(!el) return;
+  if(comboCount<2){ el.style.display='none'; return; }
+  let color='#bfe8ff', size=20, label='';
+  if(comboCount>=20){ color='#ffd700'; size=36; label=' GODLIKE'; }
+  else if(comboCount>=10){ color='#ff4444'; size=28; label=' UNSTOPPABLE'; }
+  else if(comboCount>=5){ color='#ffb347'; size=24; label=' NICE'; }
+  el.style.color=color;
+  el.style.fontSize=size+'px';
+  el.textContent='COMBO x'+comboCount+label;
+  el.style.display='block';
+  el.classList.remove('comboPop');
+  void el.offsetWidth;
+  el.classList.add('comboPop');
+}
+
+// ================= Boss trophies =================
+// One unique entry per boss-tier fight beaten this run. Purely additive: a
+// small permanent-for-the-run damage bonus, plus a ring of orbiting motes
+// (colored per boss) drawn around the player as a visible trophy case.
+let bossesDefeatedThisRun=new Set();
+const TROPHY_COLORS={ witch:'#8affa0', instructor:'#ff8a8a', teacher1:'#ffcc33', teacher2:'#cc66ff', arnav:'#39ff6a', developer:'#39ff6a' };
+function awardTrophy(key){ bossesDefeatedThisRun.add(key); }
+function trophyDamageMult(){ return 1 + bossesDefeatedThisRun.size*0.02; }
+
+// ================= Achievement toasts =================
+// Lightweight, session-only "first time this run" callouts - no persistence,
+// consistent with the rest of the game's in-memory-only philosophy.
+let achievementsSeen=new Set();
+function unlockAchievement(id, label, icon){
+  if(achievementsSeen.has(id)) return;
+  achievementsSeen.add(id);
+  const wrap=document.getElementById('achievementToasts');
+  if(!wrap) return;
+  const el=document.createElement('div');
+  el.className='achToast';
+  el.innerHTML='<span class="achIcon">'+(icon||'🏆')+'</span><span>'+label+'</span>';
+  wrap.appendChild(el);
+  setTimeout(()=>{
+    el.classList.add('achOut');
+    setTimeout(()=>{ el.remove(); }, 400);
+  }, 2800);
+}
 const DASH_SPEED=9.5, DASH_DURATION=9, DASH_COOLDOWN=42, DASH_INVULN=16;
 function attemptDash(){
   if(scene==='select') return;
@@ -1627,6 +1723,7 @@ function attemptDash(){
   player.vx=player.facing*DASH_SPEED;
   player.invuln=Math.max(player.invuln,DASH_INVULN);
   sfx.dash();
+  unlockAchievement('first_dash','Quick Reflexes','💨');
 }
 
 let witchFight=null;
@@ -1683,6 +1780,7 @@ function withdrawStash(){
 }
 safeOn('withdrawStashBtn','click', withdrawStash);
 function awardCurrency(amount, x, y){
+  amount=Math.round(amount*comboScrapMult());
   currency+=amount;
   updateCurrencyHUD();
   if(x!==undefined && y!==undefined){ spawnDamageNumber(x,y,'+'+amount+' scrap','#ffd76a'); }
@@ -2016,6 +2114,7 @@ window.addEventListener('keydown',e=>{
   }
   const k=e.key.toLowerCase();
   keys[k]=true;
+  if((k==='w'||k==='arrowup') && !e.repeat){ jumpRequested=true; }
   if(k==='e'){ if(dqActive){ advanceDialogue(); } else if(scene==='laptop_ready' && itemReady){ useLaptop(); } }
   if(k==='k'){ toggleSkillMenu(); }
   if(k==='i'){ toggleInventoryMenu(); }
@@ -2185,7 +2284,7 @@ function useSkill(sk){
   const dy=mouse.y - py;
   const len=Math.max(1,Math.hypot(dx,dy));
   let dmg = player.frog? Math.round(sk.damage*0.25) : sk.damage;
-  if(!devDamageBoost) dmg=Math.round(dmg*diffPlayerDmgMult(playthroughIndex)*rageDamageMult());
+  if(!devDamageBoost) dmg=Math.round(dmg*diffPlayerDmgMult(playthroughIndex)*rageDamageMult()*trophyDamageMult());
   projectiles.push({
     x:px, y:py, vx:dx/len*7, vy:dy/len*7, damage:dmg, color:sk.color, owner:'player',
     life:90, r:10, label:sk.name
@@ -2270,6 +2369,7 @@ const MARKET_SHOP_ITEMS=[
   {id:'vampiric', kind:'weapon', name:'Vampiric Edge', cost:75, damage:28, color:'#8a1a3a'},
   {id:'potion', kind:'potion', name:'Health Potion', cost:15, repeatable:true},
   {id:'ultimate', kind:'ultimate', name:'Cataclysm Core', cost:150, color:'#ffcc33'},
+  {id:'boots', kind:'passive', name:'Featherweight Boots', cost:35, color:'#6cf', desc:'Unlocks a mid-air double jump'},
 ];
 function renderShopMenu(){
   const wrap=document.getElementById('shopList');
@@ -2282,8 +2382,9 @@ function renderShopMenu(){
     if(item.kind==='skill') owned=hasSkill(item.name);
     if(item.kind==='weapon') owned=hasWeapon(item.name);
     if(item.kind==='ultimate') owned=player.hasUltimate;
-    const kindLabel = item.kind==='skill'?'Skill':(item.kind==='weapon'?'Weapon':(item.kind==='ultimate'?'Ultimate':'Potion'));
-    const statLabel = item.kind==='ultimate' ? ' · Screen-clearing nuke, charges from kills' : ((item.kind!=='potion' && item.damage) ? (' · DMG '+item.damage) : '');
+    if(item.kind==='passive') owned=player.hasDoubleJump;
+    const kindLabel = item.kind==='skill'?'Skill':(item.kind==='weapon'?'Weapon':(item.kind==='ultimate'?'Ultimate':(item.kind==='passive'?'Passive':'Potion')));
+    const statLabel = item.kind==='ultimate' ? ' · Screen-clearing nuke, charges from kills' : (item.kind==='passive' ? ' · '+(item.desc||'') : ((item.kind!=='potion' && item.damage) ? (' · DMG '+item.damage) : ''));
     const row=document.createElement('div');
     row.className='shopRow';
     row.innerHTML=
@@ -2315,8 +2416,11 @@ function buyShopItem(item){
   } else if(item.kind==='ultimate'){
     player.hasUltimate=true;
     updateUltimateHUD();
+  } else if(item.kind==='passive'){
+    player.hasDoubleJump=true;
   }
   sfx.uiClick();
+  unlockAchievement('first_purchase','First Deal Struck','💰');
   renderShopMenu();
 }
 function openShopMenu(){
@@ -2394,6 +2498,7 @@ function currentWeaponDamage(){
   if(player.frog) dmg=Math.round(dmg*0.25);
   dmg=Math.round(dmg*diffPlayerDmgMult(playthroughIndex));
   dmg=Math.round(dmg*rageDamageMult());
+  dmg=Math.round(dmg*trophyDamageMult());
   return dmg;
 }
 
@@ -2504,7 +2609,7 @@ function swordSwing(){
     const d=Math.hypot(witchFight.x-px, witchFight.y-py);
     if(d<range+witchFight.r){ damageWitch(dmg,isCrit); anyHit=true; }
   }
-  if(anyHit) sfx.hit(isCrit);
+  if(anyHit){ sfx.hit(isCrit); registerComboHit(); unlockAchievement('first_strike','First Strike Landed','⚔️'); }
 }
 function damageBoss(dmg,isCrit){
   boss.hp-=dmg;
@@ -2594,10 +2699,12 @@ function updateProjectiles(){
   projectiles.forEach(p=>{
     p.x+=p.vx; p.y+=p.vy; p.life--;
     if(p.owner==='player'){
+      let connected=false;
       enemies.forEach(en=>{
         if(en.alive && Math.hypot(en.x-p.x,en.y-p.y)<en.r+p.r){
           const wasLow = en.hp<=en.maxhp*0.25;
           en.hp-=p.damage; en.flash=8; spawnDamageNumber(en.x,en.y-24,'-'+p.damage,p.color||'#fff');
+          connected=true;
           if(en.hp<=0){
             en.alive=false;
             awardCurrency(6+Math.floor(Math.random()*7), en.x, en.y-40);
@@ -2607,8 +2714,9 @@ function updateProjectiles(){
           p.life=0;
         }
       });
-      if(boss&&boss.alive && Math.hypot(boss.x-p.x,boss.y-p.y)<boss.r+p.r){ damageBoss(p.damage); p.life=0; }
-      if(witchFight&&witchFight.alive && Math.hypot(witchFight.x-p.x,witchFight.y-p.y)<witchFight.r+p.r){ damageWitch(p.damage); p.life=0; }
+      if(boss&&boss.alive && Math.hypot(boss.x-p.x,boss.y-p.y)<boss.r+p.r){ damageBoss(p.damage); p.life=0; connected=true; }
+      if(witchFight&&witchFight.alive && Math.hypot(witchFight.x-p.x,witchFight.y-p.y)<witchFight.r+p.r){ damageWitch(p.damage); p.life=0; connected=true; }
+      if(connected) registerComboHit();
     } else if(p.owner==='boss'||p.owner==='witch'){
       if(player.invuln<=0 && Math.hypot(player.x+player.w/2-p.x,player.y+player.h/2-p.y)<18+p.r){
         player.hp-=p.damage; player.invuln=40; p.life=0;
@@ -2802,6 +2910,8 @@ function onWitchDefeated(){
   bossNameEl.style.display='none';
   inputLocked=true;
   awardCurrency(40);
+  awardTrophy('witch');
+  unlockAchievement('first_boss','Boss Slain','🏆');
   learnSkill("Witch's Brew",'5',20,'#ff77cc','potion',300);
   startDialogue('Witch',[
     "Hmph! A fine showing... take my brew as your prize.",
@@ -2993,6 +3103,8 @@ function startDojoInsult(){
 function onInstructorDefeated(){
   inputLocked=true;
   awardCurrency(35);
+  awardTrophy('instructor');
+  unlockAchievement('first_boss','Boss Slain','🏆');
   startDialogue('Sword Instructor',[
     "Hah... impressive. You've earned my respect.",
     "Take this - a Steel Greatsword, forged in my own dojo. Wield it well."
@@ -3167,6 +3279,8 @@ function onBossDefeated(){
   if(kind==='teacher1'){
     inputLocked=true;
     awardCurrency(30);
+    awardTrophy('teacher1');
+    unlockAchievement('first_boss','Boss Slain','🏆');
     startDialogue('Teacher',[
       "Hah... not bad at all. But I'm just getting started.",
       "Behold my true power - the Multivariable Calculus Blade!"
@@ -3174,6 +3288,7 @@ function onBossDefeated(){
   } else if(kind==='teacher2'){
     inputLocked=true;
     awardCurrency(60);
+    awardTrophy('teacher2');
     bossNameEl.style.display='none';
     player.hp=player.maxhp;
     startDialogue('Teacher',[
@@ -3188,9 +3303,11 @@ function onBossDefeated(){
     });
   } else if(kind==='arnav'){
     awardCurrency(70);
+    awardTrophy('arnav');
     startGlitchSequence();
   } else if(kind==='developer'){
     awardCurrency(120);
+    awardTrophy('developer');
     startFinalGlitchSequence();
   }
 }
@@ -3475,6 +3592,13 @@ function restartRun(){
   rageActive=false;
   ultimateFlashTimer=0;
   if(lowHpVignette) lowHpVignette.classList.remove('rageMode');
+  comboCount=0; comboTimer=0; comboBest=0; lastPlayerHpForCombo=100;
+  bossesDefeatedThisRun=new Set();
+  achievementsSeen=new Set();
+  const toastWrap=document.getElementById('achievementToasts');
+  if(toastWrap) toastWrap.innerHTML='';
+  const comboEl=document.getElementById('comboDisplay');
+  if(comboEl) comboEl.style.display='none';
 
   player.x=150; player.y=GROUND_Y-64; player.vx=0; player.vy=0; player.facing=1;
   player.grounded=false; player.crouching=false;
@@ -3485,6 +3609,8 @@ function restartRun(){
   player.skills=[]; player.invuln=0;
   player.frog=false; player.jumpBoost=false; player.healthPotions=0;
   player.hasUltimate=false; player.ultimateCharge=0;
+  player.hasDoubleJump=false; player.jumpsUsed=0;
+  jumpRequested=false;
   camera={x:0,y:0};
 
   winScreen.style.display='none';
@@ -3559,10 +3685,19 @@ function updatePlayerPhysics(){
     player.x+=player.vx;
   }
 
-  if((keys['w']||keys['arrowup']) && player.grounded && !player.crouching){
-    player.vy = player.jumpBoost ? FROG_JUMP_VEL : JUMP_VEL;
-    player.grounded=false;
-    sfx.jump();
+  if(jumpRequested){
+    jumpRequested=false;
+    if(player.grounded && !player.crouching){
+      player.vy = player.jumpBoost ? FROG_JUMP_VEL : JUMP_VEL;
+      player.grounded=false;
+      player.jumpsUsed=1;
+      sfx.jump();
+    } else if(player.hasDoubleJump && !player.grounded && player.jumpsUsed<2 && !player.crouching){
+      player.vy = (player.jumpBoost ? FROG_JUMP_VEL : JUMP_VEL)*0.88;
+      player.jumpsUsed=2;
+      sfx.jump();
+      unlockAchievement('double_jump','Featherweight','🪶');
+    }
   }
 
   player.vy+=GRAVITY;
@@ -3573,6 +3708,7 @@ function updatePlayerPhysics(){
     player.y=GROUND_Y-player.h;
     player.vy=0;
     player.grounded=true;
+    player.jumpsUsed=0;
   } else {
     player.grounded=false;
   }
@@ -3624,7 +3760,9 @@ function update(){
     nightBlend = (nt > NIGHT_LEN-TRANS) ? 1-(nt-(NIGHT_LEN-TRANS))/TRANS : 1;
   }
   nightBlend=Math.max(0,Math.min(1,nightBlend));
+  const wasNight=isNight;
   isNight = nightBlend>0.5;
+  if(isNight && !wasNight && (scene==='world1'||scene==='world2')) unlockAchievement('first_night','Nightfall','🌙');
 
   player.skills.forEach(sk=>{ if(sk.cooldown>0) sk.cooldown--; });
   if(player.attackCooldown>0) player.attackCooldown--;
@@ -3679,6 +3817,7 @@ function update(){
   updateExecutionParticles();
   updateRageMode();
   updateUltimateHUD();
+  updateCombo();
   if(ultimateFlashTimer>0) ultimateFlashTimer--;
 
   const worldScene = (scene==='world1'||scene==='world2');
@@ -4321,6 +4460,23 @@ function drawPlayerSprite(camX){
   ctx.fillStyle='#fff';
   ctx.font='11px Arial'; ctx.textAlign='center';
   ctx.fillText(playerName, sx+player.w/2, sy-8);
+  drawTrophyAura(sx,sy);
+}
+function drawTrophyAura(sx,sy){
+  if(bossesDefeatedThisRun.size===0) return;
+  const colors=Array.from(bossesDefeatedThisRun).map(k=>TROPHY_COLORS[k]||'#fff');
+  const cx=sx+player.w/2, cy=sy+player.h*0.4;
+  colors.forEach((col,i)=>{
+    const ang=animTime*0.045 + i*(Math.PI*2/colors.length);
+    const rx=player.w*1.0, ry=player.h*0.6;
+    const ox=cx+Math.cos(ang)*rx, oy=cy+Math.sin(ang)*ry*0.5;
+    ctx.save();
+    ctx.globalAlpha=0.85;
+    ctx.shadowColor=col; ctx.shadowBlur=6;
+    ctx.fillStyle=col;
+    ctx.beginPath(); ctx.arc(ox,oy,2.6,0,7); ctx.fill();
+    ctx.restore();
+  });
 }
 
 function drawEnemies(camX){
