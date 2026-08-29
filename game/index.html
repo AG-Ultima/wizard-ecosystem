@@ -709,7 +709,7 @@
     <div id="bossBarWrap"><div id="bossBarFill"></div></div>
     <div id="bossRushTimer"></div>
     <div id="skillKeys"></div>
-    <div id="controlsHint">A/D move · W/↑ jump · S crouch · Shift dash · Left Click or Space attack · K skills · I inventory · H drink potion · U ultimate (once charged)</div>
+    <div id="controlsHint">A/D move · W/↑ jump · S crouch · Shift dash · Left Click or Space attack · K skills · I inventory · H drink potion · U ultimate (once charged) · F parry</div>
     <div id="dialogueBox">
       <div id="dialogueNameRow"><span id="dialogueIcon"></span><span id="dialogueName"></span></div>
       <div id="dialogueText"></div>
@@ -1282,6 +1282,9 @@ const BOSS2_ROWS=[
 ];
 const BOSS2_PALETTE={k:'#111111', s:'#f1c39a', e:'#cc66ff', A:'#5a5a66', C:'#7a1f1f', g:'#232329', b:'#0d0d0d', P:'#cc66ff'};
 
+// The Warden - reuses BOSS2_ROWS silhouette (armored), recolored as a rogue steel security automaton
+const WARDEN_PALETTE={k:'#2a3138', s:'#8a9aa5', e:'#ff3b3b', A:'#4a545c', C:'#1a2024', g:'#20262a', b:'#101418', P:'#6cf'};
+
 function drawSwatch(cnv, colorHex, charKey){
   const c=cnv.getContext('2d');
   c.imageSmoothingEnabled=false;
@@ -1470,6 +1473,120 @@ function rageSpeedMult(){ return rageActive ? 1.2 : 1; }
 // wasteland kills (+8 per kill, capped at 100); press [U] once full to unload
 // a screen-clearing nuke on everything currently alive, then the charge
 // resets to 0 - the "cooldown" is simply earning it back through combat.
+// ================= Parry =================
+// Press F for a short (16-frame) parry window. Getting hit during that window
+// negates all damage, refunds a bit of scrap, extends the combo, and stuns
+// nothing mechanically but rewards good timing over blocking passively - no
+// hold-to-block, matching this game's press-for-an-action input scheme.
+let parryTimer=0, parryCooldown=0;
+function attemptParry(){
+  if(scene==='select' || inputLocked) return;
+  if(parryCooldown>0) return;
+  parryTimer=16;
+  parryCooldown=48;
+  sfx.uiClick();
+}
+function playerTakeDamage(amount, x, y){
+  const px = x!==undefined ? x : player.x+player.w/2;
+  const py = y!==undefined ? y : player.y-6;
+  if(parryTimer>0){
+    parryTimer=0;
+    triggerScreenShake(4,10);
+    spawnDamageNumber(px, py, 'PARRIED!', '#6cf', true);
+    awardCurrency(5);
+    registerComboHit();
+    unlockAchievement('first_parry','Perfect Timing','🛡️');
+    sfx.chain();
+    return;
+  }
+  player.hp-=amount;
+  spawnDamageNumber(px, py, '-'+amount, '#ff5a5a');
+}
+
+// ================= Companion drone =================
+// Unlocked by defeating The Warden. Hovers near the player and periodically
+// zaps the nearest live target from any current enemy pool (wasteland
+// monsters, the active boss, the witch, dojo dummies/instructor, the Warden
+// itself) with a small independent damage tick.
+let droneCooldown=0, droneBeams=[];
+function droneFindTarget(){
+  let best=null, bestD=260;
+  const px=player.x+player.w/2, py=player.y+player.h/2;
+  enemies.forEach(en=>{
+    if(!en.alive) return;
+    const d=Math.hypot(en.x-px,en.y-py);
+    if(d<bestD){ bestD=d; best={x:en.x,y:en.y-20, hit:(dmg)=>{
+      en.hp-=dmg; en.flash=6; spawnDamageNumber(en.x,en.y-20,'-'+dmg,'#8fd8ff');
+      if(en.hp<=0){ en.alive=false; awardCurrency(4+Math.floor(Math.random()*4), en.x, en.y-36); gainUltimateCharge(4); }
+    }}; }
+  });
+  if(boss && boss.alive){
+    const d=Math.hypot(boss.x-px,boss.y-py);
+    if(d<bestD){ bestD=d; best={x:boss.x,y:boss.y-70, hit:(dmg)=>damageBoss(dmg)}; }
+  }
+  if(witchFight && witchFight.alive){
+    const d=Math.hypot(witchFight.x-px,witchFight.y-py);
+    if(d<bestD){ bestD=d; best={x:witchFight.x,y:witchFight.y-70, hit:(dmg)=>damageWitch(dmg)}; }
+  }
+  if(vault.guardian && vault.guardian.alive){
+    const d=Math.hypot(vault.guardian.x-px,vault.guardian.y-py);
+    if(d<bestD){ bestD=d; best={x:vault.guardian.x,y:vault.guardian.y-70, hit:(dmg)=>damageWarden(dmg)}; }
+  }
+  if(dojo.instructor && dojo.instructor.alive){
+    const ins=dojo.instructor;
+    const d=Math.hypot(ins.x-px,ins.y-py);
+    if(d<bestD){ bestD=d; best={x:ins.x,y:ins.y-50, hit:(dmg)=>{
+      ins.hp-=dmg; ins.flash=6; spawnDamageNumber(ins.x,ins.y-50,'-'+dmg,'#8fd8ff');
+      if(ins.hp<=0){ ins.alive=false; onInstructorDefeated(); }
+    }}; }
+  }
+  dojo.dummies.forEach(du=>{
+    if(!du.alive) return;
+    const d=Math.hypot(du.x-px,du.y-py);
+    if(d<bestD){ bestD=d; best={x:du.x,y:du.y-30, hit:(dmg)=>{
+      du.hp-=dmg; du.flash=6; spawnDamageNumber(du.x,du.y-30,'-'+dmg,'#8fd8ff');
+      if(du.hp<=0){ du.alive=false; onDummyKilled(); }
+    }}; }
+  });
+  return best;
+}
+function updateDrone(){
+  if(!player.hasDrone) return;
+  if(droneCooldown>0){ droneCooldown--; return; }
+  if(scene==='select' || inputLocked) return;
+  const target=droneFindTarget();
+  if(!target) return;
+  droneCooldown=85;
+  const dmg=8+Math.round(4*diffPlayerDmgMult(playthroughIndex));
+  const bx=player.x+player.w/2, by=player.y-14;
+  droneBeams.push({x:bx,y:by,tx:target.x,ty:target.y,life:10});
+  target.hit(dmg);
+  sfx.skill();
+  unlockAchievement('first_drone','Automated Backup','🤖');
+}
+function updateDroneBeams(){
+  droneBeams.forEach(b=>{ b.life--; });
+  droneBeams=droneBeams.filter(b=>b.life>0);
+}
+function drawDrone(camX){
+  if(!player.hasDrone) return;
+  const dx=player.x-camX+player.w/2+Math.sin(animTime*0.06)*14;
+  const dy=player.y-26+Math.cos(animTime*0.05)*4;
+  ctx.save();
+  ctx.fillStyle='#6cf'; ctx.shadowColor='#6cf'; ctx.shadowBlur=8;
+  ctx.beginPath();
+  ctx.moveTo(dx,dy-5); ctx.lineTo(dx+6,dy); ctx.lineTo(dx,dy+5); ctx.lineTo(dx-6,dy);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+  droneBeams.forEach(b=>{
+    ctx.save();
+    ctx.globalAlpha=Math.max(0,b.life/10);
+    ctx.strokeStyle='#8fd8ff'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(b.x-camX,b.y); ctx.lineTo(b.tx-camX,b.ty); ctx.stroke();
+    ctx.restore();
+  });
+}
+
 function gainUltimateCharge(amount){
   if(!player.hasUltimate) return;
   player.ultimateCharge=Math.min(100, player.ultimateCharge+amount);
@@ -1639,6 +1756,7 @@ const player={
   dashing:0, dashCooldownTimer:0,
   hasUltimate:false, ultimateCharge:0,
   hasDoubleJump:false, jumpsUsed:0,
+  hasDrone:false,
 };
 let dashTrail=[];
 
@@ -1690,7 +1808,7 @@ function updateComboHUD(){
 // small permanent-for-the-run damage bonus, plus a ring of orbiting motes
 // (colored per boss) drawn around the player as a visible trophy case.
 let bossesDefeatedThisRun=new Set();
-const TROPHY_COLORS={ witch:'#8affa0', instructor:'#ff8a8a', teacher1:'#ffcc33', teacher2:'#cc66ff', arnav:'#39ff6a', developer:'#39ff6a' };
+const TROPHY_COLORS={ witch:'#8affa0', instructor:'#ff8a8a', teacher1:'#ffcc33', teacher2:'#cc66ff', arnav:'#39ff6a', developer:'#39ff6a', warden:'#6cf' };
 function awardTrophy(key){ bossesDefeatedThisRun.add(key); }
 function trophyDamageMult(){ return 1 + bossesDefeatedThisRun.size*0.02; }
 
@@ -1854,8 +1972,9 @@ let world1POIs=[
   {id:'witch', x:2850, y:GROUND_Y-150, w:110,h:150, label:'Witch Hut', triggered:false},
   {id:'market', x:3300, y:GROUND_Y-140, w:100,h:140, label:'Market Stall', triggered:false},
   {id:'dojo', x:3700, y:GROUND_Y-220, w:150,h:220, label:'Purple Dojo', triggered:false, color:'#5a2f8a'},
+  {id:'vault', x:4300, y:GROUND_Y-200, w:160,h:200, label:'The Vault', triggered:false},
 ];
-let world1End=4500;
+let world1End=5200;
 let yearsLaterTriggered=false;
 let world2Building={x:950,y:GROUND_Y-200,w:130,h:200};
 
@@ -1865,6 +1984,7 @@ let animTime=0;
 
 // Dojo state
 let dojo={ state:null, dummies:[], spawned:0, totalNonDamaging:3, totalDamaging:10, instructor:null, cutsceneStep:0 };
+let vault={ state:null, guardian:null };
 
 function currentSkyColor(){ return isNight? '#0e1220':'#7ec9e8'; }
 function currentGroundColor(){ return isNight? '#2a2118':'#5c4a30'; }
@@ -2050,6 +2170,16 @@ const VERSION_LOG=[
     'The Developer boss fight no longer happens in the Teacher\'s castle - choosing to "Prove your worth" now portals the player straight to the Developer\'s Castle: a matrix-rain server fortress with a completely different backdrop from the Teacher\'s domain',
     'Difficulty is now chosen up front via a title-screen button instead of being unlocked through a New Game+ loop'
   ]},
+  { tag:'v3.2', notes:[
+    'The Market Stall: a shady merchant offers a mysterious headset that wills your sword to 250 damage for the run - or refuse and get pushed out, unlocking his real stock (the Black Market) on your next visit',
+    'A scrap economy: monster kills, training equations, and story milestones all pay out scrap; the Blacksmith and Witch now charge for their goods instead of giving them away',
+    'A small persistent stash: earning a genuine Honored Ones entry banks 30 scrap in localStorage for future runs - the one deliberate exception to this game\'s no-save philosophy - but dying wipes it clean',
+    'Execution finishers, Rage mode at critical HP, a chargeable screen-clearing Ultimate (Cataclysm Core), combo counter, boss trophy auras, double jump, and session achievement toasts'
+  ]},
+  { tag:'v3.3', notes:[
+    'A new area: The Vault, a sealed bunker guarded by a rogue security automaton, The Warden - defeat it for the Vaultbreaker Blade and the Warden Pulse skill',
+    'World1 extended to make room for it, placed after the Dojo on the road to "Several Years Later"'
+  ]},
 ];
 safeOn('versionLogBtn','click',()=>{
   const wrap=document.getElementById('versionListWrap');
@@ -2123,6 +2253,7 @@ window.addEventListener('keydown',e=>{
   if(k==='shift'){ attemptDash(); }
   if(k==='q'){ openPinModal(); }
   if(k==='u'){ triggerUltimate(); }
+  if(k==='f'){ attemptParry(); }
   handleSkillKey(e.key);
 });
 window.addEventListener('keyup',e=>{ keys[e.key.toLowerCase()]=false; });
@@ -2143,6 +2274,7 @@ const SPEAKER_THEMES={
   'witch':        {color:'#8affa0', icon:'🧪'},
   'sword instructor': {color:'#e05a5a', icon:'⚔️'},
   'merchant':     {color:'#ff3b3b', icon:'🎭'},
+  '???':          {color:'#6cf', icon:'🔒'},
   'arnav (the developer)': {color:'#39ff6a', icon:'👨‍💻'},
   'the developer':{color:'#39ff6a', icon:'💻'},
 };
@@ -2261,6 +2393,7 @@ function updateStatusIcons(){
   if(player.frog) html+='<div class="statusChip frogChip">🐸 Frog Curse</div>';
   if(player.swordBuff) html+='<div class="statusChip buffChip">⚔ Sword +30%</div>';
   if(marketSwordBlessing) html+='<div class="statusChip buffChip" style="color:#ff5a5a;border-color:rgba(255,90,90,.4);">🔴 Sword Blessing (250)</div>';
+  if(parryTimer>0) html+='<div class="statusChip" style="color:#6cf;border-color:rgba(108,204,255,.6);animation:rageChipPulse .3s infinite;">🛡️ PARRY WINDOW</div>';
   if(player.healthPotions>0) html+='<div class="statusChip potionChip">🧪 x'+player.healthPotions+' [H]</div>';
   statusIconsEl.innerHTML=html;
 }
@@ -2609,6 +2742,10 @@ function swordSwing(){
     const d=Math.hypot(witchFight.x-px, witchFight.y-py);
     if(d<range+witchFight.r){ damageWitch(dmg,isCrit); anyHit=true; }
   }
+  if(vault.guardian && vault.guardian.alive){
+    const d=Math.hypot(vault.guardian.x-px, vault.guardian.y-py);
+    if(d<range+vault.guardian.r){ damageWarden(dmg,isCrit); anyHit=true; }
+  }
   if(anyHit){ sfx.hit(isCrit); registerComboHit(); unlockAchievement('first_strike','First Strike Landed','⚔️'); }
 }
 function damageBoss(dmg,isCrit){
@@ -2643,8 +2780,8 @@ function updateEnemies(){
     const d2=Math.hypot(player.x-en.x,(player.y+player.h/2)-en.y);
     if(d2<en.r+22 && en.dmgCooldown<=0 && player.invuln<=0){
       const dmg=scaleEnemyDmg(8);
-      player.hp-=dmg; player.invuln=50; en.dmgCooldown=60;
-      spawnDamageNumber(player.x+player.w/2,player.y-6,'-'+dmg,'#ff5a5a');
+      player.invuln=50; en.dmgCooldown=60;
+      playerTakeDamage(dmg);
     }
   });
   enemies=enemies.filter(en=>en.alive);
@@ -2716,11 +2853,12 @@ function updateProjectiles(){
       });
       if(boss&&boss.alive && Math.hypot(boss.x-p.x,boss.y-p.y)<boss.r+p.r){ damageBoss(p.damage); p.life=0; connected=true; }
       if(witchFight&&witchFight.alive && Math.hypot(witchFight.x-p.x,witchFight.y-p.y)<witchFight.r+p.r){ damageWitch(p.damage); p.life=0; connected=true; }
+      if(vault.guardian&&vault.guardian.alive && Math.hypot(vault.guardian.x-p.x,vault.guardian.y-p.y)<vault.guardian.r+p.r){ damageWarden(p.damage); p.life=0; connected=true; }
       if(connected) registerComboHit();
     } else if(p.owner==='boss'||p.owner==='witch'){
       if(player.invuln<=0 && Math.hypot(player.x+player.w/2-p.x,player.y+player.h/2-p.y)<18+p.r){
-        player.hp-=p.damage; player.invuln=40; p.life=0;
-        spawnDamageNumber(player.x+player.w/2,player.y-6,'-'+p.damage,'#ff5a5a');
+        player.invuln=40; p.life=0;
+        playerTakeDamage(p.damage);
       }
     }
   });
@@ -2759,6 +2897,7 @@ function checkWorld1Triggers(){
       poi.triggered=true;
       if(poi.id==='building') enterClassroomIntro();
       if(poi.id==='dojo') enterDojo();
+      if(poi.id==='vault') enterVault();
     }
   });
   if(!yearsLaterTriggered && player.x > world1End){
@@ -3126,8 +3265,8 @@ function updateDojoInstructor(){
   if(ins.atkCooldown>0) ins.atkCooldown--;
   const contactD=Math.hypot(player.x-ins.x,(player.y+player.h/2)-ins.y);
   if(contactD<ins.r+30 && ins.atkCooldown<=0 && player.invuln<=0){
-    player.hp-=ins.dmg; player.invuln=45; ins.atkCooldown=55;
-    spawnDamageNumber(player.x+player.w/2,player.y-6,'-'+ins.dmg,'#ff5a5a');
+    player.invuln=45; ins.atkCooldown=55;
+    playerTakeDamage(ins.dmg);
     if(player.hp<=0){ startDojoCutscene(); }
   }
   if(ins.flash>0) ins.flash--;
@@ -3141,8 +3280,8 @@ function updateDojoDummies(){
     const d=Math.hypot(player.x-du.x,(player.y+player.h/2)-du.y);
     if(d<du.r+30 && player.invuln<=0){
       const dmg=scaleEnemyDmg(6);
-      player.hp-=dmg; player.invuln=45; du.dmgCooldown=70;
-      spawnDamageNumber(player.x+player.w/2,player.y-6,'-'+dmg,'#ff5a5a');
+      player.invuln=45; du.dmgCooldown=70;
+      playerTakeDamage(dmg);
     }
   });
 }
@@ -3158,6 +3297,72 @@ function startDojoCutscene(){
     "The blade rises... and falls.",
     "..."
   ], ()=>{ triggerLose("You refused the training, challenged the master, and paid with your head."); });
+}
+
+// ================= The Vault =================
+function enterVault(){
+  inputLocked=true;
+  scene='vault_intro';
+  vault.state='intro';
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  startDialogue('???',[
+    "A blast door, half-buried in rubble. A faded plaque still reads: PROJECT WARDEN - AUTHORIZED PERSONNEL ONLY.",
+    "Something behind it hums with old power."
+  ], ()=>{
+    showChoices('???',"Force the door open?",[
+      {text:'Force it open', action:()=> startVaultFight() },
+      {text:'Walk away', action:()=>{ exitBuildingToWorld1('vault'); } }
+    ]);
+  });
+}
+function startVaultFight(){
+  scene='vault_fight';
+  vault.state='fight';
+  inputLocked=false;
+  const hp=scaleHp(260), dmg=scaleEnemyDmg(13);
+  vault.guardian={ x:650,y:GROUND_Y-70,r:30,hp:hp,maxhp:hp,alive:true,dmg:dmg,speed:1.15,atkCooldown:0,flash:0 };
+  bossBarWrap.style.display='block';
+  bossNameEl.style.display='block';
+  bossNameEl.textContent='The Warden';
+}
+function damageWarden(dmg,isCrit){
+  const g=vault.guardian; if(!g||!g.alive) return;
+  g.hp-=dmg; g.flash=10;
+  spawnDamageNumber(g.x,g.y-70,(isCrit?'CRIT -':'-')+dmg, isCrit?'#ffe066':'#8fd8ff', isCrit);
+  if(g.hp<=0){ g.hp=0; g.alive=false; triggerScreenShake(7,16); onWardenDefeated(); }
+}
+function updateVaultGuardian(){
+  const g=vault.guardian;
+  if(!g||!g.alive) return;
+  const dx=player.x-g.x, d=Math.abs(dx)||1;
+  if(d>60){ g.x+=Math.sign(dx)*g.speed; }
+  if(g.atkCooldown>0) g.atkCooldown--;
+  const contactD=Math.hypot(player.x-g.x,(player.y+player.h/2)-g.y);
+  if(contactD<g.r+30 && g.atkCooldown<=0 && player.invuln<=0){
+    player.invuln=45; g.atkCooldown=58;
+    playerTakeDamage(g.dmg);
+  }
+  if(g.flash>0) g.flash--;
+}
+function onWardenDefeated(){
+  bossBarWrap.style.display='none';
+  bossNameEl.style.display='none';
+  inputLocked=true;
+  awardCurrency(55);
+  awardTrophy('warden');
+  unlockAchievement('vault_cleared','Vault Cracked','🗝️');
+  mergedWeapons['Vaultbreaker Blade']={damage:32,color:'#6cf'};
+  ownedWeapons.push('Vaultbreaker Blade');
+  learnSkill('Warden Pulse','8',26,'#6cf','projectile');
+  player.hasDrone=true;
+  startDialogue('???',[
+    "The Warden's core goes dark. Whatever it was guarding is yours now.",
+    "You found the Vaultbreaker Blade, salvaged a working schematic for the skill Warden Pulse (Press [8]), and pulled a still-functioning scout drone from the wreckage - it'll fight alongside you now."
+  ], ()=>{
+    vault.guardian=null;
+    vault.state='done';
+    exitBuildingToWorld1('vault');
+  });
 }
 
 function triggerYearsLater(){
@@ -3584,6 +3789,7 @@ function restartRun(){
   boss=null;
   training={active:false, round:0, maxRounds:diffPrecalcRounds(playthroughIndex)};
   dojo={ state:null, dummies:[], spawned:0, totalNonDamaging:3, totalDamaging:10, instructor:null, cutsceneStep:0 };
+  vault={ state:null, guardian:null };
   world1POIs.forEach(p=>{ p.triggered=false; p.nearby=false; });
   yearsLaterTriggered=false;
   if(checkWorld2Trigger) checkWorld2Trigger.done=false;
@@ -3610,6 +3816,9 @@ function restartRun(){
   player.frog=false; player.jumpBoost=false; player.healthPotions=0;
   player.hasUltimate=false; player.ultimateCharge=0;
   player.hasDoubleJump=false; player.jumpsUsed=0;
+  player.hasDrone=false;
+  droneCooldown=0; droneBeams=[];
+  parryTimer=0; parryCooldown=0;
   jumpRequested=false;
   camera={x:0,y:0};
 
@@ -3714,7 +3923,7 @@ function updatePlayerPhysics(){
   }
 
   // scene bounds
-  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='final_glitch'||scene==='developer_final'||scene==='laptop_ready'||scene==='portal_tp'||scene==='market_stall'||scene==='market_room'||scene==='market_flash'){
+  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='final_glitch'||scene==='developer_final'||scene==='laptop_ready'||scene==='portal_tp'||scene==='market_stall'||scene==='market_room'||scene==='market_flash'||scene==='vault_intro'||scene==='vault_fight'){
     player.x=Math.max(60,Math.min(820,player.x));
   } else {
     player.x=Math.max(20,player.x);
@@ -3731,6 +3940,8 @@ function musicMoodForScene(){
   if(scene==='arnav_fight'||scene==='developer_fight'||scene==='developer_intro'||scene==='developer_final'||
      scene==='glitch_transition'||scene==='final_glitch'||scene==='portal_tp'||scene==='laptop_ready') return 'matrix';
   if(scene==='market_room'||scene==='market_flash') return 'danger';
+  if(scene==='vault_fight') return 'boss';
+  if(scene==='vault_intro') return 'danger';
   if(scene==='classroom'||scene==='witch_hut'||scene==='dojo'||scene==='market_stall') return 'mystic';
   if(scene==='world1'||scene==='world2') return isNight? 'danger':'overworld';
   return 'mystic';
@@ -3782,6 +3993,7 @@ function update(){
   if(scene==='dojo' && dojo.state==='training'){ updateDojoDummies(); }
   if(scene==='dojo' && dojo.state==='duel'){ updateDojoInstructor(); }
   if(scene==='witch_duel'){ updateWitchDuel(); }
+  if(scene==='vault_fight'){ updateVaultGuardian(); }
 
   if(scene==='boss1'||scene==='boss2'||scene==='arnav_fight'||scene==='developer_fight'){
     if(boss && boss.alive){
@@ -3815,6 +4027,10 @@ function update(){
   updateScreenShake();
   updateDustMotes();
   updateExecutionParticles();
+  updateDrone();
+  updateDroneBeams();
+  if(parryTimer>0) parryTimer--;
+  if(parryCooldown>0) parryCooldown--;
   updateRageMode();
   updateUltimateHUD();
   updateCombo();
@@ -3832,6 +4048,8 @@ function update(){
   updateStatusIcons();
   if(scene==='witch_duel' && witchFight){
     bossBarFill.style.width=Math.max(0,witchFight.hp/witchFight.maxhp*100)+'%';
+  } else if(scene==='vault_fight' && vault.guardian){
+    bossBarFill.style.width=Math.max(0,vault.guardian.hp/vault.guardian.maxhp*100)+'%';
   } else if(boss){
     bossBarFill.style.width=Math.max(0,boss.hp/boss.maxhp*100)+'%';
   }
@@ -4106,6 +4324,7 @@ function drawPOI(poi){
   if(poi.id==='blacksmith'){ drawForgeBuilding(sx,sy,poi.w,poi.h,poi.label); return; }
   if(poi.id==='market'){ drawMarketStallExterior(sx,sy,poi.w,poi.h,poi.label); return; }
   if(poi.id==='dojo'){ drawDojoBuilding(sx,sy,poi.w,poi.h,poi.label); return; }
+  if(poi.id==='vault'){ drawVaultExterior(sx,sy,poi.w,poi.h,poi.label); return; }
   ctx.fillStyle=poi.color||'#5a4a3a';
   ctx.fillRect(sx,sy,poi.w,poi.h);
   ctx.fillStyle='rgba(255,255,255,0.15)';
@@ -4333,6 +4552,41 @@ function drawDojoBuilding(sx,sy,w,h,label){
   ctx.fillText(label, sx+w/2, sy-4);
 }
 
+function drawVaultExterior(sx,sy,w,h,label){
+  // reinforced steel bunker wall
+  ctx.fillStyle='#3a3f42';
+  ctx.fillRect(sx,sy,w,h);
+  ctx.fillStyle='rgba(0,0,0,0.15)';
+  for(let i=0;i<h;i+=14) ctx.fillRect(sx,sy+i,w,1);
+  // hazard stripe band across the top
+  ctx.fillStyle='#c9a227';
+  for(let i=0;i<w;i+=16) ctx.fillRect(sx+i,sy,8,10);
+  ctx.fillStyle='#141414';
+  for(let i=8;i<w;i+=16) ctx.fillRect(sx+i,sy,8,10);
+  // circular blast door
+  const cx0=sx+w/2, cy0=sy+h*0.62, r=Math.min(w,h)*0.32;
+  ctx.fillStyle='#55595c';
+  ctx.beginPath(); ctx.arc(cx0,cy0,r,0,7); ctx.fill();
+  ctx.strokeStyle='#1c1c1c'; ctx.lineWidth=4; ctx.stroke();
+  ctx.strokeStyle='#2e3336'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx0,cy0,r*0.62,0,7); ctx.stroke();
+  for(let i=0;i<10;i++){
+    const ang=i/10*Math.PI*2;
+    ctx.fillStyle='#1c1c1c';
+    ctx.beginPath(); ctx.arc(cx0+Math.cos(ang)*r*0.82, cy0+Math.sin(ang)*r*0.82, 3,0,7); ctx.fill();
+  }
+  // plaque
+  ctx.fillStyle='#1a1a1a';
+  ctx.fillRect(cx0-30,sy+h*0.28,60,14);
+  ctx.fillStyle='#8a9aa5'; ctx.font='bold 8px monospace'; ctx.textAlign='center';
+  ctx.fillText('PROJECT WARDEN', cx0, sy+h*0.28+10);
+  // pulsing warning light
+  const pulse=0.5+0.5*Math.sin(animTime*0.1);
+  ctx.fillStyle='rgba(255,40,40,'+(0.35+0.4*pulse)+')';
+  ctx.beginPath(); ctx.arc(cx0, sy+14, 6,0,7); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText(label, sx+w/2, sy-8);
+}
 function drawHut(sx,sy,w,h,label){
   // stilted round hut with a thatched cone roof
   ctx.fillStyle='#5a4030';
@@ -5087,6 +5341,50 @@ function drawWitch(x,y){
   drawPixelSpriteOutlined(WITCH_ROWS, WITCH_PALETTE, x, y, 4, false);
 }
 
+function drawVaultScene(){
+  drawInteriorBase(['#20262a','#10141a'],['#343a3f','#20262a'],'#0d1216');
+  // hazard stripe ceiling band
+  ctx.fillStyle='#c9a227';
+  for(let i=0;i<W;i+=32) ctx.fillRect(i,0,16,10);
+  ctx.fillStyle='#111';
+  for(let i=16;i<W;i+=32) ctx.fillRect(i,0,16,10);
+  // pulsing red hazard lights along the walls
+  const pulse=0.4+0.35*Math.sin(animTime*0.08);
+  for(let i=0;i<3;i++){
+    const lx=140+i*310;
+    const glow=ctx.createRadialGradient(lx,60,2,lx,60,40);
+    glow.addColorStop(0,'rgba(255,40,40,'+(0.3+0.35*pulse)+')');
+    glow.addColorStop(1,'rgba(255,40,40,0)');
+    ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(lx,60,40,0,7); ctx.fill();
+    ctx.fillStyle='rgba(255,80,80,0.9)'; ctx.beginPath(); ctx.arc(lx,60,5,0,7); ctx.fill();
+  }
+  // dormant server racks lining the back wall
+  ctx.fillStyle='#181e22';
+  for(let i=0;i<4;i++) ctx.fillRect(60+i*190, GROUND_Y-140, 60,140);
+  ctx.fillStyle='rgba(108,204,255,0.25)';
+  for(let i=0;i<4;i++) ctx.fillRect(72+i*190, GROUND_Y-120, 36,8);
+  ctx.fillStyle='rgba(108,204,255,0.5)'; ctx.font='bold 14px monospace'; ctx.textAlign='center';
+  ctx.fillText('PROJECT WARDEN', W/2, 90);
+
+  if(vault.guardian && vault.guardian.alive){
+    const g=vault.guardian;
+    const sx=g.x, sy=GROUND_Y-90;
+    ctx.save();
+    ctx.globalAlpha=0.35; ctx.fillStyle='#000';
+    ctx.beginPath(); ctx.ellipse(sx,GROUND_Y-2,26,8,0,0,7); ctx.fill();
+    ctx.restore();
+    ctx.save();
+    if(g.flash>0) ctx.filter='brightness(2.3)';
+    drawPixelSpriteOutlined(BOSS2_ROWS, WARDEN_PALETTE, sx-24, sy, 4, player.x<g.x);
+    ctx.restore();
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(sx-25,sy-17,50,7);
+    ctx.fillStyle='#f00'; ctx.fillRect(sx-24,sy-16,48,5);
+    ctx.fillStyle='#6cf'; ctx.fillRect(sx-24,sy-16,48*Math.max(0,g.hp/g.maxhp),5);
+    ctx.fillStyle='#fff'; ctx.font='12px Arial'; ctx.textAlign='center';
+    ctx.fillText('The Warden', sx, sy-22);
+  }
+}
+
 const MARKET_STREAKS=(function(){
   const arr=[];
   for(let i=0;i<22;i++){
@@ -5226,6 +5524,7 @@ function drawSceneContent(){
     drawProjectiles(0);
     drawDamageNumbers(0);
     drawExecutionParticles(0);
+    drawDrone(0);
     drawVignette();
     return;
   }
@@ -5245,6 +5544,7 @@ function drawSceneContent(){
     drawProjectiles(0);
     drawDamageNumbers(0);
     drawExecutionParticles(0);
+    drawDrone(0);
     drawVignette();
     return;
   }
@@ -5257,6 +5557,7 @@ function drawSceneContent(){
     drawPlayerSprite(0);
     drawDamageNumbers(0);
     drawExecutionParticles(0);
+    drawDrone(0);
     drawVignette();
     return;
   }
@@ -5265,6 +5566,7 @@ function drawSceneContent(){
     drawPlayerSprite(0);
     drawDamageNumbers(0);
     drawExecutionParticles(0);
+    drawDrone(0);
     drawVignette();
     return;
   }
@@ -5302,6 +5604,7 @@ function drawSceneContent(){
     drawProjectiles(0);
     drawDamageNumbers(0);
     drawExecutionParticles(0);
+    drawDrone(0);
     drawVignette();
     return;
   }
@@ -5318,6 +5621,7 @@ function drawSceneContent(){
     drawPlayerSprite(0);
     drawDamageNumbers(0);
     drawExecutionParticles(0);
+    drawDrone(0);
     drawVignette();
     return;
   }
@@ -5331,6 +5635,17 @@ function drawSceneContent(){
     drawProjectiles(0);
     drawDamageNumbers(0);
     drawExecutionParticles(0);
+    drawDrone(0);
+    drawVignette();
+    return;
+  }
+  if(scene==='vault_intro'||scene==='vault_fight'){
+    drawVaultScene();
+    drawPlayerSprite(0);
+    drawProjectiles(0);
+    drawDamageNumbers(0);
+    drawExecutionParticles(0);
+    drawDrone(0);
     drawVignette();
     return;
   }
@@ -5342,6 +5657,7 @@ function drawSceneContent(){
   drawProjectiles(camera.x);
   drawDamageNumbers(camera.x);
   drawExecutionParticles(camera.x);
+  drawDrone(camera.x);
   drawPlayerSprite(camera.x);
   drawVignette();
 }
