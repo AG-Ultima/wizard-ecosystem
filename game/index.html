@@ -1606,7 +1606,7 @@ function triggerUltimate(){
     if(!en.alive) return;
     en.hp-=dmg; en.flash=10; anyHit=true;
     spawnDamageNumber(en.x,en.y-24,'ULTIMATE -'+dmg,'#ffcc33',true);
-    if(en.hp<=0){ en.alive=false; awardCurrency(6+Math.floor(Math.random()*7), en.x, en.y-40); triggerExecution(en.x,en.y-16); }
+    if(en.hp<=0){ en.alive=false; enemyKillReward(en); triggerExecution(en.x,en.y-16); }
   });
   if(boss && boss.alive){ damageBoss(dmg,true); anyHit=true; }
   if(witchFight && witchFight.alive){ damageWitch(dmg,true); anyHit=true; }
@@ -1808,7 +1808,7 @@ function updateComboHUD(){
 // small permanent-for-the-run damage bonus, plus a ring of orbiting motes
 // (colored per boss) drawn around the player as a visible trophy case.
 let bossesDefeatedThisRun=new Set();
-const TROPHY_COLORS={ witch:'#8affa0', instructor:'#ff8a8a', teacher1:'#ffcc33', teacher2:'#cc66ff', arnav:'#39ff6a', developer:'#39ff6a', warden:'#6cf' };
+const TROPHY_COLORS={ witch:'#8affa0', instructor:'#ff8a8a', teacher1:'#ffcc33', teacher2:'#cc66ff', arnav:'#39ff6a', developer:'#39ff6a', warden:'#6cf', proving:'#ffcc33' };
 function awardTrophy(key){ bossesDefeatedThisRun.add(key); }
 function trophyDamageMult(){ return 1 + bossesDefeatedThisRun.size*0.02; }
 
@@ -1973,8 +1973,9 @@ let world1POIs=[
   {id:'market', x:3300, y:GROUND_Y-140, w:100,h:140, label:'Market Stall', triggered:false},
   {id:'dojo', x:3700, y:GROUND_Y-220, w:150,h:220, label:'Purple Dojo', triggered:false, color:'#5a2f8a'},
   {id:'vault', x:4300, y:GROUND_Y-200, w:160,h:200, label:'The Vault', triggered:false},
+  {id:'proving', x:4750, y:GROUND_Y-200, w:150,h:200, label:'The Proving Grounds', triggered:false},
 ];
-let world1End=5200;
+let world1End=5600;
 let yearsLaterTriggered=false;
 let world2Building={x:950,y:GROUND_Y-200,w:130,h:200};
 
@@ -2180,6 +2181,19 @@ const VERSION_LOG=[
     'A new area: The Vault, a sealed bunker guarded by a rogue security automaton, The Warden - defeat it for the Vaultbreaker Blade and the Warden Pulse skill',
     'World1 extended to make room for it, placed after the Dojo on the road to "Several Years Later"'
   ]},
+  { tag:'v3.4', notes:[
+    'Parry: press [F] for a short window that fully negates the next hit, refunds scrap, and extends your combo - routed through every damage source in the game via one shared damage function',
+    'Companion drone: defeating The Warden pulls a still-functioning scout drone from the wreckage that now fights alongside you, auto-targeting the nearest live enemy, boss, or dummy'
+  ]},
+  { tag:'v3.5', notes:[
+    'Elite night monsters: a chance for tougher, faster, gold-auraed variants to spawn after dark, worth 2.5x scrap and far more Ultimate charge',
+    'Lifesteal: the Vampiric Edge now actually drains life on hit instead of being a reskinned stat stick',
+    'Frenzy: reaching a 10 or 20 combo now speeds up your attack swing itself, not just the numbers behind it'
+  ]},
+  { tag:'v3.6', notes:[
+    'A new area: The Proving Grounds, a ruined lecture hall where five real math questions are asked live in-game - correct answers pay out and sharpen the mind, wrong ones cost real HP',
+    'A full run rewards Theorem\'s Edge and the skill QED Burst; a partial run still pays out in scrap - built specifically around this game\'s dedication'
+  ]},
 ];
 safeOn('versionLogBtn','click',()=>{
   const wrap=document.getElementById('versionListWrap');
@@ -2275,6 +2289,7 @@ const SPEAKER_THEMES={
   'sword instructor': {color:'#e05a5a', icon:'⚔️'},
   'merchant':     {color:'#ff3b3b', icon:'🎭'},
   '???':          {color:'#6cf', icon:'🔒'},
+  'proctor':      {color:'#ffcc33', icon:'🎓'},
   'arnav (the developer)': {color:'#39ff6a', icon:'👨‍💻'},
   'the developer':{color:'#39ff6a', icon:'💻'},
 };
@@ -2499,7 +2514,7 @@ const MARKET_SHOP_ITEMS=[
   {id:'shrapnel', kind:'skill', name:'Shrapnel Blast', cost:50, key:'6', damage:24, color:'#ff9944', skillType:'projectile'},
   {id:'voidbolt', kind:'skill', name:'Void Bolt', cost:70, key:'7', damage:28, color:'#aa66ff', skillType:'projectile'},
   {id:'obsidian', kind:'weapon', name:'Obsidian Dagger', cost:40, damage:20, color:'#3a2a4a'},
-  {id:'vampiric', kind:'weapon', name:'Vampiric Edge', cost:75, damage:28, color:'#8a1a3a'},
+  {id:'vampiric', kind:'weapon', name:'Vampiric Edge', cost:75, damage:28, color:'#8a1a3a', lifesteal:0.18},
   {id:'potion', kind:'potion', name:'Health Potion', cost:15, repeatable:true},
   {id:'ultimate', kind:'ultimate', name:'Cataclysm Core', cost:150, color:'#ffcc33'},
   {id:'boots', kind:'passive', name:'Featherweight Boots', cost:35, color:'#6cf', desc:'Unlocks a mid-air double jump'},
@@ -2542,7 +2557,7 @@ function buyShopItem(item){
   if(item.kind==='skill'){
     learnSkill(item.name, item.key, item.damage, item.color, item.skillType);
   } else if(item.kind==='weapon'){
-    mergedWeapons[item.name]={damage:item.damage,color:item.color};
+    mergedWeapons[item.name]={damage:item.damage,color:item.color,lifesteal:item.lifesteal||0};
     if(!ownedWeapons.includes(item.name)) ownedWeapons.push(item.name);
   } else if(item.kind==='potion'){
     player.healthPotions+=1;
@@ -2666,8 +2681,7 @@ function applyChainProc(sourceX, sourceY, excludeTarget){
     sfx.chain();
     if(nearest.hp<=0){
       nearest.alive=false;
-      awardCurrency(6+Math.floor(Math.random()*7), nearest.x, nearest.y-40);
-      gainUltimateCharge(8);
+      enemyKillReward(nearest);
       if(wasLow) triggerExecution(nearest.x, nearest.y-16);
     }
   }
@@ -2689,7 +2703,7 @@ function swordSwing(){
   if(scene==='select') return;
   if(inputLocked) return;
   if(player.attackCooldown>0) return;
-  player.attackCooldown=22;
+  player.attackCooldown = comboCount>=20 ? 13 : (comboCount>=10 ? 17 : 22);
   player.swingTimer=16;
   sfx.swing();
   const range=60;
@@ -2718,8 +2732,7 @@ function swordSwing(){
       en.hp-=dmg; en.flash=8; anyHit=true; spawnDamageNumber(en.x,en.y-24,dmgText,dmgColor,isCrit);
       if(en.hp<=0){
         en.alive=false;
-        awardCurrency(6+Math.floor(Math.random()*7), en.x, en.y-40);
-        gainUltimateCharge(8);
+        enemyKillReward(en);
         if(wasLow) triggerExecution(en.x, en.y-16);
       }
     }
@@ -2746,7 +2759,16 @@ function swordSwing(){
     const d=Math.hypot(vault.guardian.x-px, vault.guardian.y-py);
     if(d<range+vault.guardian.r){ damageWarden(dmg,isCrit); anyHit=true; }
   }
-  if(anyHit){ sfx.hit(isCrit); registerComboHit(); unlockAchievement('first_strike','First Strike Landed','⚔️'); }
+  if(anyHit){
+    sfx.hit(isCrit); registerComboHit(); unlockAchievement('first_strike','First Strike Landed','⚔️');
+    const w=mergedWeapons[player.weapon];
+    if(w && w.lifesteal && player.hp<player.maxhp){
+      const heal=Math.max(1,Math.round(dmg*w.lifesteal));
+      player.hp=Math.min(player.maxhp, player.hp+heal);
+      spawnDamageNumber(player.x+player.w/2, player.y-20, '+'+heal, '#7fff7f');
+      unlockAchievement('vampiric_thirst','Thirst Quenched','🩸');
+    }
+  }
 }
 function damageBoss(dmg,isCrit){
   boss.hp-=dmg;
@@ -2760,8 +2782,15 @@ function damageBoss(dmg,isCrit){
 function spawnMonster(){
   const side=Math.random()<0.5?-1:1;
   const ex=player.x + side*(300+Math.random()*150);
-  const hp=scaleHp(30);
-  enemies.push({x:ex,y:GROUND_Y-28,r:16,hp:hp,maxhp:hp,speed:1.1,alive:true,dmgCooldown:0,flash:0,bobSeed:Math.random()*10});
+  const isElite = Math.random()<0.12;
+  const hp=scaleHp(Math.round(isElite? 30*2.4 : 30));
+  enemies.push({x:ex,y:GROUND_Y-28,r:isElite?20:16,hp:hp,maxhp:hp,speed:isElite?1.4:1.1,alive:true,dmgCooldown:0,flash:0,bobSeed:Math.random()*10,elite:isElite});
+}
+function enemyKillReward(en){
+  const eliteMult = en.elite ? 2.5 : 1;
+  awardCurrency(Math.round((6+Math.floor(Math.random()*7))*eliteMult), en.x, en.y-40);
+  gainUltimateCharge(en.elite? 18 : 8);
+  if(en.elite) unlockAchievement('first_elite','Elite Hunter','⭐');
 }
 function updateEnemies(){
   if(isNight && enemies.length<9 && Math.random()<0.035) spawnMonster();
@@ -2779,7 +2808,7 @@ function updateEnemies(){
     if(en.dmgCooldown>0) en.dmgCooldown--;
     const d2=Math.hypot(player.x-en.x,(player.y+player.h/2)-en.y);
     if(d2<en.r+22 && en.dmgCooldown<=0 && player.invuln<=0){
-      const dmg=scaleEnemyDmg(8);
+      const dmg=scaleEnemyDmg(en.elite?14:8);
       player.invuln=50; en.dmgCooldown=60;
       playerTakeDamage(dmg);
     }
@@ -2844,8 +2873,7 @@ function updateProjectiles(){
           connected=true;
           if(en.hp<=0){
             en.alive=false;
-            awardCurrency(6+Math.floor(Math.random()*7), en.x, en.y-40);
-            gainUltimateCharge(8);
+            enemyKillReward(en);
             if(wasLow) triggerExecution(en.x, en.y-16);
           }
           p.life=0;
@@ -2898,6 +2926,7 @@ function checkWorld1Triggers(){
       if(poi.id==='building') enterClassroomIntro();
       if(poi.id==='dojo') enterDojo();
       if(poi.id==='vault') enterVault();
+      if(poi.id==='proving') enterProvingGrounds();
     }
   });
   if(!yearsLaterTriggered && player.x > world1End){
@@ -3365,6 +3394,89 @@ function onWardenDefeated(){
   });
 }
 
+// ================= The Proving Grounds =================
+// A real math quiz woven directly into gameplay - five live questions, real
+// risk on a wrong answer, real reward for getting them right. The one big
+// feature built specifically around the game's dedication.
+const PROVING_QUESTIONS=[
+  { q:"What is the derivative of x^2?", options:["2x","x","x^2 / 2"], correct:0 },
+  { q:"What is the limit as x approaches infinity of 1/x?", options:["1","Infinity","0"], correct:2 },
+  { q:"What is the integral of 2x dx?", options:["x^2 + C","2x^2 + C","x + C"], correct:0 },
+  { q:"What is sin(90 degrees)?", options:["0","1","-1"], correct:1 },
+  { q:"Pi, rounded to two decimal places, is:", options:["3.41","3.14","3.12"], correct:1 },
+];
+let provingGrounds={ state:null, questionIndex:0, correctCount:0 };
+function enterProvingGrounds(){
+  inputLocked=true;
+  scene='proving_intro';
+  provingGrounds.state='intro';
+  provingGrounds.questionIndex=0;
+  provingGrounds.correctCount=0;
+  player.x=380; player.y=GROUND_Y-player.h; player.vx=0; player.vy=0;
+  startDialogue('Proctor',[
+    "Welcome to the Proving Grounds. Five questions stand between you and what lies beyond.",
+    "Answer well and your mind sharpens for it. Answer poorly, and it costs you - the wasteland doesn't grade on a curve."
+  ], ()=>{ askProvingQuestion(); });
+}
+function askProvingQuestion(){
+  scene='proving_quiz';
+  const q=PROVING_QUESTIONS[provingGrounds.questionIndex];
+  showChoices('Proctor', 'Question '+(provingGrounds.questionIndex+1)+' of '+PROVING_QUESTIONS.length+': '+q.q,
+    q.options.map((opt,i)=>({ text:opt, action:()=>answerProvingQuestion(i===q.correct) }))
+  );
+}
+function answerProvingQuestion(correct){
+  inputLocked=true;
+  if(correct){
+    provingGrounds.correctCount++;
+    awardCurrency(10);
+    gainUltimateCharge(6);
+    spawnDamageNumber(player.x+player.w/2, player.y-20, 'CORRECT!', '#7fff7f', true);
+    sfx.heal();
+  } else {
+    const dmg=scaleEnemyDmg(10);
+    playerTakeDamage(dmg, player.x+player.w/2, player.y-20);
+    sfx.hit(false);
+    triggerScreenShake(4,10);
+  }
+  provingGrounds.questionIndex++;
+  setTimeout(()=>{
+    if(provingGrounds.questionIndex<PROVING_QUESTIONS.length && player.hp>0){
+      askProvingQuestion();
+    } else {
+      finishProvingGrounds();
+    }
+  }, 750);
+}
+function finishProvingGrounds(){
+  inputLocked=true;
+  scene='proving_result';
+  const correct=provingGrounds.correctCount;
+  awardTrophy('proving');
+  unlockAchievement('proving_grounds','Proven Scholar','🎓');
+  let rewardLine;
+  if(correct>=5){
+    mergedWeapons["Theorem's Edge"]={damage:36,color:'#ffcc33'};
+    ownedWeapons.push("Theorem's Edge");
+    learnSkill('QED Burst','9',30,'#ffcc33','projectile');
+    rewardLine="Perfect score. Take Theorem's Edge, and the skill QED Burst - press [9] to unleash it.";
+  } else if(correct>=3){
+    mergedWeapons["Theorem's Edge"]={damage:26,color:'#ffcc33'};
+    ownedWeapons.push("Theorem's Edge");
+    rewardLine="Solid work. Take Theorem's Edge for your trouble.";
+  } else {
+    awardCurrency(20);
+    rewardLine="Not your best showing - but effort counts for something. Take some scrap.";
+  }
+  startDialogue('Proctor',[
+    "Final score: "+correct+" out of "+PROVING_QUESTIONS.length+".",
+    rewardLine
+  ], ()=>{
+    provingGrounds.state='done';
+    exitBuildingToWorld1('proving');
+  });
+}
+
 function triggerYearsLater(){
   inputLocked=true;
   fadeLayer.style.opacity='1';
@@ -3790,6 +3902,7 @@ function restartRun(){
   training={active:false, round:0, maxRounds:diffPrecalcRounds(playthroughIndex)};
   dojo={ state:null, dummies:[], spawned:0, totalNonDamaging:3, totalDamaging:10, instructor:null, cutsceneStep:0 };
   vault={ state:null, guardian:null };
+  provingGrounds={ state:null, questionIndex:0, correctCount:0 };
   world1POIs.forEach(p=>{ p.triggered=false; p.nearby=false; });
   yearsLaterTriggered=false;
   if(checkWorld2Trigger) checkWorld2Trigger.done=false;
@@ -3923,7 +4036,7 @@ function updatePlayerPhysics(){
   }
 
   // scene bounds
-  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='final_glitch'||scene==='developer_final'||scene==='laptop_ready'||scene==='portal_tp'||scene==='market_stall'||scene==='market_room'||scene==='market_flash'||scene==='vault_intro'||scene==='vault_fight'){
+  if(scene==='classroom'||scene==='boss_intro'||scene==='boss1'||scene==='boss2'||scene==='dojo'||scene==='witch_hut'||scene==='witch_duel'||scene==='post_crown'||scene==='arnav_intro'||scene==='arnav_fight'||scene==='glitch_transition'||scene==='developer_intro'||scene==='developer_fight'||scene==='final_glitch'||scene==='developer_final'||scene==='laptop_ready'||scene==='portal_tp'||scene==='market_stall'||scene==='market_room'||scene==='market_flash'||scene==='vault_intro'||scene==='vault_fight'||scene==='proving_intro'||scene==='proving_quiz'||scene==='proving_result'){
     player.x=Math.max(60,Math.min(820,player.x));
   } else {
     player.x=Math.max(20,player.x);
@@ -4325,6 +4438,7 @@ function drawPOI(poi){
   if(poi.id==='market'){ drawMarketStallExterior(sx,sy,poi.w,poi.h,poi.label); return; }
   if(poi.id==='dojo'){ drawDojoBuilding(sx,sy,poi.w,poi.h,poi.label); return; }
   if(poi.id==='vault'){ drawVaultExterior(sx,sy,poi.w,poi.h,poi.label); return; }
+  if(poi.id==='proving'){ drawProvingGroundsExterior(sx,sy,poi.w,poi.h,poi.label); return; }
   ctx.fillStyle=poi.color||'#5a4a3a';
   ctx.fillRect(sx,sy,poi.w,poi.h);
   ctx.fillStyle='rgba(255,255,255,0.15)';
@@ -4587,6 +4701,37 @@ function drawVaultExterior(sx,sy,w,h,label){
   ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
   ctx.fillText(label, sx+w/2, sy-8);
 }
+function drawProvingGroundsExterior(sx,sy,w,h,label){
+  // crumbling lecture-hall facade
+  ctx.fillStyle='#3a3226';
+  ctx.fillRect(sx,sy+h*0.22,w,h*0.78);
+  ctx.strokeStyle='#241f16'; ctx.lineWidth=1;
+  for(let ry=sy+h*0.3;ry<sy+h;ry+=10){ ctx.beginPath(); ctx.moveTo(sx,ry); ctx.lineTo(sx+w,ry); ctx.stroke(); }
+  // pediment roof
+  ctx.fillStyle='#2a2318';
+  ctx.beginPath();
+  ctx.moveTo(sx-12,sy+h*0.26); ctx.lineTo(sx+w/2,sy-8); ctx.lineTo(sx+w+12,sy+h*0.26);
+  ctx.closePath(); ctx.fill();
+  // columns
+  ctx.fillStyle='#4a4030';
+  for(let i=0;i<4;i++){ ctx.fillRect(sx+w*0.12+i*w*0.24, sy+h*0.3, 8, h*0.6); }
+  // giant chalkboard slab set into the facade, with a few faint equations
+  ctx.fillStyle='#111';
+  ctx.fillRect(sx+w*0.2, sy+h*0.36, w*0.6, h*0.34);
+  ctx.strokeStyle='#5a4a2a'; ctx.lineWidth=4;
+  ctx.strokeRect(sx+w*0.2, sy+h*0.36, w*0.6, h*0.34);
+  ctx.fillStyle='rgba(230,230,230,0.55)'; ctx.font='10px monospace'; ctx.textAlign='left';
+  ctx.fillText('d/dx = ?', sx+w*0.24, sy+h*0.36+16);
+  ctx.fillText('lim -> ?', sx+w*0.24, sy+h*0.36+30);
+  ctx.fillText('QED', sx+w*0.24, sy+h*0.36+44);
+  // door
+  ctx.fillStyle='#1c1712';
+  ctx.fillRect(sx+w/2-16, sy+h-52, 32,52);
+  ctx.strokeStyle='#0d0805'; ctx.lineWidth=2;
+  ctx.strokeRect(sx+w/2-16, sy+h-52, 32,52);
+  ctx.fillStyle='#fff'; ctx.font='13px Arial'; ctx.textAlign='center';
+  ctx.fillText(label, sx+w/2, sy-16);
+}
 function drawHut(sx,sy,w,h,label){
   // stilted round hut with a thatched cone roof
   ctx.fillStyle='#5a4030';
@@ -4739,25 +4884,35 @@ function drawEnemies(camX){
     const bob=Math.sin((animTime+en.bobSeed*20)*0.15)*3;
     const walkFrame = Math.floor((animTime+en.bobSeed*20)/10)%2===0;
     const sx=en.x-camX, sy=en.y-16+bob;
-    drawSoftShadow(sx,GROUND_Y-2,14,5,0.85);
-    // eerie glow around the creature at night
-    if(isNight){
-      const eg=ctx.createRadialGradient(sx,sy-8,2,sx,sy-8,32);
-      eg.addColorStop(0,'rgba(150,60,220,0.28)');
-      eg.addColorStop(1,'rgba(150,60,220,0)');
-      ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(sx,sy-8,32,0,7); ctx.fill();
+    drawSoftShadow(sx,GROUND_Y-2, en.elite?20:14, en.elite?7:5, 0.85);
+    // eerie glow around the creature at night - gold/violet aura for elites
+    if(isNight || en.elite){
+      const eg=ctx.createRadialGradient(sx,sy-8,2,sx,sy-8, en.elite?46:32);
+      if(en.elite){
+        eg.addColorStop(0,'rgba(255,204,51,0.4)');
+        eg.addColorStop(1,'rgba(255,204,51,0)');
+      } else {
+        eg.addColorStop(0,'rgba(150,60,220,0.28)');
+        eg.addColorStop(1,'rgba(150,60,220,0)');
+      }
+      ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(sx,sy-8, en.elite?46:32,0,7); ctx.fill();
     }
     ctx.save();
     if(en.flash>0) ctx.filter='brightness(2.2) saturate(0.3)';
-    drawPixelSpriteOutlined(walkFrame?MONSTER_ROWS:MONSTER_ROWS_B, MONSTER_PALETTE, sx-16, sy-16, 4, false);
+    const px = en.elite ? 5 : 4;
+    drawPixelSpriteOutlined(walkFrame?MONSTER_ROWS:MONSTER_ROWS_B, MONSTER_PALETTE, sx-16, sy-16, px, false);
     ctx.restore();
-    // pulsing red eye glow
+    // pulsing eye glow - gold for elites, red otherwise
     const pulse=0.6+0.4*Math.sin(animTime*0.2+en.bobSeed);
-    ctx.fillStyle='rgba(255,60,60,'+pulse+')';
+    ctx.fillStyle = en.elite ? 'rgba(255,214,80,'+pulse+')' : 'rgba(255,60,60,'+pulse+')';
     ctx.beginPath(); ctx.arc(sx-6,sy-14,2.2,0,7); ctx.fill();
     ctx.beginPath(); ctx.arc(sx+6,sy-14,2.2,0,7); ctx.fill();
+    if(en.elite){
+      ctx.fillStyle='#ffd76a'; ctx.font='bold 9px monospace'; ctx.textAlign='center';
+      ctx.fillText('ELITE', sx, sy-36);
+    }
     ctx.fillStyle='rgba(20,0,0,0.6)'; ctx.fillRect(sx-17,sy-31,34,6);
-    ctx.fillStyle='#f00'; ctx.fillRect(sx-16,sy-30,32,4);
+    ctx.fillStyle= en.elite? '#ffcc33':'#f00'; ctx.fillRect(sx-16,sy-30,32,4);
     ctx.fillStyle='#0f0'; ctx.fillRect(sx-16,sy-30, 32*Math.max(0,en.hp/en.maxhp),4);
   });
 }
@@ -5384,6 +5539,40 @@ function drawVaultScene(){
     ctx.fillText('The Warden', sx, sy-22);
   }
 }
+function drawProvingGroundsScene(){
+  drawInteriorBase(['#241f18','#120f0a'],['#3a2f22','#221a12'],'#160f0a');
+  drawHangingLamp(180,0);
+  drawHangingLamp(720,0);
+  // large chalkboard with floating equations
+  ctx.fillStyle='#111';
+  ctx.fillRect(70,60,300,190);
+  ctx.strokeStyle='#8b5a2b'; ctx.lineWidth=10;
+  ctx.strokeRect(70,60,300,190);
+  ctx.fillStyle='#eee'; ctx.font='16px monospace'; ctx.textAlign='left';
+  ctx.fillText('d/dx x^2 = 2x', 90,100);
+  ctx.fillText('lim x->inf 1/x = 0', 90,130);
+  ctx.fillText('int 2x dx = x^2 + C', 90,160);
+  ctx.fillText('sin(90deg) = 1', 90,190);
+  ctx.fillText('pi = 3.14159...', 90,220);
+  // rows of empty desks
+  ctx.fillStyle='#241c14';
+  for(let i=0;i<5;i++){
+    const dx=460+i*70;
+    ctx.fillRect(dx,GROUND_Y-34,44,20);
+    ctx.fillRect(dx+4,GROUND_Y-14,4,14);
+    ctx.fillRect(dx+36,GROUND_Y-14,4,14);
+  }
+  // question / score readout
+  ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(340,20,220,26);
+  ctx.strokeStyle='#8b5a2b'; ctx.lineWidth=2; ctx.strokeRect(340,20,220,26);
+  ctx.fillStyle='#ffcc33'; ctx.font='13px Arial'; ctx.textAlign='center';
+  const qLabel = provingGrounds.questionIndex<PROVING_QUESTIONS.length
+    ? 'Question '+(provingGrounds.questionIndex+1)+' / '+PROVING_QUESTIONS.length
+    : 'Complete';
+  ctx.fillText(qLabel+'  ·  Score '+provingGrounds.correctCount, 450, 38);
+  ctx.fillStyle='#ffcc33'; ctx.font='bold 13px monospace'; ctx.textAlign='center';
+  ctx.fillText('THE PROVING GROUNDS', W/2, GROUND_Y-160);
+}
 
 const MARKET_STREAKS=(function(){
   const arr=[];
@@ -5643,6 +5832,15 @@ function drawSceneContent(){
     drawVaultScene();
     drawPlayerSprite(0);
     drawProjectiles(0);
+    drawDamageNumbers(0);
+    drawExecutionParticles(0);
+    drawDrone(0);
+    drawVignette();
+    return;
+  }
+  if(scene==='proving_intro'||scene==='proving_quiz'||scene==='proving_result'){
+    drawProvingGroundsScene();
+    drawPlayerSprite(0);
     drawDamageNumbers(0);
     drawExecutionParticles(0);
     drawDrone(0);
