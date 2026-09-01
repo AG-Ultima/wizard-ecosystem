@@ -1348,6 +1348,7 @@ async function sendMessage() {
     
     const respSpan = document.getElementById(`streaming-text-${streamingMsgId}`);
     let fullResponse = '';
+    let hasContent = false;
     
     try {
         const start = Date.now();
@@ -1364,45 +1365,83 @@ async function sendMessage() {
             })
         });
         
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
         
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let toolResults = [];
+        let buffer = '';
+        let done = false;
         
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n\n');
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6);
-                    if (data === '[DONE]') continue;
-                    try {
-                        const parsed = JSON.parse(data);
-                        if (parsed.token) {
-                            fullResponse += parsed.token;
-                            if (respSpan) {
-                                respSpan.innerHTML = renderMarkdown(fullResponse);
+        while (!done) {
+            const { done: readerDone, value } = await reader.read();
+            done = readerDone;
+            
+            if (value) {
+                buffer += decoder.decode(value, { stream: true });
+                
+                // Process complete SSE messages
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop() || '';
+                
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6);
+                        if (data === '[DONE]') continue;
+                        
+                        try {
+                            const parsed = JSON.parse(data);
+                            
+                            if (parsed.token) {
+                                fullResponse += parsed.token;
+                                hasContent = true;
+                                if (respSpan) {
+                                    respSpan.innerHTML = renderMarkdown(fullResponse);
+                                }
+                                chatHistory.scrollTop = chatHistory.scrollHeight;
+                            } else if (parsed.tool_result) {
+                                console.log('🔧 Tool result:', parsed.tool_result);
+                            } else if (parsed.done || parsed.type === 'complete') {
+                                if (parsed.content) {
+                                    fullResponse = parsed.content;
+                                    hasContent = true;
+                                    if (respSpan) {
+                                        respSpan.innerHTML = renderMarkdown(fullResponse);
+                                    }
+                                }
+                                done = true;
+                            } else if (parsed.error) {
+                                fullResponse = '❌ Error: ' + parsed.error;
+                                hasContent = true;
+                                if (respSpan) {
+                                    respSpan.innerHTML = renderMarkdown(fullResponse);
+                                }
+                                showNotification('Error: ' + parsed.error, 'error');
+                                done = true;
                             }
-                            chatHistory.scrollTop = chatHistory.scrollHeight;
-                        } else if (parsed.tool_result) {
-                            toolResults.push(parsed.tool_result);
-                        } else if (parsed.done) {
-                            // Done
-                        } else if (parsed.error) {
-                            fullResponse = 'Error: ' + parsed.error;
-                            if (respSpan) respSpan.innerHTML = renderMarkdown(fullResponse);
+                        } catch (e) {
+                            console.warn('Failed to parse SSE data:', data, e);
                         }
-                    } catch (e) {}
+                    }
                 }
             }
+        }
+        
+        // If we got no content, show a fallback message
+        if (!hasContent || !fullResponse || fullResponse.trim() === '') {
+            fullResponse = "I received your message but I'm having trouble generating a response. Please try again.";
+            if (respSpan) {
+                respSpan.innerHTML = renderMarkdown(fullResponse);
+            }
+            showNotification('Empty response received. Please try again.', 'warning');
         }
         
         const elapsed = (Date.now() - start) / 1000;
         msgDiv.classList.remove('streaming');
         
+        // Save to messages array
         messages.push({
             sender: 'assistant',
             text: fullResponse,
@@ -1422,11 +1461,16 @@ async function sendMessage() {
         
     } catch (error) {
         console.error('Stream error:', error);
-        if (respSpan) respSpan.innerHTML = 'Error getting response. Please try again.';
+        const errorMsg = error.message || 'Error getting response. Please try again.';
+        if (respSpan) {
+            respSpan.innerHTML = renderMarkdown('❌ ' + errorMsg);
+        }
         msgDiv.classList.remove('streaming');
+        showNotification(errorMsg, 'error');
+        
         messages.push({
             sender: 'assistant',
-            text: 'Error getting response. Please try again.',
+            text: 'Error: ' + errorMsg,
             mode: currentMode,
             timestamp: new Date().toISOString()
         });
@@ -1633,7 +1677,7 @@ function saveChats() {
                 chats: Object.values(chats),
                 chat_order: chatIds
             })
-        }).catch(e => console.error('Failed to save chats to server:', e));
+        }).catch(e => console.warn('Failed to save chats to server:', e));
     }
 }
 
