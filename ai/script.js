@@ -5,7 +5,7 @@
 // ============================================
 
 const API_BASE_URL = 'https://arnav0928.pythonanywhere.com';
-const SITE_URL = 'https://www.wizardecosystem.dev/ai';
+const SITE_URL = 'https://wizardecosystem.dev/ai';
 
 // ============================================
 // MARKDOWN RENDERING FUNCTION
@@ -90,23 +90,19 @@ async function ecosystemQuery(userQuery) {
             throw new Error(data.error || 'Ecosystem query failed');
         }
         
-        // Display the AI response
         if (data.response) {
             addMessage('assistant', data.response);
         }
         
-        // Handle calendar event creation
         if (data.data && data.data.created_event) {
             showNotification(data.data.created_event.message || '✅ Meeting added to calendar!', 'success', 5000);
         }
         
-        // Show related notes as clickable suggestions
         if (data.data && data.data.notes && data.data.notes.length > 0) {
             const noteTitles = data.data.notes.map(n => `• ${n.title}`).join('\n');
             addMessage('assistant', `📝 **Related Notes I found:**\n${noteTitles}\n\n💡 Would you like me to open any of these notes? Just say "Open [note name]"`);
         }
         
-        // Show related emails
         if (data.data && data.data.emails && data.data.emails.length > 0) {
             const emailSubjects = data.data.emails.map(e => `• ${e.subject} (from ${e.from})`).join('\n');
             addMessage('assistant', `📧 **Related Emails:**\n${emailSubjects}`);
@@ -137,12 +133,10 @@ async function ecosystemMeetingPrep(topic, time = null) {
             throw new Error(data.error || 'Meeting prep failed');
         }
         
-        // Display the meeting prep summary
         if (data.summary) {
             addMessage('assistant', `📋 **Meeting Prep for "${data.topic}"**\n\n${data.summary}`);
         }
         
-        // Show related notes
         if (data.related_notes && data.related_notes.length > 0) {
             const notes = data.related_notes.map(n => `• ${n.title}`).join('\n');
             addMessage('assistant', `📝 **Relevant Notes:**\n${notes}`);
@@ -325,7 +319,6 @@ function addEcosystemQuickActions() {
     const toolbar = document.getElementById('pro-toolbar');
     if (!toolbar) return;
     
-    // Check if ecosystem button already exists
     if (document.getElementById('ecosystem-ai-btn')) return;
     
     const ecosystemBtn = document.createElement('button');
@@ -792,7 +785,6 @@ async function checkBackendStatus() {
         const response = await fetch(`${API_BASE_URL}/status`, {
             method: 'GET',
             headers: { 'Accept': 'application/json' },
-            mode: 'cors',
             credentials: 'omit'
         });
         
@@ -1320,8 +1312,6 @@ function renderMessages() {
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
-// Replace the sendMessage function with this version using Compound AI
-
 async function sendMessage() {
     if (isThinking) return;
     const text = chatInput.value.trim();
@@ -1362,7 +1352,6 @@ async function sendMessage() {
     try {
         const start = Date.now();
         
-        // Use Compound AI endpoint
         const response = await fetch(`${API_BASE_URL}/api/compound/stream`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1400,12 +1389,6 @@ async function sendMessage() {
                             chatHistory.scrollTop = chatHistory.scrollHeight;
                         } else if (parsed.tool_result) {
                             toolResults.push(parsed.tool_result);
-                            // Show tool execution in chat
-                            const toolMsg = parsed.tool_result;
-                            if (toolMsg.tool === 'search_web' && toolMsg.result.success) {
-                                // Show search results
-                                // You could display these in a special way
-                            }
                         } else if (parsed.done) {
                             // Done
                         } else if (parsed.error) {
@@ -1780,8 +1763,7 @@ async function checkAuth() {
         const response = await fetch(url, { 
             credentials: 'include',
             headers: {
-                'Cache-Control': 'no-cache',
-                'Pragma': 'no-cache'
+                'Accept': 'application/json'
             }
         });
         
