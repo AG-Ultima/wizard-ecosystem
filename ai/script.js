@@ -1,6 +1,6 @@
 // ============================================
 // WIZARD.AI PRO v15.2.0 - ECOSYSTEM AI INTEGRATION
-// Complete Frontend Controller with Ecosystem AI
+// Complete Frontend Controller with Code Block Support
 // Created by Arnav Gupta
 // ============================================
 
@@ -8,56 +8,146 @@ const API_BASE_URL = 'https://arnav0928.pythonanywhere.com';
 const SITE_URL = 'https://wizardecosystem.dev/ai';
 
 // ============================================
-// MARKDOWN RENDERING FUNCTION
+// MARKDOWN RENDERING WITH CODE BLOCK SUPPORT
 // ============================================
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 function renderMarkdown(text) {
     if (!text) return '';
-    
+
     let html = text;
-    
-    // Headers
+
+    // --- CODE BLOCKS (MUST RUN FIRST) ---
+    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(match, lang, code) {
+        const language = lang || 'plaintext';
+        const escapedCode = escapeHtml(code);
+        // Remove trailing newlines from code
+        const cleanCode = escapedCode.replace(/\n$/, '');
+        return `
+            <div class="code-block-wrapper">
+                <div class="code-header">
+                    <span class="code-language">${language}</span>
+                    <button class="copy-code-btn" onclick="copyCodeBlock(this)">📋 Copy</button>
+                </div>
+                <pre><code class="language-${language}">${cleanCode}</code></pre>
+            </div>
+        `;
+    });
+
+    // --- HEADERS ---
     html = html.replace(/^### (.*$)/gm, '<h3 class="md-h3">$1</h3>');
     html = html.replace(/^## (.*$)/gm, '<h2 class="md-h2">$1</h2>');
     html = html.replace(/^# (.*$)/gm, '<h1 class="md-h1">$1</h1>');
-    
-    // Bold and Italic
+
+    // --- BOLD & ITALIC ---
     html = html.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    
-    // Code blocks
-    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+
+    // --- INLINE CODE ---
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    
-    // Lists
+
+    // --- LISTS ---
     html = html.replace(/^\s*-\s+(.*$)/gm, '<li>$1</li>');
     html = html.replace(/^\s*\d+\.\s+(.*$)/gm, '<li class="ordered">$1</li>');
-    
-    // Wrap list items
     html = html.replace(/(<li>.*?<\/li>\n?)+/g, '<ul>$&</ul>');
     html = html.replace(/<ul>(<li class="ordered">.*?<\/li>\n?)+<\/ul>/g, function(match) {
         return match.replace(/<ul>/, '<ol>').replace(/<\/ul>/, '</ol>').replace(/<li class="ordered">/g, '<li>');
     });
-    
-    // Blockquotes
+
+    // --- BLOCKQUOTES ---
     html = html.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>');
     html = html.replace(/<\/blockquote>\n<blockquote>/g, '<br>');
-    
-    // Horizontal rule
+
+    // --- HORIZONTAL RULE ---
     html = html.replace(/^---$/gm, '<hr>');
-    
-    // Links
+
+    // --- LINKS ---
     html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-    
-    // Line breaks
+
+    // --- LINE BREAKS ---
     html = html.replace(/\n/g, '<br>');
-    
-    // Clean up
+
+    // --- WRAP IN CONTAINER ---
     html = '<div class="markdown-body">' + html + '</div>';
     html = html.replace(/<p><br><\/p>/g, '');
-    
+
     return html;
+}
+
+// ============================================
+// COPY CODE BLOCK FUNCTION
+// ============================================
+
+function copyCodeBlock(button) {
+    const wrapper = button.closest('.code-block-wrapper');
+    if (!wrapper) return;
+
+    const codeElement = wrapper.querySelector('code');
+    if (!codeElement) return;
+
+    const codeText = codeElement.textContent;
+
+    navigator.clipboard.writeText(codeText).then(() => {
+        const originalText = button.textContent;
+        button.textContent = '✅ Copied!';
+        button.style.background = 'rgba(16, 185, 129, 0.3)';
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.style.background = '';
+        }, 1500);
+    }).catch(() => {
+        // Fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = codeText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        button.textContent = '✅ Copied!';
+        setTimeout(() => {
+            button.textContent = '📋 Copy';
+        }, 1500);
+    });
+}
+
+// ============================================
+// ECOSYSTEM AI QUICK ACTIONS
+// ============================================
+
+function addEcosystemQuickActions() {
+    const toolbar = document.getElementById('pro-toolbar');
+    if (!toolbar) return;
+    
+    if (document.getElementById('ecosystem-ai-btn')) return;
+    
+    const ecosystemBtn = document.createElement('button');
+    ecosystemBtn.id = 'ecosystem-ai-btn';
+    ecosystemBtn.className = 'pro-btn ecosystem-btn';
+    ecosystemBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">🧠</span><span class="btn-text">Ecosystem AI</span>`;
+    ecosystemBtn.title = 'Ask AI about your emails, notes, and calendar';
+    ecosystemBtn.style.borderColor = 'var(--violet)';
+    ecosystemBtn.style.color = 'var(--violet)';
+    
+    ecosystemBtn.addEventListener('click', () => {
+        const input = chatInput;
+        input.placeholder = 'Ask about your ecosystem: "Prepare me for my 3 PM meeting about Project X"';
+        input.focus();
+        input.style.borderColor = 'var(--violet)';
+        setTimeout(() => {
+            input.style.borderColor = '';
+        }, 3000);
+        
+        showNotification('🧠 Ask about emails, notes, or calendar!', 'info', 3000);
+    });
+    
+    toolbar.appendChild(ecosystemBtn);
 }
 
 // ============================================
@@ -218,39 +308,6 @@ const profileCompletenessText = document.getElementById('profile-completeness-te
 const saveProfileBtn = document.getElementById('save-profile');
 const closeProfileBtn = document.getElementById('close-profile');
 const profileTabBtns = document.querySelectorAll('.profile-tab-btn');
-
-// ============================================
-// ECOSYSTEM AI QUICK ACTIONS
-// ============================================
-
-function addEcosystemQuickActions() {
-    const toolbar = document.getElementById('pro-toolbar');
-    if (!toolbar) return;
-    
-    if (document.getElementById('ecosystem-ai-btn')) return;
-    
-    const ecosystemBtn = document.createElement('button');
-    ecosystemBtn.id = 'ecosystem-ai-btn';
-    ecosystemBtn.className = 'pro-btn ecosystem-btn';
-    ecosystemBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">🧠</span><span class="btn-text">Ecosystem AI</span>`;
-    ecosystemBtn.title = 'Ask AI about your emails, notes, and calendar';
-    ecosystemBtn.style.borderColor = 'var(--violet)';
-    ecosystemBtn.style.color = 'var(--violet)';
-    
-    ecosystemBtn.addEventListener('click', () => {
-        const input = chatInput;
-        input.placeholder = 'Ask about your ecosystem: "Prepare me for my 3 PM meeting about Project X"';
-        input.focus();
-        input.style.borderColor = 'var(--violet)';
-        setTimeout(() => {
-            input.style.borderColor = '';
-        }, 3000);
-        
-        showNotification('🧠 Ask about emails, notes, or calendar!', 'info', 3000);
-    });
-    
-    toolbar.appendChild(ecosystemBtn);
-}
 
 // ============================================
 // STATE MANAGEMENT
