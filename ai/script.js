@@ -1,6 +1,6 @@
 // ============================================
-// WIZARD.AI PRO v15.2.0 - ECOSYSTEM AI INTEGRATION
-// Complete Frontend Controller with Code Block Support
+// WIZARD.AI PRO v15.3.0 - FULLY REWRITTEN
+// Complete Frontend Controller with Code Blocks & Image Support
 // Created by Arnav Gupta
 // ============================================
 
@@ -27,7 +27,6 @@ function renderMarkdown(text) {
     html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(match, lang, code) {
         const language = lang || 'plaintext';
         const escapedCode = escapeHtml(code);
-        // Remove trailing newlines from code
         const cleanCode = escapedCode.replace(/\n$/, '');
         return `
             <div class="code-block-wrapper">
@@ -103,7 +102,6 @@ function copyCodeBlock(button) {
             button.style.background = '';
         }, 1500);
     }).catch(() => {
-        // Fallback
         const textarea = document.createElement('textarea');
         textarea.value = codeText;
         document.body.appendChild(textarea);
@@ -656,10 +654,10 @@ function removeThinkingMessage(thinkingId) {
 // INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Initializing Wizard.AI v15.2.0 - Ecosystem AI...');
+    console.log('🚀 Initializing Wizard.AI v15.3.0...');
     console.log('📱 Mobile device:', isMobile);
     
-    showNotification('🧙 Summoning the Wizard with Ecosystem AI...', 'info', 2000);
+    showNotification('🧙 Summoning the Wizard...', 'info', 2000);
     registerServiceWorker();
     setupEventListeners();
     setupDropdown();
@@ -692,9 +690,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(checkBackendStatus, 30000);
     setupPWAInstallPrompt();
     
-    console.log('✅ Wizard.AI v15.2.0 - Ecosystem AI ready!');
-    console.log('🧠 Type "Prepare me for my meeting" or "Find related notes"');
-    console.log('🎨 Type "Generate an image of..." to create AI images in chat!');
+    console.log('✅ Wizard.AI v15.3.0 ready!');
+    console.log('🧠 Code blocks with copy buttons enabled');
+    console.log('🎨 In-chat image generation enabled');
 });
 
 function registerServiceWorker() {
@@ -905,16 +903,6 @@ function setupDevHubButton() {
 // ============================================
 // UTILITY FUNCTIONS
 // ============================================
-function escapeHtml(s) {
-    if (!s) return '';
-    return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
 function openModal(modal) {
     if (modal) modal.classList.add('active');
 }
@@ -1415,7 +1403,6 @@ async function sendMessage() {
     
     // Add thinking message
     const thinkingMsg = addThinkingMessage();
-    let thinkingText = '🧠 Analyzing request...';
     
     const streamingMsgId = 'streaming-' + Date.now();
     const msgDiv = document.createElement('div');
@@ -1491,20 +1478,27 @@ async function sendMessage() {
                         try {
                             const parsed = JSON.parse(data);
                             
-                            // Handle tool calls (thinking process)
-                            if (parsed.tool_calls) {
-                                const toolNames = parsed.tool_calls.map(t => t.tool_name || t.name).join(', ');
-                                updateThinkingMessage(thinkingMsg.id, `🔧 Using tools: ${toolNames}`);
-                            }
-                            
-                            // Handle image generation
-                            if (parsed.image) {
-                                addImageMessage(parsed.image, parsed.prompt || 'Generated image', parsed.source || 'AI');
-                                hasContent = true;
+                            // --- HANDLE THINKING ---
+                            if (parsed.thinking) {
+                                updateThinkingMessage(thinkingMsg.id, parsed.thinking);
                                 continue;
                             }
                             
-                            // Handle text tokens
+                            // --- HANDLE TOOL CALLS ---
+                            if (parsed.tool_calls) {
+                                const toolNames = parsed.tool_calls.map(t => t.tool_name || t.name).join(', ');
+                                updateThinkingMessage(thinkingMsg.id, `🔧 Using tools: ${toolNames}`);
+                                continue;
+                            }
+                            
+                            // --- HANDLE IMAGE GENERATION ---
+                            if (parsed.image) {
+                                addImageMessage(parsed.image, parsed.prompt || 'Generated image', parsed.source || 'AI');
+                                hasContent = true;
+                                // Don't continue - let the image message be added
+                            }
+                            
+                            // --- HANDLE TEXT TOKENS ---
                             if (parsed.token) {
                                 fullResponse += parsed.token;
                                 hasContent = true;
@@ -1512,7 +1506,10 @@ async function sendMessage() {
                                     respSpan.innerHTML = renderMarkdown(fullResponse);
                                 }
                                 chatHistory.scrollTop = chatHistory.scrollHeight;
-                            } else if (parsed.done || parsed.type === 'complete') {
+                            }
+                            
+                            // --- HANDLE DONE ---
+                            if (parsed.done || parsed.type === 'complete') {
                                 if (parsed.content) {
                                     fullResponse = parsed.content;
                                     hasContent = true;
@@ -1521,7 +1518,10 @@ async function sendMessage() {
                                     }
                                 }
                                 done = true;
-                            } else if (parsed.error) {
+                            }
+                            
+                            // --- HANDLE ERROR ---
+                            if (parsed.error) {
                                 fullResponse = '❌ Error: ' + parsed.error;
                                 hasContent = true;
                                 if (respSpan) {
@@ -2838,6 +2838,7 @@ if (sendBtn && 'vibrate' in navigator) {
     });
 }
 
-console.log('✅ Wizard.AI v15.2.0 - Ecosystem AI fully loaded!');
-console.log('🧠 Features: Calendar integration, Email search, Note search, Meeting prep');
+console.log('✅ Wizard.AI v15.3.0 - Fully loaded!');
+console.log('🧠 Features: Code blocks with copy, in-chat images, thinking process');
 console.log('🎨 Type "Generate an image of..." to create images in chat!');
+console.log('📋 Code blocks now have copy buttons!');
