@@ -61,98 +61,6 @@ function renderMarkdown(text) {
 }
 
 // ============================================
-// ECOSYSTEM AI FUNCTIONS
-// ============================================
-
-const ECOSYSTEM_KEYWORDS = [
-    'meeting', 'email', 'calendar', 'schedule', 'appointment',
-    'related notes', 'find notes', 'search notes', 'prepare for',
-    'add to calendar', 'create event', 'remind me', 'follow up'
-];
-
-function isEcosystemQuery(text) {
-    const lower = text.toLowerCase();
-    return ECOSYSTEM_KEYWORDS.some(keyword => lower.includes(keyword));
-}
-
-async function ecosystemQuery(userQuery) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/ecosystem/query`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ query: userQuery })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'Ecosystem query failed');
-        }
-        
-        if (data.response) {
-            addMessage('assistant', data.response);
-        }
-        
-        if (data.data && data.data.created_event) {
-            showNotification(data.data.created_event.message || '✅ Meeting added to calendar!', 'success', 5000);
-        }
-        
-        if (data.data && data.data.notes && data.data.notes.length > 0) {
-            const noteTitles = data.data.notes.map(n => `• ${n.title}`).join('\n');
-            addMessage('assistant', `📝 **Related Notes I found:**\n${noteTitles}\n\n💡 Would you like me to open any of these notes? Just say "Open [note name]"`);
-        }
-        
-        if (data.data && data.data.emails && data.data.emails.length > 0) {
-            const emailSubjects = data.data.emails.map(e => `• ${e.subject} (from ${e.from})`).join('\n');
-            addMessage('assistant', `📧 **Related Emails:**\n${emailSubjects}`);
-        }
-        
-        return data;
-        
-    } catch (error) {
-        console.error('Ecosystem query error:', error);
-        showNotification('Error processing ecosystem query', 'error');
-        addMessage('assistant', `❌ I had trouble processing that request. Error: ${error.message}`);
-        return null;
-    }
-}
-
-async function ecosystemMeetingPrep(topic, time = null) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/ecosystem/meeting-prep`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ topic, time })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.error || 'Meeting prep failed');
-        }
-        
-        if (data.summary) {
-            addMessage('assistant', `📋 **Meeting Prep for "${data.topic}"**\n\n${data.summary}`);
-        }
-        
-        if (data.related_notes && data.related_notes.length > 0) {
-            const notes = data.related_notes.map(n => `• ${n.title}`).join('\n');
-            addMessage('assistant', `📝 **Relevant Notes:**\n${notes}`);
-        }
-        
-        return data;
-        
-    } catch (error) {
-        console.error('Meeting prep error:', error);
-        showNotification('Error preparing meeting', 'error');
-        addMessage('assistant', `❌ I couldn't prepare the meeting. Error: ${error.message}`);
-        return null;
-    }
-}
-
-// ============================================
 // DOM ELEMENTS
 // ============================================
 
@@ -610,7 +518,6 @@ function addImageMessage(imageData, prompt, source = 'AI') {
     chatHistory.appendChild(msgDiv);
     chatHistory.scrollTop = chatHistory.scrollHeight;
     
-    // Save to messages
     messages.push({
         sender: 'assistant',
         text: `🎨 Generated image: ${prompt}`,
@@ -625,6 +532,67 @@ function addImageMessage(imageData, prompt, source = 'AI') {
     }
     
     trackImage();
+}
+
+function addThinkingMessage() {
+    if (!chatHistory) return;
+    
+    const thinkingId = 'thinking-' + Date.now();
+    const msgDiv = document.createElement('div');
+    msgDiv.id = thinkingId;
+    msgDiv.className = 'message assistant thinking';
+    msgDiv.innerHTML = `
+        <div class="message-content">
+            <div class="message-text">
+                <div class="thinking-container">
+                    <div class="thinking-indicator">
+                        <span class="thinking-dot"></span>
+                        <span class="thinking-dot"></span>
+                        <span class="thinking-dot"></span>
+                        <span class="thinking-text">Thinking</span>
+                    </div>
+                    <div class="thinking-process" style="display:none; margin-top: 8px; font-size: 13px; color: var(--text-muted); padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                    </div>
+                    <button class="thinking-toggle" style="background:none; border:none; color: var(--primary-light); cursor:pointer; font-size: 12px; margin-top: 4px; opacity:0.7;">💭 Show thought process</button>
+                </div>
+            </div>
+            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+        </div>
+    `;
+    chatHistory.appendChild(msgDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    
+    const toggleBtn = msgDiv.querySelector('.thinking-toggle');
+    const processDiv = msgDiv.querySelector('.thinking-process');
+    
+    toggleBtn.addEventListener('click', () => {
+        if (processDiv.style.display === 'none') {
+            processDiv.style.display = 'block';
+            toggleBtn.textContent = '💭 Hide thought process';
+        } else {
+            processDiv.style.display = 'none';
+            toggleBtn.textContent = '💭 Show thought process';
+        }
+    });
+    
+    return { id: thinkingId, element: msgDiv, processDiv: processDiv };
+}
+
+function updateThinkingMessage(thinkingId, text) {
+    const msgDiv = document.getElementById(thinkingId);
+    if (!msgDiv) return;
+    
+    const processDiv = msgDiv.querySelector('.thinking-process');
+    if (processDiv) {
+        processDiv.innerHTML = text;
+    }
+}
+
+function removeThinkingMessage(thinkingId) {
+    const msgDiv = document.getElementById(thinkingId);
+    if (msgDiv) {
+        msgDiv.remove();
+    }
 }
 
 // ============================================
@@ -1388,6 +1356,10 @@ async function sendMessage() {
         inputSearchIndicator.style.display = 'none';
     }
     
+    // Add thinking message
+    const thinkingMsg = addThinkingMessage();
+    let thinkingText = '🧠 Analyzing request...';
+    
     const streamingMsgId = 'streaming-' + Date.now();
     const msgDiv = document.createElement('div');
     msgDiv.id = streamingMsgId;
@@ -1403,6 +1375,21 @@ async function sendMessage() {
     const respSpan = document.getElementById(`streaming-text-${streamingMsgId}`);
     let fullResponse = '';
     let hasContent = false;
+    let thinkingStep = 0;
+    const thinkingSteps = [
+        '🧠 Analyzing request...',
+        '🤔 Processing your query...',
+        '📊 Finding relevant information...',
+        '✨ Generating response...'
+    ];
+    
+    // Update thinking periodically
+    const thinkingInterval = setInterval(() => {
+        if (isThinking) {
+            thinkingStep = (thinkingStep + 1) % thinkingSteps.length;
+            updateThinkingMessage(thinkingMsg.id, thinkingSteps[thinkingStep]);
+        }
+    }, 2000);
     
     try {
         const start = Date.now();
@@ -1436,7 +1423,6 @@ async function sendMessage() {
             if (value) {
                 buffer += decoder.decode(value, { stream: true });
                 
-                // Process complete SSE messages
                 const lines = buffer.split('\n\n');
                 buffer = lines.pop() || '';
                 
@@ -1447,6 +1433,12 @@ async function sendMessage() {
                         
                         try {
                             const parsed = JSON.parse(data);
+                            
+                            // Handle tool calls (thinking process)
+                            if (parsed.tool_calls) {
+                                const toolNames = parsed.tool_calls.map(t => t.tool_name || t.name).join(', ');
+                                updateThinkingMessage(thinkingMsg.id, `🔧 Using tools: ${toolNames}`);
+                            }
                             
                             // Handle image generation
                             if (parsed.image) {
@@ -1463,8 +1455,6 @@ async function sendMessage() {
                                     respSpan.innerHTML = renderMarkdown(fullResponse);
                                 }
                                 chatHistory.scrollTop = chatHistory.scrollHeight;
-                            } else if (parsed.tool_result) {
-                                console.log('🔧 Tool result:', parsed.tool_result);
                             } else if (parsed.done || parsed.type === 'complete') {
                                 if (parsed.content) {
                                     fullResponse = parsed.content;
@@ -1472,9 +1462,6 @@ async function sendMessage() {
                                     if (respSpan) {
                                         respSpan.innerHTML = renderMarkdown(fullResponse);
                                     }
-                                }
-                                if (parsed.image_generated) {
-                                    console.log('🎨 Image generated in chat');
                                 }
                                 done = true;
                             } else if (parsed.error) {
@@ -1493,6 +1480,10 @@ async function sendMessage() {
                 }
             }
         }
+        
+        // Remove thinking message when done
+        clearInterval(thinkingInterval);
+        removeThinkingMessage(thinkingMsg.id);
         
         // If we got no content, show a fallback message
         if (!hasContent || !fullResponse || fullResponse.trim() === '') {
@@ -1526,6 +1517,9 @@ async function sendMessage() {
         
     } catch (error) {
         console.error('Stream error:', error);
+        clearInterval(thinkingInterval);
+        removeThinkingMessage(thinkingMsg.id);
+        
         const errorMsg = error.message || 'Error getting response. Please try again.';
         if (respSpan) {
             respSpan.innerHTML = renderMarkdown('❌ ' + errorMsg);
