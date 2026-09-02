@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Arnav Gupta — Student Developer · Wizard Ecosystem</title>
+  <title>Arnav Gupta — AI Engineer & Founder of Wizard Ecosystem</title>
   <link rel="icon" type="image/x-icon" href="https://wizardecosystem.dev/favicon.ico">
   <meta name="description" content="Arnav Gupta builds AI-powered software from idea to production. Founder of Wizard Ecosystem, a full AI platform with fourteen integrated applications.">
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://wizardecosystem.dev/portfolio">
-  <meta property="og:title" content="Arnav Gupta — Student Developer, Founder of Wizard Ecosystem">
+  <meta property="og:title" content="Arnav Gupta — AI Engineer & Founder of Wizard Ecosystem">
   <meta property="og:description" content="A fourteen-app AI platform — assistant, browser, search engine, mail, notes, automation, chat, calendar, finance, heat safety, firewatch, nature, code editor, and a developer API — designed, built, and deployed solo.">
   <meta property="og:image" content="https://wizardecosystem.dev/assets/og-preview.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Arnav Gupta — Student Developer, Founder of Wizard Ecosystem">
+  <meta name="twitter:title" content="Arnav Gupta — AI Engineer & Founder of Wizard Ecosystem">
   <meta name="twitter:description" content="A fourteen-app AI platform — assistant, browser, search engine, mail, notes, automation, chat, calendar, finance, heat safety, firewatch, nature, code editor, and a developer API — designed, built, and deployed solo.">
   <meta name="twitter:image" content="https://wizardecosystem.dev/assets/og-preview.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -303,6 +303,8 @@
     .gh-graph-img{ max-width: 100%; height: auto; display: block; margin: 0 auto 20px; filter: saturate(1.1); }
     .gh-graph-link{ font-family: var(--mono); font-size: 0.85rem; color: var(--gold); border-bottom: 1px solid transparent; transition: border-color 0.2s ease; }
     .gh-graph-link:hover{ border-color: var(--gold); }
+
+    /* --- Updated Credentials & Certifications Grid --- */
     .cred-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 28px; }
     @media (max-width: 700px){ .cred-grid{ grid-template-columns: 1fr; } }
     .cred-block{ padding: 26px; border-radius: 10px; }
@@ -312,6 +314,9 @@
     .cred-block li:hover{ padding-left: 10px; border-left-color: var(--violet); background: rgba(130,102,240,0.04); }
     .cred-block li:last-child{ border-bottom: none; }
     .cred-block li strong{ color: var(--ink); font-weight: 600; }
+    .cred-block li a{ color: var(--violet); border-bottom: 1px solid transparent; transition: border-color 0.2s ease; }
+    .cred-block li a:hover{ border-color: var(--violet); }
+
     .faq-block{ max-width: 720px; margin: 0 auto 48px; }
     .faq-heading{ font-family: var(--mono); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold-dim); text-align: center; margin-bottom: 20px; }
     .faq-list{ display: flex; flex-direction: column; gap: 12px; }
@@ -327,6 +332,33 @@
     .contact-form-shell::before{ content:''; position: absolute; inset: -1px; border-radius: 8px; padding: 1px; background: conic-gradient(from var(--glow-angle, 0deg), var(--gold), var(--violet), var(--gold)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; z-index: -1; animation: rotate-glow 6s linear infinite; pointer-events: none; }
     footer{ padding: 60px 32px 50px; text-align: center; border-top: 1px solid var(--line); margin-top: 90px; }
     .footer-bottom{ font-family: var(--mono); font-size: 0.76rem; color: var(--ink-dimmer); }
+
+    /* --- New Licenses & Certifications Section --- */
+    .cert-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+    .cert-card {
+      padding: 24px;
+      border-radius: 12px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border);
+      transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+    .cert-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--violet);
+      box-shadow: 0 12px 30px -10px var(--glass-shadow);
+    }
+    .cert-card .cert-icon { font-size: 2rem; margin-bottom: 12px; display: block; }
+    .cert-card .cert-name { font-family: var(--display); font-size: 1.1rem; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+    .cert-card .cert-org { font-family: var(--mono); font-size: 0.75rem; color: var(--gold-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+    .cert-card .cert-desc { font-size: 0.85rem; color: var(--ink-dim); line-height: 1.5; margin-bottom: 14px; }
+    .cert-card .cert-link { font-family: var(--mono); font-size: 0.75rem; color: var(--violet); border-bottom: 1px solid transparent; transition: border-color 0.2s ease; }
+    .cert-card .cert-link:hover { border-color: var(--violet); }
   </style>
 </head>
 <body>
@@ -376,9 +408,9 @@
         <circle cx="320" cy="320" r="230" stroke="#8266f0" stroke-width="0.5" opacity="0.25"/>
       </svg>
       <div class="hero-inner">
-        <div class="eyebrow">Founder · Wizard Ecosystem</div>
-        <h1 class="hero-title">Student Developer &amp; <em><span id="type-target"></span><span class="type-cursor">|</span></em></h1>
-        <p class="hero-sub"><strong>Wizard Ecosystem</strong> replaces fourteen separate tools with one platform — live today, built and deployed without a team. Most people my age are still learning loops and conditionals. I've spent the last few months shipping to production.</p>
+        <div class="eyebrow">AI Engineer · Founder of Wizard Ecosystem</div>
+        <h1 class="hero-title">Arnav Gupta &mdash; <em><span id="type-target"></span><span class="type-cursor">|</span></em></h1>
+        <p class="hero-sub"><strong>Wizard Ecosystem</strong> replaces fourteen separate tools with one platform — live today, built and deployed without a team. I ship production AI, not just demos.</p>
         <div class="hero-ctas">
           <a href="https://wizardecosystem.dev" class="btn btn-primary" target="_blank" rel="noopener">Explore Wizard Ecosystem →</a>
           <a href="https://github.com/ag-ultima" class="btn btn-secondary" target="_blank" rel="noopener">View GitHub</a>
@@ -480,7 +512,7 @@
           <div class="fact-row"><span class="fact-label">Black belt</span><span class="fact-value">Taekwondo, 2026</span></div>
           <div class="fact-row"><span class="fact-label">GitHub</span><span class="fact-value">ag-ultima</span></div>
           <div class="fact-row"><span class="fact-label">Email</span><span class="fact-value">ag@wizardecosystem.dev</span></div>
-          <div class="fact-row"><span class="fact-label">Linkedin</span><span class="fact-value">wizard-ecosystem</span></div>
+          <div class="fact-row"><span class="fact-label">Linkedin</span><span class="fact-value">ag-ultima</span></div>
         </div>
       </div>
     </section>
@@ -903,10 +935,57 @@
           </div>
         </div>
 
-        <div class="credentials">
+        <!-- ======== NEW LICENSES & CERTIFICATIONS SECTION ======== -->
+        <div class="credentials" style="margin-top: 70px;">
+          <div class="section-head reveal" style="margin-bottom: 24px;">
+            <div class="section-eyebrow">Licenses & Certifications</div>
+            <h2 class="section-title" style="font-size: clamp(1.5rem, 2.6vw, 2rem);">Credentials from <em>ASU, Claude Academy, and Hugging Face</em>.</h2>
+          </div>
+
+          <div class="cert-grid reveal-stagger">
+            <!-- ASU Credential -->
+            <div class="cert-card glass-panel glass-stagger-1">
+              <span class="cert-icon">🎓</span>
+              <div class="cert-name">Technical Project Design: Prompt Engineering & HTML</div>
+              <div class="cert-org">The GAME School at Arizona State University</div>
+              <div class="cert-desc">Credential ID: a57ec07b-66b3-4a38-8fd1-42334315b674 · Issued Aug 2026</div>
+              <a href="https://credid.asu.edu/my-credentials/issuers/758d763e-370a-4b2a-9463-fbfa2903b536/badges/e88287da-ba82-45d3-85a0-f4465d181c35/awards/a57ec07b-66b3-4a38-8fd1-42334315b674" target="_blank" rel="noopener" class="cert-link">Verify credential →</a>
+            </div>
+
+            <!-- Claude Academy: AI Fluency for Builders -->
+            <div class="cert-card glass-panel glass-stagger-2">
+              <span class="cert-icon">🧠</span>
+              <div class="cert-name">AI Fluency for Builders</div>
+              <div class="cert-org">Claude Academy · Anthropic</div>
+              <div class="cert-desc">Credential ID: 877fcb166d16429efd5fa51bd6d4fe6b · Issued Aug 2026</div>
+              <a href="https://academy.claude.com/verify/877fcb166d16429efd5fa51bd6d4fe6b" target="_blank" rel="noopener" class="cert-link">Verify credential →</a>
+            </div>
+
+            <!-- Claude Academy: AI Capabilities and Limitations -->
+            <div class="cert-card glass-panel glass-stagger-3">
+              <span class="cert-icon">⚖️</span>
+              <div class="cert-name">AI Capabilities and Limitations</div>
+              <div class="cert-org">Claude Academy · Anthropic</div>
+              <div class="cert-desc">Credential ID: fb971059567c11355c08179ae048d11b · Issued Aug 2026</div>
+              <a href="https://academy.claude.com/verify/fb971059567c11355c08179ae048d11b" target="_blank" rel="noopener" class="cert-link">Verify credential →</a>
+            </div>
+
+            <!-- Hugging Face: AI Agents Fundamentals -->
+            <div class="cert-card glass-panel glass-stagger-4">
+              <span class="cert-icon">🤖</span>
+              <div class="cert-name">AI Agents Fundamentals</div>
+              <div class="cert-org">Hugging Face</div>
+              <div class="cert-desc">Credential ID: AG_WizardAI · Issued Sept 2026</div>
+              <a href="https://us.aws.cdn.hf.co/xet-bridge-us/67a47037749ea2c4b9fafd4b/a6ab4ca1ac280fe75f88a1b327d8ba3906c915fb5ae6c29068e1e06c1690defd?X-Xet-Cas-Uid=69acc2d699cefacce01ff1c1&response-content-type=image%2Fpng&response-content-disposition=inline%3B+filename*%3DUTF-8%27%272026-09-01.png%3B+filename%3D%222026-09-01.png%22%3B&user_id=69acc2d699cefacce01ff1c1&Expires=1788314775&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly91cy5hd3MuY2RuLmhmLmNvL3hldC1icmlkZ2UtdXMvNjdhNDcwMzc3NDllYTJjNGI5ZmFmZDRiL2E2YWI0Y2ExYWMyODBmZTc1Zjg4YTFiMzI3ZDhiYTM5MDZjOTE1ZmI1YWU2YzI5MDY4ZTFlMDZjMTY5MGRlZmRcXD9YLVhldC1DYXMtVWlkPTY5YWNjMmQ2OTljZWZhY2NlMDFmZjFjMSZyZXNwb25zZS1jb250ZW50LXR5cGU9aW1hZ2UlMkZwbmcmcmVzcG9uc2UtY29udGVudC1kaXNwb3NpdGlvbj1pbmxpbmUlM0IrZmlsZW5hbWUlMkElM0RVVEYtOCUyNyUyNzIwMjYtMDktMDEucG5nJTNCK2ZpbGVuYW1lJTNEJTIyMjAyNi0wOS0wMS5wbmclMjIlM0ImdXNlcl9pZD02OWFjYzJkNjk5Y2VmYWNjZTAxZmYxYzEiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkVwb2NoVGltZSI6MTc4ODMxNDc3NX19fV19&Signature=MEUCIDiWpH~SPt5q3t9pYUyYf0cEVBWfhxDNvK5BBdm3u3zpAiEA17Lj2jVQoI4xMTdRmE8gPxE1nATvvR5d~erf-YXOrmI_&Key-Pair-Id=01KXEF4KZ1B6FV465MAWR4M21F" target="_blank" rel="noopener" class="cert-link">View certificate →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Existing Credentials (Competitions, Awards, Academics) remain below -->
+        <div class="credentials" style="margin-top: 50px;">
           <div class="section-head reveal" style="margin-bottom: 32px;">
-            <div class="section-eyebrow">Credentials &amp; Recognition</div>
-            <h2 class="section-title" style="font-size: clamp(1.5rem, 2.6vw, 2rem);">Competitions, awards, and academics.</h2>
+            <div class="section-eyebrow">Competitions & Academics</div>
+            <h2 class="section-title" style="font-size: clamp(1.5rem, 2.6vw, 2rem);">Recognition beyond the code.</h2>
           </div>
           <div class="cred-grid reveal-stagger">
             <div class="cred-block glass-panel glass-stagger-1">
@@ -923,7 +1002,6 @@
                 <li>BASIS Phoenix Science Fair (Feb 2026)</li>
                 <li>Frostbyte Hackathon (Feb 2026)</li>
                 <li>Code Arizona Hackathon (Aug 2026)</li>
-                <li><strong>ASU Digital Credential</strong> — Earned a credential from Arizona State University (<a href="https://credid.asu.edu/my-credentials/issuers/758d763e-370a-4b2a-9463-fbfa2903b536/badges/e88287da-ba82-45d3-85a0-f4465d181c35/awards/a57ec07b-66b3-4a38-8fd1-42334315b674" target="_blank" rel="noopener" style="color: var(--violet); border-bottom: 1px solid var(--violet);">View Credential</a>)</li>
               </ul>
             </div>
             <div class="cred-block glass-panel glass-stagger-3">
@@ -960,7 +1038,7 @@
         <div class="hero-ctas" style="margin-bottom: 48px;">
           <a href="mailto:ag@wizardecosystem.dev" class="btn btn-secondary">Email me</a>
           <a href="https://github.com/ag-ultima" class="btn btn-secondary" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://www.linkedin.com/in/wizard-ecosystem/" class="btn btn-secondary" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://www.linkedin.com/in/ag-ultima/" class="btn btn-secondary" target="_blank" rel="noopener">LinkedIn</a>
           <a href="https://wizardecosystem.dev" class="btn btn-primary" target="_blank" rel="noopener">Launch Wizard Ecosystem →</a>
         </div>
 
@@ -1354,7 +1432,7 @@
   (function(){
     const el = document.getElementById('type-target');
     if (!el) return;
-    const phrases = ['Founder.', 'Black Belt.', 'Math Competitor.', 'Violinist.', 'Builder.'];
+    const phrases = ['AI Engineer.', 'Founder.', 'Black Belt.', 'Math Competitor.', 'Builder.'];
     const motionOff = () => document.documentElement.dataset.motion === 'off' ||
       (window.matchMedia('(prefers-reduced-motion: reduce)').matches && document.documentElement.dataset.motion !== 'on');
 
