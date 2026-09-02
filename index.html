@@ -1,33 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Wizard Ecosystem — your complete AI-powered workspace. Chat with Wizard AI, search the web intelligently, manage email, calendar, notes, and more in one magical place.">
-    <meta name="keywords" content="Wizard Ecosystem, AI assistant, AI tools, email client, calendar app, web search, notes app, productivity suite, Arnav Gupta">
-    <meta name="author" content="Arnav Gupta">
-    <meta name="robots" content="index, follow">
-    <meta name="theme-color" content="#0a0814">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Wizard Ecosystem — your complete AI-powered workspace. Chat with Wizard AI, search the web intelligently, manage email, calendar, notes, and more in one magical place.">
+  <meta name="keywords" content="Wizard Ecosystem, AI assistant, AI tools, email client, calendar app, web search, notes app, productivity suite, Arnav Gupta">
+  <meta name="author" content="Arnav Gupta">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0a0814">
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="Wizard Ecosystem — Your Magical AI Workspace">
-    <meta property="og:description" content="One ecosystem. AI assistant, smart search, email, calendar, notes, and chat — all powered by magic.">
-    <meta property="og:image" content="https://wizardecosystem.dev/favicon.ico">
-    <meta property="og:url" content="https://wizardecosystem.dev">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Wizard Ecosystem">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Wizard Ecosystem — Your Magical AI Workspace">
+  <meta property="og:description" content="One ecosystem. AI assistant, smart search, email, calendar, notes, and chat — all powered by magic.">
+  <meta property="og:image" content="https://wizardecosystem.dev/favicon.ico">
+  <meta property="og:url" content="https://wizardecosystem.dev">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Wizard Ecosystem">
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Wizard Ecosystem — Your Magical AI Workspace">
-    <meta name="twitter:description" content="One ecosystem. AI assistant, smart search, email, calendar, notes, and chat — all powered by magic.">
-    <meta name="twitter:image" content="https://wizardecosystem.dev/favicon.ico">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Wizard Ecosystem — Your Magical AI Workspace">
+  <meta name="twitter:description" content="One ecosystem. AI assistant, smart search, email, calendar, notes, and chat — all powered by magic.">
+  <meta name="twitter:image" content="https://wizardecosystem.dev/favicon.ico">
 
-    <!-- Canonical -->
-    <link rel="canonical" href="https://wizardecosystem.dev">
+  <!-- Canonical -->
+  <link rel="canonical" href="https://wizardecosystem.dev">
 
-    <!-- Structured Data -->
-    <script type="application/ld+json">
+  <!-- Structured Data -->
+  <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
@@ -38,943 +38,1056 @@
       "author": { "@type": "Person", "name": "Arnav Gupta" },
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
     }
-    </script>
+  </script>
 
-    <title>Wizard Ecosystem — Your Magical AI Workspace</title>
+  <title>Wizard Ecosystem — Your Magical AI Workspace</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
-    <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-        :root {
-            --ink: #080612;
-            --ink-2: #0e0b1e;
-            --ink-3: #13102a;
-            --gold: #c9a84c;
-            --gold-light: #e8c97a;
-            --gold-glow: rgba(201,168,76,0.18);
-            --violet: #7c5cbf;
-            --violet-dim: rgba(124,92,191,0.25);
-            --silver: #d4d0e8;
-            --silver-dim: rgba(212,208,232,0.5);
-            --muted: rgba(212,208,232,0.35);
-            --border: rgba(201,168,76,0.18);
-            --border-strong: rgba(201,168,76,0.45);
-        }
+    :root {
+      --ink: #080612;
+      --ink-2: #0e0b1e;
+      --ink-3: #13102a;
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --gold-glow: rgba(201,168,76,0.18);
+      --violet: #7c5cbf;
+      --violet-dim: rgba(124,92,191,0.25);
+      --silver: #d4d0e8;
+      --silver-dim: rgba(212,208,232,0.5);
+      --muted: rgba(212,208,232,0.35);
+      --border: rgba(201,168,76,0.18);
+      --border-strong: rgba(201,168,76,0.45);
+    }
 
-        html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; }
 
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--ink);
-            color: var(--silver);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--ink);
+      color: var(--silver);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-        /* ── Canvas Stars ── */
-        #starfield {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
+    /* ── Canvas Stars ── */
+    #starfield {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
 
-        /* ── Ambient blobs ── */
-        .ambient {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(120px);
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.4;
-            animation: drift 18s ease-in-out infinite alternate;
-        }
-        .ambient-1 { width: 600px; height: 600px; top: -150px; left: -150px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
-        .ambient-2 { width: 500px; height: 500px; bottom: -100px; right: -100px; background: radial-gradient(circle, #5c3a1e, transparent 70%); animation-delay: -9s; }
-        .ambient-3 { width: 400px; height: 400px; top: 40%; left: 40%; background: radial-gradient(circle, #1a1040, transparent 70%); animation-delay: -4s; }
+    /* ── Ambient blobs ── */
+    .ambient {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .ambient-1 { width: 600px; height: 600px; top: -150px; left: -150px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
+    .ambient-2 { width: 500px; height: 500px; bottom: -100px; right: -100px; background: radial-gradient(circle, #5c3a1e, transparent 70%); animation-delay: -9s; }
+    .ambient-3 { width: 400px; height: 400px; top: 40%; left: 40%; background: radial-gradient(circle, #1a1040, transparent 70%); animation-delay: -4s; }
 
-        @keyframes drift {
-            from { transform: translate(0, 0) scale(1); }
-            to   { transform: translate(40px, 30px) scale(1.08); }
-        }
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.08); }
+    }
 
-        /* ── Layout ── */
-        .shell {
-            position: relative;
-            z-index: 10;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 24px 80px;
-        }
+    /* ── Layout ── */
+    .shell {
+      position: relative;
+      z-index: 10;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
 
-        /* ── Top Bar ── */
-        .topbar {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 20px;
-        }
-        .user-pill {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 6px 16px 6px 8px;
-            cursor: pointer;
-            transition: border-color 0.3s, background 0.3s;
-        }
-        .user-pill:hover { border-color: var(--border-strong); background: rgba(255,255,255,0.07); }
-        .user-avatar {
-            width: 34px; height: 34px;
-            background: linear-gradient(135deg, var(--violet), #3d2280);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 17px;
-            border: 1px solid var(--border);
-        }
-        .user-email-text { font-size: 13px; color: var(--silver-dim); letter-spacing: 0.01em; }
-        .logout-btn {
-            background: none; border: none;
-            font-size: 15px; cursor: pointer;
-            color: var(--muted);
-            margin-left: 6px;
-            transition: color 0.2s;
-        }
-        .logout-btn:hover { color: #e05555; }
+    /* ── Top Bar ── */
+    .topbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 20px;
+    }
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px 6px 8px;
+      cursor: pointer;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .user-pill:hover { border-color: var(--border-strong); background: rgba(255,255,255,0.07); }
+    .user-avatar {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--violet), #3d2280);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      border: 1px solid var(--border);
+    }
+    .user-email-text { font-size: 13px; color: var(--silver-dim); letter-spacing: 0.01em; }
+    .logout-btn {
+      background: none; border: none;
+      font-size: 15px; cursor: pointer;
+      color: var(--muted);
+      margin-left: 6px;
+      transition: color 0.2s;
+    }
+    .logout-btn:hover { color: #e05555; }
 
-        /* ── Hero ── */
-        .hero {
-            text-align: center;
-            padding: 60px 0 70px;
-            position: relative;
-        }
-        .rune-ring {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 340px;
-            height: 340px;
-            border-radius: 50%;
-            border: 1px solid rgba(201,168,76,0.08);
-            animation: spin 60s linear infinite;
-            pointer-events: none;
-        }
-        .rune-ring::before {
-            content: '';
-            position: absolute;
-            inset: 12px;
-            border-radius: 50%;
-            border: 1px dashed rgba(201,168,76,0.06);
-        }
-        @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 60px 0 70px;
+      position: relative;
+    }
+    .rune-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.08);
+      animation: spin 60s linear infinite;
+      pointer-events: none;
+    }
+    .rune-ring::before {
+      content: '';
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      border: 1px dashed rgba(201,168,76,0.06);
+    }
+    @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
 
-        .wizard-glyph {
-            font-size: 88px;
-            display: block;
-            margin-bottom: 24px;
-            position: relative;
-            z-index: 2;
-            animation: levitate 5s ease-in-out infinite;
-            filter: drop-shadow(0 0 40px rgba(201,168,76,0.3)) drop-shadow(0 0 80px rgba(124,92,191,0.2));
-        }
-        @keyframes levitate {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-14px); }
-        }
+    .wizard-glyph {
+      font-size: 88px;
+      display: block;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 2;
+      animation: levitate 5s ease-in-out infinite;
+      filter: drop-shadow(0 0 40px rgba(201,168,76,0.3)) drop-shadow(0 0 80px rgba(124,92,191,0.2));
+    }
+    @keyframes levitate {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-14px); }
+    }
 
-        .hero-eyebrow {
-            font-family: 'DM Sans', sans-serif;
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--gold);
-            opacity: 0.8;
-            margin-bottom: 14px;
-        }
+    .hero-eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      opacity: 0.8;
+      margin-bottom: 14px;
+    }
 
-        .hero-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(48px, 8vw, 88px);
-            font-weight: 300;
-            line-height: 0.95;
-            color: var(--silver);
-            letter-spacing: -0.02em;
-            margin-bottom: 4px;
-        }
-        .hero-title em {
-            font-style: italic;
-            background: linear-gradient(135deg, var(--gold-light), var(--gold));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(48px, 8vw, 88px);
+      font-weight: 300;
+      line-height: 0.95;
+      color: var(--silver);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .hero-title em {
+      font-style: italic;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-        .hero-sub {
-            margin-top: 20px;
-            font-size: 16px;
-            font-weight: 300;
-            color: var(--muted);
-            letter-spacing: 0.02em;
-        }
+    .hero-sub {
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: 300;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
 
-        /* ── Search ── */
-        .search-wrap {
-            max-width: 580px;
-            margin: 0 auto 60px;
-        }
-        .search-field {
-            display: flex;
-            align-items: center;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 6px 6px 6px 22px;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .search-field:focus-within {
-            border-color: rgba(201,168,76,0.55);
-            box-shadow: 0 0 0 3px rgba(201,168,76,0.08), 0 8px 32px rgba(0,0,0,0.3);
-        }
-        .search-ico { font-size: 16px; margin-right: 10px; opacity: 0.5; }
-        .search-field input {
-            flex: 1;
-            background: none;
-            border: none;
-            outline: none;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 15px;
-            font-weight: 300;
-            color: var(--silver);
-            padding: 12px 0;
-        }
-        .search-field input::placeholder { color: var(--muted); }
-        .search-go {
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            border: none;
-            border-radius: 100px;
-            padding: 11px 26px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--ink);
-            cursor: pointer;
-            letter-spacing: 0.03em;
-            transition: opacity 0.2s, box-shadow 0.2s;
-            white-space: nowrap;
-        }
-        .search-go:hover { opacity: 0.88; box-shadow: 0 4px 20px rgba(201,168,76,0.35); }
+    /* ── Search ── */
+    .search-wrap {
+      max-width: 580px;
+      margin: 0 auto 60px;
+    }
+    .search-field {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 6px 6px 22px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .search-field:focus-within {
+      border-color: rgba(201,168,76,0.55);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.08), 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .search-ico { font-size: 16px; margin-right: 10px; opacity: 0.5; }
+    .search-field input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--silver);
+      padding: 12px 0;
+    }
+    .search-field input::placeholder { color: var(--muted); }
+    .search-go {
+      background: linear-gradient(135deg, var(--gold), #a8751e);
+      border: none;
+      border-radius: 100px;
+      padding: 11px 26px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: opacity 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    .search-go:hover { opacity: 0.88; box-shadow: 0 4px 20px rgba(201,168,76,0.35); }
 
-        /* ── Section label ── */
-        .section-label {
-            text-align: center;
-            margin-bottom: 36px;
-        }
-        .section-label span {
-            font-size: 11px;
-            font-weight: 500;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-            color: var(--muted);
-            position: relative;
-            padding: 0 20px;
-        }
-        .section-label span::before,
-        .section-label span::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 50px;
-            height: 1px;
-            background: var(--border);
-        }
-        .section-label span::before { right: 100%; }
-        .section-label span::after  { left: 100%; }
+    /* ── Section label ── */
+    .section-label {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .section-label span {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      position: relative;
+      padding: 0 20px;
+    }
+    .section-label span::before,
+    .section-label span::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 50px;
+      height: 1px;
+      background: var(--border);
+    }
+    .section-label span::before { right: 100%; }
+    .section-label span::after  { left: 100%; }
 
-        /* ── App Grid ── */
-        .apps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 18px;
-            margin-bottom: 60px;
-        }
+    /* ── App Grid ── */
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      margin-bottom: 60px;
+    }
 
-        .app-card {
-            background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 36px 24px 32px;
-            text-align: center;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s, box-shadow 0.35s;
-            text-decoration: none;
-            display: block;
-        }
-        .app-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at 50% 0%, var(--gold-glow), transparent 65%);
-            opacity: 0;
-            transition: opacity 0.4s;
-        }
-        .app-card:hover::before { opacity: 1; }
-        .app-card:hover {
-            transform: translateY(-6px) scale(1.02);
-            border-color: var(--border-strong);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.12);
-        }
-        .app-card:active { transform: translateY(-2px) scale(0.99); }
+    .app-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 36px 24px 32px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s, box-shadow 0.35s;
+      text-decoration: none;
+      display: block;
+    }
+    .app-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, var(--gold-glow), transparent 65%);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .app-card:hover::before { opacity: 1; }
+    .app-card:hover {
+      transform: translateY(-6px) scale(1.02);
+      border-color: var(--border-strong);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px rgba(201,168,76,0.12);
+    }
+    .app-card:active { transform: translateY(-2px) scale(0.99); }
 
-        .card-glyph {
-            font-size: 52px;
-            margin-bottom: 18px;
-            display: block;
-            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
-            transition: transform 0.3s;
-        }
-        .app-card:hover .card-glyph { transform: scale(1.1) translateY(-2px); }
+    .card-glyph {
+      font-size: 52px;
+      margin-bottom: 18px;
+      display: block;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+      transition: transform 0.3s;
+    }
+    .app-card:hover .card-glyph { transform: scale(1.1) translateY(-2px); }
 
-        .card-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 22px;
-            font-weight: 600;
-            color: var(--silver);
-            letter-spacing: 0.01em;
-            margin-bottom: 8px;
-        }
-        .card-desc {
-            font-size: 12.5px;
-            font-weight: 300;
-            color: var(--muted);
-            line-height: 1.55;
-        }
-        .card-badge {
-            position: absolute;
-            top: 14px;
-            right: 14px;
-            font-size: 10px;
-            font-weight: 500;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--gold);
-            background: rgba(201,168,76,0.1);
-            border: 1px solid rgba(201,168,76,0.25);
-            border-radius: 100px;
-            padding: 3px 9px;
-        }
+    .card-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--silver);
+      letter-spacing: 0.01em;
+      margin-bottom: 8px;
+    }
+    .card-desc {
+      font-size: 12.5px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .card-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 100px;
+      padding: 3px 9px;
+    }
 
-        /* Download Cards Section */
-        .download-section {
-            margin-top: 20px;
-            margin-bottom: 60px;
-        }
-        .download-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 18px;
-        }
-        .download-card {
-            background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 28px 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        .download-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--border-strong);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-        }
-        .download-icon { font-size: 48px; display: block; margin-bottom: 16px; }
-        .download-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-        .download-desc { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
-        .download-link {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            color: var(--ink);
-            text-decoration: none;
-            padding: 10px 24px;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .download-link:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(201,168,76,0.3); }
+    /* Developer Card */
+    .developer-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+      border: 1px solid var(--border-strong);
+      border-radius: 28px;
+      padding: 32px 30px;
+      margin-bottom: 60px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 32px;
+      transition: box-shadow 0.3s;
+    }
+    .developer-card:hover {
+      box-shadow: 0 0 0 1px rgba(201,168,76,0.2), 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .dev-avatar {
+      font-size: 72px;
+      line-height: 1;
+      filter: drop-shadow(0 8px 20px rgba(124,92,191,0.3));
+      flex-shrink: 0;
+    }
+    .dev-info {
+      flex: 1;
+      min-width: 200px;
+    }
+    .dev-info h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+    }
+    .dev-info .dev-title {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .dev-info p {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--silver-dim);
+      line-height: 1.7;
+      max-width: 600px;
+    }
+    .dev-info .dev-badge {
+      display: inline-block;
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 100px;
+      padding: 4px 14px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      margin-top: 10px;
+      margin-right: 8px;
+    }
+    .dev-portfolio-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--gold), #a8751e);
+      color: var(--ink);
+      padding: 12px 28px;
+      border-radius: 100px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+      transition: opacity 0.2s, transform 0.2s;
+      margin-top: 12px;
+      border: none;
+      cursor: pointer;
+    }
+    .dev-portfolio-link:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(201,168,76,0.3);
+    }
 
-        /* Footer */
-        footer {
-            text-align: center;
-            border-top: 1px solid rgba(255,255,255,0.06);
-            padding-top: 36px;
-        }
-        .footer-brand {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 20px;
-            font-weight: 400;
-            color: rgba(212,208,232,0.4);
-            margin-bottom: 8px;
-        }
-        .footer-meta {
-            font-size: 12px;
-            color: var(--muted);
-            letter-spacing: 0.05em;
-        }
-        .footer-meta a { color: var(--gold); text-decoration: none; opacity: 0.7; }
-        .footer-meta a:hover { opacity: 1; }
+    /* Download Cards Section */
+    .download-section {
+      margin-top: 20px;
+      margin-bottom: 60px;
+    }
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+    .download-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .download-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--border-strong);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    .download-icon { font-size: 48px; display: block; margin-bottom: 16px; }
+    .download-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .download-desc { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+    .download-link {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--gold), #a8751e);
+      color: var(--ink);
+      text-decoration: none;
+      padding: 10px 24px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .download-link:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(201,168,76,0.3); }
 
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(5,3,14,0.92);
-            backdrop-filter: blur(16px);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-overlay.show { display: flex; }
+    /* Footer */
+    footer {
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 36px;
+    }
+    .footer-brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 400;
+      color: rgba(212,208,232,0.4);
+      margin-bottom: 8px;
+    }
+    .footer-meta {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .footer-meta a { color: var(--gold); text-decoration: none; opacity: 0.7; }
+    .footer-meta a:hover { opacity: 1; }
 
-        .modal-box {
-            background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
-            border: 1px solid var(--border);
-            border-radius: 28px;
-            padding: 48px 44px;
-            width: 420px;
-            max-width: 92vw;
-            text-align: center;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
-            animation: modal-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        @keyframes modal-in {
-            from { opacity: 0; transform: scale(0.9) translateY(16px); }
-            to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5,3,14,0.92);
+      backdrop-filter: blur(16px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
 
-        .modal-glyph { font-size: 52px; margin-bottom: 20px; display: block; }
-        .modal-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 30px;
-            font-weight: 400;
-            color: var(--silver);
-            margin-bottom: 28px;
-        }
+    .modal-box {
+      background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 48px 44px;
+      width: 420px;
+      max-width: 92vw;
+      text-align: center;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+      animation: modal-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.9) translateY(16px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
 
-        .field {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 13px 16px;
-            color: var(--silver);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            margin-bottom: 12px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .field:focus { border-color: rgba(201,168,76,0.5); }
-        .field::placeholder { color: var(--muted); }
+    .modal-glyph { font-size: 52px; margin-bottom: 20px; display: block; }
+    .modal-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 30px;
+      font-weight: 400;
+      color: var(--silver);
+      margin-bottom: 28px;
+    }
 
-        .btn-primary {
-            width: 100%;
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            border: none;
-            border-radius: 14px;
-            padding: 14px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--ink);
-            cursor: pointer;
-            letter-spacing: 0.04em;
-            transition: opacity 0.2s, box-shadow 0.2s;
-            margin-top: 4px;
-        }
-        .btn-primary:hover { opacity: 0.88; box-shadow: 0 6px 24px rgba(201,168,76,0.3); }
+    .field {
+      width: 100%;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 13px 16px;
+      color: var(--silver);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .field:focus { border-color: rgba(201,168,76,0.5); }
+    .field::placeholder { color: var(--muted); }
 
-        .btn-ghost {
-            background: none;
-            border: none;
-            color: var(--gold);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px;
-            cursor: pointer;
-            margin-top: 14px;
-            opacity: 0.8;
-            transition: opacity 0.2s;
-            width: 100%;
-        }
-        .btn-ghost:hover { opacity: 1; }
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--gold), #a8751e);
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.2s, box-shadow 0.2s;
+      margin-top: 4px;
+    }
+    .btn-primary:hover { opacity: 0.88; box-shadow: 0 6px 24px rgba(201,168,76,0.3); }
 
-        .error-msg { color: #e07070; font-size: 12px; margin-bottom: 10px; }
+    .btn-ghost {
+      background: none;
+      border: none;
+      color: var(--gold);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 14px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+      width: 100%;
+    }
+    .btn-ghost:hover { opacity: 1; }
 
-        /* Entrance animation */
-        .fade-up {
-            opacity: 0;
-            transform: translateY(22px);
-            animation: fade-up 0.7s ease forwards;
-        }
-        @keyframes fade-up {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .delay-1 { animation-delay: 0.1s; }
-        .delay-2 { animation-delay: 0.2s; }
-        .delay-3 { animation-delay: 0.3s; }
-        .delay-4 { animation-delay: 0.4s; }
-        .delay-5 { animation-delay: 0.5s; }
-        .delay-6 { animation-delay: 0.6s; }
-        .delay-7 { animation-delay: 0.7s; }
+    .error-msg { color: #e07070; font-size: 12px; margin-bottom: 10px; }
 
-        @media (max-width: 640px) {
-            .hero { padding: 40px 0 50px; }
-            .rune-ring { width: 240px; height: 240px; }
-            .apps-grid { grid-template-columns: 1fr 1fr; }
-            .modal-box { padding: 36px 28px; }
-        }
-        @media (max-width: 400px) {
-            .apps-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    /* Entrance animation */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(22px);
+      animation: fade-up 0.7s ease forwards;
+    }
+    @keyframes fade-up {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+    .delay-6 { animation-delay: 0.6s; }
+    .delay-7 { animation-delay: 0.7s; }
+
+    @media (max-width: 640px) {
+      .hero { padding: 40px 0 50px; }
+      .rune-ring { width: 240px; height: 240px; }
+      .apps-grid { grid-template-columns: 1fr 1fr; }
+      .modal-box { padding: 36px 28px; }
+      .developer-card { flex-direction: column; text-align: center; }
+      .dev-info p { max-width: 100%; }
+    }
+    @media (max-width: 400px) {
+      .apps-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-    <canvas id="starfield" aria-hidden="true"></canvas>
-    <div class="ambient ambient-1" aria-hidden="true"></div>
-    <div class="ambient ambient-2" aria-hidden="true"></div>
-    <div class="ambient ambient-3" aria-hidden="true"></div>
+  <canvas id="starfield" aria-hidden="true"></canvas>
+  <div class="ambient ambient-1" aria-hidden="true"></div>
+  <div class="ambient ambient-2" aria-hidden="true"></div>
+  <div class="ambient ambient-3" aria-hidden="true"></div>
 
-    <div class="shell">
-        <!-- Top Bar -->
-        <div class="topbar">
-            <div class="user-pill" id="user-pill" style="display:none;" role="status">
-                <div class="user-avatar" aria-hidden="true">🧙</div>
-                <span id="user-email-text" class="user-email-text"></span>
-                <button id="logout-btn" class="logout-btn" aria-label="Sign out" title="Sign out">✕</button>
-            </div>
-        </div>
-
-        <!-- Hero -->
-        <header class="hero" role="banner">
-            <div class="rune-ring" aria-hidden="true"></div>
-            <span class="wizard-glyph" aria-hidden="true">🧙</span>
-            <p class="hero-eyebrow fade-up">Arnav Gupta · Est. 2026</p>
-            <h1 class="hero-title fade-up delay-1">
-                Wizard<br><em>Ecosystem</em>
-            </h1>
-            <p class="hero-sub fade-up delay-2">Your complete AI-powered workspace</p>
-        </header>
-
-        <!-- Search -->
-        <div class="search-wrap fade-up delay-3" role="search">
-            <div class="search-field">
-                <span class="search-ico" aria-hidden="true">✦</span>
-                <input
-                    type="search"
-                    id="search-input"
-                    placeholder="Search with Wizard AI…"
-                    aria-label="Search the web with Wizard AI"
-                    autocomplete="off"
-                >
-                <button class="search-go" id="search-btn" aria-label="Submit search">Search</button>
-            </div>
-        </div>
-
-        <!-- Web Apps -->
-        <nav aria-label="Wizard Ecosystem apps">
-            <div class="section-label fade-up delay-3">
-                <span>Web Apps</span>
-            </div>
-
-            <div class="apps-grid" role="list">
-                <div class="app-card fade-up delay-3" data-app="ai" role="listitem" tabindex="0">
-                    <span class="card-badge">AI</span>
-                    <span class="card-glyph" aria-hidden="true">🧠</span>
-                    <div class="card-name">Wizard AI</div>
-                    <p class="card-desc">AI assistant with 7 personalities</p>
-                </div>
-
-                <div class="app-card fade-up delay-4" data-app="search" role="listitem" tabindex="0">
-                    <span class="card-glyph" aria-hidden="true">🔍</span>
-                    <div class="card-name">Wizard Search</div>
-                    <p class="card-desc">AI-powered web search</p>
-                </div>
-
-                <div class="app-card fade-up delay-4" data-app="mail" role="listitem" tabindex="0">
-                    <span class="card-glyph" aria-hidden="true">📧</span>
-                    <div class="card-name">Wizard Mail</div>
-                    <p class="card-desc">Email client (Gmail, Outlook, IMAP)</p>
-                </div>
-
-                <div class="app-card fade-up delay-5" data-app="calendar" role="listitem" tabindex="0">
-                    <span class="card-glyph" aria-hidden="true">📅</span>
-                    <div class="card-name">Wizard Calendar</div>
-                    <p class="card-desc">Schedule and manage events</p>
-                </div>
-
-                <div class="app-card fade-up delay-5" data-app="notes" role="listitem" tabindex="0">
-                    <span class="card-glyph" aria-hidden="true">📝</span>
-                    <div class="card-name">Wizard Notes</div>
-                    <p class="card-desc">AI-powered note-taking</p>
-                </div>
-
-                <div class="app-card fade-up delay-6" data-app="chat" role="listitem" tabindex="0">
-                    <span class="card-glyph" aria-hidden="true">💬</span>
-                    <div class="card-name">Wizard Chat</div>
-                    <p class="card-desc">Real-time messaging</p>
-                </div>
-
-                <div class="app-card" data-app="finance">
-                    <span class="card-glyph">💰</span>
-                    <div class="card-name">Wizard Finance</div>
-                    <p class="card-desc">Track expenses, budgets & get AI insights</p>
-                </div>
-                <div class="app-card" data-app="heat">
-                    <span class="card-badge">NEW</span>
-                    <span class="card-glyph">🌡️</span>
-                    <div class="card-name">Wizard Heat</div>
-                    <p class="card-desc">Extreme Weather and Hydration assistant, built for Arizonans</p>
-                </div>
-                <div class="app-card" data-app="firewatch">
-                    <span class="card-badge">NEW</span>
-                    <span class="card-glyph">🔥</span>
-                    <div class="card-name">FireWatch AI</div>
-                    <p class="card-desc">Real-time wildfire detection & alerts for your area</p>
-                </div>
-                <div class="app-card" data-app="nature">
-                    <span class="card-badge">NEW</span>
-                    <span class="card-glyph">🌵</span>
-                    <div class="card-name">Wizard Nature</div>
-                    <p class="card-desc">Your Sonoran Desert companion</p>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Desktop Apps Section -->
-        <div class="download-section">
-            <div class="section-label fade-up delay-4">
-                <span>Desktop Apps</span>
-            </div>
-
-            <div class="download-grid">
-                <div class="download-card fade-up delay-4">
-                    <span class="download-icon">🌐</span>
-                    <div class="download-title">Wizard Browser</div>
-                    <p class="download-desc">AI-powered browser with workspaces, password manager, and ad blocking</p>
-                    <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/wizard-browser.Setup.10.0.0.exe" class="download-link" download>⬇ Download for Windows</a>
-                </div>
-
-                <div class="download-card fade-up delay-5">
-                    <span class="download-icon">🤖</span>
-                    <div class="download-title">Wizard Autopilot</div>
-                    <p class="download-desc">Full computer automation — control mouse, keyboard, and apps with natural language</p>
-                    <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/Wizard.Autopilot-2.1.0-Setup.exe" class="download-link" download>⬇ Download for Windows</a>
-                </div>
-
-                <div class="download-card fade-up delay-6">
-                    <span class="download-icon">🧙</span>
-                    <div class="download-title">Wizard Ecosystem</div>
-                    <p class="download-desc">All-in-one desktop suite — AI, Mail, Calendar, Chat, Notes, and more</p>
-                    <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/Wizard.Ecosystem.Setup.2.0.0.exe" class="download-link" download>⬇ Download for Windows</a>
-                </div>
-                <div class="download-card fade-up delay-6">
-                    <span class="download-icon">👨‍💻</span>
-                    <div class="download-title">Wizard Code</div>
-                    <p class="download-desc">All-in-one Code Editor/IDE</p>
-                    <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/Wizard.Code.Setup.2.0.0.exe" class="download-link" download>⬇ Download for Windows</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <footer role="contentinfo">
-            <div class="footer-brand">🧙 Wizard Ecosystem</div>
-            <p class="footer-meta">
-                Crafted by <a href="#" rel="author">Arnav Gupta</a>
-                &nbsp;·&nbsp; AI-powered &nbsp;·&nbsp; Privacy focused &nbsp;·&nbsp; Cloud sync
-            </p>
-        </footer>
+  <div class="shell">
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="user-pill" id="user-pill" style="display:none;" role="status">
+        <div class="user-avatar" aria-hidden="true">🧙</div>
+        <span id="user-email-text" class="user-email-text"></span>
+        <button id="logout-btn" class="logout-btn" aria-label="Sign out" title="Sign out">✕</button>
+      </div>
     </div>
 
-    <!-- Auth Modal -->
-    <div id="login-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <div class="modal-box">
-            <span class="modal-glyph" aria-hidden="true">🧙</span>
+    <!-- Hero -->
+    <header class="hero" role="banner">
+      <div class="rune-ring" aria-hidden="true"></div>
+      <span class="wizard-glyph" aria-hidden="true">🧙</span>
+      <p class="hero-eyebrow fade-up">Arnav Gupta · Est. 2026</p>
+      <h1 class="hero-title fade-up delay-1">
+        Wizard<br><em>Ecosystem</em>
+      </h1>
+      <p class="hero-sub fade-up delay-2">Your complete AI-powered workspace</p>
+    </header>
 
-            <!-- Login -->
-            <div id="login-form">
-                <h2 class="modal-title" id="modal-title">Sign In</h2>
-                <input class="field" type="email" id="login-email" placeholder="Email address" autocomplete="email">
-                <input class="field" type="password" id="login-password" placeholder="Password" autocomplete="current-password">
-                <div id="login-error" class="error-msg" role="alert"></div>
-                <button class="btn-primary" id="login-btn">Enter the Realm</button>
-                <button class="btn-ghost" id="show-signup">Create an account →</button>
-            </div>
-
-            <!-- Signup -->
-            <div id="signup-form" style="display:none;">
-                <h2 class="modal-title">Create Account</h2>
-                <div style="display:flex;gap:10px;">
-                    <input class="field" type="text" id="signup-first" placeholder="First name" style="margin-bottom:12px;" autocomplete="given-name">
-                    <input class="field" type="text" id="signup-last" placeholder="Last name" style="margin-bottom:12px;" autocomplete="family-name">
-                </div>
-                <input class="field" type="email" id="signup-email" placeholder="Email address" autocomplete="email">
-                <input class="field" type="password" id="signup-password" placeholder="Password" autocomplete="new-password">
-                <input class="field" type="password" id="signup-confirm" placeholder="Confirm password" autocomplete="new-password">
-                <div id="signup-error" class="error-msg" role="alert"></div>
-                <button class="btn-primary" id="signup-btn">Create Account</button>
-                <button class="btn-ghost" id="show-login">← Back to login</button>
-            </div>
-
-            <!-- Verify -->
-            <div id="verify-form" style="display:none;">
-                <h2 class="modal-title">Verify Email</h2>
-                <p style="font-size:14px;color:var(--muted);margin-bottom:22px;">Enter the 6-digit code sent to your inbox.</p>
-                <input class="field" type="text" id="verify-code" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
-                <div id="verify-error" class="error-msg" role="alert"></div>
-                <button class="btn-primary" id="verify-btn">Verify</button>
-                <button class="btn-ghost" id="resend-code">Resend code</button>
-            </div>
-        </div>
+    <!-- Search -->
+    <div class="search-wrap fade-up delay-3" role="search">
+      <div class="search-field">
+        <span class="search-ico" aria-hidden="true">✦</span>
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Search with Wizard AI…"
+          aria-label="Search the web with Wizard AI"
+          autocomplete="off"
+        >
+        <button class="search-go" id="search-btn" aria-label="Submit search">Search</button>
+      </div>
     </div>
 
-    <script>
-        /* ── Starfield ── */
-        (function() {
-            const canvas = document.getElementById('starfield');
-            const ctx = canvas.getContext('2d');
-            let stars = [];
-            const N = 180;
+    <!-- Web Apps -->
+    <nav aria-label="Wizard Ecosystem apps">
+      <div class="section-label fade-up delay-3">
+        <span>Web Apps</span>
+      </div>
 
-            function resize() {
-                canvas.width  = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            resize();
-            window.addEventListener('resize', resize);
+      <div class="apps-grid" role="list">
+        <div class="app-card fade-up delay-3" data-app="ai" role="listitem" tabindex="0">
+          <span class="card-badge">AI</span>
+          <span class="card-glyph" aria-hidden="true">🧠</span>
+          <div class="card-name">Wizard AI</div>
+          <p class="card-desc">AI assistant with 7 personalities</p>
+        </div>
 
-            for (let i = 0; i < N; i++) {
-                stars.push({
-                    x: Math.random(),
-                    y: Math.random(),
-                    r: Math.random() * 1.2 + 0.2,
-                    a: Math.random(),
-                    speed: Math.random() * 0.0005 + 0.0002,
-                    drift: Math.random() * 0.0001
-                });
-            }
+        <div class="app-card fade-up delay-4" data-app="search" role="listitem" tabindex="0">
+          <span class="card-glyph" aria-hidden="true">🔍</span>
+          <div class="card-name">Wizard Search</div>
+          <p class="card-desc">AI-powered web search</p>
+        </div>
 
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const t = Date.now() / 1000;
-                stars.forEach(s => {
-                    const alpha = 0.3 + 0.5 * Math.sin(t * s.speed * 6000 + s.a * 100);
-                    ctx.beginPath();
-                    ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(212,208,232,${alpha})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
+        <div class="app-card fade-up delay-4" data-app="mail" role="listitem" tabindex="0">
+          <span class="card-glyph" aria-hidden="true">📧</span>
+          <div class="card-name">Wizard Mail</div>
+          <p class="card-desc">Email client (Gmail, Outlook, IMAP)</p>
+        </div>
 
-        /* ── App Logic ── */
-        const API_BASE = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null;
-        let pendingEmail = null;
-        let pendingId = null;
+        <div class="app-card fade-up delay-5" data-app="calendar" role="listitem" tabindex="0">
+          <span class="card-glyph" aria-hidden="true">📅</span>
+          <div class="card-name">Wizard Calendar</div>
+          <p class="card-desc">Schedule and manage events</p>
+        </div>
 
-        const APP_URLS = {
-            ai:       'https://wizardecosystem.dev/ai',
-            search:   'https://wizardecosystem.dev/search',
-            mail:     'https://wizardecosystem.dev/mail',
-            calendar: 'https://wizardecosystem.dev/calendar',
-            notes:    'https://wizardecosystem.dev/notes',
-            chat:     'https://wizardecosystem.dev/chat',
-            finance:   'https://wizardecosystem.dev/finance',
-            heat: 'https://wizardecosystem.dev/heat',
-            firewatch: 'https://wizardecosystem.dev/firewatch',
-            nature: 'https://wizardecosystem.dev/nature'
-        };
+        <div class="app-card fade-up delay-5" data-app="notes" role="listitem" tabindex="0">
+          <span class="card-glyph" aria-hidden="true">📝</span>
+          <div class="card-name">Wizard Notes</div>
+          <p class="card-desc">AI-powered note-taking</p>
+        </div>
 
-        function search() {
-            const q = document.getElementById('search-input').value.trim();
-            if (q) window.location.href = `${APP_URLS.search}?q=${encodeURIComponent(q)}`;
-        }
+        <div class="app-card fade-up delay-6" data-app="chat" role="listitem" tabindex="0">
+          <span class="card-glyph" aria-hidden="true">💬</span>
+          <div class="card-name">Wizard Chat</div>
+          <p class="card-desc">Real-time messaging</p>
+        </div>
 
-        document.getElementById('search-btn').onclick = search;
-        document.getElementById('search-input').addEventListener('keydown', e => {
-            if (e.key === 'Enter') search();
+        <div class="app-card" data-app="finance">
+          <span class="card-glyph">💰</span>
+          <div class="card-name">Wizard Finance</div>
+          <p class="card-desc">Track expenses, budgets & get AI insights</p>
+        </div>
+        <div class="app-card" data-app="heat">
+          <span class="card-badge">NEW</span>
+          <span class="card-glyph">🌡️</span>
+          <div class="card-name">Wizard Heat</div>
+          <p class="card-desc">Extreme Weather and Hydration assistant, built for Arizonans</p>
+        </div>
+        <div class="app-card" data-app="firewatch">
+          <span class="card-badge">NEW</span>
+          <span class="card-glyph">🔥</span>
+          <div class="card-name">FireWatch AI</div>
+          <p class="card-desc">Real-time wildfire detection & alerts for your area</p>
+        </div>
+        <div class="app-card" data-app="nature">
+          <span class="card-badge">NEW</span>
+          <span class="card-glyph">🌵</span>
+          <div class="card-name">Wizard Nature</div>
+          <p class="card-desc">Your Sonoran Desert companion</p>
+        </div>
+      </div>
+    </nav>
+
+    <!-- About the Developer -->
+    <section class="developer-card fade-up delay-4">
+      <div class="dev-avatar" aria-hidden="true">🧙</div>
+      <div class="dev-info">
+        <h2>About the Developer</h2>
+        <div class="dev-title">Arnav Gupta · 8th Grade · 1st-Degree Black Belt</div>
+        <p>
+          Arnav is the sole architect and builder of the Wizard Ecosystem — a production-ready AI platform
+          serving real users, launched at age 12. Self-taught in Python, JavaScript, Electron, and Flask,
+          he has built fourteen integrated applications, including an AI assistant, desktop browser, search engine,
+          email client, calendar, real-time chat, AI note-taking, computer automation, personal finance manager,
+          extreme-weather & wildfire safety tools, a desert wildlife companion, and a full AI-powered code editor.
+          <br><br>
+          Arnav holds a 4.0 GPA at BASIS Phoenix, is a Distinguished Honour Roll student (Top 5%),
+          and earned his First-Degree Black Belt in Taekwondo in April 2026. He also plays violin in the
+          BASIS Phoenix Orchestra and competes in Math Madness and MATHCOUNTS.
+        </p>
+        <div>
+          <span class="dev-badge">🏆 4.0 GPA</span>
+          <span class="dev-badge">🥋 Black Belt</span>
+          <span class="dev-badge">🧠 AI Fluency</span>
+        </div>
+        <a href="https://wizardecosystem.dev/portfolio" class="dev-portfolio-link" target="_blank">
+          <span>✨ View Full Portfolio</span>
+          <span style="font-size:18px;">→</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Desktop Apps Section -->
+    <div class="download-section">
+      <div class="section-label fade-up delay-4">
+        <span>Desktop Apps</span>
+      </div>
+
+      <div class="download-grid">
+        <div class="download-card fade-up delay-4">
+          <span class="download-icon">🌐</span>
+          <div class="download-title">Wizard Browser</div>
+          <p class="download-desc">AI-powered browser with workspaces, password manager, and ad blocking</p>
+          <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/wizard-browser.Setup.10.0.0.exe" class="download-link" download>⬇ Download for Windows</a>
+        </div>
+
+        <div class="download-card fade-up delay-5">
+          <span class="download-icon">🤖</span>
+          <div class="download-title">Wizard Autopilot</div>
+          <p class="download-desc">Full computer automation — control mouse, keyboard, and apps with natural language</p>
+          <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/Wizard.Autopilot-2.1.0-Setup.exe" class="download-link" download>⬇ Download for Windows</a>
+        </div>
+
+        <div class="download-card fade-up delay-6">
+          <span class="download-icon">🧙</span>
+          <div class="download-title">Wizard Ecosystem</div>
+          <p class="download-desc">All-in-one desktop suite — AI, Mail, Calendar, Chat, Notes, and more</p>
+          <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/Wizard.Ecosystem.Setup.2.0.0.exe" class="download-link" download>⬇ Download for Windows</a>
+        </div>
+        <div class="download-card fade-up delay-6">
+          <span class="download-icon">👨‍💻</span>
+          <div class="download-title">Wizard Code</div>
+          <p class="download-desc">All-in-one Code Editor/IDE</p>
+          <a href="https://github.com/AG-Ultima/wizard-ecosystem/releases/download/v10.0/Wizard.Code.Setup.2.0.0.exe" class="download-link" download>⬇ Download for Windows</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer role="contentinfo">
+      <div class="footer-brand">🧙 Wizard Ecosystem</div>
+      <p class="footer-meta">
+        Crafted by <a href="#" rel="author">Arnav Gupta</a>
+        &nbsp;·&nbsp; AI-powered &nbsp;·&nbsp; Privacy focused &nbsp;·&nbsp; Cloud sync
+      </p>
+    </footer>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="login-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <span class="modal-glyph" aria-hidden="true">🧙</span>
+
+      <!-- Login -->
+      <div id="login-form">
+        <h2 class="modal-title" id="modal-title">Sign In</h2>
+        <input class="field" type="email" id="login-email" placeholder="Email address" autocomplete="email">
+        <input class="field" type="password" id="login-password" placeholder="Password" autocomplete="current-password">
+        <div id="login-error" class="error-msg" role="alert"></div>
+        <button class="btn-primary" id="login-btn">Enter the Realm</button>
+        <button class="btn-ghost" id="show-signup">Create an account →</button>
+      </div>
+
+      <!-- Signup -->
+      <div id="signup-form" style="display:none;">
+        <h2 class="modal-title">Create Account</h2>
+        <div style="display:flex;gap:10px;">
+          <input class="field" type="text" id="signup-first" placeholder="First name" style="margin-bottom:12px;" autocomplete="given-name">
+          <input class="field" type="text" id="signup-last" placeholder="Last name" style="margin-bottom:12px;" autocomplete="family-name">
+        </div>
+        <input class="field" type="email" id="signup-email" placeholder="Email address" autocomplete="email">
+        <input class="field" type="password" id="signup-password" placeholder="Password" autocomplete="new-password">
+        <input class="field" type="password" id="signup-confirm" placeholder="Confirm password" autocomplete="new-password">
+        <div id="signup-error" class="error-msg" role="alert"></div>
+        <button class="btn-primary" id="signup-btn">Create Account</button>
+        <button class="btn-ghost" id="show-login">← Back to login</button>
+      </div>
+
+      <!-- Verify -->
+      <div id="verify-form" style="display:none;">
+        <h2 class="modal-title">Verify Email</h2>
+        <p style="font-size:14px;color:var(--muted);margin-bottom:22px;">Enter the 6-digit code sent to your inbox.</p>
+        <input class="field" type="text" id="verify-code" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+        <div id="verify-error" class="error-msg" role="alert"></div>
+        <button class="btn-primary" id="verify-btn">Verify</button>
+        <button class="btn-ghost" id="resend-code">Resend code</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ── Starfield ── */
+    (function() {
+      const canvas = document.getElementById('starfield');
+      const ctx = canvas.getContext('2d');
+      let stars = [];
+      const N = 180;
+
+      function resize() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      for (let i = 0; i < N; i++) {
+        stars.push({
+          x: Math.random(),
+          y: Math.random(),
+          r: Math.random() * 1.2 + 0.2,
+          a: Math.random(),
+          speed: Math.random() * 0.0005 + 0.0002,
+          drift: Math.random() * 0.0001
         });
+      }
 
-        async function checkAuth() {
-            try {
-                const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated && data.user) {
-                        currentUser = data.user;
-                        showUserPill(currentUser.email);
-                        return true;
-                    }
-                }
-            } catch(e) {}
-            hideUserPill();
-            return false;
-        }
-
-        function showUserPill(email) {
-            const pill = document.getElementById('user-pill');
-            pill.style.display = 'flex';
-            document.getElementById('user-email-text').textContent = email;
-        }
-        function hideUserPill() {
-            document.getElementById('user-pill').style.display = 'none';
-        }
-
-        async function handleLogin() {
-            const email    = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value.trim();
-            if (!email || !password) {
-                document.getElementById('login-error').textContent = 'Email and password required';
-                return;
-            }
-            try {
-                const res  = await fetch(`${API_BASE}/api/login`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    currentUser = data.user;
-                    closeModal();
-                    showUserPill(currentUser.email);
-                } else {
-                    document.getElementById('login-error').textContent = data.error || 'Login failed';
-                }
-            } catch(e) { document.getElementById('login-error').textContent = 'Connection error'; }
-        }
-
-        async function handleSignup() {
-            const firstName = document.getElementById('signup-first').value.trim();
-            const lastName  = document.getElementById('signup-last').value.trim();
-            const email     = document.getElementById('signup-email').value.trim();
-            const password  = document.getElementById('signup-password').value.trim();
-            const confirm   = document.getElementById('signup-confirm').value.trim();
-            if (!firstName || !lastName || !email || !password) {
-                document.getElementById('signup-error').textContent = 'All fields are required';
-                return;
-            }
-            if (password !== confirm) {
-                document.getElementById('signup-error').textContent = 'Passwords do not match';
-                return;
-            }
-            try {
-                const res  = await fetch(`${API_BASE}/api/register/init`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ firstName, lastName, email, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    pendingEmail = email;
-                    pendingId = data.pending_id;
-                    if (data.dev_code) {
-                        document.getElementById('verify-code').value = data.dev_code;
-                        await handleVerify();
-                    } else {
-                        showForm('verify-form');
-                    }
-                } else {
-                    document.getElementById('signup-error').textContent = data.error || 'Signup failed';
-                }
-            } catch(e) { document.getElementById('signup-error').textContent = 'Connection error'; }
-        }
-
-        async function handleVerify() {
-            const code = document.getElementById('verify-code').value.trim();
-            if (!code || code.length !== 6) {
-                document.getElementById('verify-error').textContent = 'Enter a 6-digit code';
-                return;
-            }
-            try {
-                const res  = await fetch(`${API_BASE}/api/register/verify`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-                    body: JSON.stringify({ email: pendingEmail, code, pending_id: pendingId })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    currentUser = data.user;
-                    closeModal();
-                    showUserPill(currentUser.email);
-                } else {
-                    document.getElementById('verify-error').textContent = data.error || 'Verification failed';
-                }
-            } catch(e) { document.getElementById('verify-error').textContent = 'Connection error'; }
-        }
-
-        async function handleLogout() {
-            await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' });
-            currentUser = null;
-            hideUserPill();
-            openModal();
-            showForm('login-form');
-        }
-
-        function openModal()  { document.getElementById('login-overlay').classList.add('show'); }
-        function closeModal() { document.getElementById('login-overlay').classList.remove('show'); }
-
-        function showForm(id) {
-            ['login-form','signup-form','verify-form'].forEach(f => {
-                document.getElementById(f).style.display = f === id ? 'block' : 'none';
-            });
-        }
-
-        function openApp(appName) {
-            if (!currentUser && appName !== 'ai' && appName !== 'search') {
-                openModal();
-                return;
-            }
-            window.location.href = APP_URLS[appName];
-        }
-
-        // Card click / keyboard
-        document.querySelectorAll('.app-card').forEach(card => {
-            card.addEventListener('click', () => openApp(card.dataset.app));
-            card.addEventListener('keydown', e => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openApp(card.dataset.app); }
-            });
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const t = Date.now() / 1000;
+        stars.forEach(s => {
+          const alpha = 0.3 + 0.5 * Math.sin(t * s.speed * 6000 + s.a * 100);
+          ctx.beginPath();
+          ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(212,208,232,${alpha})`;
+          ctx.fill();
         });
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
 
-        document.getElementById('login-btn').onclick   = handleLogin;
-        document.getElementById('signup-btn').onclick  = handleSignup;
-        document.getElementById('verify-btn').onclick  = handleVerify;
-        document.getElementById('show-signup').onclick = () => showForm('signup-form');
-        document.getElementById('show-login').onclick  = () => showForm('login-form');
-        document.getElementById('logout-btn').onclick  = handleLogout;
-        document.getElementById('resend-code').onclick = async () => {
-            await fetch(`${API_BASE}/api/resend-code`, {
-                method: 'POST', credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pending_id: pendingId })
-            });
-            document.getElementById('verify-error').textContent = 'Code resent!';
-        };
+    /* ── App Logic ── */
+    const API_BASE = 'https://arnav0928.pythonanywhere.com';
+    let currentUser = null;
+    let pendingEmail = null;
+    let pendingId = null;
 
-        // Close modal on backdrop click
-        document.getElementById('login-overlay').addEventListener('click', function(e) {
-            if (e.target === this && currentUser) closeModal();
+    const APP_URLS = {
+      ai:       'https://wizardecosystem.dev/ai',
+      search:   'https://wizardecosystem.dev/search',
+      mail:     'https://wizardecosystem.dev/mail',
+      calendar: 'https://wizardecosystem.dev/calendar',
+      notes:    'https://wizardecosystem.dev/notes',
+      chat:     'https://wizardecosystem.dev/chat',
+      finance:   'https://wizardecosystem.dev/finance',
+      heat: 'https://wizardecosystem.dev/heat',
+      firewatch: 'https://wizardecosystem.dev/firewatch',
+      nature: 'https://wizardecosystem.dev/nature'
+    };
+
+    function search() {
+      const q = document.getElementById('search-input').value.trim();
+      if (q) window.location.href = `${APP_URLS.search}?q=${encodeURIComponent(q)}`;
+    }
+
+    document.getElementById('search-btn').onclick = search;
+    document.getElementById('search-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') search();
+    });
+
+    async function checkAuth() {
+      try {
+        const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            currentUser = data.user;
+            showUserPill(currentUser.email);
+            return true;
+          }
+        }
+      } catch(e) {}
+      hideUserPill();
+      return false;
+    }
+
+    function showUserPill(email) {
+      const pill = document.getElementById('user-pill');
+      pill.style.display = 'flex';
+      document.getElementById('user-email-text').textContent = email;
+    }
+    function hideUserPill() {
+      document.getElementById('user-pill').style.display = 'none';
+    }
+
+    async function handleLogin() {
+      const email    = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      if (!email || !password) {
+        document.getElementById('login-error').textContent = 'Email and password required';
+        return;
+      }
+      try {
+        const res  = await fetch(`${API_BASE}/api/login`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ email, password })
         });
+        const data = await res.json();
+        if (res.ok) {
+          currentUser = data.user;
+          closeModal();
+          showUserPill(currentUser.email);
+        } else {
+          document.getElementById('login-error').textContent = data.error || 'Login failed';
+        }
+      } catch(e) { document.getElementById('login-error').textContent = 'Connection error'; }
+    }
 
-        checkAuth();
-    </script>
+    async function handleSignup() {
+      const firstName = document.getElementById('signup-first').value.trim();
+      const lastName  = document.getElementById('signup-last').value.trim();
+      const email     = document.getElementById('signup-email').value.trim();
+      const password  = document.getElementById('signup-password').value.trim();
+      const confirm   = document.getElementById('signup-confirm').value.trim();
+      if (!firstName || !lastName || !email || !password) {
+        document.getElementById('signup-error').textContent = 'All fields are required';
+        return;
+      }
+      if (password !== confirm) {
+        document.getElementById('signup-error').textContent = 'Passwords do not match';
+        return;
+      }
+      try {
+        const res  = await fetch(`${API_BASE}/api/register/init`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ firstName, lastName, email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          pendingEmail = email;
+          pendingId = data.pending_id;
+          if (data.dev_code) {
+            document.getElementById('verify-code').value = data.dev_code;
+            await handleVerify();
+          } else {
+            showForm('verify-form');
+          }
+        } else {
+          document.getElementById('signup-error').textContent = data.error || 'Signup failed';
+        }
+      } catch(e) { document.getElementById('signup-error').textContent = 'Connection error'; }
+    }
+
+    async function handleVerify() {
+      const code = document.getElementById('verify-code').value.trim();
+      if (!code || code.length !== 6) {
+        document.getElementById('verify-error').textContent = 'Enter a 6-digit code';
+        return;
+      }
+      try {
+        const res  = await fetch(`${API_BASE}/api/register/verify`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ email: pendingEmail, code, pending_id: pendingId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          currentUser = data.user;
+          closeModal();
+          showUserPill(currentUser.email);
+        } else {
+          document.getElementById('verify-error').textContent = data.error || 'Verification failed';
+        }
+      } catch(e) { document.getElementById('verify-error').textContent = 'Connection error'; }
+    }
+
+    async function handleLogout() {
+      await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' });
+      currentUser = null;
+      hideUserPill();
+      openModal();
+      showForm('login-form');
+    }
+
+    function openModal()  { document.getElementById('login-overlay').classList.add('show'); }
+    function closeModal() { document.getElementById('login-overlay').classList.remove('show'); }
+
+    function showForm(id) {
+      ['login-form','signup-form','verify-form'].forEach(f => {
+        document.getElementById(f).style.display = f === id ? 'block' : 'none';
+      });
+    }
+
+    function openApp(appName) {
+      if (!currentUser && appName !== 'ai' && appName !== 'search') {
+        openModal();
+        return;
+      }
+      window.location.href = APP_URLS[appName];
+    }
+
+    // Card click / keyboard
+    document.querySelectorAll('.app-card').forEach(card => {
+      card.addEventListener('click', () => openApp(card.dataset.app));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openApp(card.dataset.app); }
+      });
+    });
+
+    document.getElementById('login-btn').onclick   = handleLogin;
+    document.getElementById('signup-btn').onclick  = handleSignup;
+    document.getElementById('verify-btn').onclick  = handleVerify;
+    document.getElementById('show-signup').onclick = () => showForm('signup-form');
+    document.getElementById('show-login').onclick  = () => showForm('login-form');
+    document.getElementById('logout-btn').onclick  = handleLogout;
+    document.getElementById('resend-code').onclick = async () => {
+      await fetch(`${API_BASE}/api/resend-code`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pending_id: pendingId })
+      });
+      document.getElementById('verify-error').textContent = 'Code resent!';
+    };
+
+    // Close modal on backdrop click
+    document.getElementById('login-overlay').addEventListener('click', function(e) {
+      if (e.target === this && currentUser) closeModal();
+    });
+
+    checkAuth();
+  </script>
 </body>
 </html>
