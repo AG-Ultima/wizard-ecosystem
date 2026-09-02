@@ -981,7 +981,78 @@ select.field { cursor:pointer; }
     .chats-sidebar.open { transform:translateX(0); box-shadow:-6px 0 40px rgba(0,0,0,0.6); }
     .hamburger { display:flex; }
 }
+/* ── Code Block Styles ── */
+.code-block-wrapper {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin: 16px 0;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
 
+.code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+}
+
+.code-language {
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 11px;
+}
+
+.copy-code-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.copy-code-btn:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: var(--primary);
+}
+
+.code-block-wrapper pre {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    background: transparent;
+    font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.code-block-wrapper code {
+    color: var(--text-secondary);
+    font-family: inherit;
+    white-space: pre;
+    tab-size: 2;
+}
+
+/* ── Inline Code ── */
+.markdown-body code:not(.code-block-wrapper code) {
+    background: rgba(139, 92, 246, 0.15);
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--primary-light);
+}
 @media (max-width:640px) {
     .chat-header { margin:8px 10px 0; padding:12px 14px; }
     .pro-toolbar { margin:8px 10px 0; flex-wrap:nowrap; }
