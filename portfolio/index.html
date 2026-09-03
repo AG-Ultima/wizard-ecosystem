@@ -365,28 +365,29 @@
       position: fixed; bottom: 28px; right: 28px; width: 60px; height: 60px;
       border-radius: 50%; border: none; cursor: pointer; z-index: 400;
       display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(circle at 35% 30%, #2a1f42, #12081c 70%);
+      background: radial-gradient(circle at 35% 30%, #362a5c, #1c1330 75%);
       color: var(--gold); isolation: isolate;
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.35s ease;
       box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
     }
+    #ask-fab:hover{ box-shadow: 0 14px 36px rgba(0,0,0,0.55), 0 0 22px rgba(130,102,240,0.25), inset 0 1px 0 rgba(255,255,255,0.06); }
     #ask-fab::before{
       content:''; position: absolute; inset: -3px; border-radius: 50%; z-index: -1;
-      background: conic-gradient(from var(--glow-angle, 0deg), var(--violet), var(--gold), var(--violet));
-      animation: rotate-glow 5s linear infinite;
-      opacity: 0.9;
+      background: conic-gradient(from var(--glow-angle, 0deg), var(--gold-dim), var(--violet), var(--bg-panel-2), var(--gold-dim));
+      animation: rotate-glow 11s linear infinite;
+      opacity: 0.45;
     }
     #ask-fab::after{
       content:''; position: absolute; inset: 0; border-radius: 50%;
-      box-shadow: 0 0 0 0 rgba(232,182,87,0.5);
-      animation: ask-fab-pulse 3s ease-in-out infinite;
+      box-shadow: 0 0 0 0 rgba(130,102,240,0.4);
+      animation: ask-fab-pulse 3.4s ease-in-out infinite;
       pointer-events: none;
     }
     @keyframes ask-fab-pulse{
-      0%,100%{ box-shadow: 0 0 0 0 rgba(232,182,87,0.4); }
-      50%{ box-shadow: 0 0 0 12px rgba(232,182,87,0); }
+      0%,100%{ box-shadow: 0 0 0 0 rgba(130,102,240,0.35); }
+      50%{ box-shadow: 0 0 0 11px rgba(232,182,87,0); }
     }
-    #ask-fab-icon{ font-size: 1.5rem; line-height: 1; transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); animation: icon-float 3.2s ease-in-out infinite; }
+    #ask-fab-icon{ font-size: 1.5rem; line-height: 1; transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1); animation: icon-float 3.2s ease-in-out infinite; filter: drop-shadow(0 0 4px rgba(232,182,87,0.5)); }
     #ask-fab:hover #ask-fab-icon{ transform: scale(1.15) rotate(-8deg); }
     #ask-fab.open{ transform: rotate(90deg); }
     #ask-fab.open #ask-fab-icon{ animation-play-state: paused; }
@@ -396,16 +397,18 @@
       height: 500px; max-height: calc(100vh - 150px); border-radius: 16px; overflow: hidden;
       display: flex; flex-direction: column; z-index: 400; isolation: isolate;
       background:
-        radial-gradient(ellipse 140% 90% at 15% -10%, rgba(130,102,240,0.09), transparent 60%),
-        radial-gradient(ellipse 120% 70% at 100% 115%, rgba(232,182,87,0.05), transparent 60%),
+        radial-gradient(ellipse 140% 90% at 15% -10%, rgba(130,102,240,0.11), transparent 60%),
+        radial-gradient(ellipse 120% 70% at 100% 115%, rgba(232,182,87,0.06), transparent 60%),
         var(--bg);
+      backdrop-filter: blur(18px) saturate(140%);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
       border: 1px solid rgba(232,214,255,0.08);
       box-shadow:
         0 30px 80px -18px rgba(0,0,0,0.75),
         0 4px 24px -6px rgba(0,0,0,0.6),
         inset 0 1px 0 rgba(255,255,255,0.04);
-      opacity: 0; transform: translateY(18px) scale(0.96); pointer-events: none;
-      transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.16,1,0.3,1);
+      opacity: 0; transform: translateY(20px) scale(0.95); pointer-events: none; filter: blur(4px);
+      transition: opacity 0.32s cubic-bezier(0.16,1,0.3,1), transform 0.32s cubic-bezier(0.16,1,0.3,1), filter 0.32s ease;
       animation: none !important;
     }
     #ask-panel::before{
@@ -416,12 +419,20 @@
       animation: rotate-glow 8s linear infinite;
       opacity: 0.75;
     }
-    #ask-panel.open{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    #ask-panel.open{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; filter: blur(0); }
 
     #ask-panel-header{
+      position: relative;
       display: flex; align-items: center; justify-content: space-between;
       padding: 16px 18px; border-bottom: 1px solid var(--line); flex-shrink: 0;
       background: rgba(130,102,240,0.05);
+      overflow: hidden;
+    }
+    #ask-panel-header::after{
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(100deg, transparent 40%, rgba(232,182,87,0.14) 50%, transparent 60%);
+      transform: translateX(-150%);
+      animation: hero-shine-sweep 7s ease-in-out infinite;
     }
     #ask-panel-title{
       font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--ink);
@@ -441,12 +452,13 @@
     .ask-msg{
       font-size: 0.87rem; line-height: 1.55; padding: 11px 14px; border-radius: 12px;
       max-width: 86%; white-space: pre-wrap; word-break: break-word;
-      opacity: 0; transform: translateY(8px); animation: rise 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+      opacity: 0; transform: translateY(8px) scale(0.98); animation: ask-msg-in 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
     }
+    @keyframes ask-msg-in{ to{ opacity: 1; transform: translateY(0) scale(1); } }
     .ask-msg.bot{ background: rgba(130,102,240,0.06); color: var(--ink); align-self: flex-start; border: 1px solid rgba(232,214,255,0.08); border-bottom-left-radius: 3px; }
     .ask-msg.user{ background: linear-gradient(135deg, var(--violet), #6b4fd6); color: #fff; align-self: flex-end; border-bottom-right-radius: 3px; box-shadow: 0 4px 14px var(--violet-glow); }
     .ask-msg.typing{ display: flex; gap: 4px; align-items: center; padding: 13px 15px; }
-    .ask-typing-dot{ width: 5px; height: 5px; border-radius: 50%; background: var(--ink-dimmer); animation: ask-typing-bounce 1.1s ease-in-out infinite; }
+    .ask-typing-dot{ width: 5px; height: 5px; border-radius: 50%; background: var(--gold-dim); animation: ask-typing-bounce 1.1s ease-in-out infinite; }
     .ask-typing-dot:nth-child(2){ animation-delay: 0.15s; }
     .ask-typing-dot:nth-child(3){ animation-delay: 0.3s; }
     @keyframes ask-typing-bounce{ 0%,60%,100%{ transform: translateY(0); opacity: 0.5; } 30%{ transform: translateY(-3px); opacity: 1; } }
@@ -455,22 +467,23 @@
     .ask-chip{
       font-family: var(--mono); font-size: 0.68rem; color: var(--ink-dim); background: rgba(130,102,240,0.06);
       border: 1px solid rgba(232,214,255,0.09); padding: 6px 11px; border-radius: 999px; cursor: pointer;
-      transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease; white-space: nowrap;
+      transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; white-space: nowrap;
     }
-    .ask-chip:hover{ border-color: var(--gold-dim); color: var(--ink); transform: translateY(-1px); }
+    .ask-chip:hover{ border-color: var(--gold-dim); color: var(--ink); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,182,87,0.12); }
 
     #ask-form{ display: flex; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--line); flex-shrink: 0; background: rgba(130,102,240,0.05); }
     #ask-input{
       flex: 1; background: rgba(130,102,240,0.06); border: 1px solid rgba(232,214,255,0.09); border-radius: 8px;
       padding: 11px 13px; color: var(--ink); font-family: var(--body); font-size: 0.87rem; outline: none;
-      transition: border-color 0.2s ease;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
-    #ask-input:focus{ border-color: var(--violet); box-shadow: 0 0 0 3px rgba(130,102,240,0.06); }
+    #ask-input:focus{ border-color: var(--violet); box-shadow: 0 0 0 3px rgba(130,102,240,0.1); }
     #ask-send{
-      width: 40px; height: 40px; border-radius: 8px; background: var(--gold); color: #1a1206; border: none;
-      font-size: 1.05rem; cursor: pointer; flex-shrink: 0; transition: transform 0.2s ease, background 0.2s ease;
+      width: 40px; height: 40px; border-radius: 8px; background: linear-gradient(135deg, var(--gold), var(--gold-dim)); color: #1a1206; border: none;
+      font-size: 1.05rem; cursor: pointer; flex-shrink: 0; transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 14px rgba(232,182,87,0.25);
     }
-    #ask-send:hover:not(:disabled){ background: #f3c56a; transform: scale(1.06); }
+    #ask-send:hover:not(:disabled){ transform: scale(1.06); box-shadow: 0 6px 18px rgba(232,182,87,0.35); }
     #ask-send:disabled{ opacity: 0.5; cursor: default; }
 
     @media (max-width: 480px){
