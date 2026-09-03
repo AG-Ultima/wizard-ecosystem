@@ -365,9 +365,10 @@
       position: fixed; bottom: 28px; right: 28px; width: 60px; height: 60px;
       border-radius: 50%; border: none; cursor: pointer; z-index: 400;
       display: flex; align-items: center; justify-content: center;
-      background: var(--gold); color: #1a1206; isolation: isolate;
+      background: linear-gradient(160deg, var(--bg-panel-2), var(--bg-panel));
+      color: var(--gold); isolation: isolate;
       transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s ease;
-      box-shadow: 0 12px 30px rgba(232,182,87,0.35);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
     }
     #ask-fab::before{
       content:''; position: absolute; inset: -3px; border-radius: 50%; z-index: -1;
@@ -395,9 +396,9 @@
       height: 500px; max-height: calc(100vh - 150px); border-radius: 16px; overflow: hidden;
       display: flex; flex-direction: column; z-index: 400; isolation: isolate;
       background:
-        radial-gradient(ellipse 140% 90% at 15% -10%, rgba(130,102,240,0.10), transparent 55%),
-        radial-gradient(ellipse 120% 70% at 100% 115%, rgba(232,182,87,0.06), transparent 55%),
-        #050308;
+        radial-gradient(ellipse 140% 90% at 15% -10%, rgba(130,102,240,0.28), transparent 60%),
+        radial-gradient(ellipse 120% 70% at 100% 115%, rgba(232,182,87,0.18), transparent 60%),
+        linear-gradient(160deg, var(--bg-panel-2), var(--bg-panel));
       border: 1px solid rgba(232,214,255,0.08);
       box-shadow:
         0 30px 80px -18px rgba(0,0,0,0.75),
@@ -413,14 +414,14 @@
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor; mask-composite: exclude;
       animation: rotate-glow 8s linear infinite;
-      opacity: 0.5;
+      opacity: 0.75;
     }
     #ask-panel.open{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
 
     #ask-panel-header{
       display: flex; align-items: center; justify-content: space-between;
       padding: 16px 18px; border-bottom: 1px solid var(--line); flex-shrink: 0;
-      background: rgba(0,0,0,0.35);
+      background: rgba(130,102,240,0.08);
     }
     #ask-panel-title{
       font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--ink);
@@ -442,7 +443,7 @@
       max-width: 86%; white-space: pre-wrap; word-break: break-word;
       opacity: 0; transform: translateY(8px); animation: rise 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
     }
-    .ask-msg.bot{ background: rgba(232,214,255,0.03); color: var(--ink); align-self: flex-start; border: 1px solid rgba(232,214,255,0.08); border-bottom-left-radius: 3px; }
+    .ask-msg.bot{ background: rgba(130,102,240,0.12); color: var(--ink); align-self: flex-start; border: 1px solid rgba(232,214,255,0.08); border-bottom-left-radius: 3px; }
     .ask-msg.user{ background: linear-gradient(135deg, var(--violet), #6b4fd6); color: #fff; align-self: flex-end; border-bottom-right-radius: 3px; box-shadow: 0 4px 14px var(--violet-glow); }
     .ask-msg.typing{ display: flex; gap: 4px; align-items: center; padding: 13px 15px; }
     .ask-typing-dot{ width: 5px; height: 5px; border-radius: 50%; background: var(--ink-dimmer); animation: ask-typing-bounce 1.1s ease-in-out infinite; }
@@ -452,15 +453,15 @@
 
     #ask-suggestions{ display: flex; gap: 6px; padding: 0 18px 12px; flex-wrap: wrap; flex-shrink: 0; }
     .ask-chip{
-      font-family: var(--mono); font-size: 0.68rem; color: var(--ink-dim); background: rgba(232,214,255,0.03);
+      font-family: var(--mono); font-size: 0.68rem; color: var(--ink-dim); background: rgba(130,102,240,0.12);
       border: 1px solid rgba(232,214,255,0.09); padding: 6px 11px; border-radius: 999px; cursor: pointer;
       transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease; white-space: nowrap;
     }
     .ask-chip:hover{ border-color: var(--gold-dim); color: var(--ink); transform: translateY(-1px); }
 
-    #ask-form{ display: flex; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--line); flex-shrink: 0; background: rgba(0,0,0,0.35); }
+    #ask-form{ display: flex; gap: 8px; padding: 14px 18px; border-top: 1px solid var(--line); flex-shrink: 0; background: rgba(130,102,240,0.08); }
     #ask-input{
-      flex: 1; background: rgba(232,214,255,0.03); border: 1px solid rgba(232,214,255,0.09); border-radius: 8px;
+      flex: 1; background: rgba(130,102,240,0.12); border: 1px solid rgba(232,214,255,0.09); border-radius: 8px;
       padding: 11px 13px; color: var(--ink); font-family: var(--body); font-size: 0.87rem; outline: none;
       transition: border-color 0.2s ease;
     }
