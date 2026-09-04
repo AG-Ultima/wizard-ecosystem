@@ -571,14 +571,76 @@
       background: url('assets/mac.webp') center/cover no-repeat, radial-gradient(ellipse 80% 60% at 30% 20%, #3a2a63, #0b0714 70%);
     }
     #mac-menubar{
-      position: relative; z-index: 5; height: 26px; display: flex; align-items: center; gap: 16px;
-      padding: 0 14px; background: rgba(20,14,32,0.55); backdrop-filter: blur(16px);
-      border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #f2eefb;
+      position: relative; z-index: 30; height: 26px; display: flex; align-items: center; gap: 2px;
+      padding: 0 10px; background: rgba(28,28,32,0.55); backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #f5f5f7;
+    }
+    .mac-menu-group{ position: relative; }
+    .mac-menu-btn{
+      background: none; border: none; color: #f5f5f7; font-size: 0.8rem; padding: 3px 9px; border-radius: 4px;
+      cursor: default; font-family: -apple-system, sans-serif;
     }
     .mac-apple{ font-size: 0.85rem; }
-    .mac-menu-app{ font-weight: 600; }
-    .mac-menu-item{ opacity: 0.75; font-size: 0.78rem; }
-    .mac-menu-right{ margin-left: auto; display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 0.74rem; opacity: 0.9; }
+    .mac-menu-app{ font-weight: 700; }
+    .mac-menu-group.open .mac-menu-btn, .mac-menu-btn:hover{ background: rgba(255,255,255,0.14); }
+    .mac-dropdown{
+      position: absolute; top: 26px; left: 0; min-width: 210px; z-index: 40;
+      background: rgba(40,40,44,0.85); backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 5px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+      opacity: 0; transform: translateY(-4px); pointer-events: none;
+      transition: opacity 0.12s ease, transform 0.12s ease;
+    }
+    .mac-menu-group.open .mac-dropdown{ opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .mac-dropdown button{
+      display: block; width: 100%; text-align: left; background: none; border: none; color: #f5f5f7;
+      font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 6px 10px; border-radius: 5px; cursor: pointer;
+    }
+    .mac-dropdown button:hover{ background: #0a84ff; color: #fff; }
+    .mac-dropdown hr{ border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 4px 2px; }
+    .mac-menu-right{ margin-left: auto; display: flex; align-items: center; gap: 13px; font-family: -apple-system, sans-serif; font-size: 0.8rem; }
+    .mac-menu-right span{ opacity: 0.9; font-size: 0.85rem; }
+    #mac-control-center-btn{
+      background: none; border: none; color: #f5f5f7; font-size: 0.95rem; cursor: pointer;
+      width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center;
+    }
+    #mac-control-center-btn:hover, #mac-control-center-btn.open{ background: rgba(255,255,255,0.14); }
+    #mac-control-center{
+      position: absolute; top: 32px; right: 8px; width: 230px; z-index: 40;
+      background: rgba(40,40,44,0.85); backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 12px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+      opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    #mac-control-center.open{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .mac-cc-row{ display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
+    .mac-cc-icon{ font-size: 1rem; width: 20px; text-align: center; }
+    .mac-cc-label{ flex: 1; font-family: -apple-system, sans-serif; font-size: 0.82rem; color: #f5f5f7; }
+    .mac-cc-toggle{
+      width: 38px; height: 22px; border-radius: 999px; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.18); position: relative; transition: background 0.2s ease;
+    }
+    .mac-cc-toggle::after{
+      content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+      background: #fff; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .mac-cc-toggle.on{ background: #30d158; }
+    .mac-cc-toggle.on::after{ transform: translateX(16px); }
+    .mac-cc-action{ width: auto; height: auto; border-radius: 6px; padding: 5px 10px; background: rgba(255,255,255,0.14); color: #fff; font-family: -apple-system, sans-serif; font-size: 0.76rem; }
+    .mac-cc-action:hover{ background: #ff453a; }
+
+    #mac-toast{
+      position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%) translateY(10px);
+      background: rgba(28,28,32,0.9); backdrop-filter: blur(16px); color: #f5f5f7;
+      font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 10px 18px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; z-index: 50;
+      white-space: nowrap; max-width: 80vw; text-overflow: ellipsis; overflow: hidden;
+    }
+    #mac-toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+    .mac-window-entry{ display: block; width: 100%; text-align: left; background: none; border: none; color: #f5f5f7; font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 6px 10px; border-radius: 5px; cursor: pointer; }
+    .mac-window-entry:hover{ background: #0a84ff; color: #fff; }
     #mac-icons{
       position: absolute; top: 46px; right: 24px; z-index: 4; display: flex; flex-direction: column; gap: 18px;
     }
@@ -637,6 +699,77 @@
     }
     .mac-dock-icon:hover{ transform: translateY(-10px) scale(1.12); background: rgba(255,255,255,0.12); }
     .mac-dock-divider{ width: 1px; align-self: stretch; background: rgba(255,255,255,0.15); margin: 4px 2px; }
+
+    /* ===================== MAC WINDOW CONTENT — native Finder/macOS look ===================== */
+    .mac-window-body, .mac-window-body *{
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif !important;
+    }
+    /* Kill the site's scroll-reveal system inside windows — clones never get observed, so force them visible */
+    .mac-window-body .reveal, .mac-window-body .reveal-stagger, .mac-window-body .reveal-stagger > *,
+    .mac-window-body .app-card, .mac-window-body .proj-card, .mac-window-body .skill-group,
+    .mac-window-body .cred-block, .mac-window-body .faq-item{
+      opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important;
+    }
+    /* Strip the wizard-site glass/card chrome — this should read as native macOS, not a themed card */
+    .mac-window-body .glass-panel, .mac-window-body .app-card, .mac-window-body .proj-card,
+    .mac-window-body .skill-group, .mac-window-body .cred-block, .mac-window-body .faq-item{
+      background: transparent !important; backdrop-filter: none !important; box-shadow: none !important;
+      border: none !important; border-radius: 0 !important;
+    }
+    .mac-window-body .app-shot, .mac-window-body .app-peek-hint, .mac-window-body .app-funfact,
+    .mac-window-body .app-icon{ display: none !important; }
+
+    /* Finder list-row layout for the Ecosystem + Projects windows */
+    #mac-window-ecosystem .mac-window-body .app-grid,
+    #mac-window-projects .mac-window-body .proj-grid{
+      display: flex; flex-direction: column; gap: 0;
+    }
+    #mac-window-ecosystem .mac-window-body .app-card,
+    #mac-window-projects .mac-window-body .proj-card{
+      display: flex; align-items: center; gap: 14px; padding: 11px 4px !important;
+      border-bottom: 1px solid rgba(255,255,255,0.08) !important; border-radius: 0 !important;
+      cursor: default;
+    }
+    #mac-window-ecosystem .mac-window-body .app-card::before{
+      content: '📦'; font-size: 1.2rem; flex-shrink: 0;
+    }
+    #mac-window-projects .mac-window-body .proj-card::before{
+      content: '📄'; font-size: 1.2rem; flex-shrink: 0;
+    }
+    #mac-window-ecosystem .mac-window-body .app-name,
+    #mac-window-projects .mac-window-body .proj-title{
+      font-family: -apple-system, sans-serif !important; font-size: 0.92rem !important; font-weight: 600 !important;
+      color: #f2eefb !important; margin-bottom: 2px !important;
+    }
+    #mac-window-ecosystem .mac-window-body .app-desc,
+    #mac-window-projects .mac-window-body .proj-desc{
+      font-size: 0.8rem !important; color: rgba(242,238,251,0.6) !important; margin-bottom: 6px !important; line-height: 1.4 !important;
+    }
+    #mac-window-projects .mac-window-body .proj-date{ display: none; }
+    #mac-window-ecosystem .mac-window-body .app-tags,
+    #mac-window-projects .mac-window-body .proj-link{
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    #mac-window-ecosystem .mac-window-body .tag{
+      font-family: -apple-system, sans-serif !important; font-size: 0.68rem !important; color: rgba(242,238,251,0.55) !important;
+      border: 1px solid rgba(255,255,255,0.14) !important; padding: 2px 8px !important; border-radius: 5px !important;
+    }
+
+    /* Skills + Contact windows — plain macOS text, no site card styling */
+    #mac-window-skills .mac-window-body h4, #mac-window-contact .mac-window-body h4{
+      font-family: -apple-system, sans-serif !important; font-size: 0.72rem !important; font-weight: 700 !important;
+      text-transform: uppercase; letter-spacing: 0.04em; color: rgba(242,238,251,0.45) !important; margin: 18px 0 10px !important;
+    }
+    #mac-window-skills .mac-window-body h4:first-child{ margin-top: 0 !important; }
+    #mac-window-skills .mac-window-body li, #mac-window-contact .mac-window-body p{
+      color: #e8e4f2 !important; font-size: 0.85rem !important; border-color: rgba(255,255,255,0.08) !important;
+    }
+    #mac-window-skills .mac-window-body .skill-groups, #mac-window-skills .mac-window-body .cred-grid{
+      display: block !important;
+    }
+    #mac-window-skills .mac-window-body .cert-grid{ grid-template-columns: 1fr 1fr !important; }
+    #mac-window-contact .mac-window-body .faq-question{ color: #e8e4f2 !important; }
+    #mac-window-contact .mac-window-body iframe{ border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -695,15 +828,101 @@
 <!-- ===================== MAC MODE ===================== -->
 <div id="mac-desktop" aria-hidden="true">
   <div id="mac-menubar">
-    <span class="mac-apple">🍎</span>
-    <span class="mac-menu-app">Finder</span>
-    <span class="mac-menu-item">File</span>
-    <span class="mac-menu-item">Edit</span>
-    <span class="mac-menu-item">View</span>
-    <span class="mac-menu-item">Go</span>
-    <span class="mac-menu-item">Window</span>
-    <span class="mac-menu-item">Help</span>
-    <div class="mac-menu-right"><span id="mac-clock"></span></div>
+    <div class="mac-menu-group" data-menu="apple">
+      <button class="mac-menu-btn mac-apple">🍎</button>
+      <div class="mac-dropdown">
+        <button data-mac-action="about">About This Guy</button>
+        <hr>
+        <button data-mac-action="theme">Toggle Appearance</button>
+        <button data-mac-action="sound">Sound: <span data-sound-state></span></button>
+        <hr>
+        <button data-mac-action="restart">Restart</button>
+        <button data-mac-action="shutdown">Shut Down…</button>
+      </div>
+    </div>
+    <div class="mac-menu-group" data-menu="finder">
+      <button class="mac-menu-btn mac-menu-app">Finder</button>
+      <div class="mac-dropdown">
+        <button data-mac-action="about">About Finder</button>
+        <hr>
+        <button data-mac-action="empty-trash">Empty Trash…</button>
+      </div>
+    </div>
+    <div class="mac-menu-group" data-menu="file">
+      <button class="mac-menu-btn mac-menu-item">File</button>
+      <div class="mac-dropdown">
+        <button data-mac-action="new-window">New Finder Window</button>
+        <button data-mac-action="close-window">Close Window</button>
+      </div>
+    </div>
+    <div class="mac-menu-group" data-menu="edit">
+      <button class="mac-menu-btn mac-menu-item">Edit</button>
+      <div class="mac-dropdown">
+        <button data-mac-action="undo">Undo</button>
+        <button data-mac-action="copy">Copy Bio Link</button>
+      </div>
+    </div>
+    <div class="mac-menu-group" data-menu="view">
+      <button class="mac-menu-btn mac-menu-item">View</button>
+      <div class="mac-dropdown">
+        <button data-mac-action="motion">Toggle Animations</button>
+        <button data-mac-action="cmdk">Show Command Palette (⌘K)</button>
+      </div>
+    </div>
+    <div class="mac-menu-group" data-menu="go">
+      <button class="mac-menu-btn mac-menu-item">Go</button>
+      <div class="mac-dropdown">
+        <button data-mac-action="open-window" data-win="about">About This Guy</button>
+        <button data-mac-action="open-window" data-win="ecosystem">Wizard Ecosystem</button>
+        <button data-mac-action="open-window" data-win="projects">Projects</button>
+        <button data-mac-action="open-window" data-win="skills">Skills</button>
+        <button data-mac-action="open-window" data-win="contact">Contact</button>
+      </div>
+    </div>
+    <div class="mac-menu-group" data-menu="window">
+      <button class="mac-menu-btn mac-menu-item">Window</button>
+      <div class="mac-dropdown" data-window-list>
+        <button data-mac-action="minimize-all">Minimize All</button>
+        <button data-mac-action="close-window">Close All</button>
+      </div>
+    </div>
+    <div class="mac-menu-group" data-menu="help">
+      <button class="mac-menu-btn mac-menu-item">Help</button>
+      <div class="mac-dropdown">
+        <button data-mac-action="ask">Ask Arnav a Question…</button>
+        <button data-mac-action="exit">Exit Mac Mode</button>
+      </div>
+    </div>
+
+    <div class="mac-menu-right">
+      <span id="mac-battery" title="Battery">🔋</span>
+      <span id="mac-wifi" title="Wi-Fi">📶</span>
+      <button id="mac-control-center-btn" title="Control Center">◧</button>
+      <span id="mac-clock"></span>
+    </div>
+
+    <div id="mac-control-center">
+      <div class="mac-cc-row">
+        <span class="mac-cc-icon">🌗</span>
+        <span class="mac-cc-label">Appearance</span>
+        <button class="mac-cc-toggle" data-mac-action="theme"></button>
+      </div>
+      <div class="mac-cc-row">
+        <span class="mac-cc-icon">🎞️</span>
+        <span class="mac-cc-label">Animations</span>
+        <button class="mac-cc-toggle" data-mac-action="motion"></button>
+      </div>
+      <div class="mac-cc-row">
+        <span class="mac-cc-icon">🔊</span>
+        <span class="mac-cc-label">Sound Effects</span>
+        <button class="mac-cc-toggle" data-mac-action="sound"></button>
+      </div>
+      <div class="mac-cc-row">
+        <span class="mac-cc-icon">🚪</span>
+        <span class="mac-cc-label">Exit Mac Mode</span>
+        <button class="mac-cc-toggle mac-cc-action" data-mac-action="exit">Go</button>
+      </div>
+    </div>
   </div>
   <div id="mac-wallpaper"></div>
 
@@ -2343,6 +2562,7 @@
     function close(){
       overlay.classList.remove('open');
     }
+    window.openCommandPalette = open;
 
     input.addEventListener('input', () => {
       const q = input.value.toLowerCase();
@@ -2431,8 +2651,10 @@
       document.body.classList.remove('mac-mode');
       desktop.setAttribute('aria-hidden', 'true');
       document.querySelectorAll('.mac-window.open').forEach(w => w.classList.remove('open'));
+      closeAllMenus();
       if (window.wizardSound) window.wizardSound.tick();
     }
+    window.exitMacMode = exitMac;
 
     toggleBtn.addEventListener('click', enterMac);
     if (exitBtn) exitBtn.addEventListener('click', exitMac);
@@ -2450,6 +2672,120 @@
       }
       tickClock();
       setInterval(tickClock, 15000);
+    }
+
+    // ---- toast helper ----
+    let toastTimer = null;
+    function showToast(text){
+      let toast = document.getElementById('mac-toast');
+      if (!toast){
+        toast = document.createElement('div');
+        toast.id = 'mac-toast';
+        desktop.appendChild(toast);
+      }
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    // ---- menu bar: dropdowns ----
+    const menuGroups = document.querySelectorAll('.mac-menu-group');
+    function closeAllMenus(){ menuGroups.forEach(g => g.classList.remove('open')); }
+    menuGroups.forEach(group => {
+      group.querySelector('.mac-menu-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const willOpen = !group.classList.contains('open');
+        closeAllMenus();
+        if (willOpen){
+          group.classList.add('open');
+          if (window.wizardSound) window.wizardSound.tick();
+          if (group.dataset.menu === 'apple'){
+            const soundState = group.querySelector('[data-sound-state]');
+            if (soundState) soundState.textContent = (localStorage.getItem('sound') !== 'off') ? 'On' : 'Off';
+          }
+          if (group.dataset.menu === 'window'){
+            const list = group.querySelector('[data-window-list]');
+            list.querySelectorAll('.mac-window-entry').forEach(el => el.remove());
+            document.querySelectorAll('.mac-window.open').forEach(win => {
+              const b = document.createElement('button');
+              b.className = 'mac-window-entry';
+              b.textContent = win.dataset.title || win.id;
+              b.addEventListener('click', () => openWindow(win.id.replace('mac-window-', '')));
+              list.insertBefore(b, list.firstChild);
+            });
+          }
+        }
+      });
+    });
+    document.addEventListener('click', closeAllMenus);
+
+    // ---- menu / control-center actions ----
+    function runAction(action, el){
+      switch(action){
+        case 'about': openWindow('about'); break;
+        case 'open-window': openWindow(el.dataset.win); break;
+        case 'new-window': openWindow('ecosystem'); break;
+        case 'close-window':
+        case 'minimize-all':
+          document.querySelectorAll('.mac-window.open').forEach(w => w.classList.remove('open'));
+          break;
+        case 'theme': document.getElementById('theme-toggle').click(); syncControlCenter(); break;
+        case 'motion': document.getElementById('motion-toggle').click(); syncControlCenter(); break;
+        case 'sound': document.getElementById('sound-toggle').click(); syncControlCenter(); break;
+        case 'cmdk': if (window.openCommandPalette) window.openCommandPalette(); break;
+        case 'ask': document.getElementById('ask-fab').click(); break;
+        case 'exit': exitMac(); break;
+        case 'restart':
+          showToast('Restarting…');
+          exitMac();
+          setTimeout(enterMac, 700);
+          break;
+        case 'shutdown':
+          showToast('Goodbye. (This is a portfolio, so nothing actually shut down.)');
+          setTimeout(exitMac, 900);
+          break;
+        case 'empty-trash': showToast('Trash is empty. Unlike my backlog.'); break;
+        case 'undo': showToast("Nothing to undo. I don't make mistakes. (I do.)"); break;
+        case 'copy':
+          navigator.clipboard?.writeText('https://wizardecosystem.dev/portfolio').catch(()=>{});
+          showToast('Link copied to clipboard.');
+          break;
+      }
+    }
+    document.querySelectorAll('[data-mac-action]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        runAction(el.dataset.macAction, el);
+        closeAllMenus();
+      });
+    });
+
+    // ---- control center ----
+    const ccBtn = document.getElementById('mac-control-center-btn');
+    const cc = document.getElementById('mac-control-center');
+    function syncControlCenter(){
+      const themeOn = document.documentElement.dataset.theme === 'light';
+      const motionOn = !(document.documentElement.dataset.motion === 'off');
+      const soundOn = localStorage.getItem('sound') !== 'off';
+      cc.querySelectorAll('.mac-cc-toggle[data-mac-action]').forEach(t => {
+        if (t.dataset.macAction === 'theme') t.classList.toggle('on', themeOn);
+        if (t.dataset.macAction === 'motion') t.classList.toggle('on', motionOn);
+        if (t.dataset.macAction === 'sound') t.classList.toggle('on', soundOn);
+      });
+    }
+    if (ccBtn){
+      ccBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllMenus();
+        const willOpen = !cc.classList.contains('open');
+        cc.classList.toggle('open', willOpen);
+        ccBtn.classList.toggle('open', willOpen);
+        if (willOpen){ syncControlCenter(); if (window.wizardSound) window.wizardSound.tick(); }
+      });
+      document.addEventListener('click', (e) => {
+        if (!cc.contains(e.target) && e.target !== ccBtn){ cc.classList.remove('open'); ccBtn.classList.remove('open'); }
+      });
     }
   })();
 </script>
