@@ -494,6 +494,149 @@
       #ask-panel{ right: 16px; bottom: 94px; width: calc(100vw - 32px); }
       #ask-fab{ right: 18px; bottom: 18px; }
     }
+
+    /* ===================== CUSTOM CURSOR — ECOSYSTEM PAGE ===================== */
+    #page-ecosystem, #page-ecosystem *{
+      cursor: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='rotate(-20 16 16)'%3E%3Crect x='14' y='6' width='4' height='20' rx='2' fill='%238266f0' stroke='%230b0714' stroke-width='1'/%3E%3Ccircle cx='16' cy='6' r='5' fill='%23e8b657' stroke='%230b0714' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E") 6 6, auto;
+    }
+    #page-ecosystem a, #page-ecosystem button{
+      cursor: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 L18.5 12.5 L28 16 L18.5 19.5 L16 29 L13.5 19.5 L4 16 L13.5 12.5 Z' fill='%23e8b657' stroke='%230b0714' stroke-width='1'/%3E%3C/svg%3E") 16 16, pointer;
+    }
+
+    /* ===================== SOUND TOGGLE ===================== */
+    #sound-toggle.muted::after{ content:''; }
+
+    /* ===================== APP GRID FILTER CHIPS ===================== */
+    .app-filter-row{ display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+    .app-filter-chip{
+      font-family: var(--mono); font-size: 0.76rem; color: var(--ink-dim); background: var(--bg-panel);
+      border: 1px solid var(--line); padding: 7px 14px; border-radius: 999px; cursor: pointer;
+      transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+    .app-filter-chip:hover{ border-color: var(--gold-dim); color: var(--ink); transform: translateY(-1px); }
+    .app-filter-chip.active{ border-color: var(--violet); color: var(--ink); background: rgba(130,102,240,0.12); }
+    .app-card.filtered-out{ display: none; }
+
+    /* ===================== APP CARD FUN-FACT ===================== */
+    .app-funfact{
+      font-family: var(--mono); font-size: 0.74rem; color: var(--gold-dim); margin-top: 10px;
+      max-height: 0; opacity: 0; overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.16,1,0.3,1), opacity 0.3s ease, margin-top 0.35s ease;
+    }
+    .app-card:hover .app-funfact{ max-height: 60px; opacity: 1; }
+
+    /* ===================== COMMAND PALETTE ===================== */
+    #cmdk-overlay{
+      position: fixed; inset: 0; z-index: 800; background: rgba(5,3,8,0.7); backdrop-filter: blur(4px);
+      display: flex; align-items: flex-start; justify-content: center; padding-top: 14vh;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+    }
+    #cmdk-overlay.open{ opacity: 1; pointer-events: auto; }
+    #cmdk-box{
+      width: 560px; max-width: calc(100vw - 40px); border-radius: 12px; overflow: hidden;
+      background: var(--bg-panel); border: 1px solid var(--glass-border);
+      box-shadow: 0 40px 90px -20px rgba(0,0,0,0.7);
+      transform: translateY(-12px) scale(0.97); transition: transform 0.2s cubic-bezier(0.16,1,0.3,1);
+    }
+    #cmdk-overlay.open #cmdk-box{ transform: translateY(0) scale(1); }
+    #cmdk-input{
+      width: 100%; background: none; border: none; border-bottom: 1px solid var(--line);
+      padding: 18px 20px; color: var(--ink); font-family: var(--body); font-size: 1rem; outline: none;
+    }
+    #cmdk-results{ max-height: 360px; overflow-y: auto; padding: 8px; }
+    .cmdk-item{
+      display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 8px; cursor: pointer;
+      color: var(--ink-dim); font-size: 0.9rem;
+    }
+    .cmdk-item .cmdk-icon{ font-size: 1rem; width: 22px; text-align: center; flex-shrink: 0; }
+    .cmdk-item.active{ background: rgba(130,102,240,0.14); color: var(--ink); }
+    .cmdk-empty{ padding: 20px; text-align: center; color: var(--ink-dimmer); font-size: 0.85rem; }
+    .cmdk-hint{ font-family: var(--mono); font-size: 0.7rem; color: var(--ink-dimmer); padding: 10px 20px; border-top: 1px solid var(--line); }
+
+    /* ===================== GITHUB COMMIT TICKER ===================== */
+    #gh-ticker{ font-family: var(--mono); font-size: 0.72rem; color: var(--ink-dimmer); margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    #gh-ticker .gh-dot{ width: 6px; height: 6px; border-radius: 50%; background: #3fb950; box-shadow: 0 0 6px #3fb950; animation: hint-twinkle 1.6s ease-in-out infinite; }
+
+    /* ===================== MAC MODE ===================== */
+    body.mac-mode{ overflow: hidden; }
+    body.mac-mode header, body.mac-mode main, body.mac-mode footer,
+    body.mac-mode #ask-fab, body.mac-mode #ask-panel{ display: none !important; }
+    #mac-desktop{ display: none; }
+    body.mac-mode #mac-desktop{
+      display: block; position: fixed; inset: 0; z-index: 900; font-family: var(--body);
+      animation: fadein 0.3s ease;
+    }
+    #mac-wallpaper{
+      position: absolute; inset: 0; z-index: 0;
+      background: url('assets/mac.webp') center/cover no-repeat, radial-gradient(ellipse 80% 60% at 30% 20%, #3a2a63, #0b0714 70%);
+    }
+    #mac-menubar{
+      position: relative; z-index: 5; height: 26px; display: flex; align-items: center; gap: 16px;
+      padding: 0 14px; background: rgba(20,14,32,0.55); backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #f2eefb;
+    }
+    .mac-apple{ font-size: 0.85rem; }
+    .mac-menu-app{ font-weight: 600; }
+    .mac-menu-item{ opacity: 0.75; font-size: 0.78rem; }
+    .mac-menu-right{ margin-left: auto; display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 0.74rem; opacity: 0.9; }
+    #mac-icons{
+      position: absolute; top: 46px; right: 24px; z-index: 4; display: flex; flex-direction: column; gap: 18px;
+    }
+    .mac-desktop-icon{
+      background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
+      width: 74px; padding: 6px; border-radius: 8px; transition: background 0.15s ease;
+    }
+    .mac-desktop-icon:hover{ background: rgba(255,255,255,0.08); }
+    .mac-icon-glyph{ font-size: 1.8rem; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); }
+    .mac-desktop-icon span:last-child{ font-size: 0.72rem; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); text-align: center; }
+
+    .mac-window{
+      position: absolute; z-index: 10; width: min(720px, 88vw); max-height: 74vh;
+      background: rgba(22,16,34,0.92); backdrop-filter: blur(24px) saturate(160%);
+      border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 40px 90px -20px rgba(0,0,0,0.75);
+      display: none; flex-direction: column; overflow: hidden;
+      opacity: 0; transform: translate(-50%, -46%) scale(0.94);
+      top: 50%; left: 50%;
+      transition: opacity 0.22s cubic-bezier(0.16,1,0.3,1), transform 0.22s cubic-bezier(0.16,1,0.3,1);
+    }
+    .mac-window.open{ display: flex; opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .mac-window.maximized{ width: 92vw; max-height: 88vh; }
+    .mac-titlebar{
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0; cursor: default;
+    }
+    .mac-traffic{ display: flex; gap: 8px; }
+    .mac-dot{ width: 12px; height: 12px; border-radius: 50%; cursor: pointer; border: none; padding: 0; }
+    .mac-dot.red{ background: #ff5f57; } .mac-dot.yellow{ background: #febc2e; } .mac-dot.green{ background: #28c840; }
+    .mac-window-title{ margin: 0 auto; font-size: 0.82rem; color: var(--ink-dim); font-weight: 500; transform: translateX(-18px); }
+    .mac-window-body{ padding: 22px 26px; overflow-y: auto; color: var(--ink); }
+    .mac-window-body .section-title{ font-size: 1.4rem; }
+    .mac-window-body .app-grid{ grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .mac-window-body .proj-grid{ grid-template-columns: 1fr; }
+    .mac-window-body iframe{ min-height: 480px; }
+
+    #mac-about-header{ display: flex; align-items: center; gap: 18px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    #mac-about-header .mac-about-icon{ font-size: 3.2rem; }
+    #mac-about-header h3{ font-family: var(--display); font-size: 1.3rem; font-weight: 600; }
+    #mac-about-header p{ font-family: var(--mono); font-size: 0.76rem; color: var(--ink-dimmer); margin-top: 2px; }
+    #mac-about-spec .fact-row{ padding: 10px 0; }
+
+    #mac-dock{
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 6;
+      display: flex; align-items: flex-end; gap: 10px; padding: 8px 14px; border-radius: 18px;
+      background: rgba(30,22,46,0.55); backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px -12px rgba(0,0,0,0.6);
+    }
+    .mac-dock-icon{
+      width: 46px; height: 46px; border-radius: 11px; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center;
+      font-size: 1.35rem; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), background 0.2s ease;
+      text-decoration: none; color: inherit;
+    }
+    .mac-dock-icon:hover{ transform: translateY(-10px) scale(1.12); background: rgba(255,255,255,0.12); }
+    .mac-dock-divider{ width: 1px; align-self: stretch; background: rgba(255,255,255,0.15); margin: 4px 2px; }
   </style>
 </head>
 <body>
@@ -540,6 +683,119 @@
   </form>
 </div>
 
+<!-- ===================== COMMAND PALETTE ===================== -->
+<div id="cmdk-overlay">
+  <div id="cmdk-box">
+    <input id="cmdk-input" type="text" placeholder="Jump to a page or action..." autocomplete="off" />
+    <div id="cmdk-results"></div>
+    <div class="cmdk-hint">↑↓ navigate · ↵ select · esc close</div>
+  </div>
+</div>
+
+<!-- ===================== MAC MODE ===================== -->
+<div id="mac-desktop" aria-hidden="true">
+  <div id="mac-menubar">
+    <span class="mac-apple">🍎</span>
+    <span class="mac-menu-app">Finder</span>
+    <span class="mac-menu-item">File</span>
+    <span class="mac-menu-item">Edit</span>
+    <span class="mac-menu-item">View</span>
+    <span class="mac-menu-item">Go</span>
+    <span class="mac-menu-item">Window</span>
+    <span class="mac-menu-item">Help</span>
+    <div class="mac-menu-right"><span id="mac-clock"></span></div>
+  </div>
+  <div id="mac-wallpaper"></div>
+
+  <div id="mac-icons">
+    <button class="mac-desktop-icon" data-mac-window="about"><span class="mac-icon-glyph">👤</span><span>About This Guy</span></button>
+    <button class="mac-desktop-icon" data-mac-window="ecosystem"><span class="mac-icon-glyph">🧙</span><span>Wizard Ecosystem</span></button>
+    <button class="mac-desktop-icon" data-mac-window="projects"><span class="mac-icon-glyph">📁</span><span>Projects</span></button>
+    <button class="mac-desktop-icon" data-mac-window="skills"><span class="mac-icon-glyph">🛠️</span><span>Skills</span></button>
+    <button class="mac-desktop-icon" data-mac-window="contact"><span class="mac-icon-glyph">✉️</span><span>Contact</span></button>
+  </div>
+
+  <div class="mac-window" id="mac-window-about" data-title="About This Guy" style="width:min(600px,88vw);">
+    <div class="mac-titlebar">
+      <span class="mac-traffic">
+        <button class="mac-dot red" data-close></button>
+        <button class="mac-dot yellow" data-min></button>
+        <button class="mac-dot green" data-max></button>
+      </span>
+      <span class="mac-window-title">About This Guy</span>
+    </div>
+    <div class="mac-window-body">
+      <div id="mac-about-header">
+        <span class="mac-about-icon">🧙</span>
+        <div>
+          <h3>Arnav Gupta</h3>
+          <p>Kid OS 12 · Founder Edition</p>
+        </div>
+      </div>
+      <div id="mac-about-spec"></div>
+    </div>
+  </div>
+
+  <div class="mac-window" id="mac-window-ecosystem" data-title="Wizard Ecosystem">
+    <div class="mac-titlebar">
+      <span class="mac-traffic">
+        <button class="mac-dot red" data-close></button>
+        <button class="mac-dot yellow" data-min></button>
+        <button class="mac-dot green" data-max></button>
+      </span>
+      <span class="mac-window-title">Wizard Ecosystem</span>
+    </div>
+    <div class="mac-window-body" data-mac-clone="#page-ecosystem .app-grid"></div>
+  </div>
+
+  <div class="mac-window" id="mac-window-projects" data-title="Projects">
+    <div class="mac-titlebar">
+      <span class="mac-traffic">
+        <button class="mac-dot red" data-close></button>
+        <button class="mac-dot yellow" data-min></button>
+        <button class="mac-dot green" data-max></button>
+      </span>
+      <span class="mac-window-title">Projects</span>
+    </div>
+    <div class="mac-window-body" data-mac-clone="#page-projects .proj-grid"></div>
+  </div>
+
+  <div class="mac-window" id="mac-window-skills" data-title="Skills">
+    <div class="mac-titlebar">
+      <span class="mac-traffic">
+        <button class="mac-dot red" data-close></button>
+        <button class="mac-dot yellow" data-min></button>
+        <button class="mac-dot green" data-max></button>
+      </span>
+      <span class="mac-window-title">Skills</span>
+    </div>
+    <div class="mac-window-body" data-mac-clone="#page-skills .wrap"></div>
+  </div>
+
+  <div class="mac-window" id="mac-window-contact" data-title="Contact">
+    <div class="mac-titlebar">
+      <span class="mac-traffic">
+        <button class="mac-dot red" data-close></button>
+        <button class="mac-dot yellow" data-min></button>
+        <button class="mac-dot green" data-max></button>
+      </span>
+      <span class="mac-window-title">Contact</span>
+    </div>
+    <div class="mac-window-body" data-mac-clone="#page-contact .wrap"></div>
+  </div>
+
+  <div id="mac-dock">
+    <button class="mac-dock-icon" data-mac-window="about" title="About This Guy">👤</button>
+    <button class="mac-dock-icon" data-mac-window="ecosystem" title="Wizard Ecosystem">🧙</button>
+    <button class="mac-dock-icon" data-mac-window="projects" title="Projects">📁</button>
+    <button class="mac-dock-icon" data-mac-window="skills" title="Skills">🛠️</button>
+    <button class="mac-dock-icon" data-mac-window="contact" title="Contact">✉️</button>
+    <span class="mac-dock-divider"></span>
+    <a class="mac-dock-icon" href="https://github.com/ag-ultima" target="_blank" rel="noopener" title="GitHub">🐙</a>
+    <button class="mac-dock-icon" id="mac-exit" title="Exit Mac Mode">🚪</button>
+  </div>
+</div>
+
 <header>
   <nav>
     <button class="brand" data-page="home">
@@ -557,6 +813,8 @@
       <button data-page="contact">Contact</button>
       <button id="theme-toggle" class="icon-toggle" title="Toggle light/dark theme" aria-label="Toggle light/dark theme">🌙</button>
       <button id="motion-toggle" class="icon-toggle" title="Toggle animations" aria-label="Toggle animations">🎞️</button>
+      <button id="sound-toggle" class="icon-toggle" title="Toggle sound effects" aria-label="Toggle sound effects">🔊</button>
+      <button id="mac-toggle" class="icon-toggle" title="Enter Mac mode" aria-label="Enter Mac mode">💻</button>
       <a href="https://wizardecosystem.dev/CV_Arnav_Gupta.pdf" class="nav-cta" target="_blank" rel="noopener">Resume</a>
     </div>
   </nav>
@@ -728,6 +986,7 @@
         <div class="gh-graph-card glass-panel reveal">
           <img src="https://ghchart.rshah.org/8266f0/ag-ultima" alt="Arnav Gupta's GitHub contribution graph" loading="lazy" class="gh-graph-img">
           <a href="https://github.com/ag-ultima" target="_blank" rel="noopener" class="gh-graph-link">View full activity on GitHub →</a>
+          <div id="gh-ticker"></div>
         </div>
       </div>
     </section>
@@ -761,131 +1020,152 @@
           <a href="https://wizardecosystem.dev" class="btn btn-primary" target="_blank" rel="noopener">Launch Wizard Ecosystem →</a>
         </div>
 
+        <div class="app-filter-row reveal">
+          <button class="app-filter-chip active" data-filter="all">All 14</button>
+          <button class="app-filter-chip" data-filter="ai">AI</button>
+          <button class="app-filter-chip" data-filter="desktop">Desktop</button>
+          <button class="app-filter-chip" data-filter="productivity">Productivity</button>
+          <button class="app-filter-chip" data-filter="safety">Safety</button>
+        </div>
         <div class="app-grid reveal-stagger">
 
-          <div class="app-card glass-panel glass-stagger-1">
+          <div class="app-card glass-panel glass-stagger-1" data-tags="ai productivity">
             <div class="app-shot"><img src="assets/wizard-ai.webp" alt="Wizard AI chat interface with JARVIS personality active" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">🧠</span>
             <div class="app-name">Wizard AI</div>
             <div class="app-desc">Multi-agent assistant with seven personalities, a document RAG pipeline for PDFs, spreadsheets, and code files, and nine agent types you can chain into custom workflows.</div>
             <div class="app-tags"><span class="tag">Flask</span><span class="tag">Groq / Llama 4</span><span class="tag">SSE</span></div>
+            <div class="app-funfact">✦ Has seven personalities. I only have one, and it's tired.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-2">
+          <div class="app-card glass-panel glass-stagger-2" data-tags="productivity">
             <div class="app-shot"><img src="assets/wizard-notes.webp" alt="Wizard Notes editor with AI editing panel" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">📝</span>
             <div class="app-name">Wizard Notes</div>
             <div class="app-desc">AI-powered note-taking with a full editing suite — grammar fix, summarize, format, translate, and expand — plus real-time sharing and permissions.</div>
             <div class="app-tags"><span class="tag">SQLite</span><span class="tag">Auto-save</span><span class="tag">Sharing</span></div>
+            <div class="app-funfact">✦ Better at grammar than my English teacher.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-3">
+          <div class="app-card glass-panel glass-stagger-3" data-tags="desktop productivity">
             <div class="app-shot"><img src="assets/wizard-autopilot.webp" alt="Wizard Autopilot executing a natural-language command" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">🤖</span>
             <div class="app-name">Wizard Autopilot</div>
             <div class="app-desc">Full computer automation from plain-language commands — cursor control, typing, screenshots, and file creation across Windows, macOS, and Linux.</div>
             <div class="app-tags"><span class="tag">Electron</span><span class="tag">PowerShell</span><span class="tag">xdotool</span></div>
+            <div class="app-funfact">✦ Controls the mouse better than I control my sleep schedule.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-4">
+          <div class="app-card glass-panel glass-stagger-4" data-tags="desktop">
             <div class="app-shot"><img src="assets/wizard-browser.webp" alt="Wizard Browser with Work workspace and multiple tabs open" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">🌐</span>
             <div class="app-name">Wizard Browser</div>
             <div class="app-desc">A desktop browser with multi-tab workspaces, a built-in password manager, and an ad blocker — Default, Work, School, and Media profiles.</div>
             <div class="app-tags"><span class="tag">Electron</span><span class="tag">Node.js</span></div>
+            <div class="app-funfact">✦ Blocks more ads than I block distractions during homework.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-5">
+          <div class="app-card glass-panel glass-stagger-5" data-tags="ai">
             <div class="app-peek-hint app-peek-pending">Preview coming soon</div>
             <span class="app-icon">🔍</span>
             <div class="app-name">Wizard Search</div>
             <div class="app-desc">An AI-powered search engine with live autocomplete and a short, AI-generated topic summary for every query.</div>
             <div class="app-tags"><span class="tag">DuckDuckGo</span><span class="tag">Llama 4</span></div>
+            <div class="app-funfact">✦ Answers faster than I do when called on in class.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-6">
+          <div class="app-card glass-panel glass-stagger-6" data-tags="productivity">
             <div class="app-shot"><img src="assets/wizard-mail.webp" alt="Wizard Mail inbox showing a hackathon acceptance email" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">📧</span>
             <div class="app-name">Wizard Mail</div>
             <div class="app-desc">A full email client over IMAP/SMTP with threaded replies, folder sync, and instant @wizardecosystem.dev address provisioning.</div>
             <div class="app-tags"><span class="tag">IMAP</span><span class="tag">Cloudflare</span></div>
+            <div class="app-funfact">✦ Replies to email faster than most adults I know.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-7">
+          <div class="app-card glass-panel glass-stagger-7" data-tags="productivity">
             <div class="app-shot"><img src="assets/wizard-calendar.webp" alt="Wizard Calendar month view with color-coded events" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">📅</span>
             <div class="app-name">Wizard Calendar</div>
             <div class="app-desc">Month and week views with color-coded events and overlap detection, synced to your Wizard profile across every app.</div>
             <div class="app-tags"><span class="tag">SQLite</span><span class="tag">JS dates</span></div>
+            <div class="app-funfact">✦ Never double-books. Unlike my actual schedule.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-8">
+          <div class="app-card glass-panel glass-stagger-8" data-tags="productivity">
             <div class="app-shot"><img src="assets/wizard-chat.webp" alt="Wizard Chat conversation view with contact list" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">💬</span>
             <div class="app-name">Wizard Chat</div>
             <div class="app-desc">Real-time messaging with typing indicators and read receipts, built on a lightweight, tab-focus-aware polling architecture.</div>
             <div class="app-tags"><span class="tag">SQLite</span><span class="tag">Polling</span></div>
+            <div class="app-funfact">✦ Shows read receipts I never send back to my own friends.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-9">
+          <div class="app-card glass-panel glass-stagger-9" data-tags="ai productivity">
             <div class="app-shot"><img src="assets/wizard-finance.webp" alt="Wizard Finance dashboard with income/expense charts" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">💰</span>
             <div class="app-name">Wizard Finance</div>
             <div class="app-desc">AI-powered personal finance manager with income/expense tracking, budgeting, savings goals, and receipt scanning via camera capture.</div>
             <div class="app-tags"><span class="tag">Chart.js</span><span class="tag">AI Receipts</span></div>
+            <div class="app-funfact">✦ Better at budgeting than my allowance suggests I am.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-1">
+          <div class="app-card glass-panel glass-stagger-1" data-tags="safety">
             <div class="app-shot"><img src="assets/wizard-heat.webp" alt="Wizard Heat extreme weather dashboard" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">🌡️</span>
             <div class="app-name">Wizard Heat</div>
             <div class="app-desc">Extreme weather and hydration assistant — real-time heat risk, UV index, 5-day forecast, cooling center locator, and activity safety advisor.</div>
             <div class="app-tags"><span class="tag">Weather API</span><span class="tag">Hydration</span></div>
+            <div class="app-funfact">✦ Cares more about your hydration than you probably do.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-2">
+          <div class="app-card glass-panel glass-stagger-2" data-tags="ai safety">
             <div class="app-shot"><img src="assets/wizard-firewatch.webp" alt="FireWatch AI wildfire dashboard" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">🔥</span>
             <div class="app-name">FireWatch AI</div>
             <div class="app-desc">Real-time wildfire detection aggregating NASA FIRMS, InciWeb, and NWS Alerts with fire-risk meter, active fire tracking, and evacuation suggestions.</div>
             <div class="app-tags"><span class="tag">NASA FIRMS</span><span class="tag">AI Alerts</span></div>
+            <div class="app-funfact">✦ Keeps an eye on wildfires so you don't have to squint at the news.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-3">
+          <div class="app-card glass-panel glass-stagger-3" data-tags="ai safety">
             <div class="app-shot"><img src="assets/wizard-nature.webp" alt="Wizard Nature desert survival companion" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">🌵</span>
             <div class="app-name">Wizard Nature</div>
             <div class="app-desc">Desert survival and wildlife companion — cactus tracker, AI photo ID for snakes and plants, sunset forecast, wildflower alerts, and camping guide.</div>
             <div class="app-tags"><span class="tag">Vision AI</span><span class="tag">Geolocation</span></div>
+            <div class="app-funfact">✦ Can ID a rattlesnake faster than I can tie my shoes.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-4">
+          <div class="app-card glass-panel glass-stagger-4" data-tags="desktop productivity">
             <div class="app-shot"><img src="assets/wizard-code.webp" alt="Wizard Code desktop editor" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">🧙</span>
             <div class="app-name">Wizard Code</div>
             <div class="app-desc">Electron-based IDE with Monaco editor, AI chat, ghost-text completions, agent mode, real diagnostics, Git integration, and live preview.</div>
             <div class="app-tags"><span class="tag">Monaco</span><span class="tag">Electron</span><span class="tag">Git</span></div>
+            <div class="app-funfact">✦ Writes cleaner code than my school notebook looks.</div>
           </div>
 
-          <div class="app-card glass-panel glass-stagger-5">
+          <div class="app-card glass-panel glass-stagger-5" data-tags="ai desktop">
             <div class="app-shot"><img src="assets/wizard-api.webp" alt="Developer Hub API keys dashboard" loading="lazy"></div>
             <div class="app-peek-hint">Hover to preview</div>
             <span class="app-icon">💻</span>
             <div class="app-name">Developer Hub &amp; API</div>
             <div class="app-desc">OpenAI-compatible REST API with bearer-token authentication, published as a Python SDK on PyPI — <code>wizard-ai-pro</code>.</div>
             <div class="app-tags"><span class="tag">REST</span><span class="tag">PyPI</span></div>
+            <div class="app-funfact">✦ The only "employee" here who never asks for a day off.</div>
           </div>
 
         </div>
@@ -1287,6 +1567,7 @@
 
     <footer>
       <div class="footer-bottom">© 2026 Arnav Gupta · Built with vanilla HTML, CSS &amp; JS · no template, no framework, no adults in the codebase</div>
+      <div id="gh-ticker-footer" class="footer-bottom" style="margin-top: 6px;"></div>
     </footer>
   </div>
 
@@ -1858,6 +2139,318 @@
       requestAnimationFrame(tick);
     }
     tick();
+  })();
+
+  // ============================================================
+  // SOUND EFFECTS — Web Audio API, no assets, toggle in nav
+  // ============================================================
+  (function(){
+    const btn = document.getElementById('sound-toggle');
+    let enabled = localStorage.getItem('sound') !== 'off'; // default ON
+    let ctx = null;
+
+    function ensureCtx(){
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+
+    function tone(freq, dur, type, gainPeak, delay){
+      if (!enabled) return;
+      try{
+        const c = ensureCtx();
+        const t0 = c.currentTime + (delay || 0);
+        const osc = c.createOscillator();
+        const gain = c.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, t0);
+        gain.gain.setValueAtTime(0, t0);
+        gain.gain.linearRampToValueAtTime(gainPeak || 0.06, t0 + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        osc.connect(gain).connect(c.destination);
+        osc.start(t0);
+        osc.stop(t0 + dur + 0.02);
+      } catch(e){ /* audio unavailable, fail silent */ }
+    }
+
+    window.wizardSound = {
+      tick(){ tone(920, 0.07, 'sine', 0.05); },
+      whoosh(){
+        if (!enabled) return;
+        try{
+          const c = ensureCtx();
+          const t0 = c.currentTime;
+          const osc = c.createOscillator();
+          const gain = c.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, t0);
+          osc.frequency.exponentialRampToValueAtTime(720, t0 + 0.22);
+          gain.gain.setValueAtTime(0, t0);
+          gain.gain.linearRampToValueAtTime(0.045, t0 + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.28);
+          osc.connect(gain).connect(c.destination);
+          osc.start(t0); osc.stop(t0 + 0.3);
+        } catch(e){}
+      },
+      chime(){ tone(660, 0.18, 'sine', 0.06, 0); tone(880, 0.22, 'sine', 0.05, 0.09); }
+    };
+
+    function updateIcon(){ btn.textContent = enabled ? '🔊' : '🔇'; }
+    updateIcon();
+
+    btn.addEventListener('click', () => {
+      enabled = !enabled;
+      localStorage.setItem('sound', enabled ? 'on' : 'off');
+      updateIcon();
+      if (enabled){ ensureCtx(); window.wizardSound.tick(); }
+    });
+
+    // tick on any page-nav click
+    document.querySelectorAll('[data-page]').forEach(el => {
+      el.addEventListener('click', () => window.wizardSound.tick());
+    });
+
+    // whoosh whenever the portal-flash actually fires
+    const flash = document.getElementById('portal-flash');
+    if (flash){
+      new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+          if (m.attributeName === 'class' && flash.classList.contains('firing')){
+            window.wizardSound.whoosh();
+          }
+        });
+      }).observe(flash, { attributes: true });
+    }
+
+    // chime whenever the ask-bot adds a reply
+    const askMessages = document.getElementById('ask-messages');
+    if (askMessages){
+      new MutationObserver((mutations) => {
+        mutations.forEach(m => {
+          m.addedNodes.forEach(node => {
+            if (node.nodeType === 1 && node.classList.contains('bot') && !node.classList.contains('typing')){
+              window.wizardSound.chime();
+            }
+          });
+        });
+      }).observe(askMessages, { childList: true });
+    }
+  })();
+
+  // ============================================================
+  // APP GRID — filter chips
+  // ============================================================
+  (function(){
+    const chips = document.querySelectorAll('.app-filter-chip');
+    const cards = document.querySelectorAll('#page-ecosystem .app-card');
+    if (!chips.length) return;
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const filter = chip.dataset.filter;
+        cards.forEach(card => {
+          const tags = (card.dataset.tags || '').split(' ');
+          card.classList.toggle('filtered-out', filter !== 'all' && !tags.includes(filter));
+        });
+      });
+    });
+  })();
+
+  // ============================================================
+  // GITHUB COMMIT TICKER
+  // ============================================================
+  (function(){
+    const targets = [document.getElementById('gh-ticker'), document.getElementById('gh-ticker-footer')];
+    if (!targets.some(Boolean)) return;
+
+    function relTime(iso){
+      const diffMs = Date.now() - new Date(iso).getTime();
+      const mins = Math.floor(diffMs / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + 'm ago';
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + 'h ago';
+      const days = Math.floor(hrs / 24);
+      return days + 'd ago';
+    }
+
+    fetch('https://api.github.com/users/ag-ultima/events/public')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(events => {
+        const push = events.find(e => e.type === 'PushEvent') || events[0];
+        if (!push) return;
+        const label = 'Last commit: ' + relTime(push.created_at);
+        const dot = '<span class="gh-dot"></span>';
+        targets.forEach(t => { if (t) t.innerHTML = dot + label; });
+      })
+      .catch(() => { targets.forEach(t => { if (t) t.textContent = ''; }); });
+  })();
+
+  // ============================================================
+  // COMMAND PALETTE (⌘K / Ctrl+K)
+  // ============================================================
+  (function(){
+    const overlay = document.getElementById('cmdk-overlay');
+    const input = document.getElementById('cmdk-input');
+    const results = document.getElementById('cmdk-results');
+    if (!overlay) return;
+
+    const items = [
+      { icon: '🏠', label: 'Home', action: () => { location.hash = '#home'; } },
+      { icon: '👤', label: 'About', action: () => { location.hash = '#about'; } },
+      { icon: '🧙', label: 'Wizard Ecosystem', action: () => { location.hash = '#ecosystem'; } },
+      { icon: '📁', label: 'Projects', action: () => { location.hash = '#projects'; } },
+      { icon: '🛠️', label: 'Skills', action: () => { location.hash = '#skills'; } },
+      { icon: '✉️', label: 'Contact', action: () => { location.hash = '#contact'; } },
+      { icon: '✨', label: 'Ask about Arnav', action: () => { document.getElementById('ask-fab').click(); } },
+      { icon: '🌗', label: 'Toggle light/dark theme', action: () => { document.getElementById('theme-toggle').click(); } },
+      { icon: '🎞️', label: 'Toggle animations', action: () => { document.getElementById('motion-toggle').click(); } },
+      { icon: '🔊', label: 'Toggle sound effects', action: () => { document.getElementById('sound-toggle').click(); } },
+      { icon: '💻', label: 'Enter Mac mode', action: () => { document.getElementById('mac-toggle').click(); } },
+      { icon: '🐙', label: 'Open GitHub', action: () => { window.open('https://github.com/ag-ultima', '_blank'); } },
+      { icon: '📄', label: 'Open Resume', action: () => { window.open('https://wizardecosystem.dev/CV_Arnav_Gupta.pdf', '_blank'); } },
+    ];
+
+    let activeIndex = 0;
+    let filtered = items;
+
+    function render(){
+      results.innerHTML = '';
+      if (!filtered.length){
+        results.innerHTML = '<div class="cmdk-empty">No matches</div>';
+        return;
+      }
+      filtered.forEach((item, i) => {
+        const el = document.createElement('div');
+        el.className = 'cmdk-item' + (i === activeIndex ? ' active' : '');
+        el.innerHTML = `<span class="cmdk-icon">${item.icon}</span><span>${item.label}</span>`;
+        el.addEventListener('click', () => { item.action(); close(); });
+        results.appendChild(el);
+      });
+    }
+
+    function open(){
+      overlay.classList.add('open');
+      input.value = '';
+      filtered = items;
+      activeIndex = 0;
+      render();
+      setTimeout(() => input.focus(), 50);
+      if (window.wizardSound) window.wizardSound.tick();
+    }
+
+    function close(){
+      overlay.classList.remove('open');
+    }
+
+    input.addEventListener('input', () => {
+      const q = input.value.toLowerCase();
+      filtered = items.filter(i => i.label.toLowerCase().includes(q));
+      activeIndex = 0;
+      render();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
+        e.preventDefault();
+        overlay.classList.contains('open') ? close() : open();
+        return;
+      }
+      if (!overlay.classList.contains('open')) return;
+      if (e.key === 'Escape'){ close(); }
+      else if (e.key === 'ArrowDown'){ e.preventDefault(); activeIndex = Math.min(activeIndex + 1, filtered.length - 1); render(); }
+      else if (e.key === 'ArrowUp'){ e.preventDefault(); activeIndex = Math.max(activeIndex - 1, 0); render(); }
+      else if (e.key === 'Enter'){ e.preventDefault(); if (filtered[activeIndex]){ filtered[activeIndex].action(); close(); } }
+    });
+
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  })();
+
+  // ============================================================
+  // MAC MODE
+  // ============================================================
+  (function(){
+    const toggleBtn = document.getElementById('mac-toggle');
+    const exitBtn = document.getElementById('mac-exit');
+    const desktop = document.getElementById('mac-desktop');
+    if (!toggleBtn || !desktop) return;
+
+    let cloned = false;
+
+    function cloneContentOnce(){
+      if (cloned) return;
+      cloned = true;
+
+      // About This Guy — clone the real Quick Facts rows
+      const specHost = document.getElementById('mac-about-spec');
+      const factRows = document.querySelectorAll('.about-card .fact-row');
+      factRows.forEach(row => specHost.appendChild(row.cloneNode(true)));
+
+      // Everything else — clone real page content, verbatim, into its window
+      document.querySelectorAll('.mac-window-body[data-mac-clone]').forEach(body => {
+        const selectors = body.dataset.macClone.split(',').map(s => s.trim());
+        selectors.forEach(sel => {
+          const src = document.querySelector(sel);
+          if (src){
+            const clone = src.cloneNode(true);
+            clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id')); // avoid duplicate ids
+            body.appendChild(clone);
+          }
+        });
+      });
+    }
+
+    function openWindow(id){
+      const win = document.getElementById('mac-window-' + id);
+      if (!win) return;
+      document.querySelectorAll('.mac-window.open').forEach(w => { if (w !== win) w.style.zIndex = 10; });
+      win.classList.add('open');
+      win.style.zIndex = 20;
+      if (window.wizardSound) window.wizardSound.whoosh();
+    }
+    window.openMacWindow = openWindow;
+
+    document.querySelectorAll('[data-mac-window]').forEach(el => {
+      el.addEventListener('click', () => openWindow(el.dataset.macWindow));
+    });
+
+    document.querySelectorAll('.mac-window').forEach(win => {
+      win.querySelector('[data-close]').addEventListener('click', () => win.classList.remove('open'));
+      win.querySelector('[data-min]').addEventListener('click', () => win.classList.remove('open'));
+      win.querySelector('[data-max]').addEventListener('click', () => win.classList.toggle('maximized'));
+    });
+
+    function enterMac(){
+      cloneContentOnce();
+      document.body.classList.add('mac-mode');
+      desktop.setAttribute('aria-hidden', 'false');
+      if (window.wizardSound) window.wizardSound.whoosh();
+    }
+    function exitMac(){
+      document.body.classList.remove('mac-mode');
+      desktop.setAttribute('aria-hidden', 'true');
+      document.querySelectorAll('.mac-window.open').forEach(w => w.classList.remove('open'));
+      if (window.wizardSound) window.wizardSound.tick();
+    }
+
+    toggleBtn.addEventListener('click', enterMac);
+    if (exitBtn) exitBtn.addEventListener('click', exitMac);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.classList.contains('mac-mode')) exitMac();
+    });
+
+    // live menu-bar clock
+    const clockEl = document.getElementById('mac-clock');
+    if (clockEl){
+      function tickClock(){
+        clockEl.textContent = new Date().toLocaleString('en-US', {
+          weekday: 'short', hour: 'numeric', minute: '2-digit'
+        });
+      }
+      tickClock();
+      setInterval(tickClock, 15000);
+    }
   })();
 </script>
 
