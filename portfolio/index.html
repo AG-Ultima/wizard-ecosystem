@@ -131,6 +131,10 @@
     .trust-badge-score{ display: flex; align-items: baseline; gap: 2px; font-family: var(--display); font-weight: 600; font-size: 1.1rem; color: var(--gold); background: rgba(232,182,87,0.1); padding: 6px 12px; border-radius: 999px; }
     .trust-badge-score span{ font-size: 0.72rem; color: var(--ink-dimmer); font-weight: 500; }
     .trust-badge-text{ font-family: var(--mono); font-size: 0.78rem; color: var(--ink-dim); }
+    .fun-badge{
+      margin-top: 16px; font-family: var(--mono); font-size: 0.76rem; color: var(--ink-dimmer);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
     .teaser-head{ text-align: center; margin-bottom: 28px; }
     .teaser-label{ font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-dimmer); }
     .app-teaser-strip{ display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
@@ -552,7 +556,7 @@
       <button data-page="skills">Skills</button>
       <button data-page="contact">Contact</button>
       <button id="theme-toggle" class="icon-toggle" title="Toggle light/dark theme" aria-label="Toggle light/dark theme">🌙</button>
-      <button id="motion-toggle" class="icon-toggle" title="Toggle animations" aria-label="Toggle animations">✨</button>
+      <button id="motion-toggle" class="icon-toggle" title="Toggle animations" aria-label="Toggle animations">🎞️</button>
       <a href="https://wizardecosystem.dev/CV_Arnav_Gupta.pdf" class="nav-cta" target="_blank" rel="noopener">Resume</a>
     </div>
   </nav>
@@ -569,9 +573,9 @@
         <circle cx="320" cy="320" r="230" stroke="#8266f0" stroke-width="0.5" opacity="0.25"/>
       </svg>
       <div class="hero-inner">
-        <div class="eyebrow">AI Engineer · Founder of Wizard Ecosystem</div>
+        <div class="eyebrow">12 Years Old · Founder of Wizard Ecosystem</div>
         <h1 class="hero-title">Arnav Gupta &mdash; <em><span id="type-target"></span><span class="type-cursor">|</span></em></h1>
-        <p class="hero-sub"><strong>Wizard Ecosystem</strong> replaces fourteen separate tools with one platform — live today, built and deployed without a team. I ship production AI, not just demos.</p>
+        <p class="hero-sub"><strong>Wizard Ecosystem</strong> replaces fourteen separate tools with one platform — live today, built and deployed without a team, without a bootcamp, and without being old enough to drive to a job interview.</p>
         <div class="hero-ctas">
           <a href="https://wizardecosystem.dev" class="btn btn-primary" target="_blank" rel="noopener">Explore Wizard Ecosystem →</a>
           <a href="https://github.com/ag-ultima" class="btn btn-secondary" target="_blank" rel="noopener">View GitHub</a>
@@ -580,6 +584,7 @@
           <span class="trust-badge-score">38.5<span>/39</span></span>
           <span class="trust-badge-text">Independently evaluated by ProofOfUsefulness.com →</span>
         </a>
+        <div class="fun-badge reveal">🎒 Turns in homework and pull requests the same week.</div>
       </div>
     </section>
 
@@ -624,7 +629,7 @@
         <div class="section-head reveal">
           <div class="section-eyebrow">A Different Kind of Portfolio</div>
           <h2 class="section-title">Not a resume. A <em>working platform</em>.</h2>
-          <p class="section-lede">You won't find a bullet point here that says "familiar with Python." You'll find a live login screen, a public API with real keys issued to real requests, and a database that's been running since March without anyone but me to fix it when it breaks.</p>
+          <p class="section-lede">You won't find a bullet point here that says "familiar with Python." You'll find a live login screen, a public API with real keys issued to real requests, and a database that's been running since March without anyone but me to fix it when it breaks. Most 12-year-olds' resumes list a lemonade stand. Mine lists uptime.</p>
         </div>
         <div class="hero-ctas" style="justify-content:flex-start;">
           <button class="btn btn-gold-outline" data-page="about">Read my story →</button>
@@ -941,7 +946,7 @@
 
               <rect x="520" y="264" width="200" height="70" rx="10" fill="#161022" stroke="#e8b657" stroke-opacity="0.6"/>
               <text x="620" y="292" text-anchor="middle" font-family="Fraunces, serif" font-size="14" font-weight="600" fill="#ede6f7">Deployment</text>
-              <text x="620" y="310" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#9d8fb9">GitHub Pages · Electron · PythonAnywhere</text>
+              <text x="620" y="310" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" fill="#9d8fb8">GitHub Pages · Electron · PythonAnywhere</text>
             </svg>
           </div>
 
@@ -1281,7 +1286,7 @@
     </section>
 
     <footer>
-      <div class="footer-bottom">© 2026 Arnav Gupta · Built with vanilla HTML, CSS &amp; JS</div>
+      <div class="footer-bottom">© 2026 Arnav Gupta · Built with vanilla HTML, CSS &amp; JS · no template, no framework, no adults in the codebase</div>
     </footer>
   </div>
 
@@ -1591,7 +1596,20 @@
       opened = false;
     }
 
-    fab.addEventListener('click', () => opened ? closePanel() : openPanel());
+    fab.addEventListener('click', (e) => {
+      const flash = document.getElementById('portal-flash');
+      const motionOff = document.documentElement.dataset.motion === 'off' ||
+        (window.matchMedia('(prefers-reduced-motion: reduce)').matches && document.documentElement.dataset.motion !== 'on');
+      if (flash && !motionOff && !opened){
+        const r = fab.getBoundingClientRect();
+        flash.style.left = (r.left + r.width / 2) + 'px';
+        flash.style.top = (r.top + r.height / 2) + 'px';
+        flash.classList.remove('firing');
+        void flash.offsetWidth;
+        flash.classList.add('firing');
+      }
+      opened ? closePanel() : openPanel();
+    });
     closeBtn.addEventListener('click', closePanel);
 
     document.addEventListener('keydown', (e) => {
@@ -1704,7 +1722,7 @@
   (function(){
     const el = document.getElementById('type-target');
     if (!el) return;
-    const phrases = ['AI Engineer.', 'Founder.', 'Black Belt.', 'Math Competitor.', 'Builder.'];
+    const phrases = ['AI Engineer.', 'Founder.', 'Black Belt.', 'Math Competitor.', '8th Grader.', 'Builder.'];
     const motionOff = () => document.documentElement.dataset.motion === 'off' ||
       (window.matchMedia('(prefers-reduced-motion: reduce)').matches && document.documentElement.dataset.motion !== 'on');
 
@@ -1782,7 +1800,7 @@
     function updateIcon(){
       const isOff = html.dataset.motion === 'off' ||
         (!html.dataset.motion && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-      btn.textContent = isOff ? '🚫' : '✨';
+      btn.textContent = isOff ? '🚫' : '🎞️';
       btn.title = isOff ? 'Animations off — click to enable' : 'Animations on — click to disable';
     }
   })();
