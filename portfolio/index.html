@@ -719,8 +719,11 @@
     .mac-titlebar{
       display: flex; align-items: center; gap: 12px; padding: 10px 14px;
       background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.08);
-      flex-shrink: 0; cursor: default;
+      flex-shrink: 0; cursor: grab; touch-action: none;
     }
+    .mac-titlebar:active{ cursor: grabbing; }
+    .mac-window.dragging{ transition: none !important; user-select: none; }
+    .mac-window.dragging{ box-shadow: 0 50px 110px -20px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.16); }
     .mac-traffic{ display: flex; gap: 8px; }
     .mac-dot{ width: 12px; height: 12px; border-radius: 50%; cursor: pointer; border: none; padding: 0; position: relative; }
     .mac-dot::after{
@@ -2859,6 +2862,58 @@
       win.querySelector('[data-close]').addEventListener('click', () => win.classList.remove('open'));
       win.querySelector('[data-min]').addEventListener('click', () => win.classList.remove('open'));
       win.querySelector('[data-max]').addEventListener('click', () => win.classList.toggle('maximized'));
+    });
+
+    // ---- real window drag physics ----
+    document.querySelectorAll('.mac-window').forEach(win => {
+      const titlebar = win.querySelector('.mac-titlebar');
+      let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+      function bringToFront(){
+        document.querySelectorAll('.mac-window.open').forEach(w => { if (w !== win) w.style.zIndex = 10; });
+        win.style.zIndex = 20;
+      }
+
+      titlebar.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('.mac-dot')) return; // don't drag when clicking traffic lights
+        bringToFront();
+        dragging = true;
+        titlebar.setPointerCapture(e.pointerId);
+
+        // first drag: convert from centered transform to explicit pixel position
+        const rect = win.getBoundingClientRect();
+        if (!win.dataset.dragged){
+          win.style.left = rect.left + 'px';
+          win.style.top = rect.top + 'px';
+          win.style.transform = 'none';
+          win.dataset.dragged = 'true';
+        }
+        startX = e.clientX; startY = e.clientY;
+        startLeft = rect.left; startTop = rect.top;
+        win.classList.add('dragging');
+        document.body.style.userSelect = 'none';
+      });
+
+      titlebar.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        let newLeft = startLeft + dx, newTop = startTop + dy;
+        // keep at least 60px of titlebar within the viewport (below the menu bar)
+        newLeft = Math.max(-win.offsetWidth + 100, Math.min(newLeft, window.innerWidth - 100));
+        newTop = Math.max(26, Math.min(newTop, window.innerHeight - 40));
+        win.style.left = newLeft + 'px';
+        win.style.top = newTop + 'px';
+      });
+
+      function endDrag(e){
+        if (!dragging) return;
+        dragging = false;
+        win.classList.remove('dragging');
+        document.body.style.userSelect = '';
+        try{ titlebar.releasePointerCapture(e.pointerId); } catch(err){}
+      }
+      titlebar.addEventListener('pointerup', endDrag);
+      titlebar.addEventListener('pointercancel', endDrag);
     });
 
     function enterMac(){
