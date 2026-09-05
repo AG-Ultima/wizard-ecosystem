@@ -582,30 +582,29 @@
     }
     #mac-menubar{
       position: relative; z-index: 30; height: 26px; display: flex; align-items: center; gap: 2px;
-      padding: 0 10px; background: rgba(28,28,32,0.42); backdrop-filter: blur(28px) saturate(220%);
-      border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.8rem; color: #f5f5f7;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+      padding: 0 10px; background: transparent; backdrop-filter: blur(22px) saturate(180%);
+      font-size: 0.8rem; color: #f5f5f7; text-shadow: 0 1px 2px rgba(0,0,0,0.35);
     }
     .mac-menu-group{ position: relative; }
     .mac-menu-btn{
-      background: none; border: none; color: #f5f5f7; font-size: 0.8rem; padding: 3px 9px; border-radius: 4px;
+      background: none; border: none; color: #f5f5f7; font-size: 0.8rem; padding: 3px 9px; border-radius: 5px;
       cursor: default; font-family: -apple-system, sans-serif;
     }
     .mac-apple{ font-size: 0.85rem; }
     .mac-menu-app{ font-weight: 700; }
-    .mac-menu-group.open .mac-menu-btn, .mac-menu-btn:hover{ background: rgba(255,255,255,0.14); }
+    .mac-menu-group.open .mac-menu-btn, .mac-menu-btn:hover{ background: rgba(255,255,255,0.16); }
     .mac-dropdown{
       position: absolute; top: 26px; left: 0; min-width: 210px; z-index: 40;
-      background: rgba(40,40,44,0.6); backdrop-filter: blur(30px) saturate(220%);
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 5px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.16);
-      opacity: 0; transform: translateY(-4px); pointer-events: none;
-      transition: opacity 0.12s ease, transform 0.12s ease;
+      background: rgba(50,50,54,0.55); backdrop-filter: blur(34px) saturate(200%);
+      border: 0.5px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 5px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.14);
+      opacity: 0; transform: translateY(-4px) scale(0.98); transform-origin: top left; pointer-events: none;
+      transition: opacity 0.14s cubic-bezier(0.16,1,0.3,1), transform 0.14s cubic-bezier(0.16,1,0.3,1);
     }
-    .mac-menu-group.open .mac-dropdown{ opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .mac-menu-group.open .mac-dropdown{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
     .mac-dropdown button{
       display: block; width: 100%; text-align: left; background: none; border: none; color: #f5f5f7;
-      font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 6px 10px; border-radius: 5px; cursor: pointer;
+      font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 6px 10px; border-radius: 6px; cursor: pointer;
     }
     .mac-dropdown button:hover{ background: #0a84ff; color: #fff; }
     .mac-dropdown hr{ border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 4px 2px; }
@@ -613,45 +612,69 @@
     .mac-menu-right span{ opacity: 0.9; font-size: 0.85rem; }
     #mac-control-center-btn{
       background: none; border: none; color: #f5f5f7; font-size: 0.95rem; cursor: pointer;
-      width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
     }
-    #mac-control-center-btn:hover, #mac-control-center-btn.open{ background: rgba(255,255,255,0.14); }
+    #mac-control-center-btn:hover, #mac-control-center-btn.open{ background: rgba(255,255,255,0.16); }
+
+    /* ---- Control Center: real Apple grid-of-tiles layout ---- */
     #mac-control-center{
-      position: absolute; top: 32px; right: 8px; width: 230px; z-index: 40;
-      background: rgba(40,40,44,0.6); backdrop-filter: blur(30px) saturate(220%);
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 12px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.18);
-      opacity: 0; transform: translateY(-6px) scale(0.97); pointer-events: none;
-      transition: opacity 0.15s ease, transform 0.15s ease;
+      position: absolute; top: 32px; right: 8px; width: 250px; z-index: 40;
+      background: rgba(50,50,54,0.55); backdrop-filter: blur(36px) saturate(200%);
+      border: 0.5px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 12px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.16);
+      opacity: 0; transform: translateY(-8px) scale(0.9); transform-origin: top right; pointer-events: none;
+      transition: opacity 0.2s cubic-bezier(0.34,1.56,0.64,1), transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+      display: flex; flex-direction: column; gap: 8px;
     }
     #mac-control-center.open{ opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-    .mac-cc-row{ display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
-    .mac-cc-icon{ font-size: 1rem; width: 20px; text-align: center; }
-    .mac-cc-label{ flex: 1; font-family: -apple-system, sans-serif; font-size: 0.82rem; color: #f5f5f7; }
-    .mac-cc-toggle{
-      width: 38px; height: 22px; border-radius: 999px; border: none; cursor: pointer;
-      background: rgba(255,255,255,0.18); position: relative; transition: background 0.2s ease;
+    .mac-cc-grid{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .mac-cc-tile{
+      background: rgba(255,255,255,0.09); border: none; border-radius: 14px; padding: 10px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 14px; cursor: pointer;
+      transition: background 0.18s ease, transform 0.12s ease;
     }
-    .mac-cc-toggle::after{
-      content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
-      background: #fff; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    .mac-cc-tile:active{ transform: scale(0.96); }
+    .mac-cc-tile.on{ background: #0a84ff; }
+    .mac-cc-tile .mac-cc-icon{ font-size: 1.15rem; }
+    .mac-cc-tile .mac-cc-label{ font-family: -apple-system, sans-serif; font-size: 0.72rem; color: #f5f5f7; font-weight: 500; line-height: 1.2; text-align: left; flex: none; }
+    .mac-cc-slider-row{
+      background: rgba(255,255,255,0.09); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;
     }
-    .mac-cc-toggle.on{ background: #30d158; }
-    .mac-cc-toggle.on::after{ transform: translateX(16px); }
-    .mac-cc-action{ width: auto; height: auto; border-radius: 6px; padding: 5px 10px; background: rgba(255,255,255,0.14); color: #fff; font-family: -apple-system, sans-serif; font-size: 0.76rem; }
-    .mac-cc-action:hover{ background: #ff453a; }
+    .mac-cc-slider-row .mac-cc-slider-label{ display: flex; align-items: center; gap: 8px; font-family: -apple-system, sans-serif; font-size: 0.76rem; color: #f5f5f7; }
+    .mac-cc-slider-track{
+      position: relative; height: 26px; border-radius: 13px; background: rgba(255,255,255,0.12); overflow: hidden; cursor: pointer;
+    }
+    .mac-cc-slider-fill{
+      position: absolute; inset: 0; width: 50%; background: linear-gradient(90deg, #0a84ff, #64d2ff);
+      border-radius: 13px; transition: width 0.18s cubic-bezier(0.16,1,0.3,1);
+    }
+    .mac-cc-slider-labels{ display: flex; justify-content: space-between; font-family: -apple-system, sans-serif; font-size: 0.66rem; color: rgba(255,255,255,0.55); }
+    .mac-cc-exit{
+      width: 100%; background: rgba(255,69,58,0.85); color: #fff; border: none; border-radius: 12px;
+      padding: 9px; font-family: -apple-system, sans-serif; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .mac-cc-exit:hover{ background: #ff453a; }
 
     #mac-toast{
       position: absolute; bottom: 78px; left: 50%; transform: translateX(-50%) translateY(10px);
-      background: rgba(28,28,32,0.6); backdrop-filter: blur(24px) saturate(220%); color: #f5f5f7;
-      font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 10px 18px; border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 12px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.16);
+      background: rgba(50,50,54,0.6); backdrop-filter: blur(28px) saturate(200%); color: #f5f5f7;
+      font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 10px 18px; border-radius: 14px;
+      border: 0.5px solid rgba(255,255,255,0.14); box-shadow: 0 16px 36px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.16);
       opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; z-index: 50;
       white-space: nowrap; max-width: 80vw; text-overflow: ellipsis; overflow: hidden;
     }
     #mac-toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
-    .mac-window-entry{ display: block; width: 100%; text-align: left; background: none; border: none; color: #f5f5f7; font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 6px 10px; border-radius: 5px; cursor: pointer; }
+    .mac-window-entry{ display: block; width: 100%; text-align: left; background: none; border: none; color: #f5f5f7; font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
     .mac-window-entry:hover{ background: #0a84ff; color: #fff; }
+
+    /* Liquid Glass slider state — Tinted mode makes surfaces more opaque, less see-through */
+    #mac-desktop.mac-glass-tinted #mac-menubar{ background: rgba(20,20,24,0.72); }
+    #mac-desktop.mac-glass-tinted .mac-dropdown{ background: rgba(30,28,34,0.9); }
+    #mac-desktop.mac-glass-tinted #mac-control-center{ background: rgba(30,28,34,0.9); }
+    #mac-desktop.mac-glass-tinted #mac-toast{ background: rgba(30,28,34,0.9); }
+    #mac-desktop.mac-glass-tinted .mac-window{ background: rgba(18,13,28,0.94); }
+    #mac-desktop.mac-glass-tinted #mac-dock{ background: rgba(22,16,32,0.82); }
     #mac-icons{
       position: absolute; top: 46px; right: 24px; z-index: 4; display: flex; flex-direction: column; gap: 18px;
     }
@@ -678,12 +701,13 @@
     .mac-desktop-icon:nth-child(3) .mac-icon-glyph{ --sq-a: #7fd8e0; --sq-b: #2a9ba8; }
     .mac-desktop-icon:nth-child(4) .mac-icon-glyph{ --sq-a: #ff9d9d; --sq-b: #d9534f; }
     .mac-desktop-icon:nth-child(5) .mac-icon-glyph{ --sq-a: #9de89d; --sq-b: #4caf50; }
+    .mac-desktop-icon:nth-child(6) .mac-icon-glyph{ --sq-a: #e8b657; --sq-b: #8266f0; }
     .mac-desktop-icon span:last-child{ font-size: 0.72rem; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); text-align: center; }
 
     .mac-window{
       position: absolute; z-index: 10; width: min(720px, 88vw); max-height: 74vh;
       background: rgba(24,18,36,0.72); backdrop-filter: blur(34px) saturate(200%);
-      border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px; border: 0.5px solid rgba(255,255,255,0.12);
       box-shadow: 0 40px 90px -20px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.14);
       display: none; flex-direction: column; overflow: hidden;
       opacity: 0; transform: translate(-50%, -46%) scale(0.94);
@@ -698,7 +722,13 @@
       flex-shrink: 0; cursor: default;
     }
     .mac-traffic{ display: flex; gap: 8px; }
-    .mac-dot{ width: 12px; height: 12px; border-radius: 50%; cursor: pointer; border: none; padding: 0; }
+    .mac-dot{ width: 12px; height: 12px; border-radius: 50%; cursor: pointer; border: none; padding: 0; position: relative; }
+    .mac-dot::after{
+      content: ''; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      opacity: 0; font-size: 8px; line-height: 12px; text-align: center; color: rgba(0,0,0,0.55); font-weight: 700;
+    }
+    .mac-traffic:hover .mac-dot::after{ opacity: 1; }
+    .mac-dot.red::after{ content: '×'; } .mac-dot.yellow::after{ content: '−'; } .mac-dot.green::after{ content: '+'; }
     .mac-dot.red{ background: #ff5f57; } .mac-dot.yellow{ background: #febc2e; } .mac-dot.green{ background: #28c840; }
     .mac-window-title{ margin: 0 auto; font-size: 0.82rem; color: var(--ink-dim); font-weight: 500; transform: translateX(-18px); }
     .mac-window-body{ padding: 22px 26px; overflow-y: auto; color: var(--ink); }
@@ -739,6 +769,7 @@
     .mac-dock-icon:nth-of-type(3){ --sq-a: #7fd8e0; --sq-b: #2a9ba8; }
     .mac-dock-icon:nth-of-type(4){ --sq-a: #ff9d9d; --sq-b: #d9534f; }
     .mac-dock-icon:nth-of-type(5){ --sq-a: #9de89d; --sq-b: #4caf50; }
+    .mac-dock-icon:nth-of-type(6){ --sq-a: #e8b657; --sq-b: #8266f0; }
     .mac-dock-icon:hover{ transform: translateY(-14px) scale(1.15); }
     .mac-dock-divider{ width: 1px; align-self: stretch; background: rgba(255,255,255,0.15); margin: 4px 2px; }
 
@@ -812,6 +843,37 @@
     #mac-window-skills .mac-window-body .cert-grid{ grid-template-columns: 1fr 1fr !important; }
     #mac-window-contact .mac-window-body .faq-question{ color: #e8e4f2 !important; }
     #mac-window-contact .mac-window-body iframe{ border-radius: 8px; }
+
+    /* ===================== WIZARD AI APP WINDOW ===================== */
+    #mac-window-wizardai{ display: none; flex-direction: column; }
+    #mac-window-wizardai.open{ display: flex; }
+    #mac-ai-messages{ overflow-y: auto; padding: 16px 18px !important; flex: 1; }
+    .mac-ai-msg{
+      font-family: -apple-system, sans-serif !important; font-size: 0.86rem; line-height: 1.5; padding: 10px 13px;
+      border-radius: 12px; max-width: 86%; white-space: pre-wrap; word-break: break-word; color: #f2eefb;
+    }
+    .mac-ai-msg.bot{ background: rgba(255,255,255,0.07); align-self: flex-start; border-bottom-left-radius: 3px; }
+    .mac-ai-msg.user{ background: linear-gradient(135deg, #8266f0, #6b4fd6); align-self: flex-end; border-bottom-right-radius: 3px; color: #fff; }
+    .mac-ai-msg.typing{ display: flex; gap: 4px; align-items: center; }
+    .mac-ai-typing-dot{ width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.5); animation: ask-typing-bounce 1.1s ease-in-out infinite; }
+    .mac-ai-typing-dot:nth-child(2){ animation-delay: 0.15s; } .mac-ai-typing-dot:nth-child(3){ animation-delay: 0.3s; }
+    #mac-ai-suggestions{ display: flex; gap: 6px; padding: 0 18px 10px; flex-wrap: wrap; flex-shrink: 0; }
+    .mac-ai-chip{
+      font-family: -apple-system, sans-serif; font-size: 0.72rem; color: rgba(255,255,255,0.65);
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 5px 11px;
+      border-radius: 999px; cursor: pointer; white-space: nowrap; transition: background 0.15s ease;
+    }
+    .mac-ai-chip:hover{ background: rgba(255,255,255,0.12); color: #fff; }
+    #mac-ai-form{ display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
+    #mac-ai-input{
+      flex: 1; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+      padding: 9px 12px; color: #f2eefb; font-family: -apple-system, sans-serif; font-size: 0.85rem; outline: none;
+    }
+    #mac-ai-input:focus{ border-color: #8266f0; }
+    #mac-ai-send{
+      width: 36px; height: 36px; border-radius: 8px; border: none; cursor: pointer; flex-shrink: 0;
+      background: linear-gradient(135deg, #e8b657, #b3893c); color: #1a1206; font-size: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -919,6 +981,7 @@
         <button data-mac-action="open-window" data-win="projects">Projects</button>
         <button data-mac-action="open-window" data-win="skills">Skills</button>
         <button data-mac-action="open-window" data-win="contact">Contact</button>
+        <button data-mac-action="open-window" data-win="wizardai">Wizard AI</button>
       </div>
     </div>
     <div class="mac-menu-group" data-menu="window">
@@ -944,26 +1007,32 @@
     </div>
 
     <div id="mac-control-center">
-      <div class="mac-cc-row">
-        <span class="mac-cc-icon">🌗</span>
-        <span class="mac-cc-label">Appearance</span>
-        <button class="mac-cc-toggle" data-mac-action="theme"></button>
+      <div class="mac-cc-grid">
+        <button class="mac-cc-tile" data-mac-action="theme">
+          <span class="mac-cc-icon">🌗</span>
+          <span class="mac-cc-label">Appearance</span>
+        </button>
+        <button class="mac-cc-tile" data-mac-action="motion">
+          <span class="mac-cc-icon">🎞️</span>
+          <span class="mac-cc-label">Animations</span>
+        </button>
+        <button class="mac-cc-tile" data-mac-action="sound">
+          <span class="mac-cc-icon">🔊</span>
+          <span class="mac-cc-label">Sound Effects</span>
+        </button>
+        <button class="mac-cc-tile" data-mac-action="wizardai">
+          <span class="mac-cc-icon">🔮</span>
+          <span class="mac-cc-label">Wizard AI</span>
+        </button>
       </div>
-      <div class="mac-cc-row">
-        <span class="mac-cc-icon">🎞️</span>
-        <span class="mac-cc-label">Animations</span>
-        <button class="mac-cc-toggle" data-mac-action="motion"></button>
+      <div class="mac-cc-slider-row">
+        <div class="mac-cc-slider-label"><span>◐</span><span>Liquid Glass</span></div>
+        <div class="mac-cc-slider-track" id="mac-glass-slider">
+          <div class="mac-cc-slider-fill" id="mac-glass-fill"></div>
+        </div>
+        <div class="mac-cc-slider-labels"><span>Clear</span><span>Tinted</span></div>
       </div>
-      <div class="mac-cc-row">
-        <span class="mac-cc-icon">🔊</span>
-        <span class="mac-cc-label">Sound Effects</span>
-        <button class="mac-cc-toggle" data-mac-action="sound"></button>
-      </div>
-      <div class="mac-cc-row">
-        <span class="mac-cc-icon">🚪</span>
-        <span class="mac-cc-label">Exit Mac Mode</span>
-        <button class="mac-cc-toggle mac-cc-action" data-mac-action="exit">Go</button>
-      </div>
+      <button class="mac-cc-exit" data-mac-action="exit">Exit Mac Mode</button>
     </div>
   </div>
   <div id="mac-wallpaper"></div>
@@ -974,6 +1043,7 @@
     <button class="mac-desktop-icon" data-mac-window="projects"><span class="mac-icon-glyph">📁</span><span>Projects</span></button>
     <button class="mac-desktop-icon" data-mac-window="skills"><span class="mac-icon-glyph">🛠️</span><span>Skills</span></button>
     <button class="mac-desktop-icon" data-mac-window="contact"><span class="mac-icon-glyph">✉️</span><span>Contact</span></button>
+    <button class="mac-desktop-icon" data-mac-window="wizardai"><span class="mac-icon-glyph">🔮</span><span>Wizard AI</span></button>
   </div>
 
   <div class="mac-window" id="mac-window-about" data-title="About This Guy" style="width:min(600px,88vw);">
@@ -1045,12 +1115,34 @@
     <div class="mac-window-body" data-mac-clone="#page-contact .wrap"></div>
   </div>
 
+  <div class="mac-window" id="mac-window-wizardai" data-title="Wizard AI" style="width:min(420px,90vw); height:560px;">
+    <div class="mac-titlebar">
+      <span class="mac-traffic">
+        <button class="mac-dot red" data-close></button>
+        <button class="mac-dot yellow" data-min></button>
+        <button class="mac-dot green" data-max></button>
+      </span>
+      <span class="mac-window-title">🔮 Wizard AI</span>
+    </div>
+    <div id="mac-ai-messages" class="mac-window-body" style="flex:1; display:flex; flex-direction:column; gap:12px;"></div>
+    <div id="mac-ai-suggestions">
+      <button class="mac-ai-chip" data-q="What is Wizard Ecosystem?">What's Wizard Ecosystem?</button>
+      <button class="mac-ai-chip" data-q="What's Arnav's tech stack?">Tech stack?</button>
+      <button class="mac-ai-chip" data-q="Is Arnav available for internships?">Internships?</button>
+    </div>
+    <form id="mac-ai-form">
+      <input id="mac-ai-input" type="text" autocomplete="off" placeholder="Ask something..." maxlength="400" />
+      <button id="mac-ai-send" type="submit" aria-label="Send">→</button>
+    </form>
+  </div>
+
   <div id="mac-dock">
     <button class="mac-dock-icon" data-mac-window="about" title="About This Guy">👤</button>
     <button class="mac-dock-icon" data-mac-window="ecosystem" title="Wizard Ecosystem">🧙</button>
     <button class="mac-dock-icon" data-mac-window="projects" title="Projects">📁</button>
     <button class="mac-dock-icon" data-mac-window="skills" title="Skills">🛠️</button>
     <button class="mac-dock-icon" data-mac-window="contact" title="Contact">✉️</button>
+    <button class="mac-dock-icon" data-mac-window="wizardai" title="Wizard AI">🔮</button>
     <span class="mac-dock-divider"></span>
     <a class="mac-dock-icon" href="https://github.com/ag-ultima" target="_blank" rel="noopener" title="GitHub">🐙</a>
     <button class="mac-dock-icon" id="mac-exit" title="Exit Mac Mode">🚪</button>
@@ -2084,7 +2176,7 @@
 
   // ---- Ask-about-me widget ----
   (function(){
-    const ASK_ENDPOINT = 'https://arnav0928.pythonanywhere.com/ask-about-me';
+    const ASK_ENDPOINT = window.ASK_ENDPOINT = 'https://arnav0928.pythonanywhere.com/ask-about-me';
 
     const fab = document.getElementById('ask-fab');
     const panel = document.getElementById('ask-panel');
@@ -2201,6 +2293,89 @@
       const q = input.value.trim();
       if (!q || busy) return;
       addMessage('user', q);
+      input.value = '';
+      ask(q);
+    });
+  })();
+
+  // ---- Wizard AI (Mac-mode app window) — same backend, own chat instance ----
+  (function(){
+    const messages = document.getElementById('mac-ai-messages');
+    const form = document.getElementById('mac-ai-form');
+    const input = document.getElementById('mac-ai-input');
+    const sendBtn = document.getElementById('mac-ai-send');
+    const chips = document.querySelectorAll('.mac-ai-chip');
+    if (!messages || !form) return;
+
+    let history = [];
+    let busy = false;
+    let greeted = false;
+
+    function scrollDown(){ messages.scrollTop = messages.scrollHeight; }
+
+    function addMsg(role, text){
+      const el = document.createElement('div');
+      el.className = 'mac-ai-msg ' + (role === 'user' ? 'user' : 'bot');
+      el.textContent = text;
+      messages.appendChild(el);
+      scrollDown();
+      return el;
+    }
+
+    function showTyping(){
+      const el = document.createElement('div');
+      el.className = 'mac-ai-msg bot typing';
+      el.innerHTML = '<span class="mac-ai-typing-dot"></span><span class="mac-ai-typing-dot"></span><span class="mac-ai-typing-dot"></span>';
+      messages.appendChild(el);
+      scrollDown();
+      return el;
+    }
+
+    function greetOnce(){
+      if (greeted) return;
+      greeted = true;
+      addMsg('bot', "Hey — I'm Wizard AI. Ask me anything about Arnav, Wizard Ecosystem, or how any of this got built.");
+    }
+    document.querySelectorAll('[data-mac-window="wizardai"]').forEach(el => el.addEventListener('click', greetOnce));
+
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        input.value = chip.dataset.q;
+        form.requestSubmit();
+      });
+    });
+
+    async function ask(question){
+      busy = true;
+      sendBtn.disabled = true;
+      const typingEl = showTyping();
+      history.push({ role: 'user', content: question });
+      try {
+        const res = await fetch(window.ASK_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages: history.slice(-10) })
+        });
+        if (!res.ok) throw new Error('Request failed: ' + res.status);
+        const data = await res.json();
+        const answer = data.reply || "Sorry, I couldn't get an answer just now — try again in a moment.";
+        typingEl.remove();
+        addMsg('bot', answer);
+        history.push({ role: 'assistant', content: answer });
+      } catch (err) {
+        typingEl.remove();
+        addMsg('bot', "Something went wrong reaching the assistant. Try again, or email ag@wizardecosystem.dev.");
+      } finally {
+        busy = false;
+        sendBtn.disabled = false;
+      }
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const q = input.value.trim();
+      if (!q || busy) return;
+      addMsg('user', q);
       input.value = '';
       ask(q);
     });
@@ -2564,7 +2739,10 @@
       { icon: '📁', label: 'Projects', action: () => { location.hash = '#projects'; } },
       { icon: '🛠️', label: 'Skills', action: () => { location.hash = '#skills'; } },
       { icon: '✉️', label: 'Contact', action: () => { location.hash = '#contact'; } },
-      { icon: '✨', label: 'Ask about Arnav', action: () => { document.getElementById('ask-fab').click(); } },
+      { icon: '✨', label: 'Ask about Arnav', action: () => {
+          if (document.body.classList.contains('mac-mode') && window.openMacWindow) window.openMacWindow('wizardai');
+          else document.getElementById('ask-fab').click();
+        } },
       { icon: '🌗', label: 'Toggle light/dark theme', action: () => { document.getElementById('theme-toggle').click(); } },
       { icon: '🎞️', label: 'Toggle animations', action: () => { document.getElementById('motion-toggle').click(); } },
       { icon: '🔊', label: 'Toggle sound effects', action: () => { document.getElementById('sound-toggle').click(); } },
@@ -2776,7 +2954,8 @@
         case 'motion': document.getElementById('motion-toggle').click(); syncControlCenter(); break;
         case 'sound': document.getElementById('sound-toggle').click(); syncControlCenter(); break;
         case 'cmdk': if (window.openCommandPalette) window.openCommandPalette(); break;
-        case 'ask': document.getElementById('ask-fab').click(); break;
+        case 'ask': openWindow('wizardai'); break;
+        case 'wizardai': openWindow('wizardai'); break;
         case 'exit': exitMac(); break;
         case 'restart':
           showToast('Restarting…');
@@ -2810,7 +2989,7 @@
       const themeOn = document.documentElement.dataset.theme === 'light';
       const motionOn = !(document.documentElement.dataset.motion === 'off');
       const soundOn = localStorage.getItem('sound') !== 'off';
-      cc.querySelectorAll('.mac-cc-toggle[data-mac-action]').forEach(t => {
+      cc.querySelectorAll('.mac-cc-tile[data-mac-action]').forEach(t => {
         if (t.dataset.macAction === 'theme') t.classList.toggle('on', themeOn);
         if (t.dataset.macAction === 'motion') t.classList.toggle('on', motionOn);
         if (t.dataset.macAction === 'sound') t.classList.toggle('on', soundOn);
@@ -2827,6 +3006,22 @@
       });
       document.addEventListener('click', (e) => {
         if (!cc.contains(e.target) && e.target !== ccBtn){ cc.classList.remove('open'); ccBtn.classList.remove('open'); }
+      });
+    }
+
+    // ---- Liquid Glass slider (Clear <-> Tinted, matches real macOS 27 Control Center) ----
+    const glassSlider = document.getElementById('mac-glass-slider');
+    const glassFill = document.getElementById('mac-glass-fill');
+    if (glassSlider){
+      glassFill.style.width = '15%';
+      glassSlider.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const r = glassSlider.getBoundingClientRect();
+        const pct = (e.clientX - r.left) / r.width;
+        const tinted = pct > 0.5;
+        glassFill.style.width = tinted ? '85%' : '15%';
+        desktop.classList.toggle('mac-glass-tinted', tinted);
+        if (window.wizardSound) window.wizardSound.tick();
       });
     }
   })();
