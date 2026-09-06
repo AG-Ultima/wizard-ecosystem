@@ -661,6 +661,50 @@
       white-space: nowrap; max-width: 80vw; text-overflow: ellipsis; overflow: hidden;
     }
     #mac-toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ===================== BOOT SCREEN ===================== */
+    #mac-boot{
+      position: absolute; inset: 0; z-index: 200; background: #000;
+      display: none; flex-direction: column; align-items: center; justify-content: center; gap: 34px;
+    }
+    #mac-boot.show{ display: flex; }
+    #mac-boot-logo{
+      font-size: 4.2rem; filter: drop-shadow(0 0 24px rgba(232,182,87,0.5));
+      animation: mac-boot-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes mac-boot-pulse{ 0%,100%{ opacity: 0.85; transform: scale(1); } 50%{ opacity: 1; transform: scale(1.05); } }
+    #mac-boot-bar{ width: 220px; height: 4px; border-radius: 3px; background: rgba(255,255,255,0.15); overflow: hidden; }
+    #mac-boot-fill{
+      width: 0%; height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #8266f0, #e8b657);
+      transition: width 1.3s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ===================== LOCK SCREEN ===================== */
+    #mac-lock{
+      position: absolute; inset: 0; z-index: 190; display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px;
+      background: rgba(5,3,8,0.35); backdrop-filter: blur(50px) saturate(160%);
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    #mac-lock.show{ display: flex; }
+    #mac-lock.visible{ opacity: 1; }
+    #mac-lock-time{ font-family: -apple-system, sans-serif; font-weight: 300; font-size: 5.5rem; color: #fff; text-shadow: 0 4px 30px rgba(0,0,0,0.5); }
+    #mac-lock-date{ font-family: -apple-system, sans-serif; font-size: 1.1rem; color: rgba(255,255,255,0.8); margin-bottom: 40px; }
+    #mac-lock-avatar{
+      width: 84px; height: 84px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem; background: linear-gradient(145deg, #b48cff, #6a49d9);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+      margin-bottom: 10px;
+    }
+    #mac-lock-name{ font-family: -apple-system, sans-serif; font-size: 1.1rem; color: #fff; font-weight: 500; margin-bottom: 16px; }
+    #mac-lock-unlock{
+      font-family: -apple-system, sans-serif; font-size: 0.86rem; color: #fff; font-weight: 500;
+      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.2);
+      padding: 10px 22px; border-radius: 999px; cursor: pointer; transition: background 0.15s ease, transform 0.15s ease;
+    }
+    #mac-lock-unlock:hover{ background: rgba(255,255,255,0.22); transform: translateY(-1px); }
+    #mac-lock-hint{ margin-top: 14px; font-family: -apple-system, sans-serif; font-size: 0.72rem; color: rgba(255,255,255,0.45); }
     .mac-window-entry{ display: block; width: 100%; text-align: left; background: none; border: none; color: #f5f5f7; font-family: -apple-system, sans-serif; font-size: 0.82rem; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
     .mac-window-entry:hover{ background: #0a84ff; color: #fff; }
 
@@ -803,6 +847,12 @@
     .mac-dock-icon:nth-of-type(5){ --sq-a: #9de89d; --sq-b: #4caf50; }
     .mac-dock-icon:nth-of-type(6){ --sq-a: #e8b657; --sq-b: #8266f0; }
     .mac-dock-icon:hover{ transform: translateY(-14px) scale(1.15); }
+    .mac-dock-icon.bounce{ animation: mac-dock-bounce 0.55s cubic-bezier(0.28,0.84,0.42,1); }
+    @keyframes mac-dock-bounce{
+      0%{ transform: translateY(0); } 28%{ transform: translateY(-26px); }
+      48%{ transform: translateY(0); } 66%{ transform: translateY(-12px); }
+      82%{ transform: translateY(0); } 92%{ transform: translateY(-4px); } 100%{ transform: translateY(0); }
+    }
     .mac-dock-divider{ width: 1px; align-self: stretch; background: rgba(255,255,255,0.15); margin: 4px 2px; }
 
     /* ===================== MAC WINDOW CONTENT — native Finder/macOS look ===================== */
@@ -979,6 +1029,20 @@
 
 <!-- ===================== MAC MODE ===================== -->
 <div id="mac-desktop" aria-hidden="true">
+  <div id="mac-boot">
+    <div id="mac-boot-logo">🧙</div>
+    <div id="mac-boot-bar"><div id="mac-boot-fill"></div></div>
+  </div>
+
+  <div id="mac-lock">
+    <div id="mac-lock-time"></div>
+    <div id="mac-lock-date"></div>
+    <div id="mac-lock-avatar">🧙</div>
+    <div id="mac-lock-name">Arnav Gupta</div>
+    <button id="mac-lock-unlock">Click to Unlock →</button>
+    <div id="mac-lock-hint">Wizard Ecosystem · Kid OS 12</div>
+  </div>
+
   <div id="mac-menubar">
     <div class="mac-menu-group" data-menu="apple">
       <button class="mac-menu-btn mac-apple">🍎</button>
@@ -1213,6 +1277,15 @@
     <span class="mac-dock-divider"></span>
     <a class="mac-dock-icon" href="https://github.com/ag-ultima" target="_blank" rel="noopener" title="GitHub">🐙</a>
     <button class="mac-dock-icon" id="mac-exit" title="Exit Mac Mode">🚪</button>
+  </div>
+
+  <div id="mac-context-menu" class="mac-dropdown" style="position:fixed;">
+    <button data-ctx="new-folder">New Folder</button>
+    <button data-ctx="get-info">Get Info</button>
+    <hr>
+    <button data-ctx="wallpaper">Change Desktop Background</button>
+    <button data-ctx="stacks">Use Stacks</button>
+    <button data-ctx="view-options">Show View Options</button>
   </div>
 </div>
 
@@ -1690,24 +1763,24 @@
         <div class="stat-mini-groups">
           <div class="stat-mini-group glass-panel glass-stagger-1 reveal">
             <h4>Platform Usage</h4>
-            <div class="stat-mini"><span class="stat-mini-num" data-count="198">0</span><span class="stat-mini-label">AI conversations</span></div>
-            <div class="stat-mini"><span class="stat-mini-num" data-count="104">0</span><span class="stat-mini-label">AI-powered searches</span></div>
-            <div class="stat-mini"><span class="stat-mini-num" data-count="23">0</span><span class="stat-mini-label">User sessions</span></div>
+            <div class="stat-mini"><span class="stat-mini-num" data-count="243">0</span><span class="stat-mini-label">AI conversations</span></div>
+            <div class="stat-mini"><span class="stat-mini-num" data-count="119">0</span><span class="stat-mini-label">AI-powered searches</span></div>
+            <div class="stat-mini"><span class="stat-mini-num" data-count="28">0</span><span class="stat-mini-label">User sessions</span></div>
           </div>
           <div class="stat-mini-group glass-panel glass-stagger-2 reveal">
             <h4>Productivity</h4>
             <div class="stat-mini"><span class="stat-mini-num" data-count="28">0</span><span class="stat-mini-label">Files uploaded</span></div>
-            <div class="stat-mini"><span class="stat-mini-num" data-count="1">0</span><span class="stat-mini-label">Email alias provisioned</span></div>
+            <div class="stat-mini"><span class="stat-mini-num" data-count="2">0</span><span class="stat-mini-label">Email alias provisioned</span></div>
           </div>
           <div class="stat-mini-group glass-panel glass-stagger-3 reveal">
             <h4>Developer Platform</h4>
             <div class="stat-mini"><span class="stat-mini-num" data-count="233">0</span><span class="stat-mini-label">API requests served</span></div>
-            <div class="stat-mini"><span class="stat-mini-num" data-count="1">0</span><span class="stat-mini-label">API key generated</span></div>
-            <div class="stat-mini"><span class="stat-mini-num" data-count="10">0</span><span class="stat-mini-label">Code executions</span></div>
+            <div class="stat-mini"><span class="stat-mini-num" data-count="2">0</span><span class="stat-mini-label">API key generated</span></div>
+            <div class="stat-mini"><span class="stat-mini-num" data-count="12">0</span><span class="stat-mini-label">Code executions</span></div>
           </div>
           <div class="stat-mini-group glass-panel glass-stagger-4 reveal">
             <h4>Creative AI</h4>
-            <div class="stat-mini"><span class="stat-mini-num" data-count="24">0</span><span class="stat-mini-label">Images generated</span></div>
+            <div class="stat-mini"><span class="stat-mini-num" data-count="83">0</span><span class="stat-mini-label">Images generated</span></div>
           </div>
         </div>
 
@@ -2936,7 +3009,14 @@
     window.openMacWindow = openWindow;
 
     document.querySelectorAll('[data-mac-window]').forEach(el => {
-      el.addEventListener('click', () => openWindow(el.dataset.macWindow));
+      el.addEventListener('click', () => {
+        if (el.classList.contains('mac-dock-icon')){
+          el.classList.remove('bounce');
+          void el.offsetWidth;
+          el.classList.add('bounce');
+        }
+        openWindow(el.dataset.macWindow);
+      });
     });
 
     function updateActiveAppLabel(){
@@ -2945,9 +3025,30 @@
       const openWins = [...document.querySelectorAll('.mac-window.open')].sort((a,b) => (+b.style.zIndex||0) - (+a.style.zIndex||0));
       activeAppEl.textContent = openWins.length ? (openWins[0].dataset.title || 'Finder') : 'Finder';
     }
+
+    function genieMinimize(win){
+      const dock = document.getElementById('mac-dock');
+      const dockRect = dock.getBoundingClientRect();
+      const winRect = win.getBoundingClientRect();
+      const dx = (dockRect.left + dockRect.width/2) - (winRect.left + winRect.width/2);
+      const dy = (dockRect.top + dockRect.height/2) - (winRect.top + winRect.height/2);
+      win.style.transition = 'transform 0.38s cubic-bezier(0.55,0,0.85,0.35), opacity 0.38s ease';
+      win.style.transformOrigin = 'center bottom';
+      win.style.transform = `translate(${dx}px, ${dy}px) scale(0.08)`;
+      win.style.opacity = '0';
+      setTimeout(() => {
+        win.classList.remove('open');
+        win.style.transition = '';
+        win.style.transform = '';
+        win.style.opacity = '';
+        updateActiveAppLabel();
+      }, 380);
+      if (window.wizardSound) window.wizardSound.tick();
+    }
+
     document.querySelectorAll('.mac-window').forEach(win => {
       win.querySelector('[data-close]').addEventListener('click', () => { win.classList.remove('open'); updateActiveAppLabel(); });
-      win.querySelector('[data-min]').addEventListener('click', () => { win.classList.remove('open'); updateActiveAppLabel(); });
+      win.querySelector('[data-min]').addEventListener('click', () => genieMinimize(win));
       win.querySelector('[data-max]').addEventListener('click', () => win.classList.toggle('maximized'));
     });
 
@@ -3003,13 +3104,54 @@
       titlebar.addEventListener('pointercancel', endDrag);
     });
 
+    let bootedOnce = false;
+    const bootEl = document.getElementById('mac-boot');
+    const bootFill = document.getElementById('mac-boot-fill');
+    const lockEl = document.getElementById('mac-lock');
+    const lockUnlockBtn = document.getElementById('mac-lock-unlock');
+    const lockTimeEl = document.getElementById('mac-lock-time');
+    const lockDateEl = document.getElementById('mac-lock-date');
+
+    function updateLockClock(){
+      const now = new Date();
+      lockTimeEl.textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      lockDateEl.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    }
+
+    function revealDesktop(){
+      lockEl.classList.remove('visible');
+      setTimeout(() => { lockEl.classList.remove('show'); }, 400);
+      if (window.wizardSound) window.wizardSound.whoosh();
+    }
+
+    function showLockScreen(){
+      updateLockClock();
+      lockEl.classList.add('show');
+      requestAnimationFrame(() => lockEl.classList.add('visible'));
+    }
+
+    function runBootThenLock(){
+      bootEl.classList.add('show');
+      bootFill.style.width = '0%';
+      requestAnimationFrame(() => { bootFill.style.width = '100%'; });
+      if (window.wizardSound) window.wizardSound.tick();
+      setTimeout(() => {
+        bootEl.classList.remove('show');
+        showLockScreen();
+      }, 1500);
+    }
+
+    lockUnlockBtn.addEventListener('click', revealDesktop);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && lockEl.classList.contains('show')) revealDesktop();
+    });
+
     function enterMac(){
       cloneContentOnce();
       document.body.classList.add('mac-mode');
       desktop.classList.toggle('mac-light', document.documentElement.dataset.theme === 'light');
       if (window.macRefreshGlass) window.macRefreshGlass();
       desktop.setAttribute('aria-hidden', 'false');
-      if (window.wizardSound) window.wizardSound.whoosh();
       if (window.macStartWallpaper) window.macStartWallpaper();
       // request fullscreen so small/non-maximized browser windows don't clip windows behind the dock
       const el = document.documentElement;
@@ -3017,12 +3159,21 @@
       if (req && !document.fullscreenElement){
         req.call(el).catch(() => { /* blocked (e.g. embedded iframe) — Mac mode still works, just not fullscreen */ });
       }
+      if (!bootedOnce){
+        bootedOnce = true;
+        runBootThenLock();
+      } else {
+        showLockScreen();
+        if (window.wizardSound) window.wizardSound.whoosh();
+      }
     }
     function exitMac(){
       document.body.classList.remove('mac-mode');
       desktop.setAttribute('aria-hidden', 'true');
       document.querySelectorAll('.mac-window.open').forEach(w => w.classList.remove('open'));
       closeAllMenus();
+      lockEl.classList.remove('show', 'visible');
+      bootEl.classList.remove('show');
       const activeAppEl = document.getElementById('mac-active-app');
       if (activeAppEl) activeAppEl.textContent = 'Finder';
       if (window.wizardSound) window.wizardSound.tick();
@@ -3126,6 +3277,7 @@
         case 'restart':
           showToast('Restarting…');
           exitMac();
+          bootedOnce = false; // force the full boot animation to replay
           setTimeout(enterMac, 700);
           break;
         case 'shutdown':
@@ -3158,6 +3310,42 @@
         closeAllMenus();
       });
     });
+
+    // ---- desktop right-click menu ----
+    const ctxMenu = document.getElementById('mac-context-menu');
+    const wallpaperEl = document.getElementById('mac-wallpaper');
+    function closeCtxMenu(){ ctxMenu.classList.remove('open'); }
+    if (wallpaperEl && ctxMenu){
+      wallpaperEl.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        closeAllMenus();
+        document.getElementById('mac-control-center')?.classList.remove('open');
+        document.getElementById('mac-control-center-btn')?.classList.remove('open');
+        const maxLeft = window.innerWidth - 230, maxTop = window.innerHeight - 200;
+        ctxMenu.style.left = Math.min(e.clientX, maxLeft) + 'px';
+        ctxMenu.style.top = Math.min(e.clientY, maxTop) + 'px';
+        ctxMenu.classList.add('open');
+        if (window.wizardSound) window.wizardSound.tick();
+      });
+      document.addEventListener('click', closeCtxMenu);
+      document.querySelectorAll('#mac-context-menu [data-ctx]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          switch(btn.dataset.ctx){
+            case 'new-folder': showToast('New folder created. (Kidding — this is a portfolio.)'); break;
+            case 'get-info': showToast('12 years old, self-taught, this whole desktop is fake. 10/10.'); break;
+            case 'wallpaper':
+              window.macWallpaperVariant = ((window.macWallpaperVariant || 0) + 1) % 3;
+              if (window.macRepaintWallpaper) window.macRepaintWallpaper();
+              showToast('Desktop background changed.');
+              break;
+            case 'stacks': showToast('Stacks enabled. (There are no files here, but sure.)'); break;
+            case 'view-options': showToast('View options: Icons, List, or Stacks — none of it matters here.'); break;
+          }
+          closeCtxMenu();
+        });
+      });
+    }
 
     // ---- control center ----
     const ccBtn = document.getElementById('mac-control-center-btn');
@@ -3387,6 +3575,13 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    const wallpaperPalettes = [
+      ['90,60,190', '130,102,240', '200,120,220', '232,182,87'],   // violet/gold (default)
+      ['20,110,150', '40,170,190', '80,200,210', '100,180,235'],   // teal/blue
+      ['200,60,90', '230,110,70', '240,150,90', '235,90,150'],     // sunset pink/orange
+    ];
+    window.macWallpaperVariant = 0;
+
     function frame(){
       if (!running) return;
       t += 0.045;
@@ -3395,10 +3590,11 @@
 
       const light = isLightWallpaper();
       const rAlpha = light ? 0.62 : 1;
-      ribbon(t*1.3 + 0.2, canvas.height*0.09, 1.1, 0.82, canvas.height*0.16, '90,60,190', 0.5*rAlpha);
-      ribbon(t*1.0 + 1.4, canvas.height*0.08, 1.3, 0.88, canvas.height*0.14, '130,102,240', 0.45*rAlpha);
-      ribbon(t*1.5 + 2.6, canvas.height*0.07, 1.0, 0.93, canvas.height*0.12, '200,120,220', 0.35*rAlpha);
-      ribbon(t*0.85+ 3.6, canvas.height*0.08, 0.9, 0.97, canvas.height*0.13, '232,182,87', 0.4*rAlpha);
+      const pal = wallpaperPalettes[window.macWallpaperVariant % wallpaperPalettes.length];
+      ribbon(t*1.3 + 0.2, canvas.height*0.09, 1.1, 0.82, canvas.height*0.16, pal[0], 0.5*rAlpha);
+      ribbon(t*1.0 + 1.4, canvas.height*0.08, 1.3, 0.88, canvas.height*0.14, pal[1], 0.45*rAlpha);
+      ribbon(t*1.5 + 2.6, canvas.height*0.07, 1.0, 0.93, canvas.height*0.12, pal[2], 0.35*rAlpha);
+      ribbon(t*0.85+ 3.6, canvas.height*0.08, 0.9, 0.97, canvas.height*0.13, pal[3], 0.4*rAlpha);
 
       drawParticles();
       drawRuneRing();
