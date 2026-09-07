@@ -748,6 +748,45 @@
     #mac-desktop.mac-light .mac-window-entry{ color: #1d1d1f; }
     #mac-desktop.mac-light .mac-window-entry:hover{ background: #0a84ff; color: #fff; }
     #mac-desktop.mac-light #mac-dock{ border-color: rgba(0,0,0,0.1); box-shadow: 0 20px 50px -12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.7); }
+    /* grouped inset lists (Ecosystem/Projects/Skills/Contact/About) — invert to light gray-on-white groups */
+    #mac-desktop.mac-light .mac-window-body .app-grid,
+    #mac-desktop.mac-light .mac-window-body .proj-grid,
+    #mac-desktop.mac-light .mac-window-body .skill-group,
+    #mac-desktop.mac-light .mac-window-body .cred-block,
+    #mac-desktop.mac-light .mac-window-body .cert-card,
+    #mac-desktop.mac-light .mac-window-body .faq-item,
+    #mac-desktop.mac-light #mac-about-spec{
+      background: rgba(0,0,0,0.04) !important; border-color: rgba(0,0,0,0.08) !important;
+    }
+    #mac-desktop.mac-light .mac-window-body .app-card,
+    #mac-desktop.mac-light .mac-window-body .proj-card,
+    #mac-desktop.mac-light .mac-window-body li,
+    #mac-desktop.mac-light #mac-about-spec .fact-row{ border-bottom-color: rgba(0,0,0,0.08) !important; }
+    #mac-desktop.mac-light .mac-window-body .app-card:hover,
+    #mac-desktop.mac-light .mac-window-body .proj-card:hover,
+    #mac-desktop.mac-light .mac-window-body li:hover{ background: rgba(0,0,0,0.03) !important; }
+    #mac-desktop.mac-light .mac-native-header{ color: rgba(0,0,0,0.4) !important; }
+    #mac-desktop.mac-light .mac-window-body .app-card::after,
+    #mac-desktop.mac-light .mac-window-body .proj-card::after{ color: rgba(0,0,0,0.22) !important; }
+    #mac-desktop.mac-light .mac-window-body .tag{ background: rgba(0,0,0,0.06) !important; }
+    #mac-desktop.mac-light .mac-window-body::-webkit-scrollbar-thumb{ background: rgba(0,0,0,0.18); }
+
+    /* Finder + Settings — light mode */
+    #mac-desktop.mac-light .mac-finder-toolbar,
+    #mac-desktop.mac-light .mac-finder-sidebar{ background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08); }
+    #mac-desktop.mac-light #mac-finder-path,
+    #mac-desktop.mac-light .mac-finder-side-item,
+    #mac-desktop.mac-light .mac-finder-name{ color: rgba(0,0,0,0.7) !important; }
+    #mac-desktop.mac-light .mac-finder-side-item:hover{ background: rgba(0,0,0,0.06); }
+    #mac-desktop.mac-light .mac-finder-item:hover{ background: rgba(0,0,0,0.05); }
+    #mac-desktop.mac-light #mac-finder-back{ background: rgba(0,0,0,0.07); color: rgba(0,0,0,0.6); }
+    #mac-desktop.mac-light .mac-settings-sidebar{ background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08); }
+    #mac-desktop.mac-light .mac-settings-side-item{ color: rgba(0,0,0,0.72) !important; }
+    #mac-desktop.mac-light .mac-settings-side-item:hover{ background: rgba(0,0,0,0.06); }
+    #mac-desktop.mac-light .mac-settings-row{ color: rgba(0,0,0,0.85) !important; border-color: rgba(0,0,0,0.08) !important; }
+    #mac-desktop.mac-light .mac-settings-row:hover{ background: rgba(0,0,0,0.03); }
+    #mac-desktop.mac-light .mac-settings-row-value{ color: rgba(0,0,0,0.4) !important; }
+    #mac-desktop.mac-light .mac-appearance-swatch{ color: rgba(0,0,0,0.75) !important; }
     #mac-icons{
       position: absolute; top: 46px; right: 24px; z-index: 4; display: flex; flex-direction: column; gap: 18px;
     }
@@ -775,6 +814,8 @@
     .mac-desktop-icon:nth-child(4) .mac-icon-glyph{ --sq-a: #ff9d9d; --sq-b: #d9534f; }
     .mac-desktop-icon:nth-child(5) .mac-icon-glyph{ --sq-a: #9de89d; --sq-b: #4caf50; }
     .mac-desktop-icon:nth-child(6) .mac-icon-glyph{ --sq-a: #e8b657; --sq-b: #8266f0; }
+    .mac-desktop-icon:nth-child(7) .mac-icon-glyph{ --sq-a: #7fc4ff; --sq-b: #2a7fd9; }
+    .mac-desktop-icon:nth-child(8) .mac-icon-glyph{ --sq-a: #b0b4bd; --sq-b: #6b7078; }
     .mac-desktop-icon span:last-child{ font-size: 0.72rem; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); text-align: center; }
 
     .mac-window{
@@ -855,17 +896,24 @@
     }
     .mac-dock-divider{ width: 1px; align-self: stretch; background: rgba(255,255,255,0.15); margin: 4px 2px; }
 
-    /* ===================== MAC WINDOW CONTENT — native Finder/macOS look ===================== */
+    /* ===================== MAC WINDOW CONTENT — genuinely native macOS look ===================== */
     .mac-window-body, .mac-window-body *{
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif !important;
+      -webkit-font-smoothing: antialiased;
     }
+    .mac-window-body{ padding: 20px 22px !important; }
+    .mac-window-body::-webkit-scrollbar{ width: 9px; }
+    .mac-window-body::-webkit-scrollbar-track{ background: transparent; }
+    .mac-window-body::-webkit-scrollbar-thumb{ background: rgba(255,255,255,0.18); border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }
+    .mac-window-body::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,0.28); background-clip: padding-box; }
+
     /* Kill the site's scroll-reveal system inside windows — clones never get observed, so force them visible */
     .mac-window-body .reveal, .mac-window-body .reveal-stagger, .mac-window-body .reveal-stagger > *,
     .mac-window-body .app-card, .mac-window-body .proj-card, .mac-window-body .skill-group,
     .mac-window-body .cred-block, .mac-window-body .faq-item{
       opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important;
     }
-    /* Strip the wizard-site glass/card chrome — this should read as native macOS, not a themed card */
+    /* Strip the wizard-site glass/card chrome entirely — replaced with native grouped-list styling below */
     .mac-window-body .glass-panel, .mac-window-body .app-card, .mac-window-body .proj-card,
     .mac-window-body .skill-group, .mac-window-body .cred-block, .mac-window-body .faq-item{
       background: transparent !important; backdrop-filter: none !important; box-shadow: none !important;
@@ -874,57 +922,218 @@
     .mac-window-body .app-shot, .mac-window-body .app-peek-hint, .mac-window-body .app-funfact,
     .mac-window-body .app-icon{ display: none !important; }
 
-    /* Finder list-row layout for the Ecosystem + Projects windows */
+    /* ---------- Native section header (macOS System Settings style: small caps, gray, tight) ---------- */
+    .mac-native-header{
+      font-family: -apple-system, sans-serif !important; font-size: 0.71rem !important; font-weight: 600 !important;
+      text-transform: uppercase; letter-spacing: 0.03em; color: rgba(255,255,255,0.4) !important;
+      padding: 0 6px; margin: 22px 0 6px !important;
+    }
+    .mac-native-header:first-child{ margin-top: 2px !important; }
+
+    /* ---------- Native grouped inset container (the rounded card System Settings rows sit in) ---------- */
+    .mac-native-group{
+      background: rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden;
+      border: 0.5px solid rgba(255,255,255,0.07);
+    }
+
+    /* ---------- Finder-style row, shared by Ecosystem + Projects ---------- */
     #mac-window-ecosystem .mac-window-body .app-grid,
     #mac-window-projects .mac-window-body .proj-grid{
       display: flex; flex-direction: column; gap: 0;
+      background: rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden;
+      border: 0.5px solid rgba(255,255,255,0.07);
     }
     #mac-window-ecosystem .mac-window-body .app-card,
     #mac-window-projects .mac-window-body .proj-card{
-      display: flex; align-items: center; gap: 14px; padding: 11px 4px !important;
-      border-bottom: 1px solid rgba(255,255,255,0.08) !important; border-radius: 0 !important;
-      cursor: default;
+      display: flex; align-items: center; gap: 13px; padding: 10px 14px !important;
+      border-bottom: 0.5px solid rgba(255,255,255,0.07) !important; border-radius: 0 !important;
+      cursor: default; position: relative; transition: background 0.1s ease;
     }
-    #mac-window-ecosystem .mac-window-body .app-card::before{
-      content: '📦'; font-size: 1.2rem; flex-shrink: 0;
-    }
+    #mac-window-ecosystem .mac-window-body .app-card:last-child,
+    #mac-window-projects .mac-window-body .proj-card:last-child{ border-bottom: none !important; }
+    #mac-window-ecosystem .mac-window-body .app-card:hover,
+    #mac-window-projects .mac-window-body .proj-card:hover{ background: rgba(255,255,255,0.045); }
+
+    /* icon badge — small colored squircle, same visual language as the dock/desktop icons */
+    #mac-window-ecosystem .mac-window-body .app-card::before,
     #mac-window-projects .mac-window-body .proj-card::before{
-      content: '📄'; font-size: 1.2rem; flex-shrink: 0;
+      content: '📦'; font-size: 1rem; flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(145deg, #8a7bdb, #5a4bb8);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 6px rgba(0,0,0,0.3);
     }
+    #mac-window-projects .mac-window-body .proj-card::before{ content: '📄'; background: linear-gradient(145deg, #ffcf7d, #d99a2b); }
+    #mac-window-ecosystem .mac-window-body .app-card:nth-child(3n+1)::before{ background: linear-gradient(145deg, #8a7bdb, #5a4bb8); }
+    #mac-window-ecosystem .mac-window-body .app-card:nth-child(3n+2)::before{ background: linear-gradient(145deg, #7fd8e0, #2a9ba8); }
+    #mac-window-ecosystem .mac-window-body .app-card:nth-child(3n+3)::before{ background: linear-gradient(145deg, #ffcf7d, #d99a2b); }
+
+    /* trailing chevron, real Finder/Settings row affordance */
+    #mac-window-ecosystem .mac-window-body .app-card::after,
+    #mac-window-projects .mac-window-body .proj-card::after{
+      content: '›'; margin-left: auto; padding-left: 10px; font-size: 1.1rem; font-weight: 300;
+      color: rgba(255,255,255,0.22); flex-shrink: 0; align-self: center;
+    }
+
+    #mac-window-ecosystem .mac-window-body .app-card > div,
+    #mac-window-projects .mac-window-body .proj-card > div{ min-width: 0; }
     #mac-window-ecosystem .mac-window-body .app-name,
     #mac-window-projects .mac-window-body .proj-title{
-      font-family: -apple-system, sans-serif !important; font-size: 0.92rem !important; font-weight: 600 !important;
-      color: #f2eefb !important; margin-bottom: 2px !important;
+      font-size: 0.87rem !important; font-weight: 590 !important; letter-spacing: -0.005em;
+      color: rgba(255,255,255,0.92) !important; margin-bottom: 1px !important;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     #mac-window-ecosystem .mac-window-body .app-desc,
     #mac-window-projects .mac-window-body .proj-desc{
-      font-size: 0.8rem !important; color: rgba(242,238,251,0.6) !important; margin-bottom: 6px !important; line-height: 1.4 !important;
+      font-size: 0.76rem !important; color: rgba(255,255,255,0.42) !important; margin-bottom: 5px !important; line-height: 1.35 !important;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
     #mac-window-projects .mac-window-body .proj-date{ display: none; }
     #mac-window-ecosystem .mac-window-body .app-tags,
-    #mac-window-projects .mac-window-body .proj-link{
-      display: flex; gap: 6px; flex-wrap: wrap;
-    }
+    #mac-window-projects .mac-window-body .proj-link{ display: flex; gap: 5px; flex-wrap: wrap; }
     #mac-window-ecosystem .mac-window-body .tag{
-      font-family: -apple-system, sans-serif !important; font-size: 0.68rem !important; color: rgba(242,238,251,0.55) !important;
-      border: 1px solid rgba(255,255,255,0.14) !important; padding: 2px 8px !important; border-radius: 5px !important;
+      font-size: 0.65rem !important; font-weight: 500 !important; color: rgba(255,255,255,0.5) !important;
+      background: rgba(255,255,255,0.08) !important; border: none !important; padding: 2px 7px !important; border-radius: 5px !important;
     }
 
-    /* Skills + Contact windows — plain macOS text, no site card styling */
-    #mac-window-skills .mac-window-body h4, #mac-window-contact .mac-window-body h4{
-      font-family: -apple-system, sans-serif !important; font-size: 0.72rem !important; font-weight: 700 !important;
-      text-transform: uppercase; letter-spacing: 0.04em; color: rgba(242,238,251,0.45) !important; margin: 18px 0 10px !important;
+    /* ---------- Skills window — grouped inset list, real System Settings look ---------- */
+    #mac-window-skills .mac-window-body h4{
+      font-family: -apple-system, sans-serif !important; font-size: 0.71rem !important; font-weight: 600 !important;
+      text-transform: uppercase; letter-spacing: 0.03em; color: rgba(255,255,255,0.4) !important;
+      padding: 0 6px; margin: 22px 0 6px !important;
     }
-    #mac-window-skills .mac-window-body h4:first-child{ margin-top: 0 !important; }
-    #mac-window-skills .mac-window-body li, #mac-window-contact .mac-window-body p{
-      color: #e8e4f2 !important; font-size: 0.85rem !important; border-color: rgba(255,255,255,0.08) !important;
+    #mac-window-skills .mac-window-body h4:first-child{ margin-top: 2px !important; }
+    #mac-window-skills .mac-window-body .skill-groups, #mac-window-skills .mac-window-body .cred-grid{ display: block !important; }
+    #mac-window-skills .mac-window-body .skill-group, #mac-window-skills .mac-window-body .cred-block{
+      background: rgba(255,255,255,0.05) !important; border-radius: 12px !important; overflow: hidden;
+      border: 0.5px solid rgba(255,255,255,0.07) !important; margin-bottom: 4px;
     }
-    #mac-window-skills .mac-window-body .skill-groups, #mac-window-skills .mac-window-body .cred-grid{
-      display: block !important;
+    #mac-window-skills .mac-window-body li{
+      color: rgba(255,255,255,0.88) !important; font-size: 0.84rem !important;
+      border-bottom: 0.5px solid rgba(255,255,255,0.07) !important; padding: 9px 14px !important;
     }
-    #mac-window-skills .mac-window-body .cert-grid{ grid-template-columns: 1fr 1fr !important; }
-    #mac-window-contact .mac-window-body .faq-question{ color: #e8e4f2 !important; }
-    #mac-window-contact .mac-window-body iframe{ border-radius: 8px; }
+    #mac-window-skills .mac-window-body li:last-child{ border-bottom: none !important; }
+    #mac-window-skills .mac-window-body li:hover{ background: rgba(255,255,255,0.045); padding-left: 14px !important; }
+    #mac-window-skills .mac-window-body .cert-grid{ grid-template-columns: 1fr 1fr !important; gap: 10px !important; margin-top: 6px !important; }
+    #mac-window-skills .mac-window-body .cert-card{
+      background: rgba(255,255,255,0.05) !important; border: 0.5px solid rgba(255,255,255,0.07) !important;
+      border-radius: 12px !important; backdrop-filter: none !important;
+    }
+    #mac-window-skills .mac-window-body .cert-name{ font-size: 0.86rem !important; color: rgba(255,255,255,0.92) !important; }
+    #mac-window-skills .mac-window-body .cert-org{ color: rgba(232,182,87,0.85) !important; }
+    #mac-window-skills .mac-window-body .cert-desc{ color: rgba(255,255,255,0.45) !important; }
+
+    /* ---------- Contact window ---------- */
+    #mac-window-contact .mac-window-body .faq-item{
+      background: rgba(255,255,255,0.05) !important; border-radius: 10px !important; margin-bottom: 6px;
+      border: 0.5px solid rgba(255,255,255,0.07) !important;
+    }
+    #mac-window-contact .mac-window-body .faq-question{ color: rgba(255,255,255,0.92) !important; font-size: 0.86rem !important; }
+    #mac-window-contact .mac-window-body .faq-answer p{ color: rgba(255,255,255,0.5) !important; font-size: 0.82rem !important; }
+    #mac-window-contact .mac-window-body p{ color: rgba(255,255,255,0.88) !important; font-size: 0.85rem !important; }
+    #mac-window-contact .mac-window-body iframe{ border-radius: 10px; margin-top: 8px; }
+    #mac-window-contact .mac-window-body .hero-ctas .btn{
+      background: rgba(255,255,255,0.08) !important; border: none !important; color: rgba(255,255,255,0.9) !important;
+      border-radius: 8px !important; font-family: -apple-system, sans-serif !important; font-size: 0.8rem !important;
+    }
+
+    /* ---------- About window: real System Settings-style spec rows ---------- */
+    #mac-about-spec{
+      background: rgba(255,255,255,0.05); border-radius: 12px; overflow: hidden;
+      border: 0.5px solid rgba(255,255,255,0.07);
+    }
+    #mac-about-spec .fact-row{
+      padding: 10px 14px !important; border-bottom: 0.5px solid rgba(255,255,255,0.07) !important;
+      font-size: 0.84rem !important;
+    }
+    #mac-about-spec .fact-row:last-child{ border-bottom: none !important; }
+    #mac-about-spec .fact-label{ color: rgba(255,255,255,0.45) !important; }
+    #mac-about-spec .fact-value{ color: rgba(255,255,255,0.92) !important; }
+
+    /* ===================== FINDER APP ===================== */
+    .mac-finder-toolbar{
+      display: flex; align-items: center; gap: 10px; padding: 8px 14px; flex-shrink: 0;
+      background: rgba(255,255,255,0.03); border-bottom: 0.5px solid rgba(255,255,255,0.08);
+    }
+    #mac-finder-back{
+      width: 26px; height: 22px; border-radius: 6px; border: none; background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.75); font-size: 1rem; cursor: pointer;
+    }
+    #mac-finder-back:disabled{ opacity: 0.3; cursor: default; }
+    #mac-finder-back:not(:disabled):hover{ background: rgba(255,255,255,0.14); }
+    #mac-finder-path{
+      font-family: -apple-system, sans-serif; font-size: 0.78rem; color: rgba(255,255,255,0.55);
+      display: flex; align-items: center; gap: 4px;
+    }
+    #mac-finder-path .mac-crumb{ cursor: pointer; } #mac-finder-path .mac-crumb:hover{ color: #fff; text-decoration: underline; }
+    #mac-finder-path .mac-crumb-sep{ opacity: 0.4; }
+    .mac-finder-body{ flex: 1; display: flex; overflow: hidden; }
+    .mac-finder-sidebar{
+      width: 168px; flex-shrink: 0; background: rgba(255,255,255,0.025);
+      border-right: 0.5px solid rgba(255,255,255,0.08); padding: 6px 8px; overflow-y: auto;
+    }
+    .mac-finder-side-item{
+      display: block; width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+      font-family: -apple-system, sans-serif; font-size: 0.82rem; color: rgba(255,255,255,0.75);
+      padding: 6px 8px; border-radius: 6px; margin-bottom: 1px;
+    }
+    .mac-finder-side-item:hover{ background: rgba(255,255,255,0.07); }
+    .mac-finder-side-item.active{ background: #0a84ff; color: #fff; }
+    .mac-finder-main{
+      flex: 1; overflow-y: auto; padding: 18px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 16px; align-content: start;
+    }
+    .mac-finder-item{
+      display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+      padding: 8px 4px; border-radius: 8px; text-align: center;
+    }
+    .mac-finder-item:hover{ background: rgba(255,255,255,0.06); }
+    .mac-finder-item .mac-finder-icon{ font-size: 2.1rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4)); }
+    .mac-finder-item .mac-finder-name{
+      font-family: -apple-system, sans-serif; font-size: 0.72rem; color: rgba(255,255,255,0.85);
+      line-height: 1.25; word-break: break-word;
+    }
+    .mac-finder-empty{ grid-column: 1/-1; text-align: center; padding: 40px 0; color: rgba(255,255,255,0.3); font-size: 0.82rem; font-family: -apple-system, sans-serif; }
+
+    /* ===================== SETTINGS APP ===================== */
+    .mac-settings-body{ flex: 1; display: flex; overflow: hidden; }
+    .mac-settings-sidebar{
+      width: 180px; flex-shrink: 0; background: rgba(255,255,255,0.025);
+      border-right: 0.5px solid rgba(255,255,255,0.08); padding: 10px 8px; overflow-y: auto;
+    }
+    .mac-settings-side-item{
+      display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; background: none; border: none; cursor: pointer;
+      font-family: -apple-system, sans-serif; font-size: 0.84rem; color: rgba(255,255,255,0.78);
+      padding: 7px 10px; border-radius: 7px; margin-bottom: 2px;
+    }
+    .mac-settings-side-item:hover{ background: rgba(255,255,255,0.07); }
+    .mac-settings-side-item.active{ background: #0a84ff; color: #fff; }
+    .mac-settings-main{ flex: 1; overflow-y: auto; padding: 18px 22px; }
+    .mac-settings-pane{ display: none; }
+    .mac-settings-pane.active{ display: block; }
+    .mac-settings-row{
+      display: flex; align-items: center; justify-content: space-between; width: 100%;
+      background: none; border: none; border-bottom: 0.5px solid rgba(255,255,255,0.07);
+      padding: 11px 14px; cursor: pointer; font-family: -apple-system, sans-serif; font-size: 0.85rem; color: rgba(255,255,255,0.9);
+    }
+    .mac-settings-row:last-child{ border-bottom: none; }
+    .mac-settings-row:hover{ background: rgba(255,255,255,0.04); }
+    .mac-settings-row-value{ color: rgba(255,255,255,0.45); font-size: 0.8rem; }
+    .mac-cc-toggle-mini{
+      width: 34px; height: 20px; border-radius: 999px; background: rgba(255,255,255,0.18); position: relative; display: inline-block;
+    }
+    .mac-cc-toggle-mini::after{ content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+    .mac-cc-toggle-mini.on{ background: #30d158; }
+    .mac-cc-toggle-mini.on::after{ transform: translateX(14px); }
+    .mac-appearance-swatches{ display: flex; gap: 16px; }
+    .mac-appearance-swatch{
+      display: flex; flex-direction: column; align-items: center; gap: 8px; background: none; border: none; cursor: pointer;
+      font-family: -apple-system, sans-serif; font-size: 0.8rem; color: rgba(255,255,255,0.8);
+      padding: 10px; border-radius: 12px; border: 2px solid transparent;
+    }
+    .mac-appearance-swatch:hover{ background: rgba(255,255,255,0.05); }
+    .mac-swatch-preview{ width: 84px; height: 56px; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
+    .mac-swatch-preview.light{ background: linear-gradient(160deg, #fdf6ec, #e9d9c4); }
+    .mac-swatch-preview.dark{ background: linear-gradient(160deg, #2a2033, #0d0818); }
 
     /* ===================== WIZARD AI APP WINDOW ===================== */
     #mac-window-wizardai{ display: none; flex-direction: column; }
@@ -1175,6 +1384,8 @@
     <button class="mac-desktop-icon" data-mac-window="skills"><span class="mac-icon-glyph">🛠️</span><span>Skills</span></button>
     <button class="mac-desktop-icon" data-mac-window="contact"><span class="mac-icon-glyph">✉️</span><span>Contact</span></button>
     <button class="mac-desktop-icon" data-mac-window="wizardai"><span class="mac-icon-glyph"><img src="data:image/png;base64,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" alt="" style="width:32px;height:32px;object-fit:contain;"></span><span>Wizard AI</span></button>
+    <button class="mac-desktop-icon" data-mac-window="finder"><span class="mac-icon-glyph">🗂️</span><span>Finder</span></button>
+    <button class="mac-desktop-icon" data-mac-window="settings"><span class="mac-icon-glyph">⚙️</span><span>Settings</span></button>
   </div>
 
   <div class="mac-window" id="mac-window-about" data-title="About This Guy" style="width:min(600px,88vw);">
@@ -1194,6 +1405,7 @@
           <p>Kid OS 12 · Founder Edition</p>
         </div>
       </div>
+      <div class="mac-native-header">Overview</div>
       <div id="mac-about-spec"></div>
     </div>
   </div>
@@ -1267,6 +1479,112 @@
     </form>
   </div>
 
+  <!-- ===================== FINDER APP ===================== -->
+  <div class="mac-window" id="mac-window-finder" data-title="Finder" style="width:min(760px,92vw); height:520px;">
+    <div class="mac-titlebar">
+      <span class="mac-traffic">
+        <button class="mac-dot red" data-close></button>
+        <button class="mac-dot yellow" data-min></button>
+        <button class="mac-dot green" data-max></button>
+      </span>
+      <span class="mac-window-title">Finder</span>
+    </div>
+    <div class="mac-finder-toolbar">
+      <button id="mac-finder-back" title="Back">‹</button>
+      <div id="mac-finder-path"></div>
+    </div>
+    <div class="mac-finder-body">
+      <div class="mac-finder-sidebar">
+        <div class="mac-native-header" style="margin-top:6px;">Favorites</div>
+        <button class="mac-finder-side-item" data-fav="airdrop">📡 AirDrop</button>
+        <button class="mac-finder-side-item" data-fav="recents">🕐 Recents</button>
+        <button class="mac-finder-side-item" data-fav="applications">🗂️ Applications</button>
+        <button class="mac-finder-side-item" data-fav="desktop">🖥️ Desktop</button>
+        <button class="mac-finder-side-item" data-fav="documents">📄 Documents</button>
+        <div class="mac-native-header">Locations</div>
+        <button class="mac-finder-side-item" data-nav="root">💽 Arnav</button>
+      </div>
+      <div class="mac-finder-main" id="mac-finder-main"></div>
+    </div>
+  </div>
+
+  <!-- ===================== SETTINGS APP ===================== -->
+  <div class="mac-window" id="mac-window-settings" data-title="Settings" style="width:min(680px,92vw); height:480px;">
+    <div class="mac-titlebar">
+      <span class="mac-traffic">
+        <button class="mac-dot red" data-close></button>
+        <button class="mac-dot yellow" data-min></button>
+        <button class="mac-dot green" data-max></button>
+      </span>
+      <span class="mac-window-title">Settings</span>
+    </div>
+    <div class="mac-settings-body">
+      <div class="mac-settings-sidebar">
+        <button class="mac-settings-side-item active" data-pane="general">ℹ️ General</button>
+        <button class="mac-settings-side-item" data-pane="appearance">🌗 Appearance</button>
+        <button class="mac-settings-side-item" data-pane="sound">🔊 Sound</button>
+        <button class="mac-settings-side-item" data-pane="accessibility">♿ Accessibility</button>
+        <button class="mac-settings-side-item" data-pane="wifi">📶 Wi-Fi</button>
+        <button class="mac-settings-side-item" data-pane="battery">🔋 Battery</button>
+      </div>
+      <div class="mac-settings-main">
+        <div class="mac-settings-pane active" data-pane="general">
+          <div class="mac-native-header">About</div>
+          <div id="mac-settings-about" class="mac-native-group"></div>
+          <div class="mac-native-header">Software Update</div>
+          <div class="mac-native-group">
+            <button class="mac-settings-row" data-mac-action="get-info-update">
+              <span>macOS 27 Golden Gate</span><span class="mac-settings-row-value">Up to Date ✓</span>
+            </button>
+          </div>
+        </div>
+        <div class="mac-settings-pane" data-pane="appearance">
+          <div class="mac-native-header">Appearance</div>
+          <div class="mac-appearance-swatches">
+            <button class="mac-appearance-swatch" data-mac-action="set-light">
+              <span class="mac-swatch-preview light"></span>Light
+            </button>
+            <button class="mac-appearance-swatch" data-mac-action="set-dark">
+              <span class="mac-swatch-preview dark"></span>Dark
+            </button>
+          </div>
+        </div>
+        <div class="mac-settings-pane" data-pane="sound">
+          <div class="mac-native-header">Sound</div>
+          <div class="mac-native-group">
+            <button class="mac-settings-row" data-mac-action="sound">
+              <span>Sound Effects</span><span class="mac-cc-toggle-mini" id="mac-settings-sound-toggle"></span>
+            </button>
+          </div>
+        </div>
+        <div class="mac-settings-pane" data-pane="accessibility">
+          <div class="mac-native-header">Motion</div>
+          <div class="mac-native-group">
+            <button class="mac-settings-row" data-mac-action="motion">
+              <span>Reduce Motion</span><span class="mac-cc-toggle-mini" id="mac-settings-motion-toggle"></span>
+            </button>
+          </div>
+        </div>
+        <div class="mac-settings-pane" data-pane="wifi">
+          <div class="mac-native-header">Wi-Fi</div>
+          <div class="mac-native-group">
+            <button class="mac-settings-row" data-mac-action="wifi-select" data-net="Wizard_Ecosystem_5G"><span>📶 Wizard_Ecosystem_5G</span><span class="mac-wifi-check">✓</span></button>
+            <button class="mac-settings-row" data-mac-action="wifi-select" data-net="CafeGuest"><span>📶 CafeGuest</span></button>
+            <button class="mac-settings-row" data-mac-action="wifi-select" data-net="Arnav's iPhone"><span>📶 Arnav's iPhone</span></button>
+          </div>
+        </div>
+        <div class="mac-settings-pane" data-pane="battery">
+          <div class="mac-native-header">Battery</div>
+          <div class="mac-native-group">
+            <div class="mac-settings-row" style="cursor:default;"><span>Battery Level</span><span class="mac-settings-row-value">100%</span></div>
+            <div class="mac-settings-row" style="cursor:default;"><span>Power Source</span><span class="mac-settings-row-value">Always Plugged In</span></div>
+            <div class="mac-settings-row" style="cursor:default;"><span>Battery Health</span><span class="mac-settings-row-value">Excellent</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="mac-dock">
     <button class="mac-dock-icon" data-mac-window="about" title="About This Guy">👤</button>
     <button class="mac-dock-icon" data-mac-window="ecosystem" title="Wizard Ecosystem">🧙</button>
@@ -1275,6 +1593,8 @@
     <button class="mac-dock-icon" data-mac-window="contact" title="Contact">✉️</button>
     <button class="mac-dock-icon" data-mac-window="wizardai" title="Wizard AI"><img src="data:image/png;base64,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" alt="" style="width:28px;height:28px;object-fit:contain;"></button>
     <span class="mac-dock-divider"></span>
+    <button class="mac-dock-icon" data-mac-window="finder" title="Finder">🗂️</button>
+    <button class="mac-dock-icon" data-mac-window="settings" title="Settings">⚙️</button>
     <a class="mac-dock-icon" href="https://github.com/ag-ultima" target="_blank" rel="noopener" title="GitHub">🐙</a>
     <button class="mac-dock-icon" id="mac-exit" title="Exit Mac Mode">🚪</button>
   </div>
@@ -3268,8 +3588,16 @@
           if (window.macRepaintWallpaper) window.macRepaintWallpaper();
           syncControlCenter();
           break;
-        case 'motion': document.getElementById('motion-toggle').click(); syncControlCenter(); break;
-        case 'sound': document.getElementById('sound-toggle').click(); syncControlCenter(); break;
+        case 'motion':
+          document.getElementById('motion-toggle').click();
+          syncControlCenter();
+          if (window.macSyncSettingsToggles) window.macSyncSettingsToggles();
+          break;
+        case 'sound':
+          document.getElementById('sound-toggle').click();
+          syncControlCenter();
+          if (window.macSyncSettingsToggles) window.macSyncSettingsToggles();
+          break;
         case 'cmdk': if (window.openCommandPalette) window.openCommandPalette(); break;
         case 'ask': openWindow('wizardai'); break;
         case 'wizardai': openWindow('wizardai'); break;
@@ -3301,6 +3629,13 @@
           }
           break;
         case 'wifi-off': showToast('Wi-Fi off. (Just kidding — this is a portfolio.)'); break;
+        case 'set-light':
+          if (document.documentElement.dataset.theme !== 'light') runAction('theme', el);
+          break;
+        case 'set-dark':
+          if (document.documentElement.dataset.theme === 'light') runAction('theme', el);
+          break;
+        case 'get-info-update': showToast("You're up to date. (There's nothing to update — it's a portfolio.)"); break;
       }
     }
     document.querySelectorAll('[data-mac-action]').forEach(el => {
@@ -3433,6 +3768,183 @@
         try{ glassSlider.releasePointerCapture(e.pointerId); } catch(err){}
       });
     }
+
+    // ============================================================
+    // FINDER APP — a real navigable folder tree
+    // ============================================================
+    (function(){
+      const finderMain = document.getElementById('mac-finder-main');
+      const finderPath = document.getElementById('mac-finder-path');
+      const finderBack = document.getElementById('mac-finder-back');
+      if (!finderMain) return;
+
+      const fs = {
+        root: {
+          label: 'Arnav', items: [
+            { type: 'folder', key: 'academics', icon: '📁', name: 'Academics' },
+            { type: 'folder', key: 'development', icon: '📁', name: 'Development' },
+            { type: 'folder', key: 'certifications', icon: '📁', name: 'Certifications' },
+            { type: 'folder', key: 'projects', icon: '📁', name: 'Projects' },
+            { type: 'file', icon: '👤', name: 'Contact.vcf', action: () => openWindow('contact') },
+            { type: 'file', icon: '📄', name: 'Resume.pdf', action: () => window.open('https://wizardecosystem.dev/CV_Arnav_Gupta.pdf', '_blank') },
+          ]
+        },
+        academics: {
+          label: 'Academics', items: [
+            { type: 'file', icon: '🏆', name: 'MathLeague.txt', action: () => showToast('4th (Qualifier) · 9th (District) · 11th (State)') },
+            { type: 'file', icon: '🏆', name: 'MATHCOUNTS.txt', action: () => showToast('Top 20% of 200+ participants, Charter Competition') },
+            { type: 'file', icon: '🏆', name: 'Purple Comet.txt', action: () => showToast('International Math Meet, entered March 2025') },
+            { type: 'file', icon: '🎓', name: 'BASIS Phoenix.txt', action: () => showToast('GPA 4.0 · Distinguished Honour Roll (Top 5%)') },
+            { type: 'file', icon: '🥋', name: 'Taekwondo.txt', action: () => showToast('First-Degree Black Belt, ATA Martial Arts, April 2026') },
+          ]
+        },
+        development: {
+          label: 'Development', items: [
+            { type: 'file', icon: '🧠', name: 'Wizard AI.app', action: () => openWindow('wizardai') },
+            { type: 'file', icon: '📝', name: 'Wizard Notes.app', action: () => { openWindow('ecosystem'); showToast('AI editing suite: grammar, summarize, translate.'); } },
+            { type: 'file', icon: '🤖', name: 'Wizard Autopilot.app', action: () => { openWindow('ecosystem'); showToast('Full computer automation from plain-language commands.'); } },
+            { type: 'file', icon: '🌐', name: 'Wizard Browser.app', action: () => { openWindow('ecosystem'); showToast('Multi-tab desktop browser with a built-in ad blocker.'); } },
+            { type: 'file', icon: '🔍', name: 'Wizard Search.app', action: () => { openWindow('ecosystem'); showToast('AI-summarized search results.'); } },
+            { type: 'file', icon: '📧', name: 'Wizard Mail.app', action: () => { openWindow('ecosystem'); showToast('Full IMAP/SMTP client, @wizardecosystem.dev aliases.'); } },
+            { type: 'file', icon: '📅', name: 'Wizard Calendar.app', action: () => { openWindow('ecosystem'); showToast('Color-coded events with overlap detection.'); } },
+            { type: 'file', icon: '💬', name: 'Wizard Chat.app', action: () => { openWindow('ecosystem'); showToast('Real-time messaging with read receipts.'); } },
+            { type: 'file', icon: '💰', name: 'Wizard Finance.app', action: () => { openWindow('ecosystem'); showToast('AI receipt scanning and budgeting.'); } },
+            { type: 'file', icon: '🌡️', name: 'Wizard Heat.app', action: () => { openWindow('ecosystem'); showToast('Arizona heat and hydration safety assistant.'); } },
+            { type: 'file', icon: '🔥', name: 'FireWatch AI.app', action: () => { openWindow('ecosystem'); showToast('Wildfire tracking via NASA FIRMS and NWS Alerts.'); } },
+            { type: 'file', icon: '🌵', name: 'Wizard Nature.app', action: () => { openWindow('ecosystem'); showToast('AI photo ID for desert wildlife and plants.'); } },
+            { type: 'file', icon: '🧙', name: 'Wizard Code.app', action: () => { openWindow('ecosystem'); showToast('Electron IDE with Monaco and AI agent mode.'); } },
+            { type: 'file', icon: '💻', name: 'Developer Hub.app', action: () => { openWindow('ecosystem'); showToast('OpenAI-compatible REST API + PyPI SDK.'); } },
+          ]
+        },
+        certifications: {
+          label: 'Certifications', items: [
+            { type: 'file', icon: '🎓', name: 'ASU GAME School.pdf', action: () => window.open('https://credid.asu.edu/my-credentials/issuers/758d763e-370a-4b2a-9463-fbfa2903b536/badges/e88287da-ba82-45d3-85a0-f4465d181c35/awards/a57ec07b-66b3-4a38-8fd1-42334315b674', '_blank') },
+            { type: 'file', icon: '🧠', name: 'AI Fluency for Builders.pdf', action: () => window.open('https://academy.claude.com/verify/877fcb166d16429efd5fa51bd6d4fe6b', '_blank') },
+            { type: 'file', icon: '⚖️', name: 'AI Capabilities.pdf', action: () => window.open('https://academy.claude.com/verify/fb971059567c11355c08179ae048d11b', '_blank') },
+            { type: 'file', icon: '🤖', name: 'AI Agents Fundamentals.pdf', action: () => window.open('https://huggingface.co/', '_blank') },
+          ]
+        },
+        projects: {
+          label: 'Projects', items: [
+            { type: 'file', icon: '🎮', name: 'Ultimate Clicker.app', action: () => window.open('https://ultimate-clicker.w3spaces.com', '_blank') },
+            { type: 'file', icon: '🌐', name: 'A&A Web Studio.app', action: () => window.open('https://aaweb.neocities.org', '_blank') },
+          ]
+        },
+      };
+
+      let historyStack = [];
+      let currentKey = 'root';
+
+      function render(){
+        const folder = fs[currentKey];
+        finderMain.innerHTML = '';
+        finderPath.innerHTML = '';
+
+        // breadcrumb
+        const rootCrumb = document.createElement('span');
+        rootCrumb.className = 'mac-crumb'; rootCrumb.textContent = 'Arnav';
+        rootCrumb.addEventListener('click', () => navigate('root', true));
+        finderPath.appendChild(rootCrumb);
+        if (currentKey !== 'root'){
+          const sep = document.createElement('span'); sep.className = 'mac-crumb-sep'; sep.textContent = '›';
+          const leaf = document.createElement('span'); leaf.className = 'mac-crumb'; leaf.style.color = '#fff'; leaf.textContent = folder.label;
+          finderPath.appendChild(sep); finderPath.appendChild(leaf);
+        }
+
+        finderBack.disabled = historyStack.length === 0;
+
+        document.querySelectorAll('.mac-finder-side-item[data-nav]').forEach(el => {
+          el.classList.toggle('active', currentKey === 'root');
+        });
+
+        if (!folder.items.length){
+          finderMain.innerHTML = '<div class="mac-finder-empty">This folder is empty.</div>';
+          return;
+        }
+
+        folder.items.forEach(item => {
+          const el = document.createElement('div');
+          el.className = 'mac-finder-item';
+          el.innerHTML = `<span class="mac-finder-icon">${item.icon}</span><span class="mac-finder-name">${item.name}</span>`;
+          el.addEventListener('click', () => {
+            if (window.wizardSound) window.wizardSound.tick();
+            if (item.type === 'folder') navigate(item.key);
+            else if (item.action) item.action();
+          });
+          finderMain.appendChild(el);
+        });
+      }
+
+      function navigate(key, reset){
+        if (reset){ historyStack = []; }
+        else if (key !== currentKey){ historyStack.push(currentKey); }
+        currentKey = key;
+        render();
+      }
+
+      finderBack.addEventListener('click', () => {
+        if (!historyStack.length) return;
+        currentKey = historyStack.pop();
+        render();
+      });
+
+      document.querySelectorAll('.mac-finder-side-item[data-fav]').forEach(el => {
+        el.addEventListener('click', () => showToast(el.textContent.trim() + ' — nothing here yet.'));
+      });
+      document.querySelectorAll('.mac-finder-side-item[data-nav]').forEach(el => {
+        el.addEventListener('click', () => navigate('root', true));
+      });
+
+      document.querySelector('[data-mac-window="finder"]')?.addEventListener('click', () => {
+        if (currentKey === 'root' && !historyStack.length) render();
+      });
+
+      render();
+    })();
+
+    // ============================================================
+    // SETTINGS APP — sidebar + panes, wired to the real toggles
+    // ============================================================
+    (function(){
+      const settingsWin = document.getElementById('mac-window-settings');
+      if (!settingsWin) return;
+      const sideItems = settingsWin.querySelectorAll('.mac-settings-side-item');
+      const panes = settingsWin.querySelectorAll('.mac-settings-pane');
+
+      sideItems.forEach(item => {
+        item.addEventListener('click', () => {
+          sideItems.forEach(i => i.classList.remove('active'));
+          panes.forEach(p => p.classList.remove('active'));
+          item.classList.add('active');
+          settingsWin.querySelector('.mac-settings-pane[data-pane="' + item.dataset.pane + '"]')?.classList.add('active');
+          if (window.wizardSound) window.wizardSound.tick();
+        });
+      });
+
+      function syncSettingsToggles(){
+        const soundOn = localStorage.getItem('sound') !== 'off';
+        const motionOn = !(document.documentElement.dataset.motion === 'off');
+        document.getElementById('mac-settings-sound-toggle')?.classList.toggle('on', soundOn);
+        document.getElementById('mac-settings-motion-toggle')?.classList.toggle('on', motionOn);
+      }
+      window.macSyncSettingsToggles = syncSettingsToggles;
+      syncSettingsToggles();
+
+      // populate the General > About pane once, cloning the real Quick Facts
+      let aboutCloned = false;
+      document.querySelector('[data-mac-window="settings"]')?.addEventListener('click', () => {
+        if (aboutCloned) return;
+        aboutCloned = true;
+        const host = document.getElementById('mac-settings-about');
+        document.querySelectorAll('.about-card .fact-row').forEach(row => {
+          const clone = row.cloneNode(true);
+          clone.className = 'mac-settings-row'; clone.style.cursor = 'default';
+          clone.querySelector('.fact-label').className = '';
+          clone.querySelector('.fact-value').className = 'mac-settings-row-value';
+          host.appendChild(clone);
+        });
+      });
+    })();
   })();
 
   // ============================================================
