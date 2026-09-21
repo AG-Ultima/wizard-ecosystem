@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>🗺️ Wizard Maps — Navigate with Magic</title>
+
+<meta name="description" content="Wizard Maps — free, private, OpenStreetMap-powered navigation. No API keys, no tracking.">
+<meta name="theme-color" content="#0a0814">
+<link rel="icon" href="/icons/favicon.ico">
+
+<!-- MapLibre GL -->
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg-primary: #0a0a14;
+    --bg-secondary: #0f0f1c;
+    --bg-card: rgba(18,18,35,0.96);
+    --text-primary: #ffffff;
+    --text-secondary: #e0e0ff;
+    --text-muted: #a0a0c0;
+    --border: rgba(139,92,246,0.3);
+    --primary: #a855f7;
+    --primary-dark: #7c3aed;
+    --primary-light: #c084fc;
+    --primary-glow: rgba(168,85,247,0.3);
+    --danger: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+}
+
+#map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* ══════════════════════════════════════
+   TOP HEADER
+   ══════════════════════════════════════ */
+.maps-header {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.maps-header > * { pointer-events: auto; }
+
+.header-logo {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.header-logo:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.header-logo .logo-icon { font-size: 22px; }
+
+.header-logo .logo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Search bar */
+.search-wrapper {
+    flex: 1;
+    max-width: 560px;
+    position: relative;
+}
+
+.maps-search {
+    width: 100%;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 12px 20px 12px 48px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.maps-search:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 25px var(--primary-glow);
+}
+
+.search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.search-clear {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.search-clear:hover { background: rgba(239,68,68,0.2); color: var(--danger); }
+.search-clear.show { display: flex; }
+
+/* Search results dropdown */
+.search-results {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-height: 380px;
+    overflow-y: auto;
+    display: none;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+}
+
+.search-results.show { display: block; }
+
+.search-result-item {
+    padding: 12px 18px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(139,92,246,0.1);
+    transition: all 0.15s ease;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.search-result-item:last-child { border-bottom: none; }
+
+.search-result-item:hover {
+    background: rgba(139,92,246,0.15);
+    padding-left: 24px;
+}
+
+.search-result-icon { font-size: 18px; line-height: 1.4; }
+.search-result-text { flex: 1; }
+.search-result-title { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 3px; }
+.search-result-subtitle { font-size: 12px; color: var(--text-muted); }
+
+.search-loading, .search-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* Header action buttons */
+.header-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.icon-btn {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+    background: rgba(139,92,246,0.2);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.icon-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: transparent;
+}
+
+/* ══════════════════════════════════════
+   DIRECTIONS PANEL (Left)
+   ══════════════════════════════════════ */
+.directions-panel {
+    position: absolute;
+    top: 80px;
+    left: 16px;
+    width: 380px;
+    max-height: calc(100vh - 100px);
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    z-index: 90;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.directions-panel.show { display: flex; }
+
+.panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--primary-light);
+}
+
+.panel-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.panel-close:hover { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+.panel-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.route-input-group {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.route-input-group label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.route-input-wrapper {
+    position: relative;
+}
+
+.route-input-wrapper input {
+    width: 100%;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px 12px 42px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.route-input-wrapper input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.route-input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+}
+
+/* Autocomplete dropdown for route inputs */
+.route-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.route-suggestions.show { display: block; }
+
+.route-suggestion-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(139,92,246,0.1);
+}
+
+.route-suggestion-item:hover { background: rgba(139,92,246,0.15); }
+.route-suggestion-item:last-child { border-bottom: none; }
+
+.route-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.btn {
+    flex: 1;
+    padding: 12px 18px;
+    border-radius: 40px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px var(--primary-glow);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-ghost {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.btn-ghost:hover { background: rgba(255,255,255,0.12); }
+
+/* Travel mode selector */
+.travel-modes {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.travel-mode {
+    flex: 1;
+    padding: 10px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.travel-mode:hover { background: rgba(139,92,246,0.15); }
+
+.travel-mode.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: transparent;
+    color: white;
+}
+
+.travel-mode-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+/* Route summary */
+.route-summary {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: none;
+}
+
+.route-summary.show { display: block; }
+
+.route-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.route-summary-time {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--primary-light);
+}
+
+.route-summary-distance {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* Step-by-step directions */
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.step-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    align-items: flex-start;
+}
+
+.step-item:hover { background: rgba(139,92,246,0.12); }
+
+.step-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(139,92,246,0.15);
+    border-radius: 50%;
+    font-size: 16px;
+}
+
+.step-content { flex: 1; }
+.step-instruction { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
+.step-distance { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* ══════════════════════════════════════
+   LAYERS PANEL (Right)
+   ══════════════════════════════════════ */
+.layers-panel {
+    position: absolute;
+    top: 80px;
+    right: 16px;
+    width: 260px;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    z-index: 90;
+    overflow: hidden;
+    display: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.layers-panel.show { display: block; }
+
+.layer-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.layer-section:last-child { border-bottom: none; }
+
+.layer-section-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.style-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.style-option {
+    aspect-ratio: 1;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    padding: 6px;
+    text-align: center;
+}
+
+.style-option:hover { border-color: var(--primary); }
+
+.style-option.active {
+    border-color: var(--primary);
+    background: rgba(139,92,246,0.2);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.style-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Traffic toggle */
+.toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.toggle-row label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.toggle-switch {
+    width: 42px;
+    height: 24px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 24px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.toggle-switch.active { background: var(--primary); }
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: left 0.2s;
+}
+
+.toggle-switch.active::after { left: 21px; }
+
+/* ══════════════════════════════════════
+   MAP CONTROLS (bottom right)
+   ══════════════════════════════════════ */
+.map-controls {
+    position: absolute;
+    bottom: 30px;
+    right: 16px;
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.map-control-btn {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+
+.map-control-btn:hover {
+    background: rgba(139,92,246,0.2);
+    border-color: var(--primary);
+}
+
+/* ══════════════════════════════════════
+   BOTTOM INFO BAR
+   ══════════════════════════════════════ */
+.bottom-bar {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 8px 18px;
+    font-size: 11px;
+    color: var(--text-muted);
+    z-index: 90;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.bottom-bar a {
+    color: var(--primary-light);
+    text-decoration: none;
+}
+
+.bottom-bar a:hover { text-decoration: underline; }
+
+/* ══════════════════════════════════════
+   NAVIGATION MODE OVERLAY
+   ══════════════════════════════════════ */
+.nav-banner {
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 20px;
+    padding: 16px 24px;
+    z-index: 200;
+    display: none;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px var(--primary-glow);
+    min-width: 380px;
+    color: white;
+}
+
+.nav-banner.show { display: flex; }
+
+.nav-banner-icon {
+    font-size: 40px;
+    flex-shrink: 0;
+}
+
+.nav-banner-content { flex: 1; }
+.nav-banner-step { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.nav-banner-sub { font-size: 12px; opacity: 0.9; }
+
+.nav-banner-close {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.nav-banner-close:hover { background: rgba(255,255,255,0.35); }
+
+/* ══════════════════════════════════════
+   MARKER POPUP OVERRIDE
+   ══════════════════════════════════════ */
+.maplibregl-popup-content {
+    background: var(--bg-card) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 16px !important;
+    padding: 14px 18px !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5) !important;
+    font-family: 'DM Sans', sans-serif !important;
+}
+
+.maplibregl-popup-tip {
+    border-top-color: var(--bg-card) !important;
+    border-bottom-color: var(--bg-card) !important;
+}
+
+.maplibregl-popup-close-button {
+    color: var(--text-muted) !important;
+    font-size: 20px !important;
+    padding: 6px 10px !important;
+}
+
+.maplibregl-popup-close-button:hover {
+    background: rgba(239,68,68,0.15) !important;
+    color: var(--danger) !important;
+}
+
+/* MapLibre controls styled */
+.maplibregl-ctrl-attrib {
+    background: rgba(0,0,0,0.6) !important;
+    color: var(--text-muted) !important;
+    font-size: 10px !important;
+    border-radius: 8px 0 0 0 !important;
+}
+
+.maplibregl-ctrl-attrib a { color: var(--primary-light) !important; }
+
+/* Hide default zoom controls (we have custom ones) */
+.maplibregl-ctrl-top-right { display: none !important; }
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+   ══════════════════════════════════════ */
+@media (max-width: 768px) {
+    .header-logo .logo-text { display: none; }
+    .maps-header { flex-wrap: wrap; gap: 8px; }
+    .search-wrapper { order: 3; flex-basis: 100%; max-width: none; }
+    .header-actions { margin-left: auto; }
+
+    .directions-panel {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 70vh;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .layers-panel {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .nav-banner {
+        top: 130px;
+        min-width: auto;
+        width: calc(100% - 32px);
+        padding: 12px 16px;
+    }
+
+    .bottom-bar { display: none; }
+}
+
+/* ══════════════════════════════════════
+   SCROLLBARS
+   ══════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: rgba(139,92,246,0.4);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.7); }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- ══════════════════════════════════════
+     HEADER
+     ══════════════════════════════════════ -->
+<div class="maps-header">
+    <div class="header-logo" onclick="window.location.href='https://wizardecosystem.dev'">
+        <span class="logo-icon">🗺️</span>
+        <span class="logo-text">Wizard Maps</span>
+    </div>
+
+    <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" class="maps-search" placeholder="Search places, addresses, landmarks…" autocomplete="off">
+        <button class="search-clear" id="search-clear">✕</button>
+        <div class="search-results" id="search-results"></div>
+    </div>
+
+    <div class="header-actions">
+        <button class="icon-btn" id="directions-btn" title="Directions">🧭</button>
+        <button class="icon-btn" id="layers-btn" title="Layers & Style">🎨</button>
+        <button class="icon-btn" id="locate-btn" title="My location">📍</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     DIRECTIONS PANEL
+     ══════════════════════════════════════ -->
+<div class="directions-panel" id="directions-panel">
+    <div class="panel-header">
+        <span class="panel-title">🧭 Directions</span>
+        <button class="panel-close" id="directions-close">✕</button>
+    </div>
+    <div class="panel-body">
+        <div class="route-input-group">
+            <label>Start</label>
+            <div class="route-input-wrapper">
+                <span class="route-input-icon">🟢</span>
+                <input type="text" id="route-start" placeholder="Choose starting point…" autocomplete="off">
+                <div class="route-suggestions" id="route-start-suggestions"></div>
+            </div>
+        </div>
+
+        <div class="route-input-group">
+            <label>Destination</label>
+            <div class="route-input-wrapper">
+                <span class="route-input-icon">🔴</span>
+                <input type="text" id="route-end" placeholder="Choose destination…" autocomplete="off">
+                <div class="route-suggestions" id="route-end-suggestions"></div>
+            </div>
+        </div>
+
+        <div class="travel-modes">
+            <div class="travel-mode active" data-profile="driving">
+                <span class="travel-mode-icon">🚗</span>Drive
+            </div>
+            <div class="travel-mode" data-profile="walking">
+                <span class="travel-mode-icon">🚶</span>Walk
+            </div>
+            <div class="travel-mode" data-profile="cycling">
+                <span class="travel-mode-icon">🚴</span>Bike
+            </div>
+        </div>
+
+        <div class="route-actions">
+            <button class="btn btn-primary" id="route-go">Get Route</button>
+            <button class="btn btn-ghost" id="route-clear">Clear</button>
+        </div>
+
+        <div class="route-summary" id="route-summary">
+            <div class="route-summary-header">
+                <div>
+                    <div class="route-summary-time" id="route-time">—</div>
+                    <div class="route-summary-distance" id="route-distance">—</div>
+                </div>
+                <button class="btn btn-primary" id="start-nav" style="flex:0; padding: 10px 18px; font-size: 13px;">▶ Start</button>
+            </div>
+            <div class="steps-list" id="steps-list"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     LAYERS PANEL
+     ══════════════════════════════════════ -->
+<div class="layers-panel" id="layers-panel">
+    <div class="panel-header">
+        <span class="panel-title">🎨 Style</span>
+        <button class="panel-close" id="layers-close">✕</button>
+    </div>
+    <div class="layer-section">
+        <div class="layer-section-title">Map Style</div>
+        <div class="style-grid" id="style-grid">
+            <div class="style-option active" data-style="liberty">
+                <div class="style-swatch" style="background: linear-gradient(135deg, #f0f0f0, #b8d4e8);"></div>
+                Liberty
+            </div>
+            <div class="style-option" data-style="bright">
+                <div class="style-swatch" style="background: linear-gradient(135deg, #ffffff, #ffd699);"></div>
+                Bright
+            </div>
+            <div class="style-option" data-style="positron">
+                <div class="style-swatch" style="background: linear-gradient(135deg, #f5f5f5, #d0d0d0);"></div>
+                Positron
+            </div>
+            <div class="style-option" data-style="dark">
+                <div class="style-swatch" style="background: linear-gradient(135deg, #1a1a2e, #0a0a14);"></div>
+                Dark
+            </div>
+            <div class="style-option" data-style="fiord">
+                <div class="style-swatch" style="background: linear-gradient(135deg, #2a3441, #1a1f2e);"></div>
+                Fiord
+            </div>
+            <div class="style-option" data-style="3d">
+                <div class="style-swatch" style="background: linear-gradient(135deg, #4a5b6e, #2a3441);"></div>
+                3D
+            </div>
+        </div>
+    </div>
+    <div class="layer-section">
+        <div class="layer-section-title">Overlays</div>
+        <div class="toggle-row">
+            <label for="toggle-traffic">🚦 Traffic overlay</label>
+            <div class="toggle-switch" id="toggle-traffic"></div>
+        </div>
+        <div class="toggle-row">
+            <label for="toggle-3d">🏔️ 3D buildings</label>
+            <div class="toggle-switch" id="toggle-3d"></div>
+        </div>
+        <div class="toggle-row">
+            <label for="toggle-terrain">⛰️ Terrain</label>
+            <div class="toggle-switch" id="toggle-terrain"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAP CONTROLS
+     ══════════════════════════════════════ -->
+<div class="map-controls">
+    <button class="map-control-btn" id="zoom-in" title="Zoom in">＋</button>
+    <button class="map-control-btn" id="zoom-out" title="Zoom out">−</button>
+    <button class="map-control-btn" id="reset-bearing" title="Reset rotation">🧭</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     NAVIGATION BANNER
+     ══════════════════════════════════════ -->
+<div class="nav-banner" id="nav-banner">
+    <div class="nav-banner-icon" id="nav-icon">➡️</div>
+    <div class="nav-banner-content">
+        <div class="nav-banner-step" id="nav-step">Navigate to destination</div>
+        <div class="nav-banner-sub" id="nav-sub">—</div>
+    </div>
+    <button class="nav-banner-close" id="nav-stop">✕</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     BOTTOM BAR
+     ══════════════════════════════════════ -->
+<div class="bottom-bar">
+    <span>🗺️ Wizard Maps</span>
+    <span>·</span>
+    <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a>
+    <span>·</span>
+    <span>© OpenStreetMap contributors</span>
+    <span>·</span>
+    <span>Routing by OSRM</span>
+</div>
+
+<script src="maps.js"></script>
+</body>
+</html>
