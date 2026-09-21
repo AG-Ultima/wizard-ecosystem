@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Wizard Sandbox</title>
+<meta name="description" content="A voxel sandbox to dig, build, and gather arcane ore.">
+<meta name="theme-color" content="#080612">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wizard Sandbox">
+
+<link rel="icon" href="https://wizardecosystem.dev/favicon.ico">
+<link rel="apple-touch-icon" href="https://wizardecosystem.dev/favicon.ico">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --ink: #080612;
+    --ink-2: #0e0b1e;
+    --ink-3: #13102a;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-glow: rgba(201,168,76,0.18);
+    --violet: #7c5cbf;
+    --violet-dim: rgba(124,92,191,0.25);
+    --silver: #d4d0e8;
+    --silver-dim: rgba(212,208,232,0.5);
+    --muted: rgba(212,208,232,0.35);
+    --border: rgba(201,168,76,0.18);
+    --border-strong: rgba(201,168,76,0.45);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --display: 'Cormorant Garamond', Georgia, serif;
+    --ui: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+html, body {
+    background: var(--ink); color: var(--silver);
+    font-family: var(--ui);
+    height: 100%; overflow: hidden; position: fixed; width: 100%;
+    overscroll-behavior: none; touch-action: none;
+    user-select: none; -webkit-user-select: none;
+}
+button { font-family: inherit; color: inherit; }
+#scene-canvas { position: absolute; inset: 0; display: block; touch-action: none; }
+
+/* ─────── Loading ─────── */
+#loading {
+    position: fixed; inset: 0; z-index: 500;
+    background: radial-gradient(circle at 50% 40%, #150f2e 0%, #080612 70%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    transition: opacity .5s ease;
+}
+#loading.hide { opacity: 0; pointer-events: none; }
+.brand-mark { width: 56px; height: 56px; }
+.brand-mark svg { width: 100%; height: 100%; }
+#loading h1 { font-family: var(--display); font-size: 30px; font-weight: 700; color: var(--gold-light); letter-spacing: .5px; }
+#loading p { font-size: 13.5px; color: var(--silver-dim); }
+.spin-ring { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--gold); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─────── HUD ─────── */
+.hud { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
+.hud > * { pointer-events: auto; }
+
+.crosshair {
+    position: fixed; left: 50%; top: 50%;
+    width: 20px; height: 20px; margin: -10px 0 0 -10px;
+    z-index: 40; pointer-events: none;
+}
+.crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--gold-light); box-shadow: 0 0 4px rgba(0,0,0,0.8); }
+.crosshair::before { left: 9px; top: 3px; width: 2px; height: 14px; }
+.crosshair::after { top: 9px; left: 3px; height: 2px; width: 14px; }
+
+.top-bar {
+    position: fixed; top: calc(10px + var(--safe-top)); left: 10px; right: 10px;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+}
+.pill {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(8,6,18,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border); border-radius: 22px; padding: 9px 16px;
+    font-family: var(--display); font-size: 16px; font-weight: 600; color: var(--gold-light);
+}
+.icon-btn {
+    width: 42px; height: 42px; flex-shrink: 0;
+    background: rgba(8,6,18,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border); border-radius: 50%;
+    display: grid; place-items: center; color: var(--silver); cursor: pointer;
+}
+.icon-btn:active { background: var(--violet-dim); border-color: var(--border-strong); }
+.icon-btn svg { width: 20px; height: 20px; }
+
+.hint-toast {
+    position: fixed; left: 50%; top: calc(64px + var(--safe-top));
+    transform: translateX(-50%);
+    background: rgba(8,6,18,0.8); border: 1px solid var(--border-strong); border-radius: 20px;
+    padding: 9px 18px; font-size: 13px; color: var(--silver); text-align: center;
+    opacity: 0; transition: opacity .3s; max-width: 88vw; pointer-events: none;
+}
+.hint-toast.show { opacity: 1; }
+
+/* ─────── Hotbar ─────── */
+.hotbar {
+    position: fixed; left: 50%; bottom: calc(14px + var(--safe-bottom));
+    transform: translateX(-50%);
+    display: flex; gap: 7px;
+    background: rgba(8,6,18,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border); border-radius: 20px; padding: 7px;
+}
+.slot {
+    width: 50px; height: 50px; border-radius: 13px; position: relative;
+    border: 1px solid var(--border); cursor: pointer;
+    display: flex; align-items: flex-end; justify-content: center;
+    overflow: hidden;
+}
+.slot .face { position: absolute; inset: 0; }
+.slot .count { position: relative; font-size: 10px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.9); padding: 2px 4px; }
+.slot.active { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-glow), 0 0 14px var(--gold-glow); transform: translateY(-4px); }
+
+/* ─────── Touch controls ─────── */
+.stick-zone { position: fixed; left: 0; bottom: 0; width: 46vw; height: 58vh; z-index: 45; touch-action: none; }
+.look-zone { position: fixed; right: 0; top: 0; width: 100vw; height: 100vh; z-index: 20; touch-action: none; }
+.stick-base {
+    position: fixed; width: 108px; height: 108px; border-radius: 50%;
+    background: rgba(8,6,18,0.5); border: 1px solid var(--border-strong);
+    display: none; z-index: 46; pointer-events: none;
+}
+.stick-nub {
+    position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px;
+    border-radius: 50%; background: rgba(201,168,76,0.35); border: 1px solid var(--gold);
+}
+
+.action-cluster {
+    position: fixed; right: 14px; bottom: calc(84px + var(--safe-bottom));
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    z-index: 47;
+}
+.act-btn {
+    width: 62px; height: 62px; border-radius: 50%;
+    background: rgba(8,6,18,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border-strong); display: grid; place-items: center; color: var(--gold-light);
+}
+.act-btn svg { width: 26px; height: 26px; }
+.act-btn:active, .act-btn.pressed { background: var(--gold-glow); transform: scale(0.94); }
+.act-btn.break { color: var(--silver); }
+.jump-btn {
+    position: fixed; left: 18px; bottom: calc(84px + var(--safe-bottom)); z-index: 47;
+    width: 62px; height: 62px; border-radius: 50%;
+    background: rgba(8,6,18,0.72); border: 1px solid var(--border-strong); color: var(--gold-light);
+    display: grid; place-items: center;
+}
+.jump-btn svg { width: 24px; height: 24px; }
+.jump-btn:active, .jump-btn.pressed { background: var(--gold-glow); transform: scale(0.94); }
+
+/* Desktop */
+.desk-hint {
+    display: none; position: fixed; left: 50%; bottom: calc(76px + var(--safe-bottom));
+    transform: translateX(-50%); font-size: 12.5px; color: var(--silver-dim);
+    background: rgba(8,6,18,0.6); border: 1px solid var(--border); border-radius: 16px; padding: 7px 16px;
+}
+.pointer-lock-veil {
+    position: fixed; inset: 0; z-index: 60; background: rgba(4,3,10,0.75);
+    display: none; align-items: center; justify-content: center; flex-direction: column; gap: 14px; text-align: center; padding: 20px;
+}
+.pointer-lock-veil.show { display: flex; }
+.pointer-lock-veil .go-btn {
+    padding: 14px 30px; border-radius: 26px; border: 1px solid var(--border-strong);
+    background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--ink);
+    font-size: 16px; font-weight: 700; cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .stick-zone, .action-cluster, .jump-btn { display: none; }
+    .desk-hint { display: block; }
+}
+
+/* ─────── Sheets ─────── */
+.backdrop { position: fixed; inset: 0; background: rgba(4,3,10,0.65); z-index: 180; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.backdrop.show { opacity: 1; pointer-events: auto; }
+.sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+    background: var(--ink-2); border-top: 1px solid var(--border-strong);
+    border-radius: 26px 26px 0 0; max-height: 80dvh;
+    transform: translateY(105%); transition: transform .32s cubic-bezier(.4,0,.2,1);
+    padding-bottom: var(--safe-bottom); display: flex; flex-direction: column;
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.6);
+}
+.sheet.show { transform: none; }
+.grip { width: 40px; height: 4px; border-radius: 2px; background: var(--border-strong); margin: 10px auto 4px; flex-shrink: 0; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 20px 14px; border-bottom: 1px solid var(--border); }
+.sheet-title { font-family: var(--display); font-size: 25px; font-weight: 700; color: var(--gold-light); }
+.sheet-body { padding: 18px 20px 26px; overflow-y: auto; }
+.x-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--ink-3); border: 1px solid var(--border); color: var(--silver-dim); display: grid; place-items: center; cursor: pointer; }
+.x-btn svg { width: 17px; height: 17px; }
+.label { display: block; font-size: 13px; color: var(--silver-dim); margin-bottom: 8px; font-weight: 500; }
+.row { display: flex; justify-content: space-between; align-items: center; min-height: 50px; border-bottom: 1px solid var(--border); font-size: 15px; }
+.row:last-child { border-bottom: none; }
+input[type=range] { width: 140px; accent-color: var(--gold); }
+.menu-btn {
+    width: 100%; height: 50px; margin-top: 10px; border-radius: 14px; border: 1px solid var(--border-strong);
+    background: var(--ink-3); color: var(--silver); font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.menu-btn.primary { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--ink); border: none; }
+.menu-btn.danger { color: #e0625a; border-color: rgba(224,98,90,0.4); }
+.foot { margin-top: 18px; font-size: 12px; color: var(--silver-dim); line-height: 1.6; }
+.foot a { color: var(--gold-light); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<canvas id="scene-canvas"></canvas>
+
+<div id="loading">
+    <div class="brand-mark"><svg viewBox="0 0 100 100"><path d="M50 8l10 32 32 10-32 10-10 32-10-32-32-10 32-10z" fill="#c9a84c"/></svg></div>
+    <h1>Wizard Sandbox</h1>
+    <div class="spin-ring"></div>
+    <p id="loading-msg">Shaping the realm…</p>
+</div>
+
+<div class="hud">
+    <div class="crosshair" id="crosshair"></div>
+
+    <div class="top-bar">
+        <div class="pill">Wizard Sandbox</div>
+        <button class="icon-btn" id="menu-btn" aria-label="Menu" data-icon="menu"></button>
+    </div>
+    <div class="hint-toast" id="hint"></div>
+
+    <div class="hotbar" id="hotbar"></div>
+    <div class="desk-hint">WASD move · mouse look · click break · right-click place · space jump · 1–5 select</div>
+</div>
+
+<div class="stick-zone" id="stick-zone"></div>
+<div class="stick-base" id="stick-base"><div class="stick-nub" id="stick-nub"></div></div>
+<div class="look-zone" id="look-zone"></div>
+
+<button class="jump-btn" id="jump-btn" aria-label="Jump" data-icon="jump"></button>
+<div class="action-cluster">
+    <button class="act-btn" id="place-btn" aria-label="Place block" data-icon="place"></button>
+    <button class="act-btn break" id="break-btn" aria-label="Break block" data-icon="break"></button>
+</div>
+
+<div class="pointer-lock-veil" id="lock-veil">
+    <div class="brand-mark" style="width:44px;height:44px;"><svg viewBox="0 0 100 100"><path d="M50 8l10 32 32 10-32 10-10 32-10-32-32-10 32-10z" fill="#c9a84c"/></svg></div>
+    <div style="font-family:var(--display);font-size:22px;color:var(--gold-light);">Ready to explore?</div>
+    <div style="font-size:13.5px;color:var(--silver-dim);max-width:280px;">Click to lock your mouse for looking around. Press Esc anytime to let go.</div>
+    <button class="go-btn" id="lock-go-btn">Enter the sandbox</button>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="menu-sheet">
+    <div class="grip"></div>
+    <div class="sheet-head"><span class="sheet-title">Menu</span><button class="x-btn" id="menu-close" data-icon="close"></button></div>
+    <div class="sheet-body">
+        <div class="row"><span>Look sensitivity</span><input type="range" id="sens-slider" min="20" max="200" value="90"></div>
+        <div class="row"><span>Render distance</span><input type="range" id="fog-slider" min="40" max="140" value="90"></div>
+        <button class="menu-btn primary" id="resume-btn">Resume</button>
+        <button class="menu-btn danger" id="reset-btn">Reshape the world</button>
+        <div class="foot">Your build lives only in this session — reload and a fresh realm is shaped.<br><a href="https://wizardecosystem.dev">Back to Wizard Ecosystem</a></div>
+    </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// ICONS
+// ══════════════════════════════════════
+const ICONS = {
+    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    jump: '<path d="M12 20V6M6 12l6-6 6 6"/>',
+    place: '<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M12 9v6M9 12h6"/>',
+    break: '<path d="M4 15l6-6M9 9l6 6M4 20l4-4M6 4l4 4M15 5l6 6-4 4-6-6z"/>'
+};
+function icon(name) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`; }
+document.querySelectorAll('[data-icon]').forEach(el => el.innerHTML = icon(el.dataset.icon));
+
+const $ = id => document.getElementById(id);
+let hintTimer = null;
+function showHint(text, ms = 2200) {
+    const el = $('hint');
+    el.textContent = text;
+    el.classList.add('show');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+// ══════════════════════════════════════
+// WORLD CONFIG
+// ══════════════════════════════════════
+const WORLD_SIZE = 34;              // columns per side
+const WORLD_HALF = WORLD_SIZE / 2;
+const MAX_HEIGHT = 14;
+const EYE_HEIGHT = 1.7;
+const PLAYER_RADIUS = 0.32;
+const GRAVITY = 22;
+const JUMP_SPEED = 8.6;
+const MOVE_SPEED = 5.1;
+
+const BLOCK_TYPES = [
+    { id: 'turf',    name: 'Violet Turf',    color: 0x7c5cbf, emissive: 0x000000, capacity: 1800, initial: 0 },
+    { id: 'stone',   name: 'Deepstone',      color: 0x1c1836, emissive: 0x000000, capacity: 7000, initial: 0 },
+    { id: 'gold',    name: 'Gold Ore',       color: 0xc9a84c, emissive: 0x2a2000, capacity: 900,  initial: 0 },
+    { id: 'moon',    name: 'Moonstone',      color: 0xd4d0e8, emissive: 0x0a0a14, capacity: 900,  initial: 0 },
+    { id: 'crystal', name: 'Arcane Crystal', color: 0xe8c97a, emissive: 0x6b551a, capacity: 700,  initial: 0 }
+];
+const TYPE_BY_ID = {}; BLOCK_TYPES.forEach((t, i) => TYPE_BY_ID[t.id] = i);
+
+// ══════════════════════════════════════
+// NOISE (deterministic value noise, no deps)
+// ══════════════════════════════════════
+function hash2(x, y) {
+    let h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+    return h - Math.floor(h);
+}
+function smooth(t) { return t * t * (3 - 2 * t); }
+function valueNoise(x, y) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+    const u = smooth(xf), v = smooth(yf);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+function fbm(x, y, octaves) {
+    let total = 0, amp = 1, freq = 1, max = 0;
+    for (let i = 0; i < octaves; i++) {
+        total += valueNoise(x * freq, y * freq) * amp;
+        max += amp; amp *= 0.5; freq *= 2;
+    }
+    return total / max;
+}
+
+// ══════════════════════════════════════
+// THREE SETUP
+// ══════════════════════════════════════
+const canvas = $('scene-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0818);
+scene.fog = new THREE.Fog(0x0a0818, 18, 90);
+
+const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 300);
+
+const ambient = new THREE.AmbientLight(0x5b4b96, 0.85);
+scene.add(ambient);
+const sun = new THREE.DirectionalLight(0xf2d27c, 0.9);
+sun.position.set(40, 60, 20);
+scene.add(sun);
+const rim = new THREE.DirectionalLight(0x7c5cbf, 0.35);
+rim.position.set(-30, 20, -40);
+scene.add(rim);
+
+// Starfield
+{
+    const starCount = 500;
+    const pos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+        const r = 130 + Math.random() * 40;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(Math.random() * 0.9);
+        pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        pos[i * 3 + 1] = Math.abs(r * Math.cos(phi)) + 10;
+        pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.PointsMaterial({ color: 0xe8c97a, size: 1.1, sizeAttenuation: false, transparent: true, opacity: 0.7 });
+    scene.add(new THREE.Points(geo, mat));
+}
+
+window.addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+});
+
+// ══════════════════════════════════════
+// VOXEL WORLD DATA
+// ══════════════════════════════════════
+const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
+const meshes = [];       // InstancedMesh per type
+const freeList = [];     // per type: array of free instance indices
+const posOfIndex = [];   // per type: index -> "x,y,z" key (or null)
+const voxels = new Map(); // "x,y,z" -> { type, idx }
+const dummy = new THREE.Object3D();
+
+BLOCK_TYPES.forEach((bt, ti) => {
+    const mat = new THREE.MeshStandardMaterial({ color: bt.color, emissive: bt.emissive, roughness: 0.85, metalness: bt.id === 'gold' ? 0.4 : 0.05 });
+    const mesh = new THREE.InstancedMesh(cubeGeo, mat, bt.capacity);
+    mesh.count = bt.capacity;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    dummy.position.set(0, -9999, 0);
+    dummy.scale.setScalar(0);
+    dummy.updateMatrix();
+    for (let i = 0; i < bt.capacity; i++) mesh.setMatrixAt(i, dummy.matrix);
+    scene.add(mesh);
+    meshes.push(mesh);
+    freeList.push([]);
+    posOfIndex.push(new Array(bt.capacity).fill(null));
+});
+
+function key(x, y, z) { return x + ',' + y + ',' + z; }
+function heightAt(x, z) {
+    const n = fbm(x * 0.045, z * 0.045, 4);
+    return 4 + Math.floor(n * 9);
+}
+
+function placeVoxel(x, y, z, typeId, silent) {
+    if (y < 0 || y >= MAX_HEIGHT) return false;
+    const k = key(x, y, z);
+    if (voxels.has(k)) return false;
+    const ti = TYPE_BY_ID[typeId];
+    let idx = freeList[ti].pop();
+    if (idx === undefined) { if (!silent) showHint(BLOCK_TYPES[ti].name + ' pouch is full'); return false; }
+    dummy.position.set(x + 0.5, y + 0.5, z + 0.5);
+    dummy.scale.setScalar(1);
+    dummy.updateMatrix();
+    meshes[ti].setMatrixAt(idx, dummy.matrix);
+    meshes[ti].instanceMatrix.needsUpdate = true;
+    posOfIndex[ti][idx] = k;
+    voxels.set(k, { type: ti, idx });
+    return true;
+}
+
+function removeVoxel(x, y, z) {
+    const k = key(x, y, z);
+    const v = voxels.get(k);
+    if (!v) return null;
+    dummy.position.set(0, -9999, 0);
+    dummy.scale.setScalar(0);
+    dummy.updateMatrix();
+    meshes[v.type].setMatrixAt(v.idx, dummy.matrix);
+    meshes[v.type].instanceMatrix.needsUpdate = true;
+    posOfIndex[v.type][v.idx] = null;
+    freeList[v.type].push(v.idx);
+    voxels.delete(k);
+    return BLOCK_TYPES[v.type].id;
+}
+
+function solidAt(x, y, z) { return voxels.has(key(x, y, z)); }
+
+function typeForDepth(x, y, z, surfaceY) {
+    if (y === surfaceY) return 'turf';
+    const n = hash2(x * 3.1 + 11, z * 3.1 + y * 7.7);
+    if (y < surfaceY - 2) {
+        if (n < 0.012) return 'crystal';
+        if (n < 0.03) return 'gold';
+        if (n < 0.05) return 'moon';
+    }
+    return 'stone';
+}
+
+async function generateWorld() {
+    const total = WORLD_SIZE * WORLD_SIZE;
+    let done = 0;
+    for (let x = -WORLD_HALF; x < WORLD_HALF; x++) {
+        for (let z = -WORLD_HALF; z < WORLD_HALF; z++) {
+            const h = heightAt(x, z);
+            for (let y = 0; y <= h; y++) {
+                placeVoxel(x, y, z, typeForDepth(x, y, z, h), true);
+            }
+            done++;
+        }
+        if (x % 6 === 0) {
+            $('loading-msg').textContent = `Shaping the realm… ${Math.round(done / total * 100)}%`;
+            await new Promise(r => requestAnimationFrame(r));
+        }
+    }
+}
+
+function findSpawnHeight() {
+    return heightAt(0, 0) + 1;
+}
+
+// ══════════════════════════════════════
+// PLAYER / MOVEMENT
+// ══════════════════════════════════════
+const player = {
+    x: 0.5, y: 0, z: 0.5,
+    vy: 0,
+    yaw: Math.PI * 0.25,
+    pitch: -0.12,
+    onGround: false,
+    grounded: false
+};
+
+function groundHeightBelow(x, z) {
+    for (let y = MAX_HEIGHT; y >= 0; y--) {
+        if (solidAt(Math.floor(x), y, Math.floor(z))) return y + 1;
+    }
+    return 0;
+}
+
+function tryMove(nx, nz) {
+    // Simple AABB-ish collision: block movement if the destination column
+    // is solid at foot or head height, else allow (steps up automatically
+    // by ground snapping in updatePlayer).
+    const footY = Math.floor(player.y);
+    const headY = Math.floor(player.y + 1.2);
+    const gx = Math.floor(nx), gz = Math.floor(nz);
+    const ground = groundHeightBelow(nx, nz);
+    if (ground - player.y > 1.05) return false; // wall too tall to step onto
+    return true;
+}
+
+function updatePlayer(dt) {
+    const speed = MOVE_SPEED * (moveInput.sprint ? 1.5 : 1);
+    const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
+    let dx = 0, dz = 0;
+    if (moveInput.forward) { dx += sin; dz += cos; }
+    if (moveInput.back) { dx -= sin; dz -= cos; }
+    if (moveInput.left) { dx -= cos; dz += sin; }
+    if (moveInput.right) { dx += cos; dz -= sin; }
+    const len = Math.hypot(dx, dz);
+    if (len > 0.001) { dx /= len; dz /= len; }
+
+    const nx = player.x + dx * speed * dt;
+    const nz = player.z + dz * speed * dt;
+    if (tryMove(nx, player.z)) player.x = THREE.MathUtils.clamp(nx, -WORLD_HALF + 0.5, WORLD_HALF - 0.5);
+    if (tryMove(player.x, nz)) player.z = THREE.MathUtils.clamp(nz, -WORLD_HALF + 0.5, WORLD_HALF - 0.5);
+
+    // Gravity + ground snap
+    player.vy -= GRAVITY * dt;
+    let ny = player.y + player.vy * dt;
+    const ground = groundHeightBelow(player.x, player.z);
+    if (ny <= ground) {
+        ny = ground;
+        player.vy = 0;
+        player.onGround = true;
+    } else {
+        player.onGround = false;
+    }
+    // Step up smoothly onto a 1-block ledge
+    if (player.onGround === false && ny < ground) { ny = ground; player.onGround = true; player.vy = 0; }
+    player.y = ny;
+
+    if (moveInput.jump && player.onGround) {
+        player.vy = JUMP_SPEED;
+        player.onGround = false;
+    }
+
+    camera.position.set(player.x, player.y + EYE_HEIGHT, player.z);
+    camera.rotation.order = 'YXZ';
+    camera.rotation.y = player.yaw;
+    camera.rotation.x = player.pitch;
+
+    if (player.y < -20) { // fell into the void — respawn
+        player.x = 0.5; player.z = 0.5; player.y = findSpawnHeight(); player.vy = 0;
+        showHint('The void spat you back out');
+    }
+}
+
+const moveInput = { forward: false, back: false, left: false, right: false, sprint: false, jump: false };
+
+// ══════════════════════════════════════
+// TOUCH: joystick + look
+// ══════════════════════════════════════
+const stickZone = $('stick-zone'), stickBase = $('stick-base'), stickNub = $('stick-nub');
+let stickTouchId = null, stickOrigin = { x: 0, y: 0 };
+stickZone.addEventListener('touchstart', e => {
+    if (stickTouchId !== null) return;
+    const t = e.changedTouches[0];
+    stickTouchId = t.identifier;
+    stickOrigin = { x: t.clientX, y: t.clientY };
+    stickBase.style.left = (t.clientX - 54) + 'px';
+    stickBase.style.top = (t.clientY - 54) + 'px';
+    stickBase.style.display = 'block';
+    e.preventDefault();
+}, { passive: false });
+stickZone.addEventListener('touchmove', e => {
+    for (const t of e.changedTouches) {
+        if (t.identifier !== stickTouchId) continue;
+        let dx = t.clientX - stickOrigin.x, dy = t.clientY - stickOrigin.y;
+        const max = 46;
+        const dist = Math.hypot(dx, dy);
+        if (dist > max) { dx = dx / dist * max; dy = dy / dist * max; }
+        stickNub.style.transform = `translate(${dx}px, ${dy}px)`;
+        const nx = dx / max, ny = dy / max;
+        moveInput.forward = ny < -0.28;
+        moveInput.back = ny > 0.28;
+        moveInput.left = nx < -0.28;
+        moveInput.right = nx > 0.28;
+        moveInput.sprint = dist > max * 0.85;
+    }
+    e.preventDefault();
+}, { passive: false });
+function endStick(e) {
+    for (const t of e.changedTouches) {
+        if (t.identifier !== stickTouchId) continue;
+        stickTouchId = null;
+        stickBase.style.display = 'none';
+        stickNub.style.transform = 'translate(0,0)';
+        moveInput.forward = moveInput.back = moveInput.left = moveInput.right = moveInput.sprint = false;
+    }
+}
+stickZone.addEventListener('touchend', endStick);
+stickZone.addEventListener('touchcancel', endStick);
+
+const lookZone = $('look-zone');
+let lookTouchId = null, lookLast = { x: 0, y: 0 };
+let sensitivity = 90;
+lookZone.addEventListener('touchstart', e => {
+    for (const t of e.changedTouches) {
+        if (t.clientX < innerWidth * 0.42 && t.clientY > innerHeight * 0.4) continue; // reserved for joystick
+        if (lookTouchId !== null) continue;
+        lookTouchId = t.identifier;
+        lookLast = { x: t.clientX, y: t.clientY };
+    }
+}, { passive: true });
+lookZone.addEventListener('touchmove', e => {
+    for (const t of e.changedTouches) {
+        if (t.identifier !== lookTouchId) continue;
+        const dx = t.clientX - lookLast.x, dy = t.clientY - lookLast.y;
+        lookLast = { x: t.clientX, y: t.clientY };
+        player.yaw -= dx * (sensitivity / 90) * 0.0035;
+        player.pitch -= dy * (sensitivity / 90) * 0.0035;
+        player.pitch = THREE.MathUtils.clamp(player.pitch, -1.45, 1.45);
+    }
+}, { passive: true });
+function endLook(e) {
+    for (const t of e.changedTouches) if (t.identifier === lookTouchId) lookTouchId = null;
+}
+lookZone.addEventListener('touchend', endLook);
+lookZone.addEventListener('touchcancel', endLook);
+
+// Jump / action buttons
+function bindHold(el, onDown, onUp) {
+    const down = e => { e.preventDefault(); el.classList.add('pressed'); onDown(); };
+    const up = e => { el.classList.remove('pressed'); onUp && onUp(); };
+    el.addEventListener('touchstart', down, { passive: false });
+    el.addEventListener('touchend', up);
+    el.addEventListener('touchcancel', up);
+    el.addEventListener('mousedown', down);
+    el.addEventListener('mouseup', up);
+    el.addEventListener('mouseleave', up);
+}
+bindHold($('jump-btn'), () => moveInput.jump = true, () => moveInput.jump = false);
+bindHold($('break-btn'), () => doBreak());
+bindHold($('place-btn'), () => doPlace());
+
+// ══════════════════════════════════════
+// DESKTOP: pointer lock + keyboard + mouse
+// ══════════════════════════════════════
+const lockVeil = $('lock-veil');
+const isDesktop = matchMedia('(hover: hover) and (pointer: fine)').matches;
+if (isDesktop) lockVeil.classList.add('show');
+
+$('lock-go-btn').addEventListener('click', () => canvas.requestPointerLock());
+canvas.addEventListener('click', () => { if (isDesktop && document.pointerLockElement !== canvas) canvas.requestPointerLock(); });
+document.addEventListener('pointerlockchange', () => {
+    lockVeil.classList.toggle('show', isDesktop && document.pointerLockElement !== canvas);
+});
+document.addEventListener('mousemove', e => {
+    if (document.pointerLockElement !== canvas) return;
+    player.yaw -= e.movementX * (sensitivity / 90) * 0.0022;
+    player.pitch -= e.movementY * (sensitivity / 90) * 0.0022;
+    player.pitch = THREE.MathUtils.clamp(player.pitch, -1.45, 1.45);
+});
+canvas.addEventListener('mousedown', e => {
+    if (document.pointerLockElement !== canvas) return;
+    if (e.button === 0) doBreak(); else if (e.button === 2) doPlace();
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (e.repeat) return;
+    switch (e.code) {
+        case 'KeyW': moveInput.forward = true; break;
+        case 'KeyS': moveInput.back = true; break;
+        case 'KeyA': moveInput.left = true; break;
+        case 'KeyD': moveInput.right = true; break;
+        case 'ShiftLeft': moveInput.sprint = true; break;
+        case 'Space': moveInput.jump = true; break;
+        case 'Digit1': case 'Digit2': case 'Digit3': case 'Digit4': case 'Digit5':
+            selectSlot(parseInt(e.code.slice(-1)) - 1); break;
+        case 'Escape': openMenu(); break;
+    }
+});
+document.addEventListener('keyup', e => {
+    switch (e.code) {
+        case 'KeyW': moveInput.forward = false; break;
+        case 'KeyS': moveInput.back = false; break;
+        case 'KeyA': moveInput.left = false; break;
+        case 'KeyD': moveInput.right = false; break;
+        case 'ShiftLeft': moveInput.sprint = false; break;
+        case 'Space': moveInput.jump = false; break;
+    }
+});
+
+// ══════════════════════════════════════
+// HOTBAR / INVENTORY
+// ══════════════════════════════════════
+const inventory = BLOCK_TYPES.map(() => 0);
+let activeSlot = 1; // start on Deepstone-ish; will pick a sensible default below
+
+function renderHotbar() {
+    $('hotbar').innerHTML = BLOCK_TYPES.map((bt, i) => `
+        <div class="slot ${i === activeSlot ? 'active' : ''}" data-i="${i}">
+            <div class="face" style="background:#${bt.color.toString(16).padStart(6,'0')}"></div>
+            <span class="count">${inventory[i]}</span>
+        </div>`).join('');
+    $('hotbar').querySelectorAll('.slot').forEach(el => el.addEventListener('click', () => selectSlot(+el.dataset.i)));
+}
+function selectSlot(i) {
+    if (i < 0 || i >= BLOCK_TYPES.length) return;
+    activeSlot = i;
+    renderHotbar();
+}
+function addToInventory(typeId, n = 1) {
+    const i = TYPE_BY_ID[typeId];
+    inventory[i] += n;
+    renderHotbar();
+}
+renderHotbar();
+
+// ══════════════════════════════════════
+// RAYCAST / BREAK / PLACE
+// ══════════════════════════════════════
+const raycaster = new THREE.Raycaster();
+raycaster.far = 6.5;
+const highlight = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002)),
+    new THREE.LineBasicMaterial({ color: 0xe8c97a })
+);
+highlight.visible = false;
+scene.add(highlight);
+
+function castTarget() {
+    raycaster.set(camera.position, camera.getWorldDirection(new THREE.Vector3()));
+    const hits = raycaster.intersectObjects(meshes, false);
+    if (!hits.length) return null;
+    const hit = hits[0];
+    const normal = hit.face.normal.clone();
+    const center = new THREE.Vector3();
+    hit.object.getMatrixAt(hit.instanceId, dummy.matrix);
+    dummy.matrix.decompose(center, dummy.quaternion, dummy.scale);
+    const bx = Math.round(center.x - 0.5), by = Math.round(center.y - 0.5), bz = Math.round(center.z - 0.5);
+    return { x: bx, y: by, z: bz, normal };
+}
+
+function doBreak() {
+    const t = castTarget();
+    if (!t) return;
+    const removedType = removeVoxel(t.x, t.y, t.z);
+    if (removedType) {
+        addToInventory(removedType, 1);
+        if ('vibrate' in navigator) navigator.vibrate(12);
+    }
+}
+function doPlace() {
+    const t = castTarget();
+    if (!t) return;
+    const bt = BLOCK_TYPES[activeSlot];
+    if (inventory[activeSlot] <= 0) { showHint('No ' + bt.name + ' left'); return; }
+    const px = t.x + Math.round(t.normal.x), py = t.y + Math.round(t.normal.y), pz = t.z + Math.round(t.normal.z);
+    // Don't place inside the player
+    const dist = Math.hypot(px + 0.5 - player.x, pz + 0.5 - player.z);
+    if (dist < 0.6 && py >= Math.floor(player.y) && py <= Math.floor(player.y + 1.3)) return;
+    if (placeVoxel(px, py, pz, bt.id)) {
+        inventory[activeSlot]--;
+        renderHotbar();
+        if ('vibrate' in navigator) navigator.vibrate(12);
+    }
+}
+
+// ══════════════════════════════════════
+// MENU
+// ══════════════════════════════════════
+const backdrop = $('backdrop'), menuSheet = $('menu-sheet');
+function openMenu() {
+    menuSheet.classList.add('show'); backdrop.classList.add('show');
+    if (document.pointerLockElement === canvas) document.exitPointerLock();
+}
+function closeMenu() { menuSheet.classList.remove('show'); backdrop.classList.remove('show'); }
+$('menu-btn').addEventListener('click', openMenu);
+$('menu-close').addEventListener('click', closeMenu);
+$('resume-btn').addEventListener('click', closeMenu);
+backdrop.addEventListener('click', closeMenu);
+$('sens-slider').addEventListener('input', e => sensitivity = +e.target.value);
+$('fog-slider').addEventListener('input', e => {
+    const d = +e.target.value;
+    scene.fog.near = d * 0.2;
+    scene.fog.far = d;
+});
+$('reset-btn').addEventListener('click', () => { closeMenu(); location.reload(); });
+
+// ══════════════════════════════════════
+// MAIN LOOP
+// ══════════════════════════════════════
+const clock = new THREE.Clock();
+function tick() {
+    requestAnimationFrame(tick);
+    const dt = Math.min(clock.getDelta(), 0.05);
+    updatePlayer(dt);
+    const t = castTarget();
+    if (t) {
+        highlight.position.set(t.x + 0.5, t.y + 0.5, t.z + 0.5);
+        highlight.visible = true;
+    } else {
+        highlight.visible = false;
+    }
+    renderer.render(scene, camera);
+}
+
+// ══════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════
+(async function boot() {
+    await generateWorld();
+    player.y = findSpawnHeight();
+    // Give the player a starting handful so building isn't blocked on day one
+    inventory[TYPE_BY_ID.turf] = 24;
+    inventory[TYPE_BY_ID.stone] = 24;
+    renderHotbar();
+    selectSlot(0);
+    $('loading').classList.add('hide');
+    setTimeout(() => showHint(isDesktop ? 'Click to look around, then dig and build' : 'Drag to look, joystick to move, dig and build'), 700);
+    tick();
+})();
+</script>
+</body>
+</html>
