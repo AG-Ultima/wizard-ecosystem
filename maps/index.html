@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>🗺️ Wizard Maps</title>
-<meta name="description" content="Free, private, OpenStreetMap-powered navigation. No API keys, no tracking.">
 <meta name="theme-color" content="#0a0814">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -21,6 +20,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
+/* [unchanged styles from previous version — paste them all back in] */
 :root {
     --bg-primary: #0a0a14;
     --bg-card: rgba(18,18,35,0.96);
@@ -55,31 +55,20 @@ html, body {
     width: 100%;
 }
 
-#map {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-primary);
-}
+#map { position: absolute; inset: 0; width: 100%; height: 100%; background: var(--bg-primary); }
 
-/* ══════════════════════════════════════
-   HEADER
-   ══════════════════════════════════════ */
+/* HEADER */
 .maps-header {
     position: absolute;
     top: calc(12px + var(--safe-top));
-    left: 12px;
-    right: 12px;
+    left: 12px; right: 12px;
     z-index: 100;
     display: flex;
     align-items: center;
     gap: 10px;
     pointer-events: none;
 }
-
 .maps-header > * { pointer-events: auto; }
-
 .header-logo {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
@@ -94,11 +83,8 @@ html, body {
     transition: transform 0.15s;
     flex-shrink: 0;
 }
-
 .header-logo:active { transform: scale(0.96); }
-
 .header-logo .logo-icon { font-size: 20px; }
-
 .header-logo .logo-text {
     font-family: 'Cormorant Garamond', serif;
     font-size: 18px;
@@ -109,9 +95,7 @@ html, body {
     -webkit-text-fill-color: transparent;
     white-space: nowrap;
 }
-
 .search-wrapper { flex: 1; position: relative; min-width: 0; }
-
 .maps-search {
     width: 100%;
     background: var(--bg-card);
@@ -126,12 +110,7 @@ html, body {
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
-
-.maps-search:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 25px var(--primary-glow);
-}
-
+.maps-search:focus { border-color: var(--primary); box-shadow: 0 0 25px var(--primary-glow); }
 .search-icon {
     position: absolute;
     left: 16px; top: 50%;
@@ -140,7 +119,6 @@ html, body {
     color: var(--text-muted);
     pointer-events: none;
 }
-
 .search-clear {
     position: absolute;
     right: 8px; top: 50%;
@@ -156,7 +134,6 @@ html, body {
     justify-content: center;
     font-size: 14px;
 }
-
 .search-clear.show { display: flex; }
 .search-clear:active { background: rgba(239,68,68,0.3); color: var(--danger); }
 
@@ -176,9 +153,7 @@ html, body {
     z-index: 200;
     -webkit-overflow-scrolling: touch;
 }
-
 .search-results.show { display: block; }
-
 .search-result-item {
     padding: 14px 18px;
     cursor: pointer;
@@ -187,24 +162,31 @@ html, body {
     gap: 12px;
     align-items: flex-start;
 }
-
 .search-result-item:last-child { border-bottom: none; }
 .search-result-item:active { background: rgba(139,92,246,0.25); }
-
 .search-result-icon { font-size: 20px; line-height: 1.4; flex-shrink: 0; }
 .search-result-text { flex: 1; min-width: 0; }
 .search-result-title { font-size: 15px; font-weight: 500; margin-bottom: 3px; }
 .search-result-subtitle { font-size: 13px; color: var(--text-muted); line-height: 1.35; }
+.search-loading, .search-empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 14px; }
 
-.search-loading, .search-empty {
-    padding: 24px;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 14px;
+/* saved place chip in search dropdown */
+.search-result-item.is-saved .search-result-icon { color: var(--primary-light); }
+.search-result-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    background: rgba(139,92,246,0.2);
+    color: var(--primary-light);
+    border-radius: 20px;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
-
 .icon-btn {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
@@ -221,18 +203,14 @@ html, body {
     transition: transform 0.15s, background 0.2s;
     flex-shrink: 0;
 }
-
 .icon-btn:active { background: rgba(139,92,246,0.3); transform: scale(0.94); }
-
 .icon-btn.active {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     border-color: transparent;
     box-shadow: 0 0 20px var(--primary-glow);
 }
 
-/* ══════════════════════════════════════
-   QUICK PLACES CHIPS (below header)
-   ══════════════════════════════════════ */
+/* QUICK CHIPS */
 .quick-places {
     position: absolute;
     top: calc(70px + var(--safe-top));
@@ -247,9 +225,7 @@ html, body {
     scrollbar-width: none;
     pointer-events: none;
 }
-
 .quick-places::-webkit-scrollbar { display: none; }
-
 .quick-chip {
     pointer-events: auto;
     flex-shrink: 0;
@@ -269,27 +245,13 @@ html, body {
     white-space: nowrap;
     transition: transform 0.15s, background 0.2s, border-color 0.2s;
 }
-
-.quick-chip:active {
-    background: rgba(139,92,246,0.25);
-    transform: scale(0.95);
-}
-
+.quick-chip:active { background: rgba(139,92,246,0.25); transform: scale(0.95); }
 .quick-chip .chip-emoji { font-size: 16px; }
-
-.quick-chip.add-new {
-    border-style: dashed;
-    color: var(--primary-light);
-}
-
+.quick-chip.add-new { border-style: dashed; color: var(--primary-light); }
 .quick-chip.add-new:active { background: rgba(139,92,246,0.3); }
-
-/* Hide quick places when navigating */
 body.navigating .quick-places { display: none; }
 
-/* ══════════════════════════════════════
-   LOCATION BANNER
-   ══════════════════════════════════════ */
+/* LOCATION BANNER */
 .locate-banner {
     position: fixed;
     bottom: calc(20px + var(--safe-bottom));
@@ -309,19 +271,15 @@ body.navigating .quick-places { display: none; }
     max-width: 480px;
     margin: 0 auto;
 }
-
 .locate-banner.hidden { display: none; }
-
 @keyframes slideUp {
     from { transform: translateY(120%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
-
 .locate-icon { font-size: 32px; flex-shrink: 0; }
 .locate-text { flex: 1; font-size: 14px; line-height: 1.4; }
 .locate-text strong { display: block; font-size: 15px; margin-bottom: 2px; }
 .locate-text small { color: var(--text-muted); font-size: 12px; }
-
 .locate-btn {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     border: none;
@@ -334,12 +292,9 @@ body.navigating .quick-places { display: none; }
     font-family: inherit;
     flex-shrink: 0;
 }
-
 .locate-btn:active { transform: scale(0.96); }
 
-/* ══════════════════════════════════════
-   BOTTOM SHEET
-   ══════════════════════════════════════ */
+/* BOTTOM SHEET */
 .sheet-backdrop {
     position: fixed;
     inset: 0;
@@ -351,9 +306,7 @@ body.navigating .quick-places { display: none; }
     pointer-events: none;
     transition: opacity 0.25s ease;
 }
-
 .sheet-backdrop.show { opacity: 1; pointer-events: auto; }
-
 .bottom-sheet {
     position: fixed;
     left: 0; right: 0; bottom: 0;
@@ -371,9 +324,7 @@ body.navigating .quick-places { display: none; }
     padding-bottom: var(--safe-bottom);
     box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
 }
-
 .bottom-sheet.show { transform: translateY(0); }
-
 .sheet-handle {
     width: 44px; height: 5px;
     background: rgba(255,255,255,0.25);
@@ -381,7 +332,6 @@ body.navigating .quick-places { display: none; }
     margin: 10px auto 4px;
     flex-shrink: 0;
 }
-
 .sheet-header {
     padding: 8px 20px 16px;
     display: flex;
@@ -390,14 +340,12 @@ body.navigating .quick-places { display: none; }
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
 }
-
 .sheet-title {
     font-family: 'Cormorant Garamond', serif;
     font-size: 22px;
     font-weight: 600;
     color: var(--primary-light);
 }
-
 .sheet-close {
     background: rgba(255,255,255,0.08);
     border: none;
@@ -411,9 +359,7 @@ body.navigating .quick-places { display: none; }
     justify-content: center;
     flex-shrink: 0;
 }
-
 .sheet-close:active { background: rgba(239,68,68,0.2); color: var(--danger); }
-
 .sheet-body {
     padding: 20px;
     overflow-y: auto;
@@ -421,10 +367,9 @@ body.navigating .quick-places { display: none; }
     -webkit-overflow-scrolling: touch;
 }
 
-/* Route inputs */
+/* ROUTE INPUTS */
 .route-input-group { margin-bottom: 12px; position: relative; }
 .route-input-wrapper { position: relative; display: flex; align-items: center; gap: 10px; }
-
 .route-input-icon {
     width: 34px; height: 34px;
     border-radius: 50%;
@@ -436,10 +381,8 @@ body.navigating .quick-places { display: none; }
     font-weight: bold;
     color: white;
 }
-
 .route-input-icon.start { background: linear-gradient(135deg, #10b981, #059669); }
-.route-input-icon.end   { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-
+.route-input-icon.end { background: linear-gradient(135deg, #ef4444, #b91c1c); }
 .route-input-wrapper input {
     flex: 1;
     background: rgba(0,0,0,0.4);
@@ -453,14 +396,8 @@ body.navigating .quick-places { display: none; }
     min-width: 0;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
-
-.route-input-wrapper input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 15px var(--primary-glow);
-}
-
+.route-input-wrapper input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
 .route-input-wrapper input::placeholder { color: var(--text-muted); }
-
 .route-suggestions {
     position: absolute;
     top: calc(100% + 6px);
@@ -475,9 +412,7 @@ body.navigating .quick-places { display: none; }
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     -webkit-overflow-scrolling: touch;
 }
-
 .route-suggestions.show { display: block; }
-
 .route-suggestion-item {
     padding: 12px 16px;
     cursor: pointer;
@@ -485,20 +420,13 @@ body.navigating .quick-places { display: none; }
     border-bottom: 1px solid rgba(139,92,246,0.1);
     line-height: 1.4;
 }
-
 .route-suggestion-item:active { background: rgba(139,92,246,0.25); }
 .route-suggestion-item:last-child { border-bottom: none; }
 .route-suggestion-item strong { display: block; }
 .route-suggestion-item small { color: var(--text-muted); }
 
-/* Travel modes */
-.travel-modes {
-    display: flex;
-    gap: 8px;
-    margin-top: 18px;
-    margin-bottom: 18px;
-}
-
+/* TRAVEL MODES */
+.travel-modes { display: flex; gap: 8px; margin-top: 18px; margin-bottom: 18px; }
 .travel-mode {
     flex: 1;
     padding: 14px 8px;
@@ -512,21 +440,17 @@ body.navigating .quick-places { display: none; }
     color: var(--text-secondary);
     font-weight: 500;
 }
-
 .travel-mode:active { transform: scale(0.96); }
-
 .travel-mode.active {
     background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     border-color: transparent;
     color: white;
     box-shadow: 0 0 20px var(--primary-glow);
 }
-
 .travel-mode-icon { font-size: 22px; display: block; margin-bottom: 4px; }
 
-/* Route summary */
+/* ROUTE SUMMARY */
 .route-summary { margin-top: 20px; }
-
 .route-summary-header {
     display: flex;
     justify-content: space-between;
@@ -537,7 +461,6 @@ body.navigating .quick-places { display: none; }
     border-radius: 16px;
     border-left: 4px solid var(--primary);
 }
-
 .route-summary-time {
     font-family: 'Cormorant Garamond', serif;
     font-size: 32px;
@@ -545,19 +468,8 @@ body.navigating .quick-places { display: none; }
     color: var(--primary-light);
     line-height: 1;
 }
-
-.route-summary-distance {
-    font-size: 14px;
-    color: var(--text-muted);
-    margin-top: 4px;
-}
-
-.steps-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
+.route-summary-distance { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+.steps-list { display: flex; flex-direction: column; gap: 6px; }
 .step-item {
     display: flex;
     gap: 14px;
@@ -568,13 +480,8 @@ body.navigating .quick-places { display: none; }
     border-left: 3px solid transparent;
     transition: background 0.15s, border-color 0.15s;
 }
-
 .step-item:active { background: rgba(139,92,246,0.15); }
-.step-item.active {
-    background: rgba(139,92,246,0.2);
-    border-left-color: var(--primary);
-}
-
+.step-item.active { background: rgba(139,92,246,0.2); border-left-color: var(--primary); }
 .step-icon {
     width: 38px; height: 38px;
     flex-shrink: 0;
@@ -585,20 +492,12 @@ body.navigating .quick-places { display: none; }
     border-radius: 50%;
     font-size: 18px;
 }
-
 .step-content { flex: 1; min-width: 0; }
 .step-instruction { font-size: 14px; color: var(--text-secondary); line-height: 1.4; }
 .step-distance { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
-/* ══════════════════════════════════════
-   SAVED PLACES LIST
-   ══════════════════════════════════════ */
-.saved-places-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
+/* SAVED PLACES LIST */
+.saved-places-list { display: flex; flex-direction: column; gap: 8px; }
 .saved-place-item {
     display: flex;
     align-items: center;
@@ -610,12 +509,7 @@ body.navigating .quick-places { display: none; }
     cursor: pointer;
     transition: background 0.15s, transform 0.15s;
 }
-
-.saved-place-item:active {
-    background: rgba(139,92,246,0.2);
-    transform: scale(0.98);
-}
-
+.saved-place-item:active { background: rgba(139,92,246,0.2); transform: scale(0.98); }
 .saved-place-emoji {
     font-size: 26px;
     width: 44px; height: 44px;
@@ -626,11 +520,9 @@ body.navigating .quick-places { display: none; }
     border-radius: 12px;
     flex-shrink: 0;
 }
-
 .saved-place-info { flex: 1; min-width: 0; }
 .saved-place-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
 .saved-place-address { font-size: 12px; color: var(--text-muted); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
 .saved-place-delete {
     background: none;
     border: none;
@@ -641,24 +533,11 @@ body.navigating .quick-places { display: none; }
     flex-shrink: 0;
     border-radius: 8px;
 }
-
 .saved-place-delete:active { background: rgba(239,68,68,0.2); color: var(--danger); }
 
-.no-saved-places {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-muted);
-    font-size: 14px;
-}
+.no-saved-places { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 14px; }
+.no-saved-places .big-emoji { font-size: 48px; display: block; margin-bottom: 12px; opacity: 0.6; }
 
-.no-saved-places .big-emoji {
-    font-size: 48px;
-    display: block;
-    margin-bottom: 12px;
-    opacity: 0.6;
-}
-
-/* Add-place form inside saved sheet */
 .add-place-form {
     background: rgba(0,0,0,0.3);
     border: 1px solid var(--border);
@@ -667,9 +546,7 @@ body.navigating .quick-places { display: none; }
     margin-bottom: 16px;
     display: none;
 }
-
 .add-place-form.show { display: block; }
-
 .add-place-form label {
     display: block;
     font-size: 11px;
@@ -679,7 +556,6 @@ body.navigating .quick-places { display: none; }
     margin-bottom: 6px;
     font-weight: 500;
 }
-
 .add-place-form input,
 .add-place-form select {
     width: 100%;
@@ -692,21 +568,34 @@ body.navigating .quick-places { display: none; }
     font-family: inherit;
     outline: none;
     margin-bottom: 12px;
+    appearance: none;
+    -webkit-appearance: none;
 }
-
 .add-place-form input:focus,
-.add-place-form select:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 15px var(--primary-glow);
-}
+.add-place-form select:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
 
-.emoji-picker {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
+/* Save-as dropdown — the fix */
+.save-as-select {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 40px 12px 14px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%23a0a0c0' d='M6 8L0 0h12z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
     margin-bottom: 12px;
 }
+.save-as-select:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
+.save-as-select option { background: #0f0f1c; color: white; }
 
+.emoji-picker { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .emoji-option {
     width: 40px; height: 40px;
     background: rgba(0,0,0,0.3);
@@ -719,21 +608,10 @@ body.navigating .quick-places { display: none; }
     justify-content: center;
     transition: transform 0.15s, border-color 0.2s;
 }
-
 .emoji-option:active { transform: scale(0.9); }
+.emoji-option.selected { border-color: var(--primary); background: rgba(139,92,246,0.2); box-shadow: 0 0 12px var(--primary-glow); }
 
-.emoji-option.selected {
-    border-color: var(--primary);
-    background: rgba(139,92,246,0.2);
-    box-shadow: 0 0 12px var(--primary-glow);
-}
-
-.form-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 8px;
-}
-
+.form-buttons { display: flex; gap: 10px; margin-top: 8px; }
 .form-btn {
     flex: 1;
     padding: 12px;
@@ -744,19 +622,9 @@ body.navigating .quick-places { display: none; }
     font-weight: 600;
     font-family: inherit;
 }
+.form-btn.primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+.form-btn.ghost { background: rgba(255,255,255,0.06); color: var(--text-secondary); border: 1px solid var(--border); }
 
-.form-btn.primary {
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: white;
-}
-
-.form-btn.ghost {
-    background: rgba(255,255,255,0.06);
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
-}
-
-/* Add place button at bottom of saved list */
 .add-place-btn {
     width: 100%;
     padding: 14px;
@@ -774,12 +642,9 @@ body.navigating .quick-places { display: none; }
     gap: 8px;
     margin-top: 12px;
 }
-
 .add-place-btn:active { background: rgba(139,92,246,0.3); }
 
-/* ══════════════════════════════════════
-   NAVIGATION MODE
-   ══════════════════════════════════════ */
+/* NAVIGATION */
 body.navigating .maps-header,
 body.navigating .bottom-bar,
 body.navigating .map-controls,
@@ -787,9 +652,7 @@ body.navigating .locate-banner,
 body.navigating .directions-sheet,
 body.navigating .layers-sheet,
 body.navigating .saved-sheet,
-body.navigating .sheet-backdrop {
-    display: none !important;
-}
+body.navigating .sheet-backdrop { display: none !important; }
 
 .nav-top {
     position: fixed;
@@ -801,18 +664,14 @@ body.navigating .sheet-backdrop {
     align-items: flex-start;
     gap: 18px;
 }
-
 body.navigating .nav-top { display: flex; }
-
 .nav-arrow {
     font-size: 56px;
     line-height: 1;
     flex-shrink: 0;
     filter: drop-shadow(0 0 12px rgba(168,85,247,0.6));
 }
-
 .nav-instruction { flex: 1; min-width: 0; }
-
 .nav-main {
     font-size: 26px;
     font-weight: 600;
@@ -820,12 +679,7 @@ body.navigating .nav-top { display: flex; }
     margin-bottom: 6px;
     font-family: 'Cormorant Garamond', serif;
 }
-
-.nav-sub {
-    font-size: 16px;
-    color: var(--primary-light);
-    font-weight: 500;
-}
+.nav-sub { font-size: 16px; color: var(--primary-light); font-weight: 500; }
 
 .nav-bottom {
     position: fixed;
@@ -840,11 +694,8 @@ body.navigating .nav-top { display: flex; }
     gap: 16px;
     align-items: center;
 }
-
 body.navigating .nav-bottom { display: flex; }
-
 .nav-eta-block { flex: 1; }
-
 .nav-eta {
     font-family: 'Cormorant Garamond', serif;
     font-size: 32px;
@@ -852,7 +703,6 @@ body.navigating .nav-bottom { display: flex; }
     color: var(--primary-light);
     line-height: 1;
 }
-
 .nav-eta-label {
     font-size: 12px;
     color: var(--text-muted);
@@ -860,7 +710,6 @@ body.navigating .nav-bottom { display: flex; }
     letter-spacing: 1px;
     margin-top: 4px;
 }
-
 .nav-end-btn {
     background: linear-gradient(135deg, var(--danger), #b91c1c);
     border: none;
@@ -874,9 +723,7 @@ body.navigating .nav-bottom { display: flex; }
     box-shadow: 0 8px 20px rgba(239,68,68,0.4);
     flex-shrink: 0;
 }
-
 .nav-end-btn:active { transform: scale(0.96); }
-
 .nav-voice-btn {
     background: rgba(255,255,255,0.1);
     border: 1px solid var(--border);
@@ -890,7 +737,6 @@ body.navigating .nav-bottom { display: flex; }
     justify-content: center;
     flex-shrink: 0;
 }
-
 .nav-voice-btn.muted { opacity: 0.4; }
 .nav-voice-btn:active { background: rgba(139,92,246,0.3); }
 
@@ -912,7 +758,6 @@ body.navigating .nav-bottom { display: flex; }
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
     cursor: pointer;
 }
-
 .recenter-btn.show { display: flex; }
 .recenter-btn:active { background: rgba(139,92,246,0.3); }
 body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
@@ -920,13 +765,8 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
 .user-marker { filter: drop-shadow(0 0 10px rgba(0,170,255,0.8)); }
 .user-marker-arrow { transform-origin: center; transition: transform 0.15s linear; }
 
-/* Style grid */
-.style-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
+/* STYLE GRID */
+.style-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .style-option {
     aspect-ratio: 1.2;
     background: rgba(0,0,0,0.3);
@@ -944,20 +784,9 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     padding: 8px;
     text-align: center;
 }
-
 .style-option:active { transform: scale(0.96); }
-
-.style-option.active {
-    border-color: var(--primary);
-    background: rgba(139,92,246,0.2);
-    box-shadow: 0 0 15px var(--primary-glow);
-}
-
-.style-swatch {
-    width: 26px; height: 26px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.15);
-}
+.style-option.active { border-color: var(--primary); background: rgba(139,92,246,0.2); box-shadow: 0 0 15px var(--primary-glow); }
+.style-swatch { width: 26px; height: 26px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); }
 
 .toggle-row {
     display: flex;
@@ -966,11 +795,8 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     padding: 14px 0;
     border-bottom: 1px solid rgba(139,92,246,0.1);
 }
-
 .toggle-row:last-child { border-bottom: none; }
-
 .toggle-row label { font-size: 15px; color: var(--text-secondary); }
-
 .toggle-switch {
     width: 48px; height: 28px;
     background: rgba(255,255,255,0.1);
@@ -980,9 +806,7 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     transition: background 0.2s;
     flex-shrink: 0;
 }
-
 .toggle-switch.active { background: var(--primary); }
-
 .toggle-switch::after {
     content: '';
     position: absolute;
@@ -992,10 +816,38 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     top: 3px; left: 3px;
     transition: left 0.2s;
 }
-
 .toggle-switch.active::after { left: 23px; }
 
-/* Map controls */
+/* segmented units control */
+.units-segmented {
+    display: flex;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 3px;
+    gap: 3px;
+}
+.units-seg {
+    flex: 1;
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    color: var(--text-muted);
+    border: none;
+    background: none;
+    font-family: inherit;
+}
+.units-seg.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+/* MAP CONTROLS */
 .map-controls {
     position: absolute;
     bottom: calc(30px + var(--safe-bottom));
@@ -1005,7 +857,6 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     flex-direction: column;
     gap: 8px;
 }
-
 .map-control-btn {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
@@ -1021,7 +872,6 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     color: var(--text-primary);
     transition: transform 0.15s, background 0.2s;
 }
-
 .map-control-btn:active { background: rgba(139,92,246,0.3); transform: scale(0.94); }
 
 .bottom-bar {
@@ -1043,7 +893,6 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     align-items: center;
     white-space: nowrap;
 }
-
 .bottom-bar a { color: var(--primary-light); text-decoration: none; }
 
 /* MapLibre overrides */
@@ -1057,28 +906,12 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     box-shadow: 0 15px 40px rgba(0,0,0,0.5) !important;
     font-family: 'DM Sans', sans-serif !important;
 }
-
-.maplibregl-popup-tip {
-    border-top-color: var(--bg-card) !important;
-    border-bottom-color: var(--bg-card) !important;
-}
-
-.maplibregl-ctrl-attrib {
-    background: rgba(0,0,0,0.6) !important;
-    color: var(--text-muted) !important;
-    font-size: 10px !important;
-}
-
+.maplibregl-popup-tip { border-top-color: var(--bg-card) !important; border-bottom-color: var(--bg-card) !important; }
+.maplibregl-ctrl-attrib { background: rgba(0,0,0,0.6) !important; color: var(--text-muted) !important; font-size: 10px !important; }
 .maplibregl-ctrl-attrib a { color: var(--primary-light) !important; }
 .maplibregl-ctrl-top-right { display: none !important; }
 
-/* Popup save button */
-.popup-actions {
-    display: flex;
-    gap: 6px;
-    margin-top: 10px;
-}
-
+.popup-actions { display: flex; gap: 6px; margin-top: 10px; }
 .popup-btn {
     flex: 1;
     padding: 8px 12px;
@@ -1091,10 +924,8 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     cursor: pointer;
     font-family: inherit;
 }
-
 .popup-btn:active { background: rgba(139,92,246,0.3); }
 
-/* Responsive */
 @media (max-width: 600px) {
     .header-logo .logo-text { display: none; }
     .header-logo { padding: 10px 14px; }
@@ -1103,7 +934,6 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     .nav-arrow { font-size: 44px; }
     .nav-eta { font-size: 28px; }
 }
-
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.4); border-radius: 3px; }
@@ -1113,7 +943,7 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
 
 <div id="map"></div>
 
-<!-- Header -->
+<!-- HEADER — search is now destination -->
 <div class="maps-header" id="maps-header">
     <div class="header-logo" onclick="window.location.href='https://wizardecosystem.dev'">
         <span class="logo-icon">🗺️</span>
@@ -1121,22 +951,20 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     </div>
 
     <div class="search-wrapper">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="search-input" class="maps-search" placeholder="Search places…" autocomplete="off" enterkeyhint="search">
+        <span class="search-icon">📍</span>
+        <input type="text" id="search-input" class="maps-search" placeholder="Where to?" autocomplete="off" enterkeyhint="go">
         <button class="search-clear" id="search-clear" aria-label="Clear">✕</button>
         <div class="search-results" id="search-results"></div>
     </div>
 
     <div class="header-actions">
         <button class="icon-btn" id="directions-btn" title="Directions" aria-label="Directions">🧭</button>
-        <button class="icon-btn" id="layers-btn" title="Map style" aria-label="Map style">🎨</button>
+        <button class="icon-btn" id="layers-btn" title="Settings" aria-label="Settings">⚙️</button>
     </div>
 </div>
 
-<!-- Quick place chips -->
 <div class="quick-places" id="quick-places"></div>
 
-<!-- Location prompt -->
 <div class="locate-banner" id="locate-banner">
     <div class="locate-icon">📍</div>
     <div class="locate-text">
@@ -1146,7 +974,6 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     <button class="locate-btn" id="locate-btn">Allow</button>
 </div>
 
-<!-- Navigation UI -->
 <div class="nav-top" id="nav-top">
     <div class="nav-arrow" id="nav-arrow">➡️</div>
     <div class="nav-instruction">
@@ -1158,7 +985,7 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
 <div class="nav-bottom" id="nav-bottom">
     <div class="nav-eta-block">
         <div class="nav-eta" id="nav-eta">—</div>
-        <div class="nav-eta-label">ETA</div>
+        <div class="nav-eta-label" id="nav-eta-label">ETA</div>
     </div>
     <button class="nav-voice-btn" id="nav-voice-btn" aria-label="Mute">🔊</button>
     <button class="nav-end-btn" id="nav-end-btn">End</button>
@@ -1166,9 +993,9 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
 
 <button class="recenter-btn" id="recenter-btn" aria-label="Recenter">🎯</button>
 
-<!-- Bottom sheet: directions -->
 <div class="sheet-backdrop" id="sheet-backdrop"></div>
 
+<!-- DIRECTIONS SHEET -->
 <div class="bottom-sheet" id="directions-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -1179,7 +1006,7 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
         <div class="route-input-group">
             <div class="route-input-wrapper">
                 <div class="route-input-icon start">A</div>
-                <input type="text" id="route-start" placeholder="From…" autocomplete="off">
+                <input type="text" id="route-start" placeholder="From… (or type 'Home')" autocomplete="off">
                 <div class="route-suggestions" id="route-start-suggestions"></div>
             </div>
         </div>
@@ -1216,40 +1043,50 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     </div>
 </div>
 
-<!-- Bottom sheet: layers -->
+<!-- SETTINGS / LAYERS SHEET -->
 <div class="bottom-sheet" id="layers-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-        <span class="sheet-title">🎨 Map Style</span>
+        <span class="sheet-title">⚙️ Settings</span>
         <button class="sheet-close" id="layers-close" aria-label="Close">✕</button>
     </div>
     <div class="sheet-body">
-        <div class="style-grid" id="style-grid">
-            <div class="style-option active" data-style="liberty">
-                <div class="style-swatch" style="background: linear-gradient(135deg, #f0f0f0, #b8d4e8);"></div>
-                Liberty
-            </div>
-            <div class="style-option" data-style="bright">
-                <div class="style-swatch" style="background: linear-gradient(135deg, #ffffff, #ffd699);"></div>
-                Bright
-            </div>
-            <div class="style-option" data-style="positron">
-                <div class="style-swatch" style="background: linear-gradient(135deg, #f5f5f5, #d0d0d0);"></div>
-                Positron
-            </div>
-            <div class="style-option" data-style="dark">
-                <div class="style-swatch" style="background: linear-gradient(135deg, #1a1a2e, #0a0a14);"></div>
-                Dark
-            </div>
-            <div class="style-option" data-style="fiord">
-                <div class="style-swatch" style="background: linear-gradient(135deg, #2a3441, #1a1f2e);"></div>
-                Fiord
-            </div>
-            <div class="style-option" data-style="liberty3d">
-                <div class="style-swatch" style="background: linear-gradient(135deg, #4a5b6e, #2a3441);"></div>
-                3D
+        <label style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:8px; font-weight:600;">Distance Units</label>
+        <div class="units-segmented" id="units-segmented">
+            <button class="units-seg" data-units="imperial">Miles / feet</button>
+            <button class="units-seg" data-units="metric">Kilometers / meters</button>
+        </div>
+
+        <div style="margin-top: 24px;">
+            <label style="display:block; font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:8px; font-weight:600;">Map Style</label>
+            <div class="style-grid" id="style-grid">
+                <div class="style-option active" data-style="liberty">
+                    <div class="style-swatch" style="background: linear-gradient(135deg, #f0f0f0, #b8d4e8);"></div>
+                    Liberty
+                </div>
+                <div class="style-option" data-style="bright">
+                    <div class="style-swatch" style="background: linear-gradient(135deg, #ffffff, #ffd699);"></div>
+                    Bright
+                </div>
+                <div class="style-option" data-style="positron">
+                    <div class="style-swatch" style="background: linear-gradient(135deg, #f5f5f5, #d0d0d0);"></div>
+                    Positron
+                </div>
+                <div class="style-option" data-style="dark">
+                    <div class="style-swatch" style="background: linear-gradient(135deg, #1a1a2e, #0a0a14);"></div>
+                    Dark
+                </div>
+                <div class="style-option" data-style="fiord">
+                    <div class="style-swatch" style="background: linear-gradient(135deg, #2a3441, #1a1f2e);"></div>
+                    Fiord
+                </div>
+                <div class="style-option" data-style="liberty3d">
+                    <div class="style-swatch" style="background: linear-gradient(135deg, #4a5b6e, #2a3441);"></div>
+                    3D
+                </div>
             </div>
         </div>
+
         <div style="margin-top: 20px;">
             <div class="toggle-row">
                 <label>🏔️ 3D buildings</label>
@@ -1259,11 +1096,15 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
                 <label>⛰️ Terrain</label>
                 <div class="toggle-switch" id="toggle-terrain"></div>
             </div>
+            <div class="toggle-row">
+                <label>🔊 Voice guidance</label>
+                <div class="toggle-switch active" id="toggle-voice"></div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Bottom sheet: saved places -->
+<!-- SAVED PLACES SHEET -->
 <div class="bottom-sheet" id="saved-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -1272,32 +1113,42 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     </div>
     <div class="sheet-body">
         <div class="add-place-form" id="add-place-form">
-            <label>Name</label>
-            <input type="text" id="add-place-name" placeholder="e.g., Grandma's House" maxlength="40">
+            <label>Save as</label>
+            <select id="add-place-slot" class="save-as-select">
+                <option value="__new__">➕ New custom place</option>
+                <option value="home">🏠 Home</option>
+                <option value="work">💼 Work</option>
+                <option value="school">📚 School</option>
+            </select>
 
-            <label>Address or place</label>
-            <input type="text" id="add-place-address" placeholder="Search for an address or place…" autocomplete="off">
-            <div class="route-suggestions" id="add-place-suggestions"></div>
+            <div id="custom-fields">
+                <label>Name</label>
+                <input type="text" id="add-place-name" placeholder="e.g., Grandma's House" maxlength="40">
 
-            <label>Icon</label>
-            <div class="emoji-picker" id="emoji-picker">
-                <div class="emoji-option selected" data-emoji="🏠">🏠</div>
-                <div class="emoji-option" data-emoji="💼">💼</div>
-                <div class="emoji-option" data-emoji="📚">📚</div>
-                <div class="emoji-option" data-emoji="⭐">⭐</div>
-                <div class="emoji-option" data-emoji="❤️">❤️</div>
-                <div class="emoji-option" data-emoji="🍕">🍕</div>
-                <div class="emoji-option" data-emoji="☕">☕</div>
-                <div class="emoji-option" data-emoji="🏋️">🏋️</div>
-                <div class="emoji-option" data-emoji="🎬">🎬</div>
-                <div class="emoji-option" data-emoji="🛒">🛒</div>
-                <div class="emoji-option" data-emoji="⛽">⛽</div>
-                <div class="emoji-option" data-emoji="🏥">🏥</div>
+                <label>Icon</label>
+                <div class="emoji-picker" id="emoji-picker">
+                    <div class="emoji-option selected" data-emoji="🏠">🏠</div>
+                    <div class="emoji-option" data-emoji="💼">💼</div>
+                    <div class="emoji-option" data-emoji="📚">📚</div>
+                    <div class="emoji-option" data-emoji="⭐">⭐</div>
+                    <div class="emoji-option" data-emoji="❤️">❤️</div>
+                    <div class="emoji-option" data-emoji="🍕">🍕</div>
+                    <div class="emoji-option" data-emoji="☕">☕</div>
+                    <div class="emoji-option" data-emoji="🏋️">🏋️</div>
+                    <div class="emoji-option" data-emoji="🎬">🎬</div>
+                    <div class="emoji-option" data-emoji="🛒">🛒</div>
+                    <div class="emoji-option" data-emoji="⛽">⛽</div>
+                    <div class="emoji-option" data-emoji="🏥">🏥</div>
+                </div>
             </div>
+
+            <label>Address</label>
+            <input type="text" id="add-place-address" placeholder="Search address or use current pin" autocomplete="off">
+            <div class="route-suggestions" id="add-place-suggestions"></div>
 
             <div class="form-buttons">
                 <button class="form-btn ghost" id="add-place-cancel">Cancel</button>
-                <button class="form-btn primary" id="add-place-save">Save Place</button>
+                <button class="form-btn primary" id="add-place-save">Save</button>
             </div>
         </div>
 
@@ -1310,7 +1161,6 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     </div>
 </div>
 
-<!-- Map controls -->
 <div class="map-controls">
     <button class="map-control-btn" id="zoom-in" aria-label="Zoom in">＋</button>
     <button class="map-control-btn" id="zoom-out" aria-label="Zoom out">−</button>
@@ -1351,6 +1201,7 @@ const CONFIG = {
 };
 
 const STORAGE_KEY = 'wizard_maps_saved_places_v1';
+const SETTINGS_KEY = 'wizard_maps_settings_v1';
 
 // ══════════════════════════════════════
 // STATE
@@ -1369,7 +1220,9 @@ const state = {
     routeStartMarker: null,
     routeEndMarker: null,
     savedPlaces: [],
-    editingPlaceId: null
+    editingPlaceId: null,
+    pendingPlaceCenter: null,
+    units: 'metric' // 'metric' or 'imperial'
 };
 
 const nav = {
@@ -1380,28 +1233,89 @@ const nav = {
     offRouteCount: 0,
     voiceEnabled: true,
     lastSpokenStepIndex: -1,
-    followUser: true
+    lastSpokenDistance: -1,
+    followUser: true,
+    updateInterval: null,
+    lastAnnouncedAt: -1
 };
 
 // ══════════════════════════════════════
-// SAVED PLACES (localStorage)
+// SETTINGS PERSISTENCE
+// ══════════════════════════════════════
+function loadSettings() {
+    try {
+        const raw = localStorage.getItem(SETTINGS_KEY);
+        if (raw) {
+            const s = JSON.parse(raw);
+            if (s.units) state.units = s.units;
+            if (s.voiceEnabled != null) nav.voiceEnabled = s.voiceEnabled;
+            if (s.style) state.style = s.style;
+        } else {
+            // Auto-detect: US uses imperial
+            const lang = (navigator.language || 'en').toLowerCase();
+            state.units = lang.startsWith('en-us') ? 'imperial' : 'metric';
+        }
+    } catch {}
+}
+
+function saveSettings() {
+    try {
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+            units: state.units,
+            voiceEnabled: nav.voiceEnabled,
+            style: state.style
+        }));
+    } catch {}
+}
+
+// ══════════════════════════════════════
+// UNITS
+// ══════════════════════════════════════
+function formatDistance(meters) {
+    if (state.units === 'imperial') {
+        const feet = meters * 3.28084;
+        const miles = meters / 1609.344;
+        if (feet < 500) return `${Math.round(feet / 10) * 10} ft`;
+        if (miles < 0.1) return `${Math.round(feet / 10) * 10} ft`;
+        return miles < 10 ? `${miles.toFixed(1)} mi` : `${Math.round(miles)} mi`;
+    } else {
+        if (meters < 10) return `${Math.round(meters)} m`;
+        if (meters < 1000) return `${Math.round(meters / 10) * 10} m`;
+        const km = meters / 1000;
+        return km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
+    }
+}
+
+function formatDuration(seconds) {
+    const mins = Math.round(seconds / 60);
+    if (mins < 1) return '< 1 min';
+    if (mins < 60) return `${mins} min`;
+    const hours = Math.floor(mins / 60);
+    const rem = mins % 60;
+    return rem === 0 ? `${hours} hr` : `${hours} hr ${rem} min`;
+}
+
+function formatClock(date) {
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
+// ══════════════════════════════════════
+// SAVED PLACES
 // ══════════════════════════════════════
 function loadSavedPlaces() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) {
-            // First-time defaults — user can delete/rename
             state.savedPlaces = [
-                { id: 'home',   name: 'Home',   emoji: '🏠', address: '', center: null, createdAt: Date.now() },
-                { id: 'work',   name: 'Work',   emoji: '💼', address: '', center: null, createdAt: Date.now() },
-                { id: 'school', name: 'School', emoji: '📚', address: '', center: null, createdAt: Date.now() }
+                { id: 'home',   name: 'Home',   emoji: '🏠', address: '', center: null, slot: 'home',   createdAt: Date.now() },
+                { id: 'work',   name: 'Work',   emoji: '💼', address: '', center: null, slot: 'work',   createdAt: Date.now() },
+                { id: 'school', name: 'School', emoji: '📚', address: '', center: null, slot: 'school', createdAt: Date.now() }
             ];
             saveSavedPlaces();
             return;
         }
         state.savedPlaces = JSON.parse(raw) || [];
-    } catch (err) {
-        console.error('Failed to load saved places:', err);
+    } catch {
         state.savedPlaces = [];
     }
 }
@@ -1409,14 +1323,27 @@ function loadSavedPlaces() {
 function saveSavedPlaces() {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state.savedPlaces));
-    } catch (err) {
-        console.error('Failed to save places:', err);
-        showToast('⚠️ Could not save (storage full?)');
+    } catch {
+        showToast('⚠️ Could not save');
     }
 }
 
 function getPlace(id) {
     return state.savedPlaces.find(p => p.id === id);
+}
+
+function findPlaceByNameOrSlot(name) {
+    if (!name) return null;
+    const q = name.trim().toLowerCase();
+    // exact slot match
+    const bySlot = state.savedPlaces.find(p => p.slot === q);
+    if (bySlot) return bySlot;
+    // exact name match
+    const byName = state.savedPlaces.find(p => p.name.toLowerCase() === q);
+    if (byName) return byName;
+    // starts-with
+    const byPrefix = state.savedPlaces.find(p => p.name.toLowerCase().startsWith(q) && q.length >= 3);
+    return byPrefix || null;
 }
 
 function upsertPlace(place) {
@@ -1436,15 +1363,13 @@ function deletePlace(id) {
 }
 
 // ══════════════════════════════════════
-// QUICK PLACES CHIPS
+// QUICK CHIPS
 // ══════════════════════════════════════
 const quickPlacesEl = document.getElementById('quick-places');
 
 function renderQuickPlaces() {
-    // Only show chips that have coordinates (i.e., configured)
     const ready = state.savedPlaces.filter(p => p.center);
     let html = '';
-
     ready.forEach(p => {
         html += `
             <div class="quick-chip" data-place-id="${p.id}">
@@ -1453,15 +1378,12 @@ function renderQuickPlaces() {
             </div>
         `;
     });
-
-    // Always show "manage" chip
     html += `
         <div class="quick-chip add-new" id="manage-places-chip">
             <span>${ready.length ? '⚙️' : '➕'}</span>
             <span>${ready.length ? 'Manage' : 'Add places'}</span>
         </div>
     `;
-
     quickPlacesEl.innerHTML = html;
 
     quickPlacesEl.querySelectorAll('.quick-chip[data-place-id]').forEach(chip => {
@@ -1469,16 +1391,13 @@ function renderQuickPlaces() {
             const place = getPlace(chip.dataset.placeId);
             if (place && place.center) {
                 state.endPoint = { lngLat: place.center, name: place.name };
-                // Drop a marker so user sees where they're going
                 new maplibregl.Marker({ color: '#a855f7' })
                     .setLngLat(place.center)
                     .setPopup(new maplibregl.Popup({ offset: 25 })
-                        .setHTML(`<strong>${place.emoji} ${escapeHtml(place.name)}</strong><br><small>${escapeHtml(place.address || '')}</small>`))
+                        .setHTML(`<strong>${place.emoji} ${escapeHtml(place.name)}</strong>`))
                     .addTo(map)
                     .togglePopup();
                 map.flyTo({ center: place.center, zoom: 15, duration: 800 });
-
-                // 🚀 Auto-navigate
                 startAutoRoute();
             }
         });
@@ -1486,29 +1405,28 @@ function renderQuickPlaces() {
 
     const manageChip = document.getElementById('manage-places-chip');
     if (manageChip) {
-        manageChip.addEventListener('click', () => {
-            openSavedSheet();
-        });
+        manageChip.addEventListener('click', openSavedSheet);
     }
 }
 
 // ══════════════════════════════════════
-// SAVED PLACES SHEET
+// SAVED SHEET
 // ══════════════════════════════════════
 const savedSheet = document.getElementById('saved-sheet');
 const savedClose = document.getElementById('saved-close');
 const savedListEl = document.getElementById('saved-places-list');
 const addPlaceForm = document.getElementById('add-place-form');
 const addPlaceBtn = document.getElementById('add-place-btn');
+const addPlaceSlot = document.getElementById('add-place-slot');
 const addPlaceNameInput = document.getElementById('add-place-name');
 const addPlaceAddressInput = document.getElementById('add-place-address');
 const addPlaceSuggestions = document.getElementById('add-place-suggestions');
 const addPlaceSave = document.getElementById('add-place-save');
 const addPlaceCancel = document.getElementById('add-place-cancel');
 const emojiPicker = document.getElementById('emoji-picker');
+const customFields = document.getElementById('custom-fields');
 
 let selectedEmoji = '🏠';
-let pendingPlaceCenter = null;
 
 function openSavedSheet() {
     savedSheet.classList.add('show');
@@ -1525,16 +1443,9 @@ function closeSavedSheet() {
 
 function renderSavedPlacesList() {
     if (!state.savedPlaces.length) {
-        savedListEl.innerHTML = `
-            <div class="no-saved-places">
-                <span class="big-emoji">📍</span>
-                <p>No saved places yet.</p>
-                <p style="margin-top: 8px; font-size: 12px;">Save Home, Work, School, or anywhere you go often.</p>
-            </div>
-        `;
+        savedListEl.innerHTML = `<div class="no-saved-places"><span class="big-emoji">📍</span><p>No saved places yet.</p></div>`;
         return;
     }
-
     savedListEl.innerHTML = state.savedPlaces.map(p => `
         <div class="saved-place-item" data-id="${p.id}">
             <div class="saved-place-emoji">${p.emoji}</div>
@@ -1546,51 +1457,42 @@ function renderSavedPlacesList() {
         </div>
     `).join('');
 
-    // Tap → configure or navigate
     savedListEl.querySelectorAll('.saved-place-item').forEach(item => {
         item.addEventListener('click', (e) => {
             if (e.target.closest('.saved-place-delete')) return;
             const place = getPlace(item.dataset.id);
             if (!place) return;
-
             if (place.center) {
-                // Has coords → navigate
                 closeSavedSheet();
                 state.endPoint = { lngLat: place.center, name: place.name };
-                new maplibregl.Marker({ color: '#a855f7' })
-                    .setLngLat(place.center)
-                    .addTo(map);
                 map.flyTo({ center: place.center, zoom: 15, duration: 800 });
                 startAutoRoute();
             } else {
-                // Empty slot → open edit form pre-filled with name + emoji
                 openEditPlace(place);
             }
         });
     });
 
-    // Delete buttons
     savedListEl.querySelectorAll('.saved-place-delete').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const id = btn.dataset.deleteId;
             const place = getPlace(id);
             if (!place) return;
-            if (confirm(`Delete "${place.name}"?`)) {
-                deletePlace(id);
-            }
+            if (confirm(`Delete "${place.name}"?`)) deletePlace(id);
         });
     });
 }
 
 function openEditPlace(place) {
     state.editingPlaceId = place.id;
+    addPlaceSlot.value = place.slot || '__new__';
     addPlaceNameInput.value = place.name;
     addPlaceAddressInput.value = place.address || '';
-    pendingPlaceCenter = place.center || null;
+    state.pendingPlaceCenter = place.center || null;
     selectedEmoji = place.emoji || '🏠';
     updateEmojiSelection();
-
+    updateSlotVisibility();
     addPlaceForm.classList.add('show');
     addPlaceBtn.style.display = 'none';
     addPlaceNameInput.focus();
@@ -1599,14 +1501,30 @@ function openEditPlace(place) {
 
 function resetAddPlaceForm() {
     state.editingPlaceId = null;
-    pendingPlaceCenter = null;
+    state.pendingPlaceCenter = null;
+    addPlaceSlot.value = '__new__';
     addPlaceNameInput.value = '';
     addPlaceAddressInput.value = '';
     selectedEmoji = '🏠';
     updateEmojiSelection();
     addPlaceBtn.style.display = 'flex';
     addPlaceSuggestions.classList.remove('show');
+    updateSlotVisibility();
 }
+
+function updateSlotVisibility() {
+    const isNew = addPlaceSlot.value === '__new__';
+    customFields.style.display = isNew ? 'block' : 'none';
+}
+
+addPlaceSlot.addEventListener('change', () => {
+    const slot = addPlaceSlot.value;
+    updateSlotVisibility();
+    if (slot === 'home') { addPlaceNameInput.value = 'Home'; selectedEmoji = '🏠'; }
+    else if (slot === 'work') { addPlaceNameInput.value = 'Work'; selectedEmoji = '💼'; }
+    else if (slot === 'school') { addPlaceNameInput.value = 'School'; selectedEmoji = '📚'; }
+    updateEmojiSelection();
+});
 
 addPlaceBtn.addEventListener('click', () => {
     resetAddPlaceForm();
@@ -1621,7 +1539,6 @@ addPlaceCancel.addEventListener('click', () => {
     resetAddPlaceForm();
 });
 
-// Emoji picker
 emojiPicker.querySelectorAll('.emoji-option').forEach(opt => {
     opt.addEventListener('click', () => {
         selectedEmoji = opt.dataset.emoji;
@@ -1635,37 +1552,32 @@ function updateEmojiSelection() {
     });
 }
 
-// Address autocomplete inside add-place form
+// Address autocomplete in add-place form
 const handleAddPlaceAddress = debounce(async (query) => {
     if (!query || query.length < 2) {
         addPlaceSuggestions.classList.remove('show');
         return;
     }
-
     const features = await photonSearch(query, 5);
     if (!features.length) {
         addPlaceSuggestions.classList.remove('show');
         return;
     }
-
     addPlaceSuggestions.innerHTML = features.map((f, i) => {
         const r = photonFeatureToResult(f);
-        return `
-            <div class="route-suggestion-item" data-index="${i}">
-                <strong>${escapeHtml(r.name)}</strong>
-                <small>${escapeHtml(r.subtitle)}</small>
-            </div>
-        `;
+        return `<div class="route-suggestion-item" data-index="${i}">
+            <strong>${escapeHtml(r.name)}</strong>
+            <small>${escapeHtml(r.subtitle)}</small>
+        </div>`;
     }).join('');
-
     addPlaceSuggestions.classList.add('show');
 
     addPlaceSuggestions.querySelectorAll('.route-suggestion-item').forEach(item => {
         item.addEventListener('click', () => {
             const f = features[parseInt(item.dataset.index)];
             const r = photonFeatureToResult(f);
-            addPlaceAddressInput.value = [r.name, r.subtitle].filter(Boolean).join(', ');
-            pendingPlaceCenter = r.center;
+            addPlaceAddressInput.value = [r.line1, r.line2].filter(Boolean).join(', ');
+            state.pendingPlaceCenter = r.center;
             addPlaceSuggestions.classList.remove('show');
             addPlaceAddressInput.blur();
         });
@@ -1674,34 +1586,62 @@ const handleAddPlaceAddress = debounce(async (query) => {
 
 addPlaceAddressInput.addEventListener('input', (e) => handleAddPlaceAddress(e.target.value));
 
-// Save the place
-addPlaceSave.addEventListener('click', () => {
-    const name = addPlaceNameInput.value.trim();
+// Save the place — accepts pin position OR searched address
+addPlaceSave.addEventListener('click', async () => {
+    const slot = addPlaceSlot.value;
+    let name = addPlaceNameInput.value.trim();
+    let emoji = selectedEmoji;
+
+    if (slot === 'home') { name = 'Home'; emoji = '🏠'; }
+    else if (slot === 'work') { name = 'Work'; emoji = '💼'; }
+    else if (slot === 'school') { name = 'School'; emoji = '📚'; }
+
     if (!name) {
         showToast('⚠️ Give this place a name');
         addPlaceNameInput.focus();
         return;
     }
 
-    if (!pendingPlaceCenter) {
-        showToast('⚠️ Pick an address from the dropdown');
-        addPlaceAddressInput.focus();
-        return;
+    // Need a center. Prefer pendingPlaceCenter, else try to geocode the typed address.
+    let center = state.pendingPlaceCenter;
+    let address = addPlaceAddressInput.value.trim();
+
+    if (!center) {
+        if (!address) {
+            showToast('⚠️ Pick an address or drop a pin on the map');
+            addPlaceAddressInput.focus();
+            return;
+        }
+        // Geocode the raw address
+        const features = await photonSearch(address, 1);
+        if (!features.length) {
+            showToast('⚠️ Couldn\'t find that address');
+            return;
+        }
+        const r = photonFeatureToResult(features[0]);
+        center = r.center;
+        address = [r.line1, r.line2].filter(Boolean).join(', ');
+    } else if (!address) {
+        // Reverse geocode for display
+        const r = await reverseGeocode(center[0], center[1]);
+        if (r) address = [r.line1, r.line2].filter(Boolean).join(', ');
     }
 
-    const placeId = state.editingPlaceId || ('place_' + Date.now());
+    const placeId = state.editingPlaceId || (slot === 'home' || slot === 'work' || slot === 'school' ? slot : ('place_' + Date.now()));
+    const existing = getPlace(placeId);
+
     const place = {
         id: placeId,
         name: name,
-        emoji: selectedEmoji,
-        address: addPlaceAddressInput.value.trim(),
-        center: pendingPlaceCenter,
-        createdAt: state.editingPlaceId ? (getPlace(placeId)?.createdAt || Date.now()) : Date.now()
+        emoji: emoji,
+        address: address,
+        center: center,
+        slot: (slot === 'home' || slot === 'work' || slot === 'school') ? slot : (existing?.slot || null),
+        createdAt: existing?.createdAt || Date.now()
     };
 
     upsertPlace(place);
     showToast(`✅ Saved "${name}"`);
-
     addPlaceForm.classList.remove('show');
     resetAddPlaceForm();
 });
@@ -1709,7 +1649,7 @@ addPlaceSave.addEventListener('click', () => {
 savedClose.addEventListener('click', closeSavedSheet);
 
 // ══════════════════════════════════════
-// MAP INIT
+// MAP
 // ══════════════════════════════════════
 const map = new maplibregl.Map({
     style: CONFIG.STYLES[state.style],
@@ -1718,11 +1658,7 @@ const map = new maplibregl.Map({
     container: 'map',
     attributionControl: false
 });
-
-map.addControl(new maplibregl.AttributionControl({
-    compact: true,
-    customAttribution: '© OpenFreeMap · © OpenStreetMap'
-}));
+map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: '© OpenFreeMap · © OpenStreetMap' }));
 
 // ══════════════════════════════════════
 // UTILITIES
@@ -1733,26 +1669,6 @@ function debounce(fn, delay) {
         clearTimeout(timer);
         timer = setTimeout(() => fn(...args), delay);
     };
-}
-
-function formatDistance(meters) {
-    if (meters < 10) return `${Math.round(meters)} m`;
-    if (meters < 1000) return `${Math.round(meters / 10) * 10} m`;
-    const km = meters / 1000;
-    return km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
-}
-
-function formatDuration(seconds) {
-    const mins = Math.round(seconds / 60);
-    if (mins < 1) return '< 1 min';
-    if (mins < 60) return `${mins} min`;
-    const hours = Math.floor(mins / 60);
-    const rem = mins % 60;
-    return rem === 0 ? `${hours} hr` : `${hours} hr ${rem} min`;
-}
-
-function formatClock(date) {
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
 function escapeHtml(text) {
@@ -1784,9 +1700,7 @@ function distanceToRoute(lon, lat) {
     const coords = state.routeData.geometry.coordinates;
     let min = Infinity;
     for (let i = 0; i < coords.length - 1; i++) {
-        const d = pointToSegmentDistance(lon, lat,
-            coords[i][0], coords[i][1],
-            coords[i+1][0], coords[i+1][1]);
+        const d = pointToSegmentDistance(lon, lat, coords[i][0], coords[i][1], coords[i+1][0], coords[i+1][1]);
         if (d < min) min = d;
     }
     return min;
@@ -1796,29 +1710,10 @@ function distanceToRoute(lon, lat) {
 // TOAST
 // ══════════════════════════════════════
 let toastEl = null, toastTimer = null;
-
 function showToast(message) {
     if (!toastEl) {
         toastEl = document.createElement('div');
-        toastEl.style.cssText = `
-            position: fixed;
-            bottom: calc(100px + var(--safe-bottom));
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
-            background: linear-gradient(135deg, #a855f7, #7c3aed);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 10000;
-            opacity: 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            pointer-events: none;
-            max-width: 90vw;
-            text-align: center;
-        `;
+        toastEl.style.cssText = `position: fixed; bottom: calc(100px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(20px); background: linear-gradient(135deg, #a855f7, #7c3aed); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 10000; opacity: 0; transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); pointer-events: none; max-width: 90vw; text-align: center;`;
         document.body.appendChild(toastEl);
     }
     toastEl.textContent = message;
@@ -1834,7 +1729,7 @@ function showToast(message) {
 }
 
 // ══════════════════════════════════════
-// PHOTON GEOCODING
+// GEOCODING
 // ══════════════════════════════════════
 async function photonSearch(query, limit = 8) {
     try {
@@ -1843,69 +1738,57 @@ async function photonSearch(query, limit = 8) {
         if (!res.ok) throw new Error('Search failed');
         const data = await res.json();
         return data.features || [];
-    } catch (err) {
-        console.error('Geocode error:', err);
-        return [];
-    }
+    } catch { return []; }
+}
+
+async function reverseGeocode(lon, lat) {
+    try {
+        const url = `${CONFIG.REVERSE_URL}?lon=${lon}&lat=${lat}&lang=en`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data.features?.length) return null;
+        return photonFeatureToResult(data.features[0]);
+    } catch { return null; }
 }
 
 function photonFeatureToResult(feature) {
     const p = feature.properties || {};
     const coords = feature.geometry.coordinates;
-
     const street = p.street || p.name || '';
     const number = p.housenumber || '';
     const city = p.city || p.town || p.village || p.district || '';
     const stateName = p.state || '';
     const country = p.country || '';
     const postcode = p.postcode || '';
-
     const line1 = [number, street].filter(Boolean).join(' ').trim();
     const line2Parts = [city, stateName, postcode, country].filter(Boolean);
     const line2 = [...new Set(line2Parts)].join(', ');
-
     const isPOI = p.osm_value && !['house', 'residential', 'yes'].includes(p.osm_value);
     const title = isPOI && p.name ? p.name : (line1 || p.name || 'Unknown place');
     const subtitle = isPOI ? [line1, line2].filter(Boolean).join(', ') : line2;
-
-    return {
-        name: title,
-        subtitle: subtitle,
-        line1: line1,
-        line2: line2,
-        center: coords,
-        bbox: feature.bbox || null,
-        properties: p
-    };
+    return { name: title, subtitle, line1, line2, center: coords, bbox: feature.bbox || null, properties: p };
 }
 
 // ══════════════════════════════════════
-// ROUTING (FOSSGIS multi-profile + fallback)
+// ROUTING
 // ══════════════════════════════════════
 async function fetchRoute(start, end, profile = 'driving') {
     const coords = `${start.lngLat[0]},${start.lngLat[1]};${end.lngLat[0]},${end.lngLat[1]}`;
-
     try {
         const baseUrl = CONFIG.ROUTE_SERVERS[profile] || CONFIG.ROUTE_SERVERS.driving;
         const url = `${baseUrl}${coords}?overview=full&geometries=geojson&steps=true`;
         const res = await fetch(url);
         if (res.ok) {
             const data = await res.json();
-            if (data.code === 'Ok' && data.routes?.length) {
-                return data.routes[0];
-            }
+            if (data.code === 'Ok' && data.routes?.length) return data.routes[0];
         }
-    } catch (err) {
-        console.warn('FOSSGIS failed, falling back:', err);
-    }
-
+    } catch {}
     const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Routing failed');
     const data = await res.json();
-    if (data.code !== 'Ok' || !data.routes?.length) {
-        throw new Error(data.message || 'No route found');
-    }
+    if (data.code !== 'Ok' || !data.routes?.length) throw new Error('No route');
     return adjustDuration(data.routes[0], profile);
 }
 
@@ -1923,7 +1806,7 @@ function adjustDuration(route, profile) {
 }
 
 // ══════════════════════════════════════
-// SEARCH UI (top bar)
+// SEARCH UI — the header bar is now "Where to?"
 // ══════════════════════════════════════
 const searchInput = document.getElementById('search-input');
 const searchResults = document.getElementById('search-results');
@@ -1935,17 +1818,29 @@ const handleSearch = debounce(async (query) => {
         return;
     }
 
+    // 1. Match saved places first
+    const q = query.trim().toLowerCase();
+    const savedMatches = state.savedPlaces.filter(p =>
+        p.center && (p.name.toLowerCase().includes(q) || (p.slot && p.slot.includes(q)))
+    );
+
+    // 2. Then external search
     searchResults.innerHTML = '<div class="search-loading">🔍 Searching…</div>';
     searchResults.classList.add('show');
 
     const features = await photonSearch(query);
 
-    if (!features.length) {
-        searchResults.innerHTML = '<div class="search-empty">No results found</div>';
-        return;
-    }
+    const savedHtml = savedMatches.map((p, i) => `
+        <div class="search-result-item is-saved" data-saved-id="${p.id}">
+            <span class="search-result-icon">${p.emoji}</span>
+            <div class="search-result-text">
+                <div class="search-result-title">${escapeHtml(p.name)}<span class="search-result-tag">Saved</span></div>
+                <div class="search-result-subtitle">${escapeHtml(p.address || '')}</div>
+            </div>
+        </div>
+    `).join('');
 
-    searchResults.innerHTML = features.map((f, i) => {
+    const photonHtml = features.map((f, i) => {
         const r = photonFeatureToResult(f);
         return `
             <div class="search-result-item" data-index="${i}">
@@ -1958,27 +1853,44 @@ const handleSearch = debounce(async (query) => {
         `;
     }).join('');
 
-    searchResults.querySelectorAll('.search-result-item').forEach(item => {
+    if (!savedMatches.length && !features.length) {
+        searchResults.innerHTML = '<div class="search-empty">No results found</div>';
+        return;
+    }
+
+    searchResults.innerHTML = savedHtml + photonHtml;
+
+    // Saved place clicks
+    searchResults.querySelectorAll('.search-result-item.is-saved').forEach(item => {
+        item.addEventListener('click', () => {
+            const place = getPlace(item.dataset.savedId);
+            if (!place || !place.center) return;
+            searchResults.classList.remove('show');
+            searchInput.value = place.name;
+            searchInput.blur();
+            state.endPoint = { lngLat: place.center, name: place.name };
+            new maplibregl.Marker({ color: '#a855f7' }).setLngLat(place.center).addTo(map);
+            map.flyTo({ center: place.center, zoom: 15, duration: 800 });
+            startAutoRoute();
+        });
+    });
+
+    // Photon clicks
+    searchResults.querySelectorAll('.search-result-item:not(.is-saved)').forEach(item => {
         item.addEventListener('click', () => {
             const feature = features[parseInt(item.dataset.index)];
             const r = photonFeatureToResult(feature);
             searchResults.classList.remove('show');
             searchInput.value = r.name;
             searchInput.blur();
-
+            window.__lastSearchCenter = r.center;
             new maplibregl.Marker({ color: '#a855f7' })
                 .setLngLat(r.center)
-                .setPopup(new maplibregl.Popup({ offset: 25 })
-                    .setHTML(buildSearchPopupHtml(r)))
+                .setPopup(new maplibregl.Popup({ offset: 25 }).setHTML(buildSearchPopupHtml(r)))
                 .addTo(map)
                 .togglePopup();
-
-            if (r.bbox) {
-                map.fitBounds([[r.bbox[0], r.bbox[1]], [r.bbox[2], r.bbox[3]]], { padding: 80, duration: 800 });
-            } else {
-                map.flyTo({ center: r.center, zoom: 15, duration: 800 });
-            }
-
+            if (r.bbox) map.fitBounds([[r.bbox[0], r.bbox[1]], [r.bbox[2], r.bbox[3]]], { padding: 80, duration: 800 });
+            else map.flyTo({ center: r.center, zoom: 15, duration: 800 });
             state.endPoint = { lngLat: r.center, name: r.name, address: r.subtitle };
             startAutoRoute();
         });
@@ -1986,36 +1898,31 @@ const handleSearch = debounce(async (query) => {
 }, 350);
 
 function buildSearchPopupHtml(r) {
-    const safeName = escapeHtml(r.name);
-    const safeSub = escapeHtml(r.subtitle);
     return `
-        <strong>${safeName}</strong><br>
-        <small style="color:var(--text-muted)">${safeSub}</small>
+        <strong>${escapeHtml(r.name)}</strong><br>
+        <small style="color:var(--text-muted)">${escapeHtml(r.subtitle)}</small>
         <div class="popup-actions">
-            <button class="popup-btn" id="popup-save-btn" data-name="${safeName}" data-address="${safeSub}">💾 Save</button>
+            <button class="popup-btn" id="popup-save-btn">💾 Save</button>
         </div>
     `;
 }
 
-// Handle popup save button (delegated)
+// Popup save button → opens saved form pre-filled with the pin position
 document.addEventListener('click', (e) => {
     const btn = e.target.closest('#popup-save-btn');
     if (!btn) return;
-    const name = btn.getAttribute('data-name');
-    const address = btn.getAttribute('data-address');
-
-    // Grab the popup's position (marker location)
-    // We stored it globally when the marker was created
-    if (window.__lastSearchCenter) {
-        openSavedSheet();
-        resetAddPlaceForm();
-        addPlaceForm.classList.add('show');
-        addPlaceBtn.style.display = 'none';
-        addPlaceNameInput.value = name;
-        addPlaceAddressInput.value = address;
-        pendingPlaceCenter = window.__lastSearchCenter;
-        addPlaceNameInput.focus();
-    }
+    const popup = btn.closest('.maplibregl-popup');
+    // Fallback to __lastSearchCenter
+    let center = window.__lastSearchCenter;
+    if (!center) return;
+    openSavedSheet();
+    resetAddPlaceForm();
+    addPlaceForm.classList.add('show');
+    addPlaceBtn.style.display = 'none';
+    state.pendingPlaceCenter = center;
+    addPlaceAddressInput.value = ''; // user can type or just save the pin
+    addPlaceSlot.focus();
+    addPlaceForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 searchInput.addEventListener('input', (e) => {
@@ -2044,40 +1951,32 @@ document.addEventListener('click', (e) => {
 });
 
 // ══════════════════════════════════════
-// AUTO-ROUTE FLOW
+// AUTO-ROUTE
 // ══════════════════════════════════════
 async function startAutoRoute() {
     if (!state.startPoint) {
-        const acquired = await tryAcquireLocation();
-        if (!acquired) {
-            showToast('📍 Tap Allow to enable location for navigation');
+        const ok = await tryAcquireLocation();
+        if (!ok) {
+            showToast('📍 Tap Allow to enable location');
             openDirectionsSheet();
             document.getElementById('route-start').focus();
             return;
         }
     }
-
     if (!state.startPoint || !state.endPoint) return;
-
     showToast('🧭 Starting navigation…');
     await calculateAndNavigate();
 }
 
 async function tryAcquireLocation() {
     if (!navigator.geolocation) return false;
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                state.startPoint = {
-                    lngLat: [pos.coords.longitude, pos.coords.latitude],
-                    name: 'Your location'
-                };
+                state.startPoint = { lngLat: [pos.coords.longitude, pos.coords.latitude], name: 'Your location' };
                 resolve(true);
             },
-            (err) => {
-                console.warn('Location denied:', err);
-                resolve(false);
-            },
+            () => resolve(false),
             { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
         );
     });
@@ -2091,7 +1990,7 @@ async function calculateAndNavigate() {
         renderRouteSummary(route);
         await beginNavigation();
     } catch (err) {
-        console.error('Route error:', err);
+        console.error(err);
         showToast('❌ Could not calculate route');
     }
 }
@@ -2107,76 +2006,47 @@ function clearRouteLayers() {
 
 function drawRoute(route) {
     clearRouteLayers();
-
-    map.addSource('route', {
-        type: 'geojson',
-        data: { type: 'Feature', properties: {}, geometry: route.geometry }
-    });
-
+    map.addSource('route', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: route.geometry } });
     map.addLayer({
-        id: 'route-line-outline',
-        type: 'line',
-        source: 'route',
+        id: 'route-line-outline', type: 'line', source: 'route',
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: { 'line-color': '#0a0a14', 'line-width': 12, 'line-opacity': 0.7 }
     });
-
     map.addLayer({
-        id: 'route-line',
-        type: 'line',
-        source: 'route',
+        id: 'route-line', type: 'line', source: 'route',
         layout: { 'line-join': 'round', 'line-cap': 'round' },
         paint: { 'line-color': '#a855f7', 'line-width': 6 }
     });
-
     if (state.routeStartMarker) state.routeStartMarker.remove();
     if (state.routeEndMarker) state.routeEndMarker.remove();
-
     const coords = route.geometry.coordinates;
-    state.routeStartMarker = new maplibregl.Marker({ color: '#10b981' })
-        .setLngLat(coords[0]).addTo(map);
-    state.routeEndMarker = new maplibregl.Marker({ color: '#ef4444' })
-        .setLngLat(coords[coords.length - 1]).addTo(map);
-
-    const bounds = coords.reduce(
-        (b, c) => b.extend(c),
-        new maplibregl.LngLatBounds(coords[0], coords[0])
-    );
+    state.routeStartMarker = new maplibregl.Marker({ color: '#10b981' }).setLngLat(coords[0]).addTo(map);
+    state.routeEndMarker = new maplibregl.Marker({ color: '#ef4444' }).setLngLat(coords[coords.length - 1]).addTo(map);
+    const bounds = coords.reduce((b, c) => b.extend(c), new maplibregl.LngLatBounds(coords[0], coords[0]));
     map.fitBounds(bounds, { padding: { top: 120, bottom: 120, left: 40, right: 40 } });
 }
 
 function renderRouteSummary(route) {
-    const routeSummary = document.getElementById('route-summary');
-    const routeTime = document.getElementById('route-time');
-    const routeDistance = document.getElementById('route-distance');
-    const stepsList = document.getElementById('steps-list');
-
-    routeTime.textContent = formatDuration(route.duration);
-    routeDistance.textContent = formatDistance(route.distance);
-
+    document.getElementById('route-time').textContent = formatDuration(route.duration);
+    document.getElementById('route-distance').textContent = formatDistance(route.distance);
     const steps = route.legs[0].steps || [];
-    stepsList.innerHTML = steps.map((step, i) => {
-        const icon = stepIcon(step.maneuver.type);
-        const instruction = step.maneuver.instruction || step.name || 'Continue';
-        return `
-            <div class="step-item" data-step="${i}">
-                <div class="step-icon">${icon}</div>
-                <div class="step-content">
-                    <div class="step-instruction">${escapeHtml(instruction)}</div>
-                    <div class="step-distance">${formatDistance(step.distance)}</div>
-                </div>
+    const stepsList = document.getElementById('steps-list');
+    stepsList.innerHTML = steps.map((step, i) => `
+        <div class="step-item" data-step="${i}">
+            <div class="step-icon">${stepIcon(step.maneuver.type)}</div>
+            <div class="step-content">
+                <div class="step-instruction">${escapeHtml(step.maneuver.instruction || step.name || 'Continue')}</div>
+                <div class="step-distance">${formatDistance(step.distance)}</div>
             </div>
-        `;
-    }).join('');
-
+        </div>
+    `).join('');
     stepsList.querySelectorAll('.step-item').forEach(item => {
         item.addEventListener('click', () => {
             const idx = parseInt(item.dataset.step);
             map.flyTo({ center: steps[idx].maneuver.location, zoom: 17, duration: 800 });
         });
     });
-
-    routeSummary.style.display = 'block';
+    document.getElementById('route-summary').style.display = 'block';
 }
 
 function stepIcon(type) {
@@ -2190,15 +2060,15 @@ function stepIcon(type) {
 }
 
 // ══════════════════════════════════════
-// NAVIGATION ENGINE
+// NAVIGATION
 // ══════════════════════════════════════
 async function beginNavigation() {
     if (!state.routeData) return;
-
     state.navigationActive = true;
     nav.currentStepIndex = 0;
     nav.offRouteCount = 0;
     nav.lastSpokenStepIndex = -1;
+    nav.lastSpokenDistance = -1;
     nav.followUser = true;
 
     document.body.classList.add('navigating');
@@ -2217,6 +2087,10 @@ async function beginNavigation() {
         );
     }
 
+    // Live-updating distance ticker (fixes frozen "290 m to next turn")
+    if (nav.updateInterval) clearInterval(nav.updateInterval);
+    nav.updateInterval = setInterval(updateLiveDistance, 1500);
+
     if ('vibrate' in navigator) navigator.vibrate([30, 30, 30]);
 }
 
@@ -2228,9 +2102,12 @@ function stopNavigation() {
         navigator.geolocation.clearWatch(nav.watchId);
         nav.watchId = null;
     }
+    if (nav.updateInterval) {
+        clearInterval(nav.updateInterval);
+        nav.updateInterval = null;
+    }
     releaseWakeLock();
     if (window.speechSynthesis) speechSynthesis.cancel();
-
     clearRouteLayers();
     if (state.routeStartMarker) { state.routeStartMarker.remove(); state.routeStartMarker = null; }
     if (state.routeEndMarker) { state.routeEndMarker.remove(); state.routeEndMarker = null; }
@@ -2238,6 +2115,16 @@ function stopNavigation() {
     state.endPoint = null;
     document.getElementById('route-summary').style.display = 'none';
     document.getElementById('route-end').value = '';
+}
+
+// Recompute distance to next maneuver every 1.5s
+function updateLiveDistance() {
+    if (!state.navigationActive || !state.routeData || !nav.lastPosition) return;
+    const steps = state.routeData.legs[0].steps;
+    if (nav.currentStepIndex >= steps.length) return;
+    const target = steps[nav.currentStepIndex].maneuver.location;
+    const dist = distanceMeters(nav.lastPosition.lon, nav.lastPosition.lat, target[0], target[1]);
+    document.getElementById('nav-sub').textContent = `${formatDistance(dist)} to next turn`;
 }
 
 function updateNavUI() {
@@ -2254,26 +2141,22 @@ function updateNavUI() {
     const step = steps[nav.currentStepIndex];
     document.getElementById('nav-arrow').textContent = stepIcon(step.maneuver.type);
     document.getElementById('nav-main').textContent = step.maneuver.instruction || step.name || 'Continue';
-
     document.querySelectorAll('.step-item').forEach((el, i) => {
         el.classList.toggle('active', i === nav.currentStepIndex);
     });
 
-    let remainingTime = 0;
-    let remainingDist = 0;
+    let remainingTime = 0, remainingDist = 0;
     for (let i = nav.currentStepIndex; i < steps.length; i++) {
         remainingTime += steps[i].duration;
         remainingDist += steps[i].distance;
     }
-
-    if (nav.lastPosition && steps[nav.currentStepIndex]) {
+    if (nav.lastPosition) {
         const target = steps[nav.currentStepIndex].maneuver.location;
         const distToNext = distanceMeters(nav.lastPosition.lon, nav.lastPosition.lat, target[0], target[1]);
         document.getElementById('nav-sub').textContent = `${formatDistance(distToNext)} to next turn`;
     } else {
         document.getElementById('nav-sub').textContent = `${formatDistance(remainingDist)} remaining`;
     }
-
     const etaDate = new Date(Date.now() + remainingTime * 1000);
     document.getElementById('nav-eta').textContent = formatClock(etaDate);
 }
@@ -2293,40 +2176,42 @@ function onPositionUpdate(pos) {
                     <polygon points="20,3 26,16 20,13 14,16" fill="#00aaff" stroke="#fff" stroke-width="1.5"/>
                 </svg>
             </div>`;
-        state.userMarker = new maplibregl.Marker({ element: el })
-            .setLngLat([lon, lat])
-            .addTo(map);
+        state.userMarker = new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(map);
     } else {
         state.userMarker.setLngLat([lon, lat]);
     }
 
-    if (nav.followUser) {
-        map.easeTo({ center: [lon, lat], duration: 500 });
-    }
+    if (nav.followUser) map.easeTo({ center: [lon, lat], duration: 500 });
 
     if (state.navigationActive && state.routeData) {
         const steps = state.routeData.legs[0].steps;
-
         if (nav.currentStepIndex < steps.length) {
             const step = steps[nav.currentStepIndex];
             const target = step.maneuver.location;
             const dist = distanceMeters(lon, lat, target[0], target[1]);
 
-            if (nav.lastSpokenStepIndex !== nav.currentStepIndex) {
-                const instruction = step.maneuver.instruction || step.name;
-                if (instruction && dist > 30) speak(instruction);
-                nav.lastSpokenStepIndex = nav.currentStepIndex;
+            // Voice: announce at 500m, 200m, 50m for each step
+            const buckets = [500, 200, 50];
+            for (const b of buckets) {
+                // Use ft thresholds in imperial mode
+                const threshold = state.units === 'imperial' ? Math.round(b * 3.28) : b;
+                const realThreshold = state.units === 'imperial' ? b * 0.3048 * 3.28 : b;
+                // simpler: just use meters
+                const m = b;
+                if (nav.lastAnnouncedAt < m && dist <= m && dist > m * 0.6) {
+                    nav.lastAnnouncedAt = m;
+                    const instruction = step.maneuver.instruction || step.name || 'continue';
+                    speak(`In ${formatDistance(m)}, ${instruction}`);
+                    break;
+                }
             }
 
             if (dist < 25) {
                 nav.currentStepIndex++;
                 nav.lastSpokenStepIndex = -1;
+                nav.lastAnnouncedAt = -1;
                 if ('vibrate' in navigator) navigator.vibrate(30);
                 updateNavUI();
-            }
-
-            if (dist < 220 && dist > 180) {
-                speak(`In ${Math.round(dist / 10) * 10} meters, ${step.maneuver.instruction || step.name || 'continue'}`);
             }
         } else {
             if (nav.lastSpokenStepIndex !== steps.length) {
@@ -2355,42 +2240,30 @@ function onPositionUpdate(pos) {
 async function rerouteFrom(lon, lat) {
     if (!state.endPoint) return;
     try {
-        const start = { lngLat: [lon, lat] };
-        const route = await fetchRoute(start, state.endPoint, state.routeProfile);
+        const route = await fetchRoute({ lngLat: [lon, lat] }, state.endPoint, state.routeProfile);
         state.routeData = route;
         drawRoute(route);
         renderRouteSummary(route);
         nav.currentStepIndex = 0;
         nav.lastSpokenStepIndex = -1;
+        nav.lastAnnouncedAt = -1;
         updateNavUI();
-    } catch (err) {
-        console.error('Reroute failed:', err);
-    }
+    } catch {}
 }
 
 // ══════════════════════════════════════
-// WAKE LOCK
+// WAKE LOCK / VOICE / COMPASS
 // ══════════════════════════════════════
 async function requestWakeLock() {
     try {
-        if ('wakeLock' in navigator) {
-            nav.wakeLock = await navigator.wakeLock.request('screen');
-        }
-    } catch (err) {
-        console.warn('Wake lock failed:', err);
-    }
+        if ('wakeLock' in navigator) nav.wakeLock = await navigator.wakeLock.request('screen');
+    } catch {}
 }
 
 function releaseWakeLock() {
-    if (nav.wakeLock) {
-        nav.wakeLock.release();
-        nav.wakeLock = null;
-    }
+    if (nav.wakeLock) { nav.wakeLock.release(); nav.wakeLock = null; }
 }
 
-// ══════════════════════════════════════
-// VOICE
-// ══════════════════════════════════════
 function speak(text) {
     if (!nav.voiceEnabled || !('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
@@ -2401,9 +2274,6 @@ function speak(text) {
     speechSynthesis.speak(u);
 }
 
-// ══════════════════════════════════════
-// COMPASS
-// ══════════════════════════════════════
 async function requestCompassPermission() {
     if (typeof DeviceOrientationEvent === 'undefined') return false;
     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -2439,8 +2309,8 @@ const locateBanner = document.getElementById('locate-banner');
 const locateBtn = document.getElementById('locate-btn');
 
 if (navigator.permissions) {
-    navigator.permissions.query({ name: 'geolocation' }).then(result => {
-        if (result.state === 'granted') locateBanner.classList.add('hidden');
+    navigator.permissions.query({ name: 'geolocation' }).then(r => {
+        if (r.state === 'granted') locateBanner.classList.add('hidden');
     }).catch(() => {});
 }
 
@@ -2456,52 +2326,68 @@ locateBtn.addEventListener('click', async () => {
 });
 
 // ══════════════════════════════════════
-// DIRECTIONS SHEET
+// SHEETS
 // ══════════════════════════════════════
 const directionsBtn = document.getElementById('directions-btn');
 const directionsSheet = document.getElementById('directions-sheet');
 const directionsClose = document.getElementById('directions-close');
+const layersBtn = document.getElementById('layers-btn');
+const layersSheet = document.getElementById('layers-sheet');
+const layersClose = document.getElementById('layers-close');
 const sheetBackdrop = document.getElementById('sheet-backdrop');
 
-function openDirectionsSheet() {
-    directionsSheet.classList.add('show');
-    sheetBackdrop.classList.add('show');
-    directionsBtn.classList.add('active');
-}
+function openDirectionsSheet() { directionsSheet.classList.add('show'); sheetBackdrop.classList.add('show'); directionsBtn.classList.add('active'); }
+function closeDirectionsSheet() { directionsSheet.classList.remove('show'); sheetBackdrop.classList.remove('show'); directionsBtn.classList.remove('active'); }
+function openLayersSheet() { layersSheet.classList.add('show'); sheetBackdrop.classList.add('show'); layersBtn.classList.add('active'); }
+function closeLayersSheet() { layersSheet.classList.remove('show'); sheetBackdrop.classList.remove('show'); layersBtn.classList.remove('active'); }
 
-function closeDirectionsSheet() {
-    directionsSheet.classList.remove('show');
-    sheetBackdrop.classList.remove('show');
-    directionsBtn.classList.remove('active');
-}
-
-directionsBtn.addEventListener('click', () => {
-    if (directionsSheet.classList.contains('show')) closeDirectionsSheet();
-    else openDirectionsSheet();
-});
-
+directionsBtn.addEventListener('click', () => directionsSheet.classList.contains('show') ? closeDirectionsSheet() : openDirectionsSheet());
 directionsClose.addEventListener('click', closeDirectionsSheet);
-sheetBackdrop.addEventListener('click', () => {
-    closeDirectionsSheet();
-    closeLayersSheet();
-    closeSavedSheet();
-});
+layersBtn.addEventListener('click', () => layersSheet.classList.contains('show') ? closeLayersSheet() : openLayersSheet());
+layersClose.addEventListener('click', closeLayersSheet);
+sheetBackdrop.addEventListener('click', () => { closeDirectionsSheet(); closeLayersSheet(); closeSavedSheet(); });
 
+// Travel modes
 document.querySelectorAll('.travel-mode').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.travel-mode').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.routeProfile = btn.dataset.profile;
-
-        if (state.routeData && state.startPoint && state.endPoint) {
-            calculateAndNavigate();
-        }
+        if (state.routeData && state.startPoint && state.endPoint) calculateAndNavigate();
     });
 });
 
-// ══════════════════════════════════════
-// ROUTE AUTOCOMPLETE
-// ══════════════════════════════════════
+// Units segmented control
+document.querySelectorAll('.units-seg').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.units-seg').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.units = btn.dataset.units;
+        saveSettings();
+        if (state.routeData) renderRouteSummary(state.routeData);
+        updateLiveDistance();
+        showToast(state.units === 'imperial' ? '🇺🇸 Miles' : '🌍 Kilometers');
+    });
+});
+
+function syncUnitsButtons() {
+    document.querySelectorAll('.units-seg').forEach(b => {
+        b.classList.toggle('active', b.dataset.units === state.units);
+    });
+}
+
+// Voice toggle
+const voiceToggle = document.getElementById('toggle-voice');
+voiceToggle.addEventListener('click', () => {
+    nav.voiceEnabled = !nav.voiceEnabled;
+    voiceToggle.classList.toggle('active', nav.voiceEnabled);
+    saveSettings();
+    document.getElementById('nav-voice-btn').classList.toggle('muted', !nav.voiceEnabled);
+    document.getElementById('nav-voice-btn').textContent = nav.voiceEnabled ? '🔊' : '🔇';
+    showToast(nav.voiceEnabled ? '🔊 Voice on' : '🔇 Voice off');
+});
+
+// Route autocomplete — recognizes "Home", "Work", etc.
 function setupRouteAutocomplete(inputId, suggestionsId, key) {
     const input = document.getElementById(inputId);
     const suggestions = document.getElementById(suggestionsId);
@@ -2512,25 +2398,50 @@ function setupRouteAutocomplete(inputId, suggestionsId, key) {
             return;
         }
 
+        const q = query.trim().toLowerCase();
+        const savedMatches = state.savedPlaces.filter(p =>
+            p.center && (p.name.toLowerCase().includes(q) || (p.slot && p.slot.includes(q)))
+        );
+
         const features = await photonSearch(query, 5);
-        if (!features.length) {
+
+        const savedHtml = savedMatches.map(p => `
+            <div class="route-suggestion-item" data-saved-id="${p.id}">
+                <strong>${p.emoji} ${escapeHtml(p.name)}</strong>
+                <small>${escapeHtml(p.address || '')}</small>
+            </div>
+        `).join('');
+
+        const photonHtml = features.map((f, i) => {
+            const r = photonFeatureToResult(f);
+            return `<div class="route-suggestion-item" data-index="${i}">
+                <strong>${escapeHtml(r.name)}</strong>
+                <small>${escapeHtml(r.subtitle)}</small>
+            </div>`;
+        }).join('');
+
+        if (!savedMatches.length && !features.length) {
             suggestions.classList.remove('show');
             return;
         }
 
-        suggestions.innerHTML = features.map((f, i) => {
-            const r = photonFeatureToResult(f);
-            return `
-                <div class="route-suggestion-item" data-index="${i}">
-                    <strong>${escapeHtml(r.name)}</strong>
-                    <small>${escapeHtml(r.subtitle)}</small>
-                </div>
-            `;
-        }).join('');
-
+        suggestions.innerHTML = savedHtml + photonHtml;
         suggestions.classList.add('show');
 
-        suggestions.querySelectorAll('.route-suggestion-item').forEach(item => {
+        suggestions.querySelectorAll('.route-suggestion-item[data-saved-id]').forEach(item => {
+            item.addEventListener('click', () => {
+                const place = getPlace(item.dataset.savedId);
+                if (!place || !place.center) return;
+                input.value = place.name;
+                state[key] = { lngLat: place.center, name: place.name };
+                suggestions.classList.remove('show');
+                input.blur();
+                if (state.startPoint && state.endPoint) calculateAndNavigate();
+                else if (key === 'endPoint') startAutoRoute();
+            });
+        });
+
+        suggestions.querySelectorAll('.route-suggestion-item[data-index]').forEach(item => {
             item.addEventListener('click', () => {
                 const f = features[parseInt(item.dataset.index)];
                 const r = photonFeatureToResult(f);
@@ -2538,15 +2449,11 @@ function setupRouteAutocomplete(inputId, suggestionsId, key) {
                 state[key] = { lngLat: r.center, name: r.name };
                 suggestions.classList.remove('show');
                 input.blur();
-
-                if (state.startPoint && state.endPoint) {
-                    calculateAndNavigate();
-                } else if (key === 'endPoint') {
-                    startAutoRoute();
-                }
+                if (state.startPoint && state.endPoint) calculateAndNavigate();
+                else if (key === 'endPoint') startAutoRoute();
             });
         });
-    }, 300);
+    }, 250);
 
     input.addEventListener('input', (e) => handler(e.target.value));
     input.addEventListener('keydown', (e) => {
@@ -2568,43 +2475,16 @@ function setupRouteAutocomplete(inputId, suggestionsId, key) {
 setupRouteAutocomplete('route-start', 'route-start-suggestions', 'startPoint');
 setupRouteAutocomplete('route-end', 'route-end-suggestions', 'endPoint');
 
-// ══════════════════════════════════════
-// LAYERS SHEET
-// ══════════════════════════════════════
-const layersBtn = document.getElementById('layers-btn');
-const layersSheet = document.getElementById('layers-sheet');
-const layersClose = document.getElementById('layers-close');
+// Style grid
 const styleGrid = document.getElementById('style-grid');
-
-function openLayersSheet() {
-    layersSheet.classList.add('show');
-    sheetBackdrop.classList.add('show');
-    layersBtn.classList.add('active');
-}
-
-function closeLayersSheet() {
-    layersSheet.classList.remove('show');
-    sheetBackdrop.classList.remove('show');
-    layersBtn.classList.remove('active');
-}
-
-layersBtn.addEventListener('click', () => {
-    if (layersSheet.classList.contains('show')) closeLayersSheet();
-    else openLayersSheet();
-});
-
-layersClose.addEventListener('click', closeLayersSheet);
-
 styleGrid.addEventListener('click', (e) => {
     const opt = e.target.closest('.style-option');
     if (!opt) return;
-
     styleGrid.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
     opt.classList.add('active');
-
     state.style = opt.dataset.style;
+    saveSettings();
     map.setStyle(CONFIG.STYLES[state.style]);
-
     map.once('styledata', () => {
         if (state.routeData) drawRoute(state.routeData);
         if (state.buildings3D) enable3DBuildings();
@@ -2615,15 +2495,13 @@ styleGrid.addEventListener('click', (e) => {
 document.getElementById('toggle-3d').addEventListener('click', (e) => {
     e.currentTarget.classList.toggle('active');
     state.buildings3D = e.currentTarget.classList.contains('active');
-    if (state.buildings3D) enable3DBuildings();
-    else disable3DBuildings();
+    if (state.buildings3D) enable3DBuildings(); else disable3DBuildings();
 });
 
 document.getElementById('toggle-terrain').addEventListener('click', (e) => {
     e.currentTarget.classList.toggle('active');
     state.terrain = e.currentTarget.classList.contains('active');
-    if (state.terrain) enableTerrain();
-    else disableTerrain();
+    if (state.terrain) enableTerrain(); else disableTerrain();
 });
 
 function enable3DBuildings() {
@@ -2638,11 +2516,8 @@ function enable3DBuildings() {
     }
     try {
         map.addLayer({
-            id: '3d-buildings',
-            source: 'openmaptiles',
-            'source-layer': 'building',
-            type: 'fill-extrusion',
-            minzoom: 15,
+            id: '3d-buildings', source: 'openmaptiles', 'source-layer': 'building',
+            type: 'fill-extrusion', minzoom: 15,
             paint: {
                 'fill-extrusion-color': '#7c3aed',
                 'fill-extrusion-height': ['coalesce', ['get', 'render_height'], 10],
@@ -2650,58 +2525,38 @@ function enable3DBuildings() {
                 'fill-extrusion-opacity': 0.7
             }
         }, labelLayerId);
-    } catch (err) {
-        console.warn('Could not add 3D buildings:', err);
-    }
+    } catch {}
 }
 
-function disable3DBuildings() {
-    if (map.getLayer('3d-buildings')) map.removeLayer('3d-buildings');
-}
-
+function disable3DBuildings() { if (map.getLayer('3d-buildings')) map.removeLayer('3d-buildings'); }
 function enableTerrain() {
     if (!map.getSource('terrain-dem')) {
         map.addSource('terrain-dem', {
             type: 'raster-dem',
             tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            encoding: 'terrarium',
-            maxzoom: 15
+            tileSize: 256, encoding: 'terrarium', maxzoom: 15
         });
     }
     map.setTerrain({ source: 'terrain-dem', exaggeration: 1.2 });
 }
+function disableTerrain() { map.setTerrain(null); }
 
-function disableTerrain() {
-    map.setTerrain(null);
-}
-
-// ══════════════════════════════════════
-// MAP CONTROLS
-// ══════════════════════════════════════
+// Map controls
 document.getElementById('zoom-in').addEventListener('click', () => map.zoomIn());
 document.getElementById('zoom-out').addEventListener('click', () => map.zoomOut());
-document.getElementById('reset-bearing').addEventListener('click', () => {
-    map.easeTo({ bearing: 0, pitch: 0, duration: 500 });
-});
-
+document.getElementById('reset-bearing').addEventListener('click', () => map.easeTo({ bearing: 0, pitch: 0, duration: 500 }));
 document.getElementById('recenter-btn').addEventListener('click', () => {
     nav.followUser = true;
-    if (nav.lastPosition) {
-        map.easeTo({
-            center: [nav.lastPosition.lon, nav.lastPosition.lat],
-            zoom: 18,
-            pitch: 55,
-            duration: 600
-        });
-    }
+    if (nav.lastPosition) map.easeTo({ center: [nav.lastPosition.lon, nav.lastPosition.lat], zoom: 18, pitch: 55, duration: 600 });
 });
 
 document.getElementById('nav-end-btn').addEventListener('click', stopNavigation);
 document.getElementById('nav-voice-btn').addEventListener('click', (e) => {
     nav.voiceEnabled = !nav.voiceEnabled;
+    saveSettings();
     e.currentTarget.classList.toggle('muted', !nav.voiceEnabled);
     e.currentTarget.textContent = nav.voiceEnabled ? '🔊' : '🔇';
+    voiceToggle.classList.toggle('active', nav.voiceEnabled);
     showToast(nav.voiceEnabled ? '🔊 Voice on' : '🔇 Voice off');
 });
 
@@ -2709,9 +2564,7 @@ map.on('dragstart', () => { nav.followUser = false; document.getElementById('rec
 map.on('rotatestart', () => { nav.followUser = false; document.getElementById('recenter-btn').classList.add('show'); });
 
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && state.navigationActive) {
-        requestWakeLock();
-    }
+    if (document.visibilityState === 'visible' && state.navigationActive) requestWakeLock();
 });
 
 document.addEventListener('keydown', (e) => {
@@ -2728,18 +2581,39 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// IMPORTANT: iOS requires at least one user gesture to enable speechSynthesis.
+// Any tap anywhere on the page calls a silent speak() to unlock it.
+document.addEventListener('touchstart', function unlockSpeech() {
+    if ('speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance('');
+        u.volume = 0;
+        speechSynthesis.speak(u);
+    }
+    document.removeEventListener('touchstart', unlockSpeech);
+}, { once: true });
+
 // ══════════════════════════════════════
 // MAP READY
 // ══════════════════════════════════════
 map.on('load', () => {
     console.log('🗺️ Wizard Maps ready');
-    console.log('⭐ Saved places: localStorage only (iOS-friendly)');
-
-    // Load saved places
+    loadSettings();
     loadSavedPlaces();
     renderQuickPlaces();
+    syncUnitsButtons();
+    voiceToggle.classList.toggle('active', nav.voiceEnabled);
+    document.getElementById('nav-voice-btn').classList.toggle('muted', !nav.voiceEnabled);
+    document.getElementById('nav-voice-btn').textContent = nav.voiceEnabled ? '🔊' : '🔇';
 
-    // Warm-up location if permission already granted
+    // Apply saved style
+    if (state.style !== 'liberty') {
+        styleGrid.querySelectorAll('.style-option').forEach(o => {
+            o.classList.toggle('active', o.dataset.style === state.style);
+        });
+        map.setStyle(CONFIG.STYLES[state.style]);
+    }
+
+    // Warm-up location if already granted
     if (navigator.permissions) {
         navigator.permissions.query({ name: 'geolocation' }).then(r => {
             if (r.state === 'granted') {
@@ -2755,11 +2629,7 @@ map.on('load', () => {
 });
 
 map.on('error', (e) => console.warn('Map error:', e.error));
-
-// Store last search center for popup save
-map.on('click', (e) => {
-    window.__lastSearchCenter = [e.lngLat.lng, e.lngLat.lat];
-});
+map.on('click', (e) => { window.__lastSearchCenter = [e.lngLat.lng, e.lngLat.lat]; });
 </script>
 </body>
 </html>
