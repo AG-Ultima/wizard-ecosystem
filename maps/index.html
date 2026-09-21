@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Wizard Maps">
 
-<link rel="icon" href="wizardecosystem.dev/favicon.ico">
-<link rel="apple-touch-icon" href="wizardecosystem.dev/favicon.ico">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗺️</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230a0814'/><text y='.9em' font-size='80' x='10'>🗺️</text></svg>">
 
 <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <link href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet">
@@ -231,7 +231,64 @@ html, body {
 }
 
 /* ══════════════════════════════════════
-   LOCATION PROMPT (bottom banner on load)
+   QUICK PLACES CHIPS (below header)
+   ══════════════════════════════════════ */
+.quick-places {
+    position: absolute;
+    top: calc(70px + var(--safe-top));
+    left: 0; right: 0;
+    z-index: 99;
+    display: flex;
+    gap: 8px;
+    padding: 0 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    pointer-events: none;
+}
+
+.quick-places::-webkit-scrollbar { display: none; }
+
+.quick-chip {
+    pointer-events: auto;
+    flex-shrink: 0;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    transition: transform 0.15s, background 0.2s, border-color 0.2s;
+}
+
+.quick-chip:active {
+    background: rgba(139,92,246,0.25);
+    transform: scale(0.95);
+}
+
+.quick-chip .chip-emoji { font-size: 16px; }
+
+.quick-chip.add-new {
+    border-style: dashed;
+    color: var(--primary-light);
+}
+
+.quick-chip.add-new:active { background: rgba(139,92,246,0.3); }
+
+/* Hide quick places when navigating */
+body.navigating .quick-places { display: none; }
+
+/* ══════════════════════════════════════
+   LOCATION BANNER
    ══════════════════════════════════════ */
 .locate-banner {
     position: fixed;
@@ -534,6 +591,193 @@ html, body {
 .step-distance { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
 /* ══════════════════════════════════════
+   SAVED PLACES LIST
+   ══════════════════════════════════════ */
+.saved-places-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.saved-place-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+}
+
+.saved-place-item:active {
+    background: rgba(139,92,246,0.2);
+    transform: scale(0.98);
+}
+
+.saved-place-emoji {
+    font-size: 26px;
+    width: 44px; height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(139,92,246,0.15);
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.saved-place-info { flex: 1; min-width: 0; }
+.saved-place-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+.saved-place-address { font-size: 12px; color: var(--text-muted); line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.saved-place-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    padding: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    border-radius: 8px;
+}
+
+.saved-place-delete:active { background: rgba(239,68,68,0.2); color: var(--danger); }
+
+.no-saved-places {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.no-saved-places .big-emoji {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.6;
+}
+
+/* Add-place form inside saved sheet */
+.add-place-form {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: none;
+}
+
+.add-place-form.show { display: block; }
+
+.add-place-form label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.add-place-form input,
+.add-place-form select {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 12px;
+}
+
+.add-place-form input:focus,
+.add-place-form select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.emoji-picker {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.emoji-option {
+    width: 40px; height: 40px;
+    background: rgba(0,0,0,0.3);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, border-color 0.2s;
+}
+
+.emoji-option:active { transform: scale(0.9); }
+
+.emoji-option.selected {
+    border-color: var(--primary);
+    background: rgba(139,92,246,0.2);
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+.form-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.form-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+}
+
+.form-btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+}
+
+.form-btn.ghost {
+    background: rgba(255,255,255,0.06);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+/* Add place button at bottom of saved list */
+.add-place-btn {
+    width: 100%;
+    padding: 14px;
+    background: rgba(139,92,246,0.15);
+    border: 1px dashed var(--primary);
+    border-radius: 16px;
+    color: var(--primary-light);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.add-place-btn:active { background: rgba(139,92,246,0.3); }
+
+/* ══════════════════════════════════════
    NAVIGATION MODE
    ══════════════════════════════════════ */
 body.navigating .maps-header,
@@ -541,6 +785,8 @@ body.navigating .bottom-bar,
 body.navigating .map-controls,
 body.navigating .locate-banner,
 body.navigating .directions-sheet,
+body.navigating .layers-sheet,
+body.navigating .saved-sheet,
 body.navigating .sheet-backdrop {
     display: none !important;
 }
@@ -643,13 +889,11 @@ body.navigating .nav-bottom { display: flex; }
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: opacity 0.2s;
 }
 
 .nav-voice-btn.muted { opacity: 0.4; }
 .nav-voice-btn:active { background: rgba(139,92,246,0.3); }
 
-/* Recenter */
 .recenter-btn {
     position: fixed;
     right: 16px;
@@ -673,12 +917,8 @@ body.navigating .nav-bottom { display: flex; }
 .recenter-btn:active { background: rgba(139,92,246,0.3); }
 body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
 
-/* User marker */
 .user-marker { filter: drop-shadow(0 0 10px rgba(0,170,255,0.8)); }
-.user-marker-arrow {
-    transform-origin: center;
-    transition: transform 0.15s linear;
-}
+.user-marker-arrow { transform-origin: center; transition: transform 0.15s linear; }
 
 /* Style grid */
 .style-grid {
@@ -729,10 +969,7 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
 
 .toggle-row:last-child { border-bottom: none; }
 
-.toggle-row label {
-    font-size: 15px;
-    color: var(--text-secondary);
-}
+.toggle-row label { font-size: 15px; color: var(--text-secondary); }
 
 .toggle-switch {
     width: 48px; height: 28px;
@@ -787,7 +1024,6 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
 
 .map-control-btn:active { background: rgba(139,92,246,0.3); transform: scale(0.94); }
 
-/* Attribution */
 .bottom-bar {
     position: absolute;
     bottom: calc(12px + var(--safe-bottom));
@@ -836,6 +1072,28 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
 .maplibregl-ctrl-attrib a { color: var(--primary-light) !important; }
 .maplibregl-ctrl-top-right { display: none !important; }
 
+/* Popup save button */
+.popup-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.popup-btn {
+    flex: 1;
+    padding: 8px 12px;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--primary-light);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.popup-btn:active { background: rgba(139,92,246,0.3); }
+
 /* Responsive */
 @media (max-width: 600px) {
     .header-logo .logo-text { display: none; }
@@ -875,12 +1133,15 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     </div>
 </div>
 
+<!-- Quick place chips -->
+<div class="quick-places" id="quick-places"></div>
+
 <!-- Location prompt -->
 <div class="locate-banner" id="locate-banner">
     <div class="locate-icon">📍</div>
     <div class="locate-text">
         <strong>Turn on location</strong>
-        <small>Get real-time navigation with turn-by-turn directions</small>
+        <small>Get real-time turn-by-turn navigation</small>
     </div>
     <button class="locate-btn" id="locate-btn">Allow</button>
 </div>
@@ -1002,6 +1263,53 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     </div>
 </div>
 
+<!-- Bottom sheet: saved places -->
+<div class="bottom-sheet" id="saved-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+        <span class="sheet-title">⭐ Saved Places</span>
+        <button class="sheet-close" id="saved-close" aria-label="Close">✕</button>
+    </div>
+    <div class="sheet-body">
+        <div class="add-place-form" id="add-place-form">
+            <label>Name</label>
+            <input type="text" id="add-place-name" placeholder="e.g., Grandma's House" maxlength="40">
+
+            <label>Address or place</label>
+            <input type="text" id="add-place-address" placeholder="Search for an address or place…" autocomplete="off">
+            <div class="route-suggestions" id="add-place-suggestions"></div>
+
+            <label>Icon</label>
+            <div class="emoji-picker" id="emoji-picker">
+                <div class="emoji-option selected" data-emoji="🏠">🏠</div>
+                <div class="emoji-option" data-emoji="💼">💼</div>
+                <div class="emoji-option" data-emoji="📚">📚</div>
+                <div class="emoji-option" data-emoji="⭐">⭐</div>
+                <div class="emoji-option" data-emoji="❤️">❤️</div>
+                <div class="emoji-option" data-emoji="🍕">🍕</div>
+                <div class="emoji-option" data-emoji="☕">☕</div>
+                <div class="emoji-option" data-emoji="🏋️">🏋️</div>
+                <div class="emoji-option" data-emoji="🎬">🎬</div>
+                <div class="emoji-option" data-emoji="🛒">🛒</div>
+                <div class="emoji-option" data-emoji="⛽">⛽</div>
+                <div class="emoji-option" data-emoji="🏥">🏥</div>
+            </div>
+
+            <div class="form-buttons">
+                <button class="form-btn ghost" id="add-place-cancel">Cancel</button>
+                <button class="form-btn primary" id="add-place-save">Save Place</button>
+            </div>
+        </div>
+
+        <div class="saved-places-list" id="saved-places-list"></div>
+
+        <button class="add-place-btn" id="add-place-btn">
+            <span>➕</span>
+            <span>Add a place</span>
+        </button>
+    </div>
+</div>
+
 <!-- Map controls -->
 <div class="map-controls">
     <button class="map-control-btn" id="zoom-in" aria-label="Zoom in">＋</button>
@@ -1009,7 +1317,6 @@ body.navigating .recenter-btn { bottom: calc(140px + var(--safe-bottom)); }
     <button class="map-control-btn" id="reset-bearing" aria-label="Reset view">🧭</button>
 </div>
 
-<!-- Attribution -->
 <div class="bottom-bar">
     <span>🗺️ Wizard Maps</span>
     <span>·</span>
@@ -1033,17 +1340,17 @@ const CONFIG = {
     },
     GEOCODE_URL: 'https://photon.komoot.io/api/',
     REVERSE_URL: 'https://photon.komoot.io/reverse',
-    // FOSSGIS routing — real multi-profile OSRM
     ROUTE_SERVERS: {
         driving: 'https://routing.openstreetmap.de/routed-car/route/v1/driving/',
         cycling: 'https://routing.openstreetmap.de/routed-bike/route/v1/driving/',
         walking: 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/'
     },
-    // Fallback speeds for the public OSRM server (driving-only)
     FALLBACK_SPEEDS: { walking: 1.4, cycling: 4.2 },
     DEFAULT_CENTER: [0, 20],
     DEFAULT_ZOOM: 2
 };
+
+const STORAGE_KEY = 'wizard_maps_saved_places_v1';
 
 // ══════════════════════════════════════
 // STATE
@@ -1055,13 +1362,14 @@ const state = {
     startPoint: null,
     endPoint: null,
     navigationActive: false,
-    trafficVisible: false,
     buildings3D: false,
     terrain: false,
     userMarker: null,
     userHeading: 0,
     routeStartMarker: null,
-    routeEndMarker: null
+    routeEndMarker: null,
+    savedPlaces: [],
+    editingPlaceId: null
 };
 
 const nav = {
@@ -1074,6 +1382,331 @@ const nav = {
     lastSpokenStepIndex: -1,
     followUser: true
 };
+
+// ══════════════════════════════════════
+// SAVED PLACES (localStorage)
+// ══════════════════════════════════════
+function loadSavedPlaces() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+            // First-time defaults — user can delete/rename
+            state.savedPlaces = [
+                { id: 'home',   name: 'Home',   emoji: '🏠', address: '', center: null, createdAt: Date.now() },
+                { id: 'work',   name: 'Work',   emoji: '💼', address: '', center: null, createdAt: Date.now() },
+                { id: 'school', name: 'School', emoji: '📚', address: '', center: null, createdAt: Date.now() }
+            ];
+            saveSavedPlaces();
+            return;
+        }
+        state.savedPlaces = JSON.parse(raw) || [];
+    } catch (err) {
+        console.error('Failed to load saved places:', err);
+        state.savedPlaces = [];
+    }
+}
+
+function saveSavedPlaces() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.savedPlaces));
+    } catch (err) {
+        console.error('Failed to save places:', err);
+        showToast('⚠️ Could not save (storage full?)');
+    }
+}
+
+function getPlace(id) {
+    return state.savedPlaces.find(p => p.id === id);
+}
+
+function upsertPlace(place) {
+    const idx = state.savedPlaces.findIndex(p => p.id === place.id);
+    if (idx >= 0) state.savedPlaces[idx] = place;
+    else state.savedPlaces.push(place);
+    saveSavedPlaces();
+    renderQuickPlaces();
+    renderSavedPlacesList();
+}
+
+function deletePlace(id) {
+    state.savedPlaces = state.savedPlaces.filter(p => p.id !== id);
+    saveSavedPlaces();
+    renderQuickPlaces();
+    renderSavedPlacesList();
+}
+
+// ══════════════════════════════════════
+// QUICK PLACES CHIPS
+// ══════════════════════════════════════
+const quickPlacesEl = document.getElementById('quick-places');
+
+function renderQuickPlaces() {
+    // Only show chips that have coordinates (i.e., configured)
+    const ready = state.savedPlaces.filter(p => p.center);
+    let html = '';
+
+    ready.forEach(p => {
+        html += `
+            <div class="quick-chip" data-place-id="${p.id}">
+                <span class="chip-emoji">${p.emoji}</span>
+                <span>${escapeHtml(p.name)}</span>
+            </div>
+        `;
+    });
+
+    // Always show "manage" chip
+    html += `
+        <div class="quick-chip add-new" id="manage-places-chip">
+            <span>${ready.length ? '⚙️' : '➕'}</span>
+            <span>${ready.length ? 'Manage' : 'Add places'}</span>
+        </div>
+    `;
+
+    quickPlacesEl.innerHTML = html;
+
+    quickPlacesEl.querySelectorAll('.quick-chip[data-place-id]').forEach(chip => {
+        chip.addEventListener('click', () => {
+            const place = getPlace(chip.dataset.placeId);
+            if (place && place.center) {
+                state.endPoint = { lngLat: place.center, name: place.name };
+                // Drop a marker so user sees where they're going
+                new maplibregl.Marker({ color: '#a855f7' })
+                    .setLngLat(place.center)
+                    .setPopup(new maplibregl.Popup({ offset: 25 })
+                        .setHTML(`<strong>${place.emoji} ${escapeHtml(place.name)}</strong><br><small>${escapeHtml(place.address || '')}</small>`))
+                    .addTo(map)
+                    .togglePopup();
+                map.flyTo({ center: place.center, zoom: 15, duration: 800 });
+
+                // 🚀 Auto-navigate
+                startAutoRoute();
+            }
+        });
+    });
+
+    const manageChip = document.getElementById('manage-places-chip');
+    if (manageChip) {
+        manageChip.addEventListener('click', () => {
+            openSavedSheet();
+        });
+    }
+}
+
+// ══════════════════════════════════════
+// SAVED PLACES SHEET
+// ══════════════════════════════════════
+const savedSheet = document.getElementById('saved-sheet');
+const savedClose = document.getElementById('saved-close');
+const savedListEl = document.getElementById('saved-places-list');
+const addPlaceForm = document.getElementById('add-place-form');
+const addPlaceBtn = document.getElementById('add-place-btn');
+const addPlaceNameInput = document.getElementById('add-place-name');
+const addPlaceAddressInput = document.getElementById('add-place-address');
+const addPlaceSuggestions = document.getElementById('add-place-suggestions');
+const addPlaceSave = document.getElementById('add-place-save');
+const addPlaceCancel = document.getElementById('add-place-cancel');
+const emojiPicker = document.getElementById('emoji-picker');
+
+let selectedEmoji = '🏠';
+let pendingPlaceCenter = null;
+
+function openSavedSheet() {
+    savedSheet.classList.add('show');
+    sheetBackdrop.classList.add('show');
+    renderSavedPlacesList();
+}
+
+function closeSavedSheet() {
+    savedSheet.classList.remove('show');
+    sheetBackdrop.classList.remove('show');
+    addPlaceForm.classList.remove('show');
+    resetAddPlaceForm();
+}
+
+function renderSavedPlacesList() {
+    if (!state.savedPlaces.length) {
+        savedListEl.innerHTML = `
+            <div class="no-saved-places">
+                <span class="big-emoji">📍</span>
+                <p>No saved places yet.</p>
+                <p style="margin-top: 8px; font-size: 12px;">Save Home, Work, School, or anywhere you go often.</p>
+            </div>
+        `;
+        return;
+    }
+
+    savedListEl.innerHTML = state.savedPlaces.map(p => `
+        <div class="saved-place-item" data-id="${p.id}">
+            <div class="saved-place-emoji">${p.emoji}</div>
+            <div class="saved-place-info">
+                <div class="saved-place-name">${escapeHtml(p.name)}</div>
+                <div class="saved-place-address">${escapeHtml(p.address || 'Not configured — tap to set')}</div>
+            </div>
+            <button class="saved-place-delete" data-delete-id="${p.id}" aria-label="Delete">✕</button>
+        </div>
+    `).join('');
+
+    // Tap → configure or navigate
+    savedListEl.querySelectorAll('.saved-place-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            if (e.target.closest('.saved-place-delete')) return;
+            const place = getPlace(item.dataset.id);
+            if (!place) return;
+
+            if (place.center) {
+                // Has coords → navigate
+                closeSavedSheet();
+                state.endPoint = { lngLat: place.center, name: place.name };
+                new maplibregl.Marker({ color: '#a855f7' })
+                    .setLngLat(place.center)
+                    .addTo(map);
+                map.flyTo({ center: place.center, zoom: 15, duration: 800 });
+                startAutoRoute();
+            } else {
+                // Empty slot → open edit form pre-filled with name + emoji
+                openEditPlace(place);
+            }
+        });
+    });
+
+    // Delete buttons
+    savedListEl.querySelectorAll('.saved-place-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.deleteId;
+            const place = getPlace(id);
+            if (!place) return;
+            if (confirm(`Delete "${place.name}"?`)) {
+                deletePlace(id);
+            }
+        });
+    });
+}
+
+function openEditPlace(place) {
+    state.editingPlaceId = place.id;
+    addPlaceNameInput.value = place.name;
+    addPlaceAddressInput.value = place.address || '';
+    pendingPlaceCenter = place.center || null;
+    selectedEmoji = place.emoji || '🏠';
+    updateEmojiSelection();
+
+    addPlaceForm.classList.add('show');
+    addPlaceBtn.style.display = 'none';
+    addPlaceNameInput.focus();
+    addPlaceForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetAddPlaceForm() {
+    state.editingPlaceId = null;
+    pendingPlaceCenter = null;
+    addPlaceNameInput.value = '';
+    addPlaceAddressInput.value = '';
+    selectedEmoji = '🏠';
+    updateEmojiSelection();
+    addPlaceBtn.style.display = 'flex';
+    addPlaceSuggestions.classList.remove('show');
+}
+
+addPlaceBtn.addEventListener('click', () => {
+    resetAddPlaceForm();
+    addPlaceForm.classList.add('show');
+    addPlaceBtn.style.display = 'none';
+    addPlaceNameInput.focus();
+    addPlaceForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+addPlaceCancel.addEventListener('click', () => {
+    addPlaceForm.classList.remove('show');
+    resetAddPlaceForm();
+});
+
+// Emoji picker
+emojiPicker.querySelectorAll('.emoji-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+        selectedEmoji = opt.dataset.emoji;
+        updateEmojiSelection();
+    });
+});
+
+function updateEmojiSelection() {
+    emojiPicker.querySelectorAll('.emoji-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.emoji === selectedEmoji);
+    });
+}
+
+// Address autocomplete inside add-place form
+const handleAddPlaceAddress = debounce(async (query) => {
+    if (!query || query.length < 2) {
+        addPlaceSuggestions.classList.remove('show');
+        return;
+    }
+
+    const features = await photonSearch(query, 5);
+    if (!features.length) {
+        addPlaceSuggestions.classList.remove('show');
+        return;
+    }
+
+    addPlaceSuggestions.innerHTML = features.map((f, i) => {
+        const r = photonFeatureToResult(f);
+        return `
+            <div class="route-suggestion-item" data-index="${i}">
+                <strong>${escapeHtml(r.name)}</strong>
+                <small>${escapeHtml(r.subtitle)}</small>
+            </div>
+        `;
+    }).join('');
+
+    addPlaceSuggestions.classList.add('show');
+
+    addPlaceSuggestions.querySelectorAll('.route-suggestion-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const f = features[parseInt(item.dataset.index)];
+            const r = photonFeatureToResult(f);
+            addPlaceAddressInput.value = [r.name, r.subtitle].filter(Boolean).join(', ');
+            pendingPlaceCenter = r.center;
+            addPlaceSuggestions.classList.remove('show');
+            addPlaceAddressInput.blur();
+        });
+    });
+}, 300);
+
+addPlaceAddressInput.addEventListener('input', (e) => handleAddPlaceAddress(e.target.value));
+
+// Save the place
+addPlaceSave.addEventListener('click', () => {
+    const name = addPlaceNameInput.value.trim();
+    if (!name) {
+        showToast('⚠️ Give this place a name');
+        addPlaceNameInput.focus();
+        return;
+    }
+
+    if (!pendingPlaceCenter) {
+        showToast('⚠️ Pick an address from the dropdown');
+        addPlaceAddressInput.focus();
+        return;
+    }
+
+    const placeId = state.editingPlaceId || ('place_' + Date.now());
+    const place = {
+        id: placeId,
+        name: name,
+        emoji: selectedEmoji,
+        address: addPlaceAddressInput.value.trim(),
+        center: pendingPlaceCenter,
+        createdAt: state.editingPlaceId ? (getPlace(placeId)?.createdAt || Date.now()) : Date.now()
+    };
+
+    upsertPlace(place);
+    showToast(`✅ Saved "${name}"`);
+
+    addPlaceForm.classList.remove('show');
+    resetAddPlaceForm();
+});
+
+savedClose.addEventListener('click', closeSavedSheet);
 
 // ══════════════════════════════════════
 // MAP INIT
@@ -1246,26 +1879,12 @@ function photonFeatureToResult(feature) {
     };
 }
 
-async function reverseGeocode(lon, lat) {
-    try {
-        const url = `${CONFIG.REVERSE_URL}?lon=${lon}&lat=${lat}&lang=en`;
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        const data = await res.json();
-        if (!data.features?.length) return null;
-        return photonFeatureToResult(data.features[0]);
-    } catch (err) {
-        return null;
-    }
-}
-
 // ══════════════════════════════════════
 // ROUTING (FOSSGIS multi-profile + fallback)
 // ══════════════════════════════════════
 async function fetchRoute(start, end, profile = 'driving') {
     const coords = `${start.lngLat[0]},${start.lngLat[1]};${end.lngLat[0]},${end.lngLat[1]}`;
 
-    // Try FOSSGIS first — real profile routing
     try {
         const baseUrl = CONFIG.ROUTE_SERVERS[profile] || CONFIG.ROUTE_SERVERS.driving;
         const url = `${baseUrl}${coords}?overview=full&geometries=geojson&steps=true`;
@@ -1280,7 +1899,6 @@ async function fetchRoute(start, end, profile = 'driving') {
         console.warn('FOSSGIS failed, falling back:', err);
     }
 
-    // Fallback: public OSRM (driving-only) + duration fixup
     const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('Routing failed');
@@ -1305,7 +1923,7 @@ function adjustDuration(route, profile) {
 }
 
 // ══════════════════════════════════════
-// SEARCH UI
+// SEARCH UI (top bar)
 // ══════════════════════════════════════
 const searchInput = document.getElementById('search-input');
 const searchResults = document.getElementById('search-results');
@@ -1348,27 +1966,57 @@ const handleSearch = debounce(async (query) => {
             searchInput.value = r.name;
             searchInput.blur();
 
-            // Drop a marker and zoom
             new maplibregl.Marker({ color: '#a855f7' })
                 .setLngLat(r.center)
                 .setPopup(new maplibregl.Popup({ offset: 25 })
-                    .setHTML(`<strong>${escapeHtml(r.name)}</strong><br><small>${escapeHtml(r.subtitle)}</small>`))
+                    .setHTML(buildSearchPopupHtml(r)))
                 .addTo(map)
                 .togglePopup();
 
-            // Zoom
             if (r.bbox) {
                 map.fitBounds([[r.bbox[0], r.bbox[1]], [r.bbox[2], r.bbox[3]]], { padding: 80, duration: 800 });
             } else {
                 map.flyTo({ center: r.center, zoom: 15, duration: 800 });
             }
 
-            // 🚀 AUTO-NAVIGATE: set as destination
-            state.endPoint = { lngLat: r.center, name: r.name };
+            state.endPoint = { lngLat: r.center, name: r.name, address: r.subtitle };
             startAutoRoute();
         });
     });
 }, 350);
+
+function buildSearchPopupHtml(r) {
+    const safeName = escapeHtml(r.name);
+    const safeSub = escapeHtml(r.subtitle);
+    return `
+        <strong>${safeName}</strong><br>
+        <small style="color:var(--text-muted)">${safeSub}</small>
+        <div class="popup-actions">
+            <button class="popup-btn" id="popup-save-btn" data-name="${safeName}" data-address="${safeSub}">💾 Save</button>
+        </div>
+    `;
+}
+
+// Handle popup save button (delegated)
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#popup-save-btn');
+    if (!btn) return;
+    const name = btn.getAttribute('data-name');
+    const address = btn.getAttribute('data-address');
+
+    // Grab the popup's position (marker location)
+    // We stored it globally when the marker was created
+    if (window.__lastSearchCenter) {
+        openSavedSheet();
+        resetAddPlaceForm();
+        addPlaceForm.classList.add('show');
+        addPlaceBtn.style.display = 'none';
+        addPlaceNameInput.value = name;
+        addPlaceAddressInput.value = address;
+        pendingPlaceCenter = window.__lastSearchCenter;
+        addPlaceNameInput.focus();
+    }
+});
 
 searchInput.addEventListener('input', (e) => {
     const v = e.target.value;
@@ -1398,15 +2046,11 @@ document.addEventListener('click', (e) => {
 // ══════════════════════════════════════
 // AUTO-ROUTE FLOW
 // ══════════════════════════════════════
-let autoRouteTimer = null;
-
 async function startAutoRoute() {
-    // If we don't have a start point yet, try to get user location
     if (!state.startPoint) {
         const acquired = await tryAcquireLocation();
         if (!acquired) {
             showToast('📍 Tap Allow to enable location for navigation');
-            // Open directions sheet so user can pick a start manually
             openDirectionsSheet();
             document.getElementById('route-start').focus();
             return;
@@ -1415,7 +2059,6 @@ async function startAutoRoute() {
 
     if (!state.startPoint || !state.endPoint) return;
 
-    // Calculate + start navigation
     showToast('🧭 Starting navigation…');
     await calculateAndNavigate();
 }
@@ -1467,11 +2110,7 @@ function drawRoute(route) {
 
     map.addSource('route', {
         type: 'geojson',
-        data: {
-            type: 'Feature',
-            properties: {},
-            geometry: route.geometry
-        }
+        data: { type: 'Feature', properties: {}, geometry: route.geometry }
     });
 
     map.addLayer({
@@ -1503,7 +2142,7 @@ function drawRoute(route) {
         (b, c) => b.extend(c),
         new maplibregl.LngLatBounds(coords[0], coords[0])
     );
-    map.fitBounds(bounds, { padding: { top: 100, bottom: 100, left: 40, right: 40 } });
+    map.fitBounds(bounds, { padding: { top: 120, bottom: 120, left: 40, right: 40 } });
 }
 
 function renderRouteSummary(route) {
@@ -1568,10 +2207,8 @@ async function beginNavigation() {
     await requestCompassPermission();
     startCompass();
 
-    // Show current turn immediately
     updateNavUI();
 
-    // Start watching position
     if (nav.watchId == null) {
         nav.watchId = navigator.geolocation.watchPosition(
             onPositionUpdate,
@@ -1594,7 +2231,6 @@ function stopNavigation() {
     releaseWakeLock();
     if (window.speechSynthesis) speechSynthesis.cancel();
 
-    // Clear route
     clearRouteLayers();
     if (state.routeStartMarker) { state.routeStartMarker.remove(); state.routeStartMarker = null; }
     if (state.routeEndMarker) { state.routeEndMarker.remove(); state.routeEndMarker = null; }
@@ -1619,18 +2255,17 @@ function updateNavUI() {
     document.getElementById('nav-arrow').textContent = stepIcon(step.maneuver.type);
     document.getElementById('nav-main').textContent = step.maneuver.instruction || step.name || 'Continue';
 
-    // Highlight in list
     document.querySelectorAll('.step-item').forEach((el, i) => {
         el.classList.toggle('active', i === nav.currentStepIndex);
     });
 
-    // ETA
     let remainingTime = 0;
     let remainingDist = 0;
     for (let i = nav.currentStepIndex; i < steps.length; i++) {
         remainingTime += steps[i].duration;
         remainingDist += steps[i].distance;
     }
+
     if (nav.lastPosition && steps[nav.currentStepIndex]) {
         const target = steps[nav.currentStepIndex].maneuver.location;
         const distToNext = distanceMeters(nav.lastPosition.lon, nav.lastPosition.lat, target[0], target[1]);
@@ -1647,7 +2282,6 @@ function onPositionUpdate(pos) {
     const { longitude: lon, latitude: lat, heading } = pos.coords;
     nav.lastPosition = { lon, lat, heading };
 
-    // Update user marker
     if (!state.userMarker) {
         const el = document.createElement('div');
         el.className = 'user-marker';
@@ -1666,12 +2300,10 @@ function onPositionUpdate(pos) {
         state.userMarker.setLngLat([lon, lat]);
     }
 
-    // Center on user
     if (nav.followUser) {
         map.easeTo({ center: [lon, lat], duration: 500 });
     }
 
-    // Active navigation logic
     if (state.navigationActive && state.routeData) {
         const steps = state.routeData.legs[0].steps;
 
@@ -1680,14 +2312,12 @@ function onPositionUpdate(pos) {
             const target = step.maneuver.location;
             const dist = distanceMeters(lon, lat, target[0], target[1]);
 
-            // Speak current step once
             if (nav.lastSpokenStepIndex !== nav.currentStepIndex) {
                 const instruction = step.maneuver.instruction || step.name;
                 if (instruction && dist > 30) speak(instruction);
                 nav.lastSpokenStepIndex = nav.currentStepIndex;
             }
 
-            // Advance when close
             if (dist < 25) {
                 nav.currentStepIndex++;
                 nav.lastSpokenStepIndex = -1;
@@ -1695,12 +2325,10 @@ function onPositionUpdate(pos) {
                 updateNavUI();
             }
 
-            // Voice warning at ~200m
             if (dist < 220 && dist > 180) {
                 speak(`In ${Math.round(dist / 10) * 10} meters, ${step.maneuver.instruction || step.name || 'continue'}`);
             }
         } else {
-            // Arrived
             if (nav.lastSpokenStepIndex !== steps.length) {
                 speak('You have arrived at your destination.');
                 nav.lastSpokenStepIndex = steps.length;
@@ -1709,7 +2337,6 @@ function onPositionUpdate(pos) {
             }
         }
 
-        // Off-route detection
         const offRoute = distanceToRoute(lon, lat);
         if (offRoute > 50) {
             nav.offRouteCount++;
@@ -1811,7 +2438,6 @@ function handleOrientation(e) {
 const locateBanner = document.getElementById('locate-banner');
 const locateBtn = document.getElementById('locate-btn');
 
-// Hide if permission already granted before
 if (navigator.permissions) {
     navigator.permissions.query({ name: 'geolocation' }).then(result => {
         if (result.state === 'granted') locateBanner.classList.add('hidden');
@@ -1824,21 +2450,6 @@ locateBtn.addEventListener('click', async () => {
         locateBanner.classList.add('hidden');
         showToast('✅ Location enabled');
         map.flyTo({ center: state.startPoint.lngLat, zoom: 14, duration: 1200 });
-        // Drop a user marker
-        if (!state.userMarker) {
-            const el = document.createElement('div');
-            el.className = 'user-marker';
-            el.innerHTML = `
-                <div class="user-marker-arrow">
-                    <svg width="40" height="40" viewBox="0 0 40 40">
-                        <circle cx="20" cy="20" r="14" fill="rgba(0,170,255,0.15)"/>
-                        <circle cx="20" cy="20" r="9" fill="#00aaff" stroke="#fff" stroke-width="2"/>
-                    </svg>
-                </div>`;
-            state.userMarker = new maplibregl.Marker({ element: el })
-                .setLngLat(state.startPoint.lngLat)
-                .addTo(map);
-        }
     } else {
         showToast('❌ Location denied');
     }
@@ -1865,27 +2476,23 @@ function closeDirectionsSheet() {
 }
 
 directionsBtn.addEventListener('click', () => {
-    if (directionsSheet.classList.contains('show')) {
-        closeDirectionsSheet();
-    } else {
-        openDirectionsSheet();
-    }
+    if (directionsSheet.classList.contains('show')) closeDirectionsSheet();
+    else openDirectionsSheet();
 });
 
 directionsClose.addEventListener('click', closeDirectionsSheet);
 sheetBackdrop.addEventListener('click', () => {
     closeDirectionsSheet();
     closeLayersSheet();
+    closeSavedSheet();
 });
 
-// Travel modes
 document.querySelectorAll('.travel-mode').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.travel-mode').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         state.routeProfile = btn.dataset.profile;
 
-        // If a route already exists, recalculate
         if (state.routeData && state.startPoint && state.endPoint) {
             calculateAndNavigate();
         }
@@ -1932,11 +2539,9 @@ function setupRouteAutocomplete(inputId, suggestionsId, key) {
                 suggestions.classList.remove('show');
                 input.blur();
 
-                // 🚀 AUTO-NAVIGATE when both endpoints are set
                 if (state.startPoint && state.endPoint) {
                     calculateAndNavigate();
                 } else if (key === 'endPoint') {
-                    // Destination set — try to fill start automatically
                     startAutoRoute();
                 }
             });
@@ -2007,7 +2612,6 @@ styleGrid.addEventListener('click', (e) => {
     });
 });
 
-// Toggles
 document.getElementById('toggle-3d').addEventListener('click', (e) => {
     e.currentTarget.classList.toggle('active');
     state.buildings3D = e.currentTarget.classList.contains('active');
@@ -2093,7 +2697,6 @@ document.getElementById('recenter-btn').addEventListener('click', () => {
     }
 });
 
-// Nav bottom buttons
 document.getElementById('nav-end-btn').addEventListener('click', stopNavigation);
 document.getElementById('nav-voice-btn').addEventListener('click', (e) => {
     nav.voiceEnabled = !nav.voiceEnabled;
@@ -2102,18 +2705,15 @@ document.getElementById('nav-voice-btn').addEventListener('click', (e) => {
     showToast(nav.voiceEnabled ? '🔊 Voice on' : '🔇 Voice off');
 });
 
-// Pause follow when user drags
 map.on('dragstart', () => { nav.followUser = false; document.getElementById('recenter-btn').classList.add('show'); });
 map.on('rotatestart', () => { nav.followUser = false; document.getElementById('recenter-btn').classList.add('show'); });
 
-// Re-acquire wake lock when returning to tab
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && state.navigationActive) {
         requestWakeLock();
     }
 });
 
-// Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
     if (e.key === '/' && !e.target.matches('input, textarea')) {
         e.preventDefault();
@@ -2123,6 +2723,7 @@ document.addEventListener('keydown', (e) => {
         searchResults.classList.remove('show');
         closeDirectionsSheet();
         closeLayersSheet();
+        closeSavedSheet();
         if (state.navigationActive) stopNavigation();
     }
 });
@@ -2132,9 +2733,13 @@ document.addEventListener('keydown', (e) => {
 // ══════════════════════════════════════
 map.on('load', () => {
     console.log('🗺️ Wizard Maps ready');
-    console.log('📡 Tiles: OpenFreeMap · Routing: FOSSGIS OSRM · Geocoding: Photon');
+    console.log('⭐ Saved places: localStorage only (iOS-friendly)');
 
-    // Silent location warm-up: if permission already granted, grab position
+    // Load saved places
+    loadSavedPlaces();
+    renderQuickPlaces();
+
+    // Warm-up location if permission already granted
     if (navigator.permissions) {
         navigator.permissions.query({ name: 'geolocation' }).then(r => {
             if (r.state === 'granted') {
@@ -2150,6 +2755,11 @@ map.on('load', () => {
 });
 
 map.on('error', (e) => console.warn('Map error:', e.error));
+
+// Store last search center for popup save
+map.on('click', (e) => {
+    window.__lastSearchCenter = [e.lngLat.lng, e.lngLat.lat];
+});
 </script>
 </body>
 </html>
