@@ -1814,6 +1814,8 @@ async function beginNavigation() {
     await requestCompassPermission();
     startCompass();
     startLocationWatch();
+    warmSpeech();
+    startSpeechKeepAlive();
 
     updateNavUI();
 
@@ -1831,6 +1833,7 @@ function stopNavigation() {
     state.navigationActive = false;
     document.body.classList.remove('navigating');
     if (nav.speedInterval) { clearInterval(nav.speedInterval); nav.speedInterval = null; }
+    stopSpeechKeepAlive();
     window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
     window.removeEventListener('deviceorientation', handleOrientation, true);
     releaseWakeLock();
@@ -2025,15 +2028,81 @@ async function requestWakeLock() {
 }
 function releaseWakeLock() { if (nav.wakeLock) { nav.wakeLock.release().catch(() => {}); nav.wakeLock = null; } }
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && state.navigationActive) requestWakeLock();
+    if (document.visibilityState === 'visible' && state.navigationActive) {
+        requestWakeLock();
+        speechWarmed = false;
+        warmSpeech();
+    }
 });
 
+let voicesReady = false;
+let speechWarmed = false;
+function loadVoicesOnce() {
+    if (!('speechSynthesis' in window)) return;
+    const v = speechSynthesis.getVoices();
+    if (v && v.length) voicesReady = true;
+}
+if ('speechSynthesis' in window) {
+    loadVoicesOnce();
+    speechSynthesis.addEventListener('voiceschanged', loadVoicesOnce);
+}
+
+// iOS/Android PWAs in standalone mode often need a spoken (not silent) utterance
+// fired directly from a user tap before speechSynthesis will work at all, and
+// mobile Safari has a long-standing bug where cancel() immediately followed by
+// speak() silently drops the new utterance. warmSpeech() and the cancel delay
+// below work around both.
+function warmSpeech() {
+    if (speechWarmed || !('speechSynthesis' in window)) return;
+    speechWarmed = true;
+    try {
+        const u = new SpeechSynthesisUtterance(' ');
+        u.volume = 0.01;
+        speechSynthesis.speak(u);
+    } catch {}
+}
+['touchend', 'click'].forEach(ev => document.addEventListener(ev, warmSpeech, { once: true, passive: true }));
+
+let speechQueue = null;
 function speak(text) {
     if (!nav.voiceEnabled || !('speechSynthesis' in window)) return;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
-    speechSynthesis.speak(u);
+    warmSpeech();
+    clearTimeout(speechQueue);
+    const fire = () => {
+        try {
+            speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
+            u.onerror = () => { /* swallow — the instruction is already shown on screen */ };
+            speechSynthesis.speak(u);
+        } catch {}
+    };
+    // A short delay after cancel() avoids the iOS bug where speak() right after
+    // cancel() is silently dropped.
+    if (speechSynthesis.speaking || speechSynthesis.pending) {
+        speechSynthesis.cancel();
+        speechQueue = setTimeout(fire, 120);
+    } else {
+        fire();
+    }
+}
+
+// iOS Safari silently kills the speech engine after ~15s of inactivity in some
+// standalone-PWA builds. Nudging pause/resume periodically during navigation
+// keeps it alive without audibly affecting anything already queued.
+let speechKeepAlive = null;
+function startSpeechKeepAlive() {
+    if (!('speechSynthesis' in window) || speechKeepAlive) return;
+    speechKeepAlive = setInterval(() => {
+        if (!state.navigationActive) return;
+        try {
+            if (speechSynthesis.paused) speechSynthesis.resume();
+            if (!speechSynthesis.speaking) { speechSynthesis.pause(); speechSynthesis.resume(); }
+        } catch {}
+    }, 12000);
+}
+function stopSpeechKeepAlive() {
+    if (speechKeepAlive) { clearInterval(speechKeepAlive); speechKeepAlive = null; }
 }
 document.addEventListener('touchstart', function unlock() {
     if ('speechSynthesis' in window) {
