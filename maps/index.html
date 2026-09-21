@@ -1228,22 +1228,27 @@ function adjustDuration(route, profile) {
 }
 
 function clearRouteLayers() {
-    ['route-line', 'route-line-outline'].forEach(id => { if (map.getLayer(id)) map.removeLayer(id); });
+    ['route-line', 'route-line-outline', 'route-line-glow'].forEach(id => { if (map.getLayer(id)) map.removeLayer(id); });
     if (map.getSource('route')) map.removeSource('route');
 }
 function addRouteLayers(route) {
     clearRouteLayers();
     map.addSource('route', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: route.geometry } });
     const before = firstLabelId();
+    const layout = { 'line-join': 'round', 'line-cap': 'round' };
+    // Widths grow with zoom so the route stays wider than the roads it sits on
+    const w = (a, b, c, d, e) => ['interpolate', ['exponential', 1.5], ['zoom'], 3, a, 10, b, 14, c, 17, d, 20, e];
     map.addLayer({
-        id: 'route-line-outline', type: 'line', source: 'route',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': '#080612', 'line-width': 11, 'line-opacity': 0.85 }
+        id: 'route-line-glow', type: 'line', source: 'route', layout,
+        paint: { 'line-color': '#e8c97a', 'line-opacity': 0.28, 'line-blur': 6, 'line-width': w(10, 16, 24, 40, 80) }
     }, before);
     map.addLayer({
-        id: 'route-line', type: 'line', source: 'route',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': '#e8c97a', 'line-width': 5 }
+        id: 'route-line-outline', type: 'line', source: 'route', layout,
+        paint: { 'line-color': '#080612', 'line-opacity': 1, 'line-width': w(7, 10, 14, 24, 50) }
+    }, before);
+    map.addLayer({
+        id: 'route-line', type: 'line', source: 'route', layout,
+        paint: { 'line-color': '#f2d27c', 'line-width': w(4, 6, 9, 16, 34) }
     }, before);
 }
 function fitRoute(route) {
@@ -2124,6 +2129,7 @@ function enable3DBuildings() {
                 'fill-extrusion-opacity': 0.75
             }
         }, firstLabelId());
+        if (state.routeData) addRouteLayers(state.routeData);
     } catch {}
 }
 function disable3DBuildings() { if (map.getLayer('3d-buildings')) map.removeLayer('3d-buildings'); }
