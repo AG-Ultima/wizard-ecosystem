@@ -10,12 +10,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Wizard Sandbox">
 
-<link rel="icon" href="https://wizardecosystem.dev/favicon.ico">
-<link rel="apple-touch-icon" href="https://wizardecosystem.dev/favicon.ico">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root {
@@ -34,8 +28,8 @@
     --border-strong: rgba(201,168,76,0.45);
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --display: 'Cormorant Garamond', Georgia, serif;
-    --ui: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --display: Georgia, 'Times New Roman', serif;
+    --ui: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body {
@@ -116,6 +110,10 @@ button { font-family: inherit; color: inherit; }
     border-radius: 4px; box-shadow: 0 0 0 1px var(--border-strong), 0 20px 60px rgba(0,0,0,0.6);
     touch-action: none; cursor: none;
 }
+#fx-canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 4;
+}
 #brush-cursor {
     position: absolute; border: 1.5px solid var(--gold-light); border-radius: 50%;
     pointer-events: none; transform: translate(-50%, -50%); display: none;
@@ -186,7 +184,7 @@ button { font-family: inherit; color: inherit; }
             </div>
             <div id="pal-groups"></div>
             <div class="pal-tip">
-                Everything falls now — sand, acid, oil, even TNT if unsupported. Lay a <b>Gunpowder</b> trail into a <b>Nuke</b> for a chain reaction, or drop a <b>Black Hole</b> and watch it eat the map.
+                Materials now react, ignite, freeze, dissolve, grow, chain-react, and interact with the wizard elements. Everything falls now — sand, acid, oil, even TNT if unsupported. Lay a <b>Gunpowder</b> trail into a <b>Nuke</b> for a chain reaction, or drop a <b>Black Hole</b> and watch it eat the map.
                 <br><br><a href="https://wizardecosystem.dev">Back to Wizard Ecosystem</a>
             </div>
         </div>
@@ -324,6 +322,8 @@ const shade = new Int8Array(N);
 const fromWood = new Uint8Array(N);
 const fuse = new Int16Array(N).fill(-1);
 const processed = new Uint8Array(N);
+const reaction = new Uint8Array(N);
+const heatGlow = new Uint8Array(N);
 let pendingExplosions = [];
 let frame = 0;
 
@@ -359,6 +359,23 @@ function swap(i, j) {
 // ══════════════════════════════════════
 // GRANULAR / SOLID FALL (shared)
 // ══════════════════════════════════════
+function markReaction(idx, strength = 180) {
+    if (idx >= 0 && idx < N) reaction[idx] = Math.max(reaction[idx], strength);
+}
+
+function markHeat(idx, strength = 180) {
+    if (idx >= 0 && idx < N) heatGlow[idx] = Math.max(heatGlow[idx], strength);
+}
+
+function clearCell(idx) {
+    grid[idx] = EMPTY; life[idx] = 0; shade[idx] = 0; fromWood[idx] = 0; fuse[idx] = -1;
+}
+
+function transform(idx, type, effect = true) {
+    setCell(idx, type);
+    if (effect) { markReaction(idx, 210); markHeat(idx, 110); }
+}
+
 function updatePowder(x, y, i) {
     const down = tryIdx(x, y + 1);
     if (down !== -1 && !processed[down]) {
@@ -497,9 +514,38 @@ function updateLiquid(x, y, i, t) {
             const [dx, dy] = NEI8[(Math.random() * 8) | 0];
             const ni = tryIdx(x + dx, y + dy);
             if (ni !== -1 && grid[ni] === EMPTY) {
-                const pool = [SAND, WATER, FIRE, STONE, SPARK];
+                const pool = [SAND, WATER, FIRE, STONE, SPARK, MANA];
                 setCell(ni, pool[(Math.random() * pool.length) | 0]);
+                markReaction(ni, 160);
             }
+        }
+    } else if (t === BLOOD) {
+        for (const [dx, dy] of NEI8) {
+            const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+            if (grid[ni] === FUNGUS && Math.random() < 0.04) { transform(ni, MUD); }
+            if (grid[ni] === PLANT && Math.random() < 0.025) { transform(ni, GRASS); }
+        }
+    } else if (t === SLIME) {
+        for (const [dx, dy] of NEI8) {
+            const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+            if (grid[ni] === WATER && Math.random() < 0.03) { transform(i, MUD); processed[i] = 1; return; }
+            if (grid[ni] === FIRE && Math.random() < 0.25) { transform(i, STEAM); processed[i] = 1; return; }
+        }
+    }
+    // Cross-material reactions: small, readable chains rather than instant deletion.
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if (t === WATER && nt === SALT && Math.random() < 0.018) {
+            clearCell(ni); markReaction(i, 120);
+        } else if (t === WATER && nt === SEED && Math.random() < 0.045) {
+            transform(ni, PLANT); markReaction(i, 180);
+        } else if (t === WATER && nt === GRASS && Math.random() < 0.02) {
+            markReaction(ni, 100);
+        } else if (t === MERCURY && (nt === GOLD || nt === METAL) && Math.random() < 0.008) {
+            transform(ni, MERCURY); markReaction(i, 200);
+        } else if (t === ACID && (nt === METAL || nt === GOLD || nt === BRICK || nt === CONCRETE) && Math.random() < 0.035) {
+            clearCell(ni); markReaction(i, 220);
         }
     }
     if (grid[i] !== t) { processed[i] = 1; return; }
@@ -544,8 +590,9 @@ function updateFire(x, y, i) {
         else if (FAST_BURN.has(nt) && Math.random() < 0.5) { setCell(ni, FIRE); }
         else if ((nt === SAND || nt === DIRT) && Math.random() < 0.02) { setCell(ni, GLASS); shade[ni] = rnd(-15, 15); }
         else if (nt === GOLD && Math.random() < 0.02) { setCell(ni, LAVA); }
-        else if (nt === GUNPOWDER) { pendingExplosions.push({ i: ni, r: 3 }); }
-        else if (EXPLOSIVE_INFO[nt] && fuse[ni] < 0) { fuse[ni] = EXPLOSIVE_INFO[nt].fuse; }
+        else if (nt === GUNPOWDER) { pendingExplosions.push({ i: ni, r: 3 }); markReaction(ni, 255); }
+        else if (EXPLOSIVE_INFO[nt] && fuse[ni] < 0) { fuse[ni] = EXPLOSIVE_INFO[nt].fuse; markReaction(ni, 220); }
+        else if (nt === OXYGEN && Math.random() < 0.35) { life[i] = Math.min(100, life[i] + 20); markHeat(i, 220); }
         else if (nt === WATER) {
             if (Math.random() < 0.4) setCell(i, STEAM); else grid[i] = EMPTY;
             fromWood[i] = 0; processed[i] = 1;
@@ -577,8 +624,9 @@ function updatePlasma(x, y, i) {
         else if (nt === WATER && Math.random() < 0.5) { setCell(ni, STEAM); }
         else if ((nt === SAND || nt === DIRT) && Math.random() < 0.05) { setCell(ni, GLASS); shade[ni] = rnd(-15, 15); }
         else if ((nt === METAL || nt === GOLD) && Math.random() < 0.02) { setCell(ni, LAVA); }
-        else if (nt === GUNPOWDER) { pendingExplosions.push({ i: ni, r: 3 }); }
-        else if (EXPLOSIVE_INFO[nt] && fuse[ni] < 0) { fuse[ni] = EXPLOSIVE_INFO[nt].fuse; }
+        else if (nt === GUNPOWDER) { pendingExplosions.push({ i: ni, r: 3 }); markReaction(ni, 255); }
+        else if (EXPLOSIVE_INFO[nt] && fuse[ni] < 0) { fuse[ni] = EXPLOSIVE_INFO[nt].fuse; markReaction(ni, 220); }
+        else if (nt === WIZARDIUM && grid[i] === ARCFIRE && Math.random() < 0.08) { transform(ni, MANA); markReaction(i, 255); }
     }
     if (Math.random() < 0.35) {
         const opts = [[0, -1], [-1, -1], [1, -1], [-1, 0], [1, 0]];
@@ -661,14 +709,25 @@ function updateGasGeneric(x, y, i) {
             if (ORGANIC.has(grid[ni]) && Math.random() < 0.05) { grid[ni] = EMPTY; fromWood[ni] = 0; }
         }
     } else if (t === HYDROGEN) {
-        for (const [dx, dy] of ORTHO) {
+        let oxygenNearby = false;
+        for (const [dx, dy] of NEI8) {
             const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
-            if (HOT_IGNITERS.has(grid[ni])) { pendingExplosions.push({ i, r: 4 }); processed[i] = 1; return; }
+            if (grid[ni] === OXYGEN) oxygenNearby = true;
+            if (HOT_IGNITERS.has(grid[ni])) {
+                pendingExplosions.push({ i, r: oxygenNearby ? 6 : 4 });
+                markReaction(i, 255); processed[i] = 1; return;
+            }
         }
     } else if (t === METHANE) {
-        for (const [dx, dy] of ORTHO) {
+        let oxygenNearby = false;
+        for (const [dx, dy] of NEI8) {
             const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
-            if (HOT_IGNITERS.has(grid[ni])) { setCell(i, FIRE); processed[i] = 1; return; }
+            if (grid[ni] === OXYGEN) oxygenNearby = true;
+            if (HOT_IGNITERS.has(grid[ni])) {
+                if (oxygenNearby) pendingExplosions.push({ i, r: 5 });
+                else setCell(i, FIRE);
+                markReaction(i, 240); processed[i] = 1; return;
+            }
         }
     } else if (t === CO2) {
         for (const [dx, dy] of ORTHO) {
@@ -792,7 +851,7 @@ function explode(entry) {
             const nt = grid[ni];
             const tough = TOUGHNESS[nt];
             if (tough) {
-                if (dist < R * tough.t && Math.random() < tough.c) { grid[ni] = EMPTY; shade[ni] = 0; }
+                if (dist < R * tough.t && Math.random() < tough.c) { grid[ni] = EMPTY; shade[ni] = 0; markReaction(ni, 255); markHeat(ni, 220); }
             } else if (EXPLOSIVE_INFO[nt]) {
                 if (ni !== ci && fuse[ni] < 0) fuse[ni] = EXPLOSIVE_INFO[nt].chainFuse;
             } else if (nt === GUNPOWDER) {
@@ -800,7 +859,7 @@ function explode(entry) {
             } else if (dist < R * 0.4) {
                 grid[ni] = EMPTY; fromWood[ni] = 0; life[ni] = 0; fuse[ni] = -1;
             } else {
-                grid[ni] = FIRE; life[ni] = rnd(15, 35); fromWood[ni] = 0; fuse[ni] = -1;
+                grid[ni] = FIRE; life[ni] = rnd(15, 35); fromWood[ni] = 0; fuse[ni] = -1; markReaction(ni, 255); markHeat(ni, 240);
             }
         }
     }
@@ -883,10 +942,19 @@ function updatePortal(x, y, i) {
 }
 
 function updateWizardium(x, y, i) {
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        if (grid[ni] === MANA && Math.random() < 0.035) {
+            transform(i, MAGIC); markReaction(ni, 255); processed[i] = 1; return;
+        }
+        if (grid[ni] === FIRE && Math.random() < 0.025) {
+            transform(i, ARCFIRE); markHeat(i, 255); processed[i] = 1; return;
+        }
+    }
     if (Math.random() < 0.01) {
         const [dx, dy] = NEI8[(Math.random() * 8) | 0];
         const ni = tryIdx(x + dx, y + dy);
-        if (ni !== -1 && grid[ni] === EMPTY) setCell(ni, MANA);
+        if (ni !== -1 && grid[ni] === EMPTY) { setCell(ni, MANA); markReaction(ni, 170); }
     }
     updateSolidFall(x, y, i);
 }
@@ -950,6 +1018,10 @@ function step() {
 // ══════════════════════════════════════
 const canvas = $('sim');
 canvas.width = COLS; canvas.height = ROWS;
+const fxCanvas = document.createElement('canvas');
+fxCanvas.id = 'fx-canvas'; fxCanvas.width = COLS; fxCanvas.height = ROWS;
+$('canvas-wrap').insertBefore(fxCanvas, $('brush-cursor'));
+const fxCtx = fxCanvas.getContext('2d');
 const ctx = canvas.getContext('2d');
 const imgData = ctx.createImageData(COLS, ROWS);
 const px = imgData.data;
@@ -1021,6 +1093,32 @@ function render() {
         px[p] = r; px[p + 1] = g; px[p + 2] = b; px[p + 3] = a;
     }
     ctx.putImageData(imgData, 0, 0);
+
+    // Lightweight particle/reaction pass. It lives on a separate 1:1 canvas so the
+    // simulation stays pixel-fast while reactions get a much richer visual punch.
+    fxCtx.clearRect(0, 0, COLS, ROWS);
+    fxCtx.globalCompositeOperation = 'screen';
+    for (let idx = 0; idx < N; idx++) {
+        const rr = reaction[idx];
+        const hg = heatGlow[idx];
+        if (!rr && !hg) continue;
+        const x = idx % COLS, y = (idx / COLS) | 0;
+        if (rr) {
+            const a = rr / 255 * 0.55;
+            fxCtx.fillStyle = `rgba(232,201,122,${a})`;
+            fxCtx.fillRect(x - 0.7, y - 0.7, 1.4, 1.4);
+        }
+        if (hg) {
+            const a = hg / 255 * 0.22;
+            fxCtx.fillStyle = `rgba(255,120,60,${a})`;
+            fxCtx.fillRect(x - 1, y - 1, 2, 2);
+        }
+    }
+    fxCtx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < N; i++) {
+        if (reaction[i]) reaction[i] = Math.max(0, reaction[i] - 14);
+        if (heatGlow[i]) heatGlow[i] = Math.max(0, heatGlow[i] - 10);
+    }
 }
 
 // ══════════════════════════════════════
@@ -1080,7 +1178,7 @@ function setPaused(p) {
 $('play-btn').addEventListener('click', () => setPaused(!isPaused));
 $('step-btn').addEventListener('click', () => { step(); render(); });
 $('clear-btn').addEventListener('click', () => {
-    grid.fill(EMPTY); life.fill(0); shade.fill(0); fromWood.fill(0); fuse.fill(-1); pendingExplosions = [];
+    grid.fill(EMPTY); life.fill(0); shade.fill(0); fromWood.fill(0); fuse.fill(-1); reaction.fill(0); heatGlow.fill(0); pendingExplosions = [];
     render();
 });
 
