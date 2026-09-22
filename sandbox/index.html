@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>Wizard Sandbox</title>
-<meta name="description" content="A voxel sandbox to dig, build, and gather arcane ore.">
+<meta name="description" content="A falling-sand physics playground — gravity, fire, and things that go boom.">
 <meta name="theme-color" content="#080612">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,8 +12,6 @@
 
 <link rel="icon" href="https://wizardecosystem.dev/favicon.ico">
 <link rel="apple-touch-icon" href="https://wizardecosystem.dev/favicon.ico">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -39,793 +37,701 @@
     --display: 'Cormorant Garamond', Georgia, serif;
     --ui: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body {
     background: var(--ink); color: var(--silver);
     font-family: var(--ui);
     height: 100%; overflow: hidden; position: fixed; width: 100%;
-    overscroll-behavior: none; touch-action: none;
-    user-select: none; -webkit-user-select: none;
+    overscroll-behavior: none;
 }
 button { font-family: inherit; color: inherit; }
-#scene-canvas { position: absolute; inset: 0; display: block; touch-action: none; }
 
-/* ─────── Loading ─────── */
-#loading {
-    position: fixed; inset: 0; z-index: 500;
-    background: radial-gradient(circle at 50% 40%, #150f2e 0%, #080612 70%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
-    transition: opacity .5s ease;
-}
-#loading.hide { opacity: 0; pointer-events: none; }
-.brand-mark { width: 56px; height: 56px; }
-.brand-mark svg { width: 100%; height: 100%; }
-#loading h1 { font-family: var(--display); font-size: 30px; font-weight: 700; color: var(--gold-light); letter-spacing: .5px; }
-#loading p { font-size: 13.5px; color: var(--silver-dim); }
-.spin-ring { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--gold); animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+#shell { display: flex; flex-direction: column; height: 100dvh; padding-top: var(--safe-top); }
 
-/* ─────── HUD ─────── */
-.hud { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
-.hud > * { pointer-events: auto; }
+/* ─────── Top bar ─────── */
+#topbar {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    background: var(--ink-2);
+}
+.brand {
+    font-family: var(--display); font-size: 19px; font-weight: 700; color: var(--gold-light);
+    display: flex; align-items: center; gap: 8px; margin-right: 6px; white-space: nowrap;
+}
+.brand svg { width: 20px; height: 20px; flex-shrink: 0; }
+.tb-btn {
+    height: 38px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--border);
+    background: var(--ink-3); color: var(--silver); font-size: 13.5px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+}
+.tb-btn svg { width: 16px; height: 16px; }
+.tb-btn:hover { border-color: var(--border-strong); }
+.tb-btn:active { background: var(--violet-dim); }
+.tb-btn.on { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--ink); border-color: transparent; }
+.tb-sep { width: 1px; height: 24px; background: var(--border); margin: 0 2px; }
+.brush-ctrl { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--silver-dim); }
+.brush-ctrl input[type=range] { width: 100px; accent-color: var(--gold); }
+.brush-val { color: var(--gold-light); font-weight: 600; min-width: 16px; text-align: center; }
+.spacer { flex: 1; }
+#palette-toggle { display: none; }
 
-.crosshair {
-    position: fixed; left: 50%; top: 50%;
-    width: 20px; height: 20px; margin: -10px 0 0 -10px;
-    z-index: 40; pointer-events: none;
-}
-.crosshair::before, .crosshair::after { content: ''; position: absolute; background: var(--gold-light); box-shadow: 0 0 4px rgba(0,0,0,0.8); }
-.crosshair::before { left: 9px; top: 3px; width: 2px; height: 14px; }
-.crosshair::after { top: 9px; left: 3px; height: 2px; width: 14px; }
+/* ─────── Main layout ─────── */
+#main { flex: 1; display: flex; min-height: 0; }
 
-.top-bar {
-    position: fixed; top: calc(10px + var(--safe-top)); left: 10px; right: 10px;
-    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+#palette {
+    width: 264px; flex: 0 0 auto; overflow-y: auto;
+    border-right: 1px solid var(--border); background: var(--ink-2);
+    padding: 14px 12px 20px;
 }
-.pill {
-    display: flex; align-items: center; gap: 8px;
-    background: rgba(8,6,18,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--border); border-radius: 22px; padding: 9px 16px;
-    font-family: var(--display); font-size: 16px; font-weight: 600; color: var(--gold-light);
+.pal-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--silver-dim); font-weight: 600; margin: 4px 6px 10px; }
+.pal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pal-item {
+    border: 1px solid var(--border); border-radius: 14px; padding: 10px 8px;
+    display: flex; flex-direction: column; align-items: center; gap: 7px; cursor: pointer;
+    background: var(--ink-3);
 }
-.icon-btn {
-    width: 42px; height: 42px; flex-shrink: 0;
-    background: rgba(8,6,18,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--border); border-radius: 50%;
-    display: grid; place-items: center; color: var(--silver); cursor: pointer;
+.pal-item:hover { border-color: var(--border-strong); }
+.pal-item.active { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-glow); }
+.pal-swatch { width: 30px; height: 30px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.08); position: relative; }
+.pal-key { position: absolute; top: -6px; right: -6px; background: var(--ink); border: 1px solid var(--border-strong); color: var(--gold-light); font-size: 9px; font-weight: 700; width: 15px; height: 15px; border-radius: 50%; display: grid; place-items: center; }
+.pal-label { font-size: 11.5px; text-align: center; color: var(--silver); line-height: 1.2; font-weight: 500; }
+.pal-tip {
+    margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--silver-dim); line-height: 1.6;
 }
-.icon-btn:active { background: var(--violet-dim); border-color: var(--border-strong); }
-.icon-btn svg { width: 20px; height: 20px; }
+.pal-tip b { color: var(--gold-light); font-weight: 600; }
+.pal-tip a { color: var(--gold-light); text-decoration: none; }
 
-.hint-toast {
-    position: fixed; left: 50%; top: calc(64px + var(--safe-top));
-    transform: translateX(-50%);
-    background: rgba(8,6,18,0.8); border: 1px solid var(--border-strong); border-radius: 20px;
-    padding: 9px 18px; font-size: 13px; color: var(--silver); text-align: center;
-    opacity: 0; transition: opacity .3s; max-width: 88vw; pointer-events: none;
+#canvas-wrap {
+    flex: 1; position: relative; display: flex; align-items: center; justify-content: center;
+    background: #050410; min-width: 0;
 }
-.hint-toast.show { opacity: 1; }
+#sim {
+    image-rendering: pixelated; image-rendering: crisp-edges;
+    border-radius: 4px; box-shadow: 0 0 0 1px var(--border-strong), 0 20px 60px rgba(0,0,0,0.6);
+    touch-action: none; cursor: none;
+}
+#brush-cursor {
+    position: absolute; border: 1.5px solid var(--gold-light); border-radius: 50%;
+    pointer-events: none; transform: translate(-50%, -50%); display: none;
+    box-shadow: 0 0 8px var(--gold-glow); z-index: 5;
+}
+.status-line {
+    position: absolute; left: 12px; bottom: 12px; z-index: 5;
+    font-size: 12px; color: var(--silver-dim); background: rgba(8,6,18,0.6);
+    border: 1px solid var(--border); border-radius: 14px; padding: 6px 12px;
+    pointer-events: none;
+}
+.status-line b { color: var(--gold-light); font-weight: 600; }
 
-/* ─────── Hotbar ─────── */
-.hotbar {
-    position: fixed; left: 50%; bottom: calc(14px + var(--safe-bottom));
-    transform: translateX(-50%);
-    display: flex; gap: 7px;
-    background: rgba(8,6,18,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--border); border-radius: 20px; padding: 7px;
-}
-.slot {
-    width: 50px; height: 50px; border-radius: 13px; position: relative;
-    border: 1px solid var(--border); cursor: pointer;
-    display: flex; align-items: flex-end; justify-content: center;
-    overflow: hidden;
-}
-.slot .face { position: absolute; inset: 0; }
-.slot .count { position: relative; font-size: 10px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.9); padding: 2px 4px; }
-.slot.active { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold-glow), 0 0 14px var(--gold-glow); transform: translateY(-4px); }
+#palette-backdrop { position: fixed; inset: 0; background: rgba(4,3,10,0.6); z-index: 90; display: none; }
+#palette-backdrop.show { display: block; }
 
-/* ─────── Touch controls ─────── */
-.stick-zone { position: fixed; left: 0; bottom: 0; width: 46vw; height: 58vh; z-index: 45; touch-action: none; }
-.look-zone { position: fixed; right: 0; top: 0; width: 100vw; height: 100vh; z-index: 20; touch-action: none; }
-.stick-base {
-    position: fixed; width: 108px; height: 108px; border-radius: 50%;
-    background: rgba(8,6,18,0.5); border: 1px solid var(--border-strong);
-    display: none; z-index: 46; pointer-events: none;
+/* ─────── Mobile ─────── */
+@media (max-width: 860px) {
+    .brand span.full { display: none; }
+    .brush-ctrl { display: none; }
+    #palette-toggle { display: flex; }
+    #palette {
+        position: fixed; left: 0; right: 0; bottom: 0; top: auto;
+        width: auto; max-height: 58dvh; border-right: none;
+        border-top: 1px solid var(--border-strong);
+        border-radius: 22px 22px 0 0;
+        box-shadow: 0 -14px 40px rgba(0,0,0,0.6);
+        transform: translateY(105%);
+        transition: transform .3s cubic-bezier(.4,0,.2,1);
+        z-index: 100;
+        padding-bottom: calc(20px + var(--safe-bottom));
+    }
+    #palette.open { transform: translateY(0); }
+    #palette .brush-ctrl-mobile { display: flex; margin: 4px 6px 14px; }
+    .pal-grid { grid-template-columns: repeat(3, 1fr); }
+    #sim { cursor: default; }
+    .status-line { display: none; }
 }
-.stick-nub {
-    position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px;
-    border-radius: 50%; background: rgba(201,168,76,0.35); border: 1px solid var(--gold);
+@media (max-width: 480px) {
+    .tb-btn span.lbl { display: none; }
+    .tb-btn { padding: 0 11px; }
 }
-
-.action-cluster {
-    position: fixed; right: 14px; bottom: calc(84px + var(--safe-bottom));
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
-    z-index: 47;
-}
-.act-btn {
-    width: 62px; height: 62px; border-radius: 50%;
-    background: rgba(8,6,18,0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--border-strong); display: grid; place-items: center; color: var(--gold-light);
-}
-.act-btn svg { width: 26px; height: 26px; }
-.act-btn:active, .act-btn.pressed { background: var(--gold-glow); transform: scale(0.94); }
-.act-btn.break { color: var(--silver); }
-.jump-btn {
-    position: fixed; left: 18px; bottom: calc(84px + var(--safe-bottom)); z-index: 47;
-    width: 62px; height: 62px; border-radius: 50%;
-    background: rgba(8,6,18,0.72); border: 1px solid var(--border-strong); color: var(--gold-light);
-    display: grid; place-items: center;
-}
-.jump-btn svg { width: 24px; height: 24px; }
-.jump-btn:active, .jump-btn.pressed { background: var(--gold-glow); transform: scale(0.94); }
-
-/* Desktop */
-.desk-hint {
-    display: none; position: fixed; left: 50%; bottom: calc(76px + var(--safe-bottom));
-    transform: translateX(-50%); font-size: 12.5px; color: var(--silver-dim);
-    background: rgba(8,6,18,0.6); border: 1px solid var(--border); border-radius: 16px; padding: 7px 16px;
-}
-.pointer-lock-veil {
-    position: fixed; inset: 0; z-index: 60; background: rgba(4,3,10,0.75);
-    display: none; align-items: center; justify-content: center; flex-direction: column; gap: 14px; text-align: center; padding: 20px;
-}
-.pointer-lock-veil.show { display: flex; }
-.pointer-lock-veil .go-btn {
-    padding: 14px 30px; border-radius: 26px; border: 1px solid var(--border-strong);
-    background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--ink);
-    font-size: 16px; font-weight: 700; cursor: pointer;
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .stick-zone, .action-cluster, .jump-btn { display: none; }
-    .desk-hint { display: block; }
-}
-
-/* ─────── Sheets ─────── */
-.backdrop { position: fixed; inset: 0; background: rgba(4,3,10,0.65); z-index: 180; opacity: 0; pointer-events: none; transition: opacity .25s; }
-.backdrop.show { opacity: 1; pointer-events: auto; }
-.sheet {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
-    background: var(--ink-2); border-top: 1px solid var(--border-strong);
-    border-radius: 26px 26px 0 0; max-height: 80dvh;
-    transform: translateY(105%); transition: transform .32s cubic-bezier(.4,0,.2,1);
-    padding-bottom: var(--safe-bottom); display: flex; flex-direction: column;
-    box-shadow: 0 -20px 60px rgba(0,0,0,0.6);
-}
-.sheet.show { transform: none; }
-.grip { width: 40px; height: 4px; border-radius: 2px; background: var(--border-strong); margin: 10px auto 4px; flex-shrink: 0; }
-.sheet-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 20px 14px; border-bottom: 1px solid var(--border); }
-.sheet-title { font-family: var(--display); font-size: 25px; font-weight: 700; color: var(--gold-light); }
-.sheet-body { padding: 18px 20px 26px; overflow-y: auto; }
-.x-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--ink-3); border: 1px solid var(--border); color: var(--silver-dim); display: grid; place-items: center; cursor: pointer; }
-.x-btn svg { width: 17px; height: 17px; }
-.label { display: block; font-size: 13px; color: var(--silver-dim); margin-bottom: 8px; font-weight: 500; }
-.row { display: flex; justify-content: space-between; align-items: center; min-height: 50px; border-bottom: 1px solid var(--border); font-size: 15px; }
-.row:last-child { border-bottom: none; }
-input[type=range] { width: 140px; accent-color: var(--gold); }
-.menu-btn {
-    width: 100%; height: 50px; margin-top: 10px; border-radius: 14px; border: 1px solid var(--border-strong);
-    background: var(--ink-3); color: var(--silver); font-size: 15px; font-weight: 600; cursor: pointer;
-}
-.menu-btn.primary { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--ink); border: none; }
-.menu-btn.danger { color: #e0625a; border-color: rgba(224,98,90,0.4); }
-.foot { margin-top: 18px; font-size: 12px; color: var(--silver-dim); line-height: 1.6; }
-.foot a { color: var(--gold-light); text-decoration: none; }
 </style>
 </head>
 <body>
 
-<canvas id="scene-canvas"></canvas>
-
-<div id="loading">
-    <div class="brand-mark"><svg viewBox="0 0 100 100"><path d="M50 8l10 32 32 10-32 10-10 32-10-32-32-10 32-10z" fill="#c9a84c"/></svg></div>
-    <h1>Wizard Sandbox</h1>
-    <div class="spin-ring"></div>
-    <p id="loading-msg">Shaping the realm…</p>
-</div>
-
-<div class="hud">
-    <div class="crosshair" id="crosshair"></div>
-
-    <div class="top-bar">
-        <div class="pill">Wizard Sandbox</div>
-        <button class="icon-btn" id="menu-btn" aria-label="Menu" data-icon="menu"></button>
+<div id="shell">
+    <div id="topbar">
+        <div class="brand">
+            <svg viewBox="0 0 100 100"><path d="M50 8l10 32 32 10-32 10-10 32-10-32-32-10 32-10z" fill="#c9a84c"/></svg>
+            <span class="full">Wizard Sandbox</span>
+        </div>
+        <button class="tb-btn on" id="play-btn" data-icon="pause"><span class="lbl">Pause</span></button>
+        <button class="tb-btn" id="step-btn" data-icon="step"><span class="lbl">Step</span></button>
+        <button class="tb-btn" id="clear-btn" data-icon="clear"><span class="lbl">Clear</span></button>
+        <div class="tb-sep"></div>
+        <div class="brush-ctrl">
+            Brush <input type="range" id="brush-slider" min="1" max="12" value="3"> <span class="brush-val" id="brush-val">3</span>
+        </div>
+        <div class="spacer"></div>
+        <button class="tb-btn" id="palette-toggle" data-icon="materials"><span class="lbl">Materials</span></button>
     </div>
-    <div class="hint-toast" id="hint"></div>
 
-    <div class="hotbar" id="hotbar"></div>
-    <div class="desk-hint">WASD move · mouse look · click break · right-click place · space jump · 1–5 select</div>
-</div>
-
-<div class="stick-zone" id="stick-zone"></div>
-<div class="stick-base" id="stick-base"><div class="stick-nub" id="stick-nub"></div></div>
-<div class="look-zone" id="look-zone"></div>
-
-<button class="jump-btn" id="jump-btn" aria-label="Jump" data-icon="jump"></button>
-<div class="action-cluster">
-    <button class="act-btn" id="place-btn" aria-label="Place block" data-icon="place"></button>
-    <button class="act-btn break" id="break-btn" aria-label="Break block" data-icon="break"></button>
-</div>
-
-<div class="pointer-lock-veil" id="lock-veil">
-    <div class="brand-mark" style="width:44px;height:44px;"><svg viewBox="0 0 100 100"><path d="M50 8l10 32 32 10-32 10-10 32-10-32-32-10 32-10z" fill="#c9a84c"/></svg></div>
-    <div style="font-family:var(--display);font-size:22px;color:var(--gold-light);">Ready to explore?</div>
-    <div style="font-size:13.5px;color:var(--silver-dim);max-width:280px;">Click to lock your mouse for looking around. Press Esc anytime to let go.</div>
-    <button class="go-btn" id="lock-go-btn">Enter the sandbox</button>
-</div>
-
-<div class="backdrop" id="backdrop"></div>
-<div class="sheet" id="menu-sheet">
-    <div class="grip"></div>
-    <div class="sheet-head"><span class="sheet-title">Menu</span><button class="x-btn" id="menu-close" data-icon="close"></button></div>
-    <div class="sheet-body">
-        <div class="row"><span>Look sensitivity</span><input type="range" id="sens-slider" min="20" max="200" value="90"></div>
-        <div class="row"><span>Render distance</span><input type="range" id="fog-slider" min="40" max="140" value="90"></div>
-        <button class="menu-btn primary" id="resume-btn">Resume</button>
-        <button class="menu-btn danger" id="reset-btn">Reshape the world</button>
-        <div class="foot">Your build lives only in this session — reload and a fresh realm is shaped.<br><a href="https://wizardecosystem.dev">Back to Wizard Ecosystem</a></div>
+    <div id="main">
+        <div id="palette">
+            <div class="pal-title">Materials</div>
+            <div class="brush-ctrl brush-ctrl-mobile" style="display:none;">
+                Brush <input type="range" id="brush-slider-m" min="1" max="12" value="3"> <span class="brush-val" id="brush-val-m">3</span>
+            </div>
+            <div class="pal-grid" id="pal-grid"></div>
+            <div class="pal-tip">
+                Paint <b>Grimwood</b> or <b>Arcane Charge</b>, then touch it with <b>Wildfire</b> or <b>Molten Gold</b> and watch what happens. Sand and liquids fall — everything obeys gravity.
+                <br><br><a href="https://wizardecosystem.dev">Back to Wizard Ecosystem</a>
+            </div>
+        </div>
+        <div id="canvas-wrap">
+            <canvas id="sim"></canvas>
+            <div id="brush-cursor"></div>
+            <div class="status-line"><b id="status-tool">Gold Dust</b> · brush <span id="status-brush">3</span></div>
+        </div>
     </div>
 </div>
+<div id="palette-backdrop"></div>
 
 <script>
-// ══════════════════════════════════════
+const $ = id => document.getElementById(id);
+
 // ICONS
-// ══════════════════════════════════════
 const ICONS = {
-    menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
-    close: '<path d="M6 6l12 12M18 6L6 18"/>',
-    jump: '<path d="M12 20V6M6 12l6-6 6 6"/>',
-    place: '<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M12 9v6M9 12h6"/>',
-    break: '<path d="M4 15l6-6M9 9l6 6M4 20l4-4M6 4l4 4M15 5l6 6-4 4-6-6z"/>'
+    play: '<path d="M6 4l14 8-14 8z"/>',
+    pause: '<path d="M7 4h4v16H7zM13 4h4v16h-4z"/>',
+    step: '<path d="M5 4l10 8-10 8zM19 4v16"/>',
+    clear: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+    materials: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>'
 };
 function icon(name) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[name]}</svg>`; }
-document.querySelectorAll('[data-icon]').forEach(el => el.innerHTML = icon(el.dataset.icon));
+document.querySelectorAll('[data-icon]').forEach(el => el.insertAdjacentHTML('afterbegin', icon(el.dataset.icon)));
 
-const $ = id => document.getElementById(id);
-let hintTimer = null;
-function showHint(text, ms = 2200) {
-    const el = $('hint');
-    el.textContent = text;
-    el.classList.add('show');
-    clearTimeout(hintTimer);
-    hintTimer = setTimeout(() => el.classList.remove('show'), ms);
-}
+// CELL TYPES
+const EMPTY=0, STONE=1, SAND=2, WATER=3, WOOD=4, FIRE=5, TNT=6, LAVA=7, ACID=8, ASH=9, STEAM=10,
+      ICE=11, OIL=12, PLANT=13, GLASS=14, VOID=15;
 
-// ══════════════════════════════════════
-// WORLD CONFIG
-// ══════════════════════════════════════
-const WORLD_SIZE = 34;              // columns per side
-const WORLD_HALF = WORLD_SIZE / 2;
-const MAX_HEIGHT = 14;
-const EYE_HEIGHT = 1.7;
-const PLAYER_RADIUS = 0.32;
-const GRAVITY = 22;
-const JUMP_SPEED = 8.6;
-const MOVE_SPEED = 5.1;
-
-const BLOCK_TYPES = [
-    { id: 'turf',    name: 'Violet Turf',    color: 0x7c5cbf, emissive: 0x000000, capacity: 1800, initial: 0 },
-    { id: 'stone',   name: 'Deepstone',      color: 0x1c1836, emissive: 0x000000, capacity: 7000, initial: 0 },
-    { id: 'gold',    name: 'Gold Ore',       color: 0xc9a84c, emissive: 0x2a2000, capacity: 900,  initial: 0 },
-    { id: 'moon',    name: 'Moonstone',      color: 0xd4d0e8, emissive: 0x0a0a14, capacity: 900,  initial: 0 },
-    { id: 'crystal', name: 'Arcane Crystal', color: 0xe8c97a, emissive: 0x6b551a, capacity: 700,  initial: 0 }
+const ELEMENTS = [
+    { id: 'eraser', type: EMPTY, label: 'Eraser',        color: '#0e0b1e', eraser: true, key: '0' },
+    { id: 'stone',  type: STONE, label: 'Deepstone',     color: '#342d5c', key: '1' },
+    { id: 'sand',   type: SAND,  label: 'Gold Dust',     color: '#c9a84c', key: '2' },
+    { id: 'water',  type: WATER, label: 'Moonwater',     color: '#8f83c9', key: '3' },
+    { id: 'wood',   type: WOOD,  label: 'Grimwood',      color: '#4a3a2e', key: '4' },
+    { id: 'fire',   type: FIRE,  label: 'Wildfire',      color: '#e8934a', key: '5' },
+    { id: 'tnt',    type: TNT,   label: 'Arcane Charge', color: '#b98a2e', key: '6' },
+    { id: 'lava',   type: LAVA,  label: 'Molten Gold',   color: '#e0862e', key: '7' },
+    { id: 'acid',   type: ACID,  label: 'Void Acid',     color: '#9b4fd6', key: '8' },
+    { id: 'ash',    type: ASH,   label: 'Ash',           color: '#5c5570', key: '9' },
+    { id: 'steam',  type: STEAM, label: 'Steam',         color: '#aaa5c8', key: 'S' },
+    { id: 'ice',    type: ICE,   label: 'Rime Ice',      color: '#96b2d6', key: 'I' },
+    { id: 'oil',    type: OIL,   label: 'Shadow Oil',    color: '#302246', key: 'O' },
+    { id: 'plant',  type: PLANT, label: 'Wyrmvine',      color: '#446e48', key: 'P' },
+    { id: 'glass',  type: GLASS, label: 'Arcane Glass',  color: '#c4cee2', key: 'G' },
+    { id: 'void',   type: VOID,  label: 'Void Rift',     color: '#1a0a2e', key: 'V' }
 ];
-const TYPE_BY_ID = {}; BLOCK_TYPES.forEach((t, i) => TYPE_BY_ID[t.id] = i);
 
-// ══════════════════════════════════════
-// NOISE (deterministic value noise, no deps)
-// ══════════════════════════════════════
-function hash2(x, y) {
-    let h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
-    return h - Math.floor(h);
+// GRID
+const COLS = 232, ROWS = 138;
+const N = COLS * ROWS;
+const grid = new Uint8Array(N);
+const life = new Int16Array(N);
+const shade = new Int8Array(N);
+const fromWood = new Uint8Array(N);
+const fuse = new Int16Array(N).fill(-1);
+const processed = new Uint8Array(N);
+let pendingExplosions = [];
+let frame = 0;
+
+const NEI8 = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+const ORTHO = [[0,-1],[0,1],[-1,0],[1,0]];
+
+function inBounds(x, y) { return x >= 0 && x < COLS && y >= 0 && y < ROWS; }
+function tryIdx(x, y) { return inBounds(x, y) ? y * COLS + x : -1; }
+function rnd(a, b) { return a + ((Math.random() * (b - a + 1)) | 0); }
+
+function setCell(idx, t) {
+    grid[idx] = t;
+    life[idx] = t === FIRE ? rnd(45, 85) : t === STEAM ? rnd(30, 60) : 0;
+    shade[idx] = (t === SAND || t === STONE || t === WOOD || t === ASH || t === ICE || t === GLASS) ? rnd(-15, 15) : 0;
+    fromWood[idx] = 0;
+    fuse[idx] = -1;
 }
-function smooth(t) { return t * t * (3 - 2 * t); }
-function valueNoise(x, y) {
-    const xi = Math.floor(x), yi = Math.floor(y);
-    const xf = x - xi, yf = y - yi;
-    const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
-    const u = smooth(xf), v = smooth(yf);
-    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+
+function swap(i, j) {
+    const t = grid[i]; grid[i] = grid[j]; grid[j] = t;
+    const l = life[i]; life[i] = life[j]; life[j] = l;
+    const s = shade[i]; shade[i] = shade[j]; shade[j] = s;
+    const f = fromWood[i]; fromWood[i] = fromWood[j]; fromWood[j] = f;
+    const u = fuse[i]; fuse[i] = fuse[j]; fuse[j] = u;
+    processed[i] = 1; processed[j] = 1;
 }
-function fbm(x, y, octaves) {
-    let total = 0, amp = 1, freq = 1, max = 0;
-    for (let i = 0; i < octaves; i++) {
-        total += valueNoise(x * freq, y * freq) * amp;
-        max += amp; amp *= 0.5; freq *= 2;
+
+// ELEMENT BEHAVIOR
+function updatePowder(x, y, i) {
+    const down = tryIdx(x, y + 1);
+    if (down !== -1 && !processed[down]) {
+        const dt = grid[down];
+        if (dt === EMPTY || dt === WATER || dt === ACID) { swap(i, down); return; }
     }
-    return total / max;
-}
-
-// ══════════════════════════════════════
-// THREE SETUP
-// ══════════════════════════════════════
-const canvas = $('scene-canvas');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-renderer.setSize(innerWidth, innerHeight);
-renderer.outputEncoding = THREE.sRGBEncoding;
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0818);
-scene.fog = new THREE.Fog(0x0a0818, 18, 90);
-
-const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.05, 300);
-
-const ambient = new THREE.AmbientLight(0x5b4b96, 0.85);
-scene.add(ambient);
-const sun = new THREE.DirectionalLight(0xf2d27c, 0.9);
-sun.position.set(40, 60, 20);
-scene.add(sun);
-const rim = new THREE.DirectionalLight(0x7c5cbf, 0.35);
-rim.position.set(-30, 20, -40);
-scene.add(rim);
-
-// Starfield
-{
-    const starCount = 500;
-    const pos = new Float32Array(starCount * 3);
-    for (let i = 0; i < starCount; i++) {
-        const r = 130 + Math.random() * 40;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(Math.random() * 0.9);
-        pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-        pos[i * 3 + 1] = Math.abs(r * Math.cos(phi)) + 10;
-        pos[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+    const order = Math.random() < 0.5 ? [-1, 1] : [1, -1];
+    for (const dxo of order) {
+        const di = tryIdx(x + dxo, y + 1);
+        if (di !== -1 && !processed[di]) {
+            const dt = grid[di];
+            if (dt === EMPTY || dt === WATER || dt === ACID) { swap(i, di); return; }
+        }
     }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({ color: 0xe8c97a, size: 1.1, sizeAttenuation: false, transparent: true, opacity: 0.7 });
-    scene.add(new THREE.Points(geo, mat));
+    processed[i] = 1;
 }
 
-window.addEventListener('resize', () => {
-    camera.aspect = innerWidth / innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth, innerHeight);
-});
-
-// ══════════════════════════════════════
-// VOXEL WORLD DATA
-// ══════════════════════════════════════
-const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
-const meshes = [];       // InstancedMesh per type
-const freeList = [];     // per type: array of free instance indices
-const posOfIndex = [];   // per type: index -> "x,y,z" key (or null)
-const voxels = new Map(); // "x,y,z" -> { type, idx }
-const dummy = new THREE.Object3D();
-
-BLOCK_TYPES.forEach((bt, ti) => {
-    const mat = new THREE.MeshStandardMaterial({ color: bt.color, emissive: bt.emissive, roughness: 0.85, metalness: bt.id === 'gold' ? 0.4 : 0.05 });
-    const mesh = new THREE.InstancedMesh(cubeGeo, mat, bt.capacity);
-    mesh.count = bt.capacity;
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    dummy.position.set(0, -9999, 0);
-    dummy.scale.setScalar(0);
-    dummy.updateMatrix();
-    for (let i = 0; i < bt.capacity; i++) mesh.setMatrixAt(i, dummy.matrix);
-    scene.add(mesh);
-    meshes.push(mesh);
-    freeList.push([]);
-    posOfIndex.push(new Array(bt.capacity).fill(null));
-});
-
-function key(x, y, z) { return x + ',' + y + ',' + z; }
-function heightAt(x, z) {
-    const n = fbm(x * 0.045, z * 0.045, 4);
-    return 4 + Math.floor(n * 9);
-}
-
-function placeVoxel(x, y, z, typeId, silent) {
-    if (y < 0 || y >= MAX_HEIGHT) return false;
-    const k = key(x, y, z);
-    if (voxels.has(k)) return false;
-    const ti = TYPE_BY_ID[typeId];
-    let idx = freeList[ti].pop();
-    if (idx === undefined) { if (!silent) showHint(BLOCK_TYPES[ti].name + ' pouch is full'); return false; }
-    dummy.position.set(x + 0.5, y + 0.5, z + 0.5);
-    dummy.scale.setScalar(1);
-    dummy.updateMatrix();
-    meshes[ti].setMatrixAt(idx, dummy.matrix);
-    meshes[ti].instanceMatrix.needsUpdate = true;
-    posOfIndex[ti][idx] = k;
-    voxels.set(k, { type: ti, idx });
-    return true;
-}
-
-function removeVoxel(x, y, z) {
-    const k = key(x, y, z);
-    const v = voxels.get(k);
-    if (!v) return null;
-    dummy.position.set(0, -9999, 0);
-    dummy.scale.setScalar(0);
-    dummy.updateMatrix();
-    meshes[v.type].setMatrixAt(v.idx, dummy.matrix);
-    meshes[v.type].instanceMatrix.needsUpdate = true;
-    posOfIndex[v.type][v.idx] = null;
-    freeList[v.type].push(v.idx);
-    voxels.delete(k);
-    return BLOCK_TYPES[v.type].id;
-}
-
-function solidAt(x, y, z) { return voxels.has(key(x, y, z)); }
-
-function typeForDepth(x, y, z, surfaceY) {
-    if (y === surfaceY) return 'turf';
-    const n = hash2(x * 3.1 + 11, z * 3.1 + y * 7.7);
-    if (y < surfaceY - 2) {
-        if (n < 0.012) return 'crystal';
-        if (n < 0.03) return 'gold';
-        if (n < 0.05) return 'moon';
-    }
-    return 'stone';
-}
-
-async function generateWorld() {
-    const total = WORLD_SIZE * WORLD_SIZE;
-    let done = 0;
-    for (let x = -WORLD_HALF; x < WORLD_HALF; x++) {
-        for (let z = -WORLD_HALF; z < WORLD_HALF; z++) {
-            const h = heightAt(x, z);
-            for (let y = 0; y <= h; y++) {
-                placeVoxel(x, y, z, typeForDepth(x, y, z, h), true);
+function updateLiquid(x, y, i, t) {
+    if (t === LAVA) {
+        for (const [dx, dy] of ORTHO) {
+            const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+            const nt = grid[ni];
+            if ((nt === WOOD || nt === PLANT) && Math.random() < 0.25) { setCell(ni, FIRE); fromWood[ni] = 1; }
+            else if (nt === OIL && Math.random() < 0.6) { setCell(ni, FIRE); }
+            else if (nt === SAND && Math.random() < 0.06) { setCell(ni, GLASS); shade[ni] = rnd(-15, 15); }
+            else if (nt === ICE && Math.random() < 0.4) { setCell(ni, WATER); }
+            else if (nt === WATER && Math.random() < 0.5) {
+                grid[i] = STONE; shade[i] = rnd(-15, 15); life[i] = 0; processed[i] = 1;
+                if (Math.random() < 0.5) { setCell(ni, STEAM); } else { grid[ni] = EMPTY; }
+                processed[ni] = 1;
+                return;
             }
-            done++;
         }
-        if (x % 6 === 0) {
-            $('loading-msg').textContent = `Shaping the realm… ${Math.round(done / total * 100)}%`;
-            await new Promise(r => requestAnimationFrame(r));
+    } else if (t === WATER) {
+        for (const [dx, dy] of ORTHO) {
+            const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+            const nt = grid[ni];
+            if (nt === FIRE) { if (Math.random() < 0.3) setCell(ni, STEAM); else { grid[ni] = EMPTY; fromWood[ni] = 0; } }
+            else if (nt === LAVA && Math.random() < 0.5) { setCell(i, STEAM); processed[i] = 1; return; }
+        }
+    } else if (t === ACID) {
+        for (const [dx, dy] of ORTHO) {
+            const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+            const nt = grid[ni];
+            if (nt !== EMPTY && nt !== ACID) {
+                const p = nt === STONE ? 0.045 : 0.32;
+                if (Math.random() < p) {
+                    grid[ni] = EMPTY; fromWood[ni] = 0;
+                    if (Math.random() < 0.07) { grid[i] = EMPTY; processed[i] = 1; return; }
+                }
+            }
+        }
+    } else if (t === OIL) {
+        for (const [dx, dy] of ORTHO) {
+            const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+            const nt = grid[ni];
+            if ((nt === FIRE || nt === LAVA) && Math.random() < 0.5) { setCell(i, FIRE); processed[i] = 1; return; }
         }
     }
-}
+    if (grid[i] !== t) { processed[i] = 1; return; }
 
-function findSpawnHeight() {
-    return heightAt(0, 0) + 1;
-}
-
-// ══════════════════════════════════════
-// PLAYER / MOVEMENT
-// ══════════════════════════════════════
-const player = {
-    x: 0.5, y: 0, z: 0.5,
-    vy: 0,
-    yaw: Math.PI * 0.25,
-    pitch: -0.12,
-    onGround: false,
-    grounded: false
-};
-
-function groundHeightBelow(x, z) {
-    for (let y = MAX_HEIGHT; y >= 0; y--) {
-        if (solidAt(Math.floor(x), y, Math.floor(z))) return y + 1;
-    }
-    return 0;
-}
-
-function tryMove(nx, nz) {
-    // Simple AABB-ish collision: block movement if the destination column
-    // is solid at foot or head height, else allow (steps up automatically
-    // by ground snapping in updatePlayer).
-    const footY = Math.floor(player.y);
-    const headY = Math.floor(player.y + 1.2);
-    const gx = Math.floor(nx), gz = Math.floor(nz);
-    const ground = groundHeightBelow(nx, nz);
-    if (ground - player.y > 1.05) return false; // wall too tall to step onto
-    return true;
-}
-
-function updatePlayer(dt) {
-    const speed = MOVE_SPEED * (moveInput.sprint ? 1.5 : 1);
-    const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
-    let dx = 0, dz = 0;
-    if (moveInput.forward) { dx += sin; dz += cos; }
-    if (moveInput.back) { dx -= sin; dz -= cos; }
-    if (moveInput.left) { dx -= cos; dz += sin; }
-    if (moveInput.right) { dx += cos; dz -= sin; }
-    const len = Math.hypot(dx, dz);
-    if (len > 0.001) { dx /= len; dz /= len; }
-
-    const nx = player.x + dx * speed * dt;
-    const nz = player.z + dz * speed * dt;
-    if (tryMove(nx, player.z)) player.x = THREE.MathUtils.clamp(nx, -WORLD_HALF + 0.5, WORLD_HALF - 0.5);
-    if (tryMove(player.x, nz)) player.z = THREE.MathUtils.clamp(nz, -WORLD_HALF + 0.5, WORLD_HALF - 0.5);
-
-    // Gravity + ground snap
-    player.vy -= GRAVITY * dt;
-    let ny = player.y + player.vy * dt;
-    const ground = groundHeightBelow(player.x, player.z);
-    if (ny <= ground) {
-        ny = ground;
-        player.vy = 0;
-        player.onGround = true;
-    } else {
-        player.onGround = false;
-    }
-    // Step up smoothly onto a 1-block ledge
-    if (player.onGround === false && ny < ground) { ny = ground; player.onGround = true; player.vy = 0; }
-    player.y = ny;
-
-    if (moveInput.jump && player.onGround) {
-        player.vy = JUMP_SPEED;
-        player.onGround = false;
+    if (t === OIL) {
+        const up = tryIdx(x, y - 1);
+        if (up !== -1 && grid[up] === WATER && !processed[up]) { swap(i, up); return; }
     }
 
-    camera.position.set(player.x, player.y + EYE_HEIGHT, player.z);
-    camera.rotation.order = 'YXZ';
-    camera.rotation.y = player.yaw;
-    camera.rotation.x = player.pitch;
+    const down = tryIdx(x, y + 1);
+    if (down !== -1 && grid[down] === EMPTY && !processed[down]) { swap(i, down); return; }
+    const order = Math.random() < 0.5 ? [-1, 1] : [1, -1];
+    for (const dxo of order) {
+        const di = tryIdx(x + dxo, y + 1);
+        if (di !== -1 && grid[di] === EMPTY && !processed[di]) { swap(i, di); return; }
+    }
+    for (const dxo of order) {
+        const di = tryIdx(x + dxo, y);
+        if (di !== -1 && grid[di] === EMPTY && !processed[di]) { swap(i, di); return; }
+    }
+    processed[i] = 1;
+}
 
-    if (player.y < -20) { // fell into the void — respawn
-        player.x = 0.5; player.z = 0.5; player.y = findSpawnHeight(); player.vy = 0;
-        showHint('The void spat you back out');
+function updateFire(x, y, i) {
+    life[i]--;
+    if (life[i] <= 0) {
+        if (fromWood[i] && Math.random() < 0.55) { grid[i] = ASH; shade[i] = rnd(-10, 10); }
+        else grid[i] = EMPTY;
+        fromWood[i] = 0; life[i] = 0; processed[i] = 1;
+        return;
+    }
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if ((nt === WOOD || nt === PLANT) && Math.random() < 0.10) { setCell(ni, FIRE); fromWood[ni] = 1; }
+        else if (nt === OIL && Math.random() < 0.5) { setCell(ni, FIRE); }
+        else if (nt === SAND && Math.random() < 0.02) { setCell(ni, GLASS); shade[ni] = rnd(-15, 15); }
+        else if (nt === WATER) {
+            if (Math.random() < 0.4) setCell(i, STEAM); else grid[i] = EMPTY;
+            fromWood[i] = 0; processed[i] = 1;
+            return;
+        }
+    }
+    if (Math.random() < 0.3) {
+        const opts = [[0, -1], [-1, -1], [1, -1], [-1, 0], [1, 0]];
+        const [dx, dy] = opts[(Math.random() * opts.length) | 0];
+        const ni = tryIdx(x + dx, y + dy);
+        if (ni !== -1 && grid[ni] === EMPTY && !processed[ni]) {
+            grid[ni] = FIRE; life[ni] = life[i]; fromWood[ni] = fromWood[i];
+            grid[i] = EMPTY; fromWood[i] = 0;
+            processed[i] = 1; processed[ni] = 1;
+            return;
+        }
+    }
+    processed[i] = 1;
+}
+
+function updateSteam(x, y, i) {
+    life[i]--;
+    if (life[i] <= 0) { grid[i] = EMPTY; processed[i] = 1; return; }
+    const choices = [[0, -1], [-1, -1], [1, -1], [-1, 0], [1, 0]];
+    const [dx, dy] = choices[(Math.random() * choices.length) | 0];
+    const ni = tryIdx(x + dx, y + dy);
+    if (ni !== -1 && grid[ni] === EMPTY && !processed[ni]) { swap(i, ni); return; }
+    processed[i] = 1;
+}
+
+function updateWood(x, y, i) {
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if ((nt === FIRE || nt === LAVA) && Math.random() < 0.05) { setCell(i, FIRE); fromWood[i] = 1; break; }
+    }
+    if (grid[i] === WOOD) {
+        const down = tryIdx(x, y + 1);
+        if (down !== -1 && grid[down] === EMPTY && !processed[down]) { swap(i, down); return; }
+    }
+    processed[i] = 1;
+}
+
+function updateIce(x, y, i) {
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if ((nt === FIRE || nt === LAVA) && Math.random() < 0.12) { grid[i] = WATER; life[i] = 0; shade[i] = 0; processed[i] = 1; return; }
+    }
+    const down = tryIdx(x, y + 1);
+    if (down !== -1 && grid[down] === EMPTY && !processed[down]) { swap(i, down); return; }
+    processed[i] = 1;
+}
+
+function updateGlass(x, y, i) {
+    const down = tryIdx(x, y + 1);
+    if (down !== -1 && grid[down] === EMPTY && !processed[down]) { swap(i, down); return; }
+    processed[i] = 1;
+}
+
+function updatePlant(x, y, i) {
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if ((nt === FIRE || nt === LAVA) && Math.random() < 0.05) { setCell(i, FIRE); fromWood[i] = 1; processed[i] = 1; return; }
+    }
+    let nearWater = false;
+    for (const [dx, dy] of ORTHO) {
+        const ni = tryIdx(x + dx, y + dy);
+        if (ni !== -1 && grid[ni] === WATER) { nearWater = true; break; }
+    }
+    if (nearWater && Math.random() < 0.018) {
+        const up = tryIdx(x, y - 1);
+        if (up !== -1 && grid[up] === EMPTY) setCell(up, PLANT);
+    }
+    processed[i] = 1;
+}
+
+function updateVoid(x, y, i) {
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if (nt !== EMPTY && nt !== VOID && Math.random() < 0.5) {
+            grid[ni] = EMPTY; life[ni] = 0; shade[ni] = 0; fromWood[ni] = 0; fuse[ni] = -1;
+        }
+    }
+    processed[i] = 1;
+}
+
+function updateTNT(x, y, i) {
+    if (fuse[i] >= 0) {
+        fuse[i]--;
+        if (fuse[i] < 0) pendingExplosions.push(i);
+        processed[i] = 1;
+        return;
+    }
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if (nt === FIRE || nt === LAVA) { fuse[i] = 10; break; }
+    }
+    if (grid[i] === TNT && fuse[i] < 0) {
+        const down = tryIdx(x, y + 1);
+        if (down !== -1 && grid[down] === EMPTY && !processed[down]) { swap(i, down); return; }
+    }
+    processed[i] = 1;
+}
+
+function explode(ci) {
+    const cy = (ci / COLS) | 0, cx = ci - cy * COLS;
+    const R = 8;
+    for (let dy = -R; dy <= R; dy++) {
+        for (let dx = -R; dx <= R; dx++) {
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > R) continue;
+            const nx = cx + dx, ny = cy + dy;
+            if (!inBounds(nx, ny)) continue;
+            const ni = ny * COLS + nx;
+            const nt = grid[ni];
+            if (nt === STONE) {
+                if (dist < R * 0.5 && Math.random() < 0.8) { grid[ni] = EMPTY; shade[ni] = 0; }
+            } else if (nt === TNT) {
+                if (ni !== ci && fuse[ni] < 0) fuse[ni] = rnd(3, 7);
+            } else if (dist < R * 0.4) {
+                grid[ni] = EMPTY; fromWood[ni] = 0; life[ni] = 0;
+            } else {
+                grid[ni] = FIRE; life[ni] = rnd(15, 35); fromWood[ni] = 0; fuse[ni] = -1;
+            }
+        }
+    }
+    grid[ci] = EMPTY; fuse[ci] = -1;
+    if ('vibrate' in navigator) navigator.vibrate(30);
+}
+
+function processCell(x, y) {
+    const i = y * COLS + x;
+    if (processed[i]) return;
+    switch (grid[i]) {
+        case SAND: case ASH: updatePowder(x, y, i); break;
+        case WATER: case LAVA: case ACID: case OIL: updateLiquid(x, y, i, grid[i]); break;
+        case FIRE: updateFire(x, y, i); break;
+        case STEAM: updateSteam(x, y, i); break;
+        case TNT: updateTNT(x, y, i); break;
+        case WOOD: updateWood(x, y, i); break;
+        case ICE: updateIce(x, y, i); break;
+        case GLASS: updateGlass(x, y, i); break;
+        case PLANT: updatePlant(x, y, i); break;
+        case VOID: updateVoid(x, y, i); break;
+        default: processed[i] = 1;
     }
 }
 
-const moveInput = { forward: false, back: false, left: false, right: false, sprint: false, jump: false };
-
-// ══════════════════════════════════════
-// TOUCH: joystick + look
-// ══════════════════════════════════════
-const stickZone = $('stick-zone'), stickBase = $('stick-base'), stickNub = $('stick-nub');
-let stickTouchId = null, stickOrigin = { x: 0, y: 0 };
-stickZone.addEventListener('touchstart', e => {
-    if (stickTouchId !== null) return;
-    const t = e.changedTouches[0];
-    stickTouchId = t.identifier;
-    stickOrigin = { x: t.clientX, y: t.clientY };
-    stickBase.style.left = (t.clientX - 54) + 'px';
-    stickBase.style.top = (t.clientY - 54) + 'px';
-    stickBase.style.display = 'block';
-    e.preventDefault();
-}, { passive: false });
-stickZone.addEventListener('touchmove', e => {
-    for (const t of e.changedTouches) {
-        if (t.identifier !== stickTouchId) continue;
-        let dx = t.clientX - stickOrigin.x, dy = t.clientY - stickOrigin.y;
-        const max = 46;
-        const dist = Math.hypot(dx, dy);
-        if (dist > max) { dx = dx / dist * max; dy = dy / dist * max; }
-        stickNub.style.transform = `translate(${dx}px, ${dy}px)`;
-        const nx = dx / max, ny = dy / max;
-        moveInput.forward = ny < -0.28;
-        moveInput.back = ny > 0.28;
-        moveInput.left = nx < -0.28;
-        moveInput.right = nx > 0.28;
-        moveInput.sprint = dist > max * 0.85;
+function step() {
+    processed.fill(0);
+    const leftToRight = (frame & 1) === 0;
+    for (let y = ROWS - 1; y >= 0; y--) {
+        if (leftToRight) { for (let x = 0; x < COLS; x++) processCell(x, y); }
+        else { for (let x = COLS - 1; x >= 0; x--) processCell(x, y); }
     }
-    e.preventDefault();
-}, { passive: false });
-function endStick(e) {
-    for (const t of e.changedTouches) {
-        if (t.identifier !== stickTouchId) continue;
-        stickTouchId = null;
-        stickBase.style.display = 'none';
-        stickNub.style.transform = 'translate(0,0)';
-        moveInput.forward = moveInput.back = moveInput.left = moveInput.right = moveInput.sprint = false;
+    if (pendingExplosions.length) {
+        const list = pendingExplosions; pendingExplosions = [];
+        list.forEach(explode);
     }
+    frame++;
 }
-stickZone.addEventListener('touchend', endStick);
-stickZone.addEventListener('touchcancel', endStick);
 
-const lookZone = $('look-zone');
-let lookTouchId = null, lookLast = { x: 0, y: 0 };
-let sensitivity = 90;
-lookZone.addEventListener('touchstart', e => {
-    for (const t of e.changedTouches) {
-        if (t.clientX < innerWidth * 0.42 && t.clientY > innerHeight * 0.4) continue; // reserved for joystick
-        if (lookTouchId !== null) continue;
-        lookTouchId = t.identifier;
-        lookLast = { x: t.clientX, y: t.clientY };
+// RENDER
+const canvas = $('sim');
+canvas.width = COLS; canvas.height = ROWS;
+const ctx = canvas.getContext('2d');
+const imgData = ctx.createImageData(COLS, ROWS);
+const px = imgData.data;
+
+function render() {
+    for (let idx = 0, p = 0; idx < N; idx++, p += 4) {
+        const t = grid[idx];
+        let r, g, b, a = 255;
+        switch (t) {
+            case EMPTY: r = 10; g = 8; b = 20; break;
+            case STONE: { const s = shade[idx]; r = 52 + s; g = 45 + s; b = 92 + s; break; }
+            case SAND: { const s = shade[idx]; r = 201 + s * 0.6; g = 168 + s * 0.5; b = 76 + s * 0.3; break; }
+            case WATER: r = 110; g = 100; b = 196; a = 232; break;
+            case WOOD: { const s = shade[idx]; r = 74 + s * 0.4; g = 58 + s * 0.3; b = 46 + s * 0.2; break; }
+            case FIRE: { const f = 0.75 + 0.35 * Math.sin(frame * 0.5 + idx * 0.9); r = 232 * f; g = (life[idx] > 40 ? 168 : 108) * f; b = 68 * f; break; }
+            case TNT: { if (fuse[idx] >= 0 && (fuse[idx] % 4) < 2) { r = 255; g = 240; b = 200; } else { r = 185; g = 138; b = 46; } break; }
+            case LAVA: { const f = 0.8 + 0.3 * Math.sin(frame * 0.4 + idx * 1.3); r = 224 * f; g = 134 * f; b = 46 * f; break; }
+            case ACID: r = 155; g = 79; b = 214; break;
+            case ASH: { const s = shade[idx]; r = 92 + s * 0.4; g = 85 + s * 0.4; b = 112 + s * 0.4; break; }
+            case STEAM: r = 170; g = 165; b = 200; a = 120; break;
+            case ICE: { const s = shade[idx]; r = 150 + s * 0.5; g = 178 + s * 0.4; b = 214 + s * 0.3; a = 235; break; }
+            case OIL: r = 48; g = 34; b = 64; a = 225; break;
+            case PLANT: { const s = shade[idx]; r = 68 + s * 0.3; g = 110 + s * 0.3; b = 70 + s * 0.3; break; }
+            case GLASS: { const s = shade[idx]; r = 196 + s * 0.3; g = 206 + s * 0.3; b = 224 + s * 0.3; a = 205; break; }
+            case VOID: { const f = 0.6 + 0.4 * Math.sin(frame * 0.15 + idx * 2.1); r = 26 * f + 40 * (1 - f); g = 10 * f; b = 46 * f + 70 * (1 - f); break; }
+            default: r = 10; g = 8; b = 20;
+        }
+        px[p] = r; px[p + 1] = g; px[p + 2] = b; px[p + 3] = a;
     }
-}, { passive: true });
-lookZone.addEventListener('touchmove', e => {
-    for (const t of e.changedTouches) {
-        if (t.identifier !== lookTouchId) continue;
-        const dx = t.clientX - lookLast.x, dy = t.clientY - lookLast.y;
-        lookLast = { x: t.clientX, y: t.clientY };
-        player.yaw -= dx * (sensitivity / 90) * 0.0035;
-        player.pitch -= dy * (sensitivity / 90) * 0.0035;
-        player.pitch = THREE.MathUtils.clamp(player.pitch, -1.45, 1.45);
-    }
-}, { passive: true });
-function endLook(e) {
-    for (const t of e.changedTouches) if (t.identifier === lookTouchId) lookTouchId = null;
+    ctx.putImageData(imgData, 0, 0);
 }
-lookZone.addEventListener('touchend', endLook);
-lookZone.addEventListener('touchcancel', endLook);
 
-// Jump / action buttons
-function bindHold(el, onDown, onUp) {
-    const down = e => { e.preventDefault(); el.classList.add('pressed'); onDown(); };
-    const up = e => { el.classList.remove('pressed'); onUp && onUp(); };
-    el.addEventListener('touchstart', down, { passive: false });
-    el.addEventListener('touchend', up);
-    el.addEventListener('touchcancel', up);
-    el.addEventListener('mousedown', down);
-    el.addEventListener('mouseup', up);
-    el.addEventListener('mouseleave', up);
+// UI: palette
+let selected = 2; // Gold Dust by default
+$('pal-grid').innerHTML = ELEMENTS.map((el, i) => `
+    <div class="pal-item ${i === selected ? 'active' : ''}" data-i="${i}">
+        <div class="pal-swatch" style="background:${el.color}"><span class="pal-key">${el.key}</span></div>
+        <div class="pal-label">${el.label}</div>
+    </div>`).join('');
+function selectElement(i) {
+    selected = i;
+    document.querySelectorAll('.pal-item').forEach(el => el.classList.toggle('active', +el.dataset.i === i));
+    $('status-tool').textContent = ELEMENTS[i].label;
 }
-bindHold($('jump-btn'), () => moveInput.jump = true, () => moveInput.jump = false);
-bindHold($('break-btn'), () => doBreak());
-bindHold($('place-btn'), () => doPlace());
+$('pal-grid').querySelectorAll('.pal-item').forEach(el => el.addEventListener('click', () => selectElement(+el.dataset.i)));
 
-// ══════════════════════════════════════
-// DESKTOP: pointer lock + keyboard + mouse
-// ══════════════════════════════════════
-const lockVeil = $('lock-veil');
-const isDesktop = matchMedia('(hover: hover) and (pointer: fine)').matches;
-if (isDesktop) lockVeil.classList.add('show');
-
-$('lock-go-btn').addEventListener('click', () => canvas.requestPointerLock());
-canvas.addEventListener('click', () => { if (isDesktop && document.pointerLockElement !== canvas) canvas.requestPointerLock(); });
-document.addEventListener('pointerlockchange', () => {
-    lockVeil.classList.toggle('show', isDesktop && document.pointerLockElement !== canvas);
-});
-document.addEventListener('mousemove', e => {
-    if (document.pointerLockElement !== canvas) return;
-    player.yaw -= e.movementX * (sensitivity / 90) * 0.0022;
-    player.pitch -= e.movementY * (sensitivity / 90) * 0.0022;
-    player.pitch = THREE.MathUtils.clamp(player.pitch, -1.45, 1.45);
-});
-canvas.addEventListener('mousedown', e => {
-    if (document.pointerLockElement !== canvas) return;
-    if (e.button === 0) doBreak(); else if (e.button === 2) doPlace();
-});
-canvas.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
-    if (e.repeat) return;
-    switch (e.code) {
-        case 'KeyW': moveInput.forward = true; break;
-        case 'KeyS': moveInput.back = true; break;
-        case 'KeyA': moveInput.left = true; break;
-        case 'KeyD': moveInput.right = true; break;
-        case 'ShiftLeft': moveInput.sprint = true; break;
-        case 'Space': moveInput.jump = true; break;
-        case 'Digit1': case 'Digit2': case 'Digit3': case 'Digit4': case 'Digit5':
-            selectSlot(parseInt(e.code.slice(-1)) - 1); break;
-        case 'Escape': openMenu(); break;
-    }
-});
-document.addEventListener('keyup', e => {
-    switch (e.code) {
-        case 'KeyW': moveInput.forward = false; break;
-        case 'KeyS': moveInput.back = false; break;
-        case 'KeyA': moveInput.left = false; break;
-        case 'KeyD': moveInput.right = false; break;
-        case 'ShiftLeft': moveInput.sprint = false; break;
-        case 'Space': moveInput.jump = false; break;
-    }
+    if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+    const k = e.key.toUpperCase();
+    const idx = ELEMENTS.findIndex(el => el.key === k);
+    if (idx !== -1) selectElement(idx);
 });
 
-// ══════════════════════════════════════
-// HOTBAR / INVENTORY
-// ══════════════════════════════════════
-const inventory = BLOCK_TYPES.map(() => 0);
-let activeSlot = 1; // start on Deepstone-ish; will pick a sensible default below
-
-function renderHotbar() {
-    $('hotbar').innerHTML = BLOCK_TYPES.map((bt, i) => `
-        <div class="slot ${i === activeSlot ? 'active' : ''}" data-i="${i}">
-            <div class="face" style="background:#${bt.color.toString(16).padStart(6,'0')}"></div>
-            <span class="count">${inventory[i]}</span>
-        </div>`).join('');
-    $('hotbar').querySelectorAll('.slot').forEach(el => el.addEventListener('click', () => selectSlot(+el.dataset.i)));
+// UI: topbar controls
+let isPaused = false;
+function setPaused(p) {
+    isPaused = p;
+    $('play-btn').classList.toggle('on', !isPaused);
+    $('play-btn').innerHTML = icon(isPaused ? 'play' : 'pause') + `<span class="lbl">${isPaused ? 'Play' : 'Pause'}</span>`;
 }
-function selectSlot(i) {
-    if (i < 0 || i >= BLOCK_TYPES.length) return;
-    activeSlot = i;
-    renderHotbar();
-}
-function addToInventory(typeId, n = 1) {
-    const i = TYPE_BY_ID[typeId];
-    inventory[i] += n;
-    renderHotbar();
-}
-renderHotbar();
-
-// ══════════════════════════════════════
-// RAYCAST / BREAK / PLACE
-// ══════════════════════════════════════
-const raycaster = new THREE.Raycaster();
-raycaster.far = 6.5;
-const highlight = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new THREE.BoxGeometry(1.002, 1.002, 1.002)),
-    new THREE.LineBasicMaterial({ color: 0xe8c97a })
-);
-highlight.visible = false;
-scene.add(highlight);
-
-function castTarget() {
-    raycaster.set(camera.position, camera.getWorldDirection(new THREE.Vector3()));
-    const hits = raycaster.intersectObjects(meshes, false);
-    if (!hits.length) return null;
-    const hit = hits[0];
-    const normal = hit.face.normal.clone();
-    const center = new THREE.Vector3();
-    hit.object.getMatrixAt(hit.instanceId, dummy.matrix);
-    dummy.matrix.decompose(center, dummy.quaternion, dummy.scale);
-    const bx = Math.round(center.x - 0.5), by = Math.round(center.y - 0.5), bz = Math.round(center.z - 0.5);
-    return { x: bx, y: by, z: bz, normal };
-}
-
-function doBreak() {
-    const t = castTarget();
-    if (!t) return;
-    const removedType = removeVoxel(t.x, t.y, t.z);
-    if (removedType) {
-        addToInventory(removedType, 1);
-        if ('vibrate' in navigator) navigator.vibrate(12);
-    }
-}
-function doPlace() {
-    const t = castTarget();
-    if (!t) return;
-    const bt = BLOCK_TYPES[activeSlot];
-    if (inventory[activeSlot] <= 0) { showHint('No ' + bt.name + ' left'); return; }
-    const px = t.x + Math.round(t.normal.x), py = t.y + Math.round(t.normal.y), pz = t.z + Math.round(t.normal.z);
-    // Don't place inside the player
-    const dist = Math.hypot(px + 0.5 - player.x, pz + 0.5 - player.z);
-    if (dist < 0.6 && py >= Math.floor(player.y) && py <= Math.floor(player.y + 1.3)) return;
-    if (placeVoxel(px, py, pz, bt.id)) {
-        inventory[activeSlot]--;
-        renderHotbar();
-        if ('vibrate' in navigator) navigator.vibrate(12);
-    }
-}
-
-// ══════════════════════════════════════
-// MENU
-// ══════════════════════════════════════
-const backdrop = $('backdrop'), menuSheet = $('menu-sheet');
-function openMenu() {
-    menuSheet.classList.add('show'); backdrop.classList.add('show');
-    if (document.pointerLockElement === canvas) document.exitPointerLock();
-}
-function closeMenu() { menuSheet.classList.remove('show'); backdrop.classList.remove('show'); }
-$('menu-btn').addEventListener('click', openMenu);
-$('menu-close').addEventListener('click', closeMenu);
-$('resume-btn').addEventListener('click', closeMenu);
-backdrop.addEventListener('click', closeMenu);
-$('sens-slider').addEventListener('input', e => sensitivity = +e.target.value);
-$('fog-slider').addEventListener('input', e => {
-    const d = +e.target.value;
-    scene.fog.near = d * 0.2;
-    scene.fog.far = d;
+$('play-btn').addEventListener('click', () => setPaused(!isPaused));
+$('step-btn').addEventListener('click', () => { step(); render(); });
+$('clear-btn').addEventListener('click', () => {
+    grid.fill(EMPTY); life.fill(0); shade.fill(0); fromWood.fill(0); fuse.fill(-1); pendingExplosions = [];
+    render();
 });
-$('reset-btn').addEventListener('click', () => { closeMenu(); location.reload(); });
 
-// ══════════════════════════════════════
+function syncBrush(v) {
+    $('brush-val').textContent = v; $('brush-val-m').textContent = v; $('status-brush').textContent = v;
+    $('brush-slider').value = v; $('brush-slider-m').value = v;
+    updateCursorSize();
+}
+$('brush-slider').addEventListener('input', e => syncBrush(+e.target.value));
+$('brush-slider-m').addEventListener('input', e => syncBrush(+e.target.value));
+
+const paletteEl = $('palette'), paletteBackdrop = $('palette-backdrop');
+$('palette-toggle').addEventListener('click', () => {
+    const open = paletteEl.classList.toggle('open');
+    paletteBackdrop.classList.toggle('show', open);
+});
+paletteBackdrop.addEventListener('click', () => { paletteEl.classList.remove('open'); paletteBackdrop.classList.remove('show'); });
+
+// PAINTING (pointer events — works for mouse + touch)
+const cursorEl = $('brush-cursor');
+let isDrawing = false;
+let lastCell = null;
+
+function displayScale() {
+    const rect = canvas.getBoundingClientRect();
+    return rect.width / COLS;
+}
+function updateCursorSize() {
+    const d = (+$('brush-slider').value * 2 + 1) * displayScale();
+    cursorEl.style.width = d + 'px';
+    cursorEl.style.height = d + 'px';
+}
+function resizeCanvasDisplay() {
+    const wrap = $('canvas-wrap').getBoundingClientRect();
+    const pad = 24;
+    const scale = Math.max(1, Math.min((wrap.width - pad) / COLS, (wrap.height - pad) / ROWS));
+    canvas.style.width = Math.floor(COLS * scale) + 'px';
+    canvas.style.height = Math.floor(ROWS * scale) + 'px';
+    updateCursorSize();
+}
+window.addEventListener('resize', resizeCanvasDisplay);
+
+function cellFromEvent(e) {
+    const rect = canvas.getBoundingClientRect();
+    const cx = Math.floor((e.clientX - rect.left) / rect.width * COLS);
+    const cy = Math.floor((e.clientY - rect.top) / rect.height * ROWS);
+    return { cx, cy };
+}
+
+function applyTool(idx, isEraser, elType) {
+    const cur = grid[idx];
+    if (isEraser) { grid[idx] = EMPTY; life[idx] = 0; fromWood[idx] = 0; fuse[idx] = -1; return; }
+    if (elType === FIRE || elType === LAVA) {
+        if (cur === TNT) { if (fuse[idx] < 0) fuse[idx] = 12; return; }
+        if (cur === EMPTY || cur === WOOD || cur === ASH || cur === PLANT || cur === OIL) {
+            const leavesAsh = (cur === WOOD || cur === PLANT);
+            setCell(idx, elType);
+            if (leavesAsh) fromWood[idx] = 1;
+            return;
+        }
+        if (cur === elType) { life[idx] = rnd(45, 85); return; }
+        return;
+    }
+    if (cur === EMPTY) setCell(idx, elType);
+}
+
+function stampAt(cx, cy) {
+    const radius = +$('brush-slider').value;
+    const el = ELEMENTS[selected];
+    const r2 = radius * radius;
+    for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+            if (dx * dx + dy * dy > r2) continue;
+            const nx = cx + dx, ny = cy + dy;
+            if (!inBounds(nx, ny)) continue;
+            applyTool(ny * COLS + nx, el.eraser, el.type);
+        }
+    }
+}
+function stampLine(x0, y0, x1, y1) {
+    const steps = Math.max(1, Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)));
+    for (let s = 0; s <= steps; s++) {
+        const t = s / steps;
+        stampAt(Math.round(x0 + (x1 - x0) * t), Math.round(y0 + (y1 - y0) * t));
+    }
+}
+
+canvas.addEventListener('pointerdown', e => {
+    canvas.setPointerCapture(e.pointerId);
+    isDrawing = true;
+    const { cx, cy } = cellFromEvent(e);
+    stampAt(cx, cy);
+    lastCell = { cx, cy };
+});
+canvas.addEventListener('pointermove', e => {
+    const wrapRect = $('canvas-wrap').getBoundingClientRect();
+    cursorEl.style.left = (e.clientX - wrapRect.left) + 'px';
+    cursorEl.style.top = (e.clientY - wrapRect.top) + 'px';
+    if (!isDrawing) return;
+    const { cx, cy } = cellFromEvent(e);
+    if (lastCell) stampLine(lastCell.cx, lastCell.cy, cx, cy); else stampAt(cx, cy);
+    lastCell = { cx, cy };
+});
+canvas.addEventListener('pointerup', e => { isDrawing = false; lastCell = null; try { canvas.releasePointerCapture(e.pointerId); } catch {} });
+canvas.addEventListener('pointercancel', () => { isDrawing = false; lastCell = null; });
+canvas.addEventListener('pointerenter', () => { if (matchMedia('(hover: hover) and (pointer: fine)').matches) cursorEl.style.display = 'block'; });
+canvas.addEventListener('pointerleave', () => { cursorEl.style.display = 'none'; });
+
+// SEED A STARTER SCENE
+function seedWorld() {
+    for (let x = 0; x < COLS; x++) {
+        const h = 14 + Math.round(Math.sin(x * 0.05) * 3);
+        for (let y = ROWS - h; y < ROWS; y++) setCell(y * COLS + x, STONE);
+    }
+    for (let i = 0; i < 40; i++) {
+        const x = rnd(10, COLS - 10), y = rnd(ROWS - 40, ROWS - 16);
+        setCell(y * COLS + x, SAND);
+    }
+    const wx = Math.floor(COLS * 0.3);
+    for (let y = ROWS - 26; y < ROWS - 16; y++) setCell(y * COLS + wx, WOOD);
+    const tx = Math.floor(COLS * 0.6);
+    setCell((ROWS - 17) * COLS + tx, TNT);
+}
+
 // MAIN LOOP
-// ══════════════════════════════════════
-const clock = new THREE.Clock();
-function tick() {
-    requestAnimationFrame(tick);
-    const dt = Math.min(clock.getDelta(), 0.05);
-    updatePlayer(dt);
-    const t = castTarget();
-    if (t) {
-        highlight.position.set(t.x + 0.5, t.y + 0.5, t.z + 0.5);
-        highlight.visible = true;
-    } else {
-        highlight.visible = false;
-    }
-    renderer.render(scene, camera);
+function loop() {
+    requestAnimationFrame(loop);
+    if (!isPaused) step();
+    render();
 }
 
-// ══════════════════════════════════════
-// BOOT
-// ══════════════════════════════════════
-(async function boot() {
-    await generateWorld();
-    player.y = findSpawnHeight();
-    // Give the player a starting handful so building isn't blocked on day one
-    inventory[TYPE_BY_ID.turf] = 24;
-    inventory[TYPE_BY_ID.stone] = 24;
-    renderHotbar();
-    selectSlot(0);
-    $('loading').classList.add('hide');
-    setTimeout(() => showHint(isDesktop ? 'Click to look around, then dig and build' : 'Drag to look, joystick to move, dig and build'), 700);
-    tick();
-})();
+seedWorld();
+resizeCanvasDisplay();
+selectElement(selected);
+loop();
 </script>
 </body>
 </html>
