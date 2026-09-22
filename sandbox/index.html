@@ -183,7 +183,7 @@ button { font-family: inherit; color: inherit; }
             </div>
             <div class="pal-grid" id="pal-grid"></div>
             <div class="pal-tip">
-                Paint <b>Grimwood</b> or <b>Arcane Charge</b>, then touch it with <b>Wildfire</b> or <b>Molten Gold</b> and watch what happens. Sand and liquids fall — everything obeys gravity.
+                Everything falls now — sand, acid, oil, even TNT if it's unsupported. Line up <b>Gunpowder</b> for an instant chain-reaction fuse, or drop a <b>Nuke</b> and stand back. <b>Spark</b> ignites anything flammable on contact.
                 <br><br><a href="https://wizardecosystem.dev">Back to Wizard Ecosystem</a>
             </div>
         </div>
@@ -212,25 +212,33 @@ document.querySelectorAll('[data-icon]').forEach(el => el.insertAdjacentHTML('af
 
 // CELL TYPES
 const EMPTY=0, STONE=1, SAND=2, WATER=3, WOOD=4, FIRE=5, TNT=6, LAVA=7, ACID=8, ASH=9, STEAM=10,
-      ICE=11, OIL=12, PLANT=13, GLASS=14, VOID=15;
+      ICE=11, OIL=12, PLANT=13, GLASS=14, VOID=15, LEAVES=16, NUKE=17, GUNPOWDER=18, METAL=19,
+      SPARK=20, SNOW=21, GAS=22;
 
 const ELEMENTS = [
-    { id: 'eraser', type: EMPTY, label: 'Eraser',        color: '#0e0b1e', eraser: true, key: '0' },
-    { id: 'stone',  type: STONE, label: 'Deepstone',     color: '#342d5c', key: '1' },
-    { id: 'sand',   type: SAND,  label: 'Gold Dust',     color: '#c9a84c', key: '2' },
-    { id: 'water',  type: WATER, label: 'Moonwater',     color: '#8f83c9', key: '3' },
-    { id: 'wood',   type: WOOD,  label: 'Grimwood',      color: '#4a3a2e', key: '4' },
-    { id: 'fire',   type: FIRE,  label: 'Wildfire',      color: '#e8934a', key: '5' },
-    { id: 'tnt',    type: TNT,   label: 'Arcane Charge', color: '#b98a2e', key: '6' },
-    { id: 'lava',   type: LAVA,  label: 'Molten Gold',   color: '#e0862e', key: '7' },
-    { id: 'acid',   type: ACID,  label: 'Void Acid',     color: '#9b4fd6', key: '8' },
-    { id: 'ash',    type: ASH,   label: 'Ash',           color: '#5c5570', key: '9' },
-    { id: 'steam',  type: STEAM, label: 'Steam',         color: '#aaa5c8', key: 'S' },
-    { id: 'ice',    type: ICE,   label: 'Rime Ice',      color: '#96b2d6', key: 'I' },
-    { id: 'oil',    type: OIL,   label: 'Shadow Oil',    color: '#302246', key: 'O' },
-    { id: 'plant',  type: PLANT, label: 'Wyrmvine',      color: '#446e48', key: 'P' },
-    { id: 'glass',  type: GLASS, label: 'Arcane Glass',  color: '#c4cee2', key: 'G' },
-    { id: 'void',   type: VOID,  label: 'Void Rift',     color: '#1a0a2e', key: 'V' }
+    { id: 'eraser',    type: EMPTY,     label: 'Eraser',     color: '#0e0b1e', eraser: true, key: '0' },
+    { id: 'stone',     type: STONE,     label: 'Stone',      color: '#342d5c', key: '1' },
+    { id: 'sand',      type: SAND,      label: 'Sand',       color: '#c9a84c', key: '2' },
+    { id: 'water',     type: WATER,     label: 'Water',      color: '#8f83c9', key: '3' },
+    { id: 'wood',      type: WOOD,      label: 'Wood',       color: '#4a3a2e', key: '4' },
+    { id: 'fire',      type: FIRE,      label: 'Fire',       color: '#e8934a', key: '5' },
+    { id: 'tnt',       type: TNT,       label: 'TNT',        color: '#b98a2e', key: '6' },
+    { id: 'lava',      type: LAVA,      label: 'Molten Gold',color: '#e0862e', key: '7' },
+    { id: 'acid',      type: ACID,      label: 'Acid',       color: '#9b4fd6', key: '8' },
+    { id: 'ash',       type: ASH,       label: 'Ash',        color: '#5c5570', key: '9' },
+    { id: 'steam',     type: STEAM,     label: 'Steam',      color: '#aaa5c8', key: 'S' },
+    { id: 'ice',       type: ICE,       label: 'Ice',        color: '#96b2d6', key: 'I' },
+    { id: 'oil',       type: OIL,       label: 'Oil',        color: '#302246', key: 'O' },
+    { id: 'vine',      type: PLANT,     label: 'Vine',       color: '#446e48', key: 'P' },
+    { id: 'glass',     type: GLASS,     label: 'Glass',      color: '#c4cee2', key: 'G' },
+    { id: 'void',      type: VOID,      label: 'Void',       color: '#1a0a2e', key: 'V' },
+    { id: 'leaves',    type: LEAVES,    label: 'Leaves',     color: '#4f7a4a', key: 'L' },
+    { id: 'nuke',      type: NUKE,      label: 'Nuke',       color: '#d94a2e', key: 'N' },
+    { id: 'gunpowder', type: GUNPOWDER, label: 'Gunpowder',  color: '#2e2a3c', key: 'U' },
+    { id: 'metal',     type: METAL,     label: 'Metal',      color: '#8a92a8', key: 'M' },
+    { id: 'spark',     type: SPARK,     label: 'Spark',      color: '#fff2c9', key: 'K' },
+    { id: 'snow',      type: SNOW,      label: 'Snow',       color: '#e6e2f2', key: 'W' },
+    { id: 'gas',       type: GAS,       label: 'Poison Gas', color: '#8a9e4a', key: 'X' }
 ];
 
 // GRID
@@ -254,8 +262,8 @@ function rnd(a, b) { return a + ((Math.random() * (b - a + 1)) | 0); }
 
 function setCell(idx, t) {
     grid[idx] = t;
-    life[idx] = t === FIRE ? rnd(45, 85) : t === STEAM ? rnd(30, 60) : 0;
-    shade[idx] = (t === SAND || t === STONE || t === WOOD || t === ASH || t === ICE || t === GLASS) ? rnd(-15, 15) : 0;
+    life[idx] = t === FIRE ? rnd(45, 85) : (t === STEAM || t === GAS) ? rnd(30, 60) : t === SPARK ? 4 : 0;
+    shade[idx] = (t === SAND || t === STONE || t === WOOD || t === ASH || t === ICE || t === GLASS || t === GUNPOWDER || t === METAL || t === SNOW) ? rnd(-15, 15) : 0;
     fromWood[idx] = 0;
     fuse[idx] = -1;
 }
@@ -293,7 +301,7 @@ function updateLiquid(x, y, i, t) {
             const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
             const nt = grid[ni];
             if ((nt === WOOD || nt === PLANT) && Math.random() < 0.25) { setCell(ni, FIRE); fromWood[ni] = 1; }
-            else if (nt === OIL && Math.random() < 0.6) { setCell(ni, FIRE); }
+            else if ((nt === OIL || nt === LEAVES) && Math.random() < 0.6) { setCell(ni, FIRE); }
             else if (nt === SAND && Math.random() < 0.06) { setCell(ni, GLASS); shade[ni] = rnd(-15, 15); }
             else if (nt === ICE && Math.random() < 0.4) { setCell(ni, WATER); }
             else if (nt === WATER && Math.random() < 0.5) {
@@ -315,7 +323,7 @@ function updateLiquid(x, y, i, t) {
             const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
             const nt = grid[ni];
             if (nt !== EMPTY && nt !== ACID) {
-                const p = nt === STONE ? 0.045 : 0.32;
+                const p = (nt === STONE || nt === METAL) ? 0.045 : 0.32;
                 if (Math.random() < p) {
                     grid[ni] = EMPTY; fromWood[ni] = 0;
                     if (Math.random() < 0.07) { grid[i] = EMPTY; processed[i] = 1; return; }
@@ -362,7 +370,7 @@ function updateFire(x, y, i) {
         const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
         const nt = grid[ni];
         if ((nt === WOOD || nt === PLANT) && Math.random() < 0.10) { setCell(ni, FIRE); fromWood[ni] = 1; }
-        else if (nt === OIL && Math.random() < 0.5) { setCell(ni, FIRE); }
+        else if ((nt === OIL || nt === LEAVES) && Math.random() < 0.5) { setCell(ni, FIRE); }
         else if (nt === SAND && Math.random() < 0.02) { setCell(ni, GLASS); shade[ni] = rnd(-15, 15); }
         else if (nt === WATER) {
             if (Math.random() < 0.4) setCell(i, STEAM); else grid[i] = EMPTY;
@@ -453,10 +461,113 @@ function updateVoid(x, y, i) {
     processed[i] = 1;
 }
 
+function updateLeaves(x, y, i) {
+    if (Math.random() < 0.25) { processed[i] = 1; return; } // flutter — pause a beat so it drifts rather than drops
+    const order = Math.random() < 0.5 ? [-1, 1] : [1, -1];
+    for (const dxo of order) {
+        if (Math.random() < 0.6) continue; // bias toward diagonal sway over straight fall
+        const di = tryIdx(x + dxo, y + 1);
+        if (di !== -1 && !processed[di]) {
+            const dt = grid[di];
+            if (dt === EMPTY || dt === WATER || dt === ACID) { swap(i, di); return; }
+        }
+    }
+    const down = tryIdx(x, y + 1);
+    if (down !== -1 && !processed[down]) {
+        const dt = grid[down];
+        if (dt === EMPTY || dt === WATER || dt === ACID) { swap(i, down); return; }
+    }
+    for (const dxo of order) {
+        const di = tryIdx(x + dxo, y + 1);
+        if (di !== -1 && !processed[di]) {
+            const dt = grid[di];
+            if (dt === EMPTY || dt === WATER || dt === ACID) { swap(i, di); return; }
+        }
+    }
+    processed[i] = 1;
+}
+
+function updateSnow(x, y, i) {
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if ((nt === FIRE || nt === LAVA) && Math.random() < 0.2) { grid[i] = WATER; life[i] = 0; shade[i] = 0; processed[i] = 1; return; }
+    }
+    updatePowder(x, y, i);
+}
+
+function updateGunpowder(x, y, i) {
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if ((nt === FIRE || nt === LAVA || nt === SPARK) && Math.random() < 0.9) {
+            pendingExplosions.push({ i, r: 3 });
+            processed[i] = 1;
+            return;
+        }
+    }
+    updatePowder(x, y, i);
+}
+
+function updateMetal(x, y, i) {
+    const down = tryIdx(x, y + 1);
+    if (down !== -1 && grid[down] === EMPTY && !processed[down]) { swap(i, down); return; }
+    processed[i] = 1;
+}
+
+function updateSpark(x, y, i) {
+    life[i]--;
+    if (life[i] <= 0) { grid[i] = EMPTY; processed[i] = 1; return; }
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if (nt === WOOD || nt === PLANT) { setCell(ni, FIRE); fromWood[ni] = 1; }
+        else if (nt === OIL || nt === LEAVES) { setCell(ni, FIRE); }
+        else if (nt === GUNPOWDER) { pendingExplosions.push({ i: ni, r: 3 }); }
+        else if (nt === TNT && fuse[ni] < 0) { fuse[ni] = 8; }
+        else if (nt === NUKE && fuse[ni] < 0) { fuse[ni] = 20; }
+    }
+    processed[i] = 1;
+}
+
+function updateGas(x, y, i) {
+    life[i]--;
+    if (life[i] <= 0) { grid[i] = EMPTY; processed[i] = 1; return; }
+    for (const [dx, dy] of ORTHO) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if ((nt === WOOD || nt === PLANT || nt === LEAVES) && Math.random() < 0.05) { grid[ni] = EMPTY; fromWood[ni] = 0; }
+    }
+    const choices = [[0, -1], [-1, -1], [1, -1], [-1, 0], [1, 0]];
+    const [dx, dy] = choices[(Math.random() * choices.length) | 0];
+    const ni = tryIdx(x + dx, y + dy);
+    if (ni !== -1 && grid[ni] === EMPTY && !processed[ni]) { swap(i, ni); return; }
+    processed[i] = 1;
+}
+
+function updateNuke(x, y, i) {
+    if (fuse[i] >= 0) {
+        fuse[i]--;
+        if (fuse[i] < 0) pendingExplosions.push({ i, r: 24 });
+        processed[i] = 1;
+        return;
+    }
+    for (const [dx, dy] of NEI8) {
+        const ni = tryIdx(x + dx, y + dy); if (ni === -1) continue;
+        const nt = grid[ni];
+        if (nt === FIRE || nt === LAVA || nt === SPARK) { fuse[i] = 24; break; }
+    }
+    if (grid[i] === NUKE && fuse[i] < 0) {
+        const down = tryIdx(x, y + 1);
+        if (down !== -1 && grid[down] === EMPTY && !processed[down]) { swap(i, down); return; }
+    }
+    processed[i] = 1;
+}
+
 function updateTNT(x, y, i) {
     if (fuse[i] >= 0) {
         fuse[i]--;
-        if (fuse[i] < 0) pendingExplosions.push(i);
+        if (fuse[i] < 0) pendingExplosions.push({ i, r: 8 });
         processed[i] = 1;
         return;
     }
@@ -472,9 +583,9 @@ function updateTNT(x, y, i) {
     processed[i] = 1;
 }
 
-function explode(ci) {
+function explode(entry) {
+    const ci = entry.i, R = entry.r;
     const cy = (ci / COLS) | 0, cx = ci - cy * COLS;
-    const R = 8;
     for (let dy = -R; dy <= R; dy++) {
         for (let dx = -R; dx <= R; dx++) {
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -483,19 +594,25 @@ function explode(ci) {
             if (!inBounds(nx, ny)) continue;
             const ni = ny * COLS + nx;
             const nt = grid[ni];
-            if (nt === STONE) {
-                if (dist < R * 0.5 && Math.random() < 0.8) { grid[ni] = EMPTY; shade[ni] = 0; }
+            if (nt === STONE || nt === METAL) {
+                const toughness = nt === METAL ? 0.32 : 0.5;
+                const chance = nt === METAL ? 0.35 : 0.8;
+                if (dist < R * toughness && Math.random() < chance) { grid[ni] = EMPTY; shade[ni] = 0; }
             } else if (nt === TNT) {
                 if (ni !== ci && fuse[ni] < 0) fuse[ni] = rnd(3, 7);
+            } else if (nt === NUKE) {
+                if (ni !== ci && fuse[ni] < 0) fuse[ni] = rnd(6, 12);
+            } else if (nt === GUNPOWDER) {
+                if (ni !== ci) pendingExplosions.push({ i: ni, r: 3 });
             } else if (dist < R * 0.4) {
-                grid[ni] = EMPTY; fromWood[ni] = 0; life[ni] = 0;
+                grid[ni] = EMPTY; fromWood[ni] = 0; life[ni] = 0; fuse[ni] = -1;
             } else {
                 grid[ni] = FIRE; life[ni] = rnd(15, 35); fromWood[ni] = 0; fuse[ni] = -1;
             }
         }
     }
     grid[ci] = EMPTY; fuse[ci] = -1;
-    if ('vibrate' in navigator) navigator.vibrate(30);
+    if ('vibrate' in navigator) navigator.vibrate(R > 15 ? 60 : 30);
 }
 
 function processCell(x, y) {
@@ -503,16 +620,22 @@ function processCell(x, y) {
     if (processed[i]) return;
     switch (grid[i]) {
         case SAND: case ASH: updatePowder(x, y, i); break;
+        case SNOW: updateSnow(x, y, i); break;
+        case LEAVES: updateLeaves(x, y, i); break;
+        case GUNPOWDER: updateGunpowder(x, y, i); break;
         case WATER: case LAVA: case ACID: case OIL: updateLiquid(x, y, i, grid[i]); break;
         case FIRE: updateFire(x, y, i); break;
         case STEAM: updateSteam(x, y, i); break;
+        case GAS: updateGas(x, y, i); break;
+        case SPARK: updateSpark(x, y, i); break;
         case TNT: updateTNT(x, y, i); break;
+        case NUKE: updateNuke(x, y, i); break;
         case WOOD: updateWood(x, y, i); break;
         case ICE: updateIce(x, y, i); break;
         case GLASS: updateGlass(x, y, i); break;
+        case METAL: updateMetal(x, y, i); break;
         case PLANT: updatePlant(x, y, i); break;
         case VOID: updateVoid(x, y, i); break;
-        default: processed[i] = 1;
     }
 }
 
@@ -558,6 +681,13 @@ function render() {
             case PLANT: { const s = shade[idx]; r = 68 + s * 0.3; g = 110 + s * 0.3; b = 70 + s * 0.3; break; }
             case GLASS: { const s = shade[idx]; r = 196 + s * 0.3; g = 206 + s * 0.3; b = 224 + s * 0.3; a = 205; break; }
             case VOID: { const f = 0.6 + 0.4 * Math.sin(frame * 0.15 + idx * 2.1); r = 26 * f + 40 * (1 - f); g = 10 * f; b = 46 * f + 70 * (1 - f); break; }
+            case LEAVES: { const s = shade[idx]; r = 74 + s * 0.3; g = 122 + s * 0.3; b = 70 + s * 0.3; break; }
+            case NUKE: { if (fuse[idx] >= 0 && (fuse[idx] % 4) < 2) { r = 255; g = 255; b = 255; } else { const f = 0.85 + 0.15 * Math.sin(frame * 0.3 + idx); r = 217 * f; g = 74 * f; b = 46 * f; } break; }
+            case GUNPOWDER: { const s = shade[idx]; r = 46 + s * 0.3; g = 42 + s * 0.3; b = 60 + s * 0.3; break; }
+            case METAL: { const s = shade[idx]; r = 138 + s * 0.4; g = 146 + s * 0.4; b = 168 + s * 0.4; break; }
+            case SPARK: { const f = life[idx] / 4; r = 255 * f + 120 * (1 - f); g = 242 * f + 90 * (1 - f); b = 201 * f + 60 * (1 - f); break; }
+            case SNOW: { const s = shade[idx]; r = 230 + s * 0.3; g = 226 + s * 0.3; b = 242 + s * 0.3; a = 245; break; }
+            case GAS: r = 138; g = 158; b = 74; a = 150; break;
             default: r = 10; g = 8; b = 20;
         }
         px[p] = r; px[p + 1] = g; px[p + 2] = b; px[p + 3] = a;
@@ -651,7 +781,9 @@ function applyTool(idx, isEraser, elType) {
     if (isEraser) { grid[idx] = EMPTY; life[idx] = 0; fromWood[idx] = 0; fuse[idx] = -1; return; }
     if (elType === FIRE || elType === LAVA) {
         if (cur === TNT) { if (fuse[idx] < 0) fuse[idx] = 12; return; }
-        if (cur === EMPTY || cur === WOOD || cur === ASH || cur === PLANT || cur === OIL) {
+        if (cur === NUKE) { if (fuse[idx] < 0) fuse[idx] = 24; return; }
+        if (cur === GUNPOWDER) { pendingExplosions.push({ i: idx, r: 3 }); return; }
+        if (cur === EMPTY || cur === WOOD || cur === ASH || cur === PLANT || cur === OIL || cur === LEAVES) {
             const leavesAsh = (cur === WOOD || cur === PLANT);
             setCell(idx, elType);
             if (leavesAsh) fromWood[idx] = 1;
