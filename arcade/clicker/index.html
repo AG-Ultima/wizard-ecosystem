@@ -1,0 +1,1361 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Ultimate Clicker — Wizard Arcade</title><style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+:root{--bg:#080612;--bg2:#0e0b1e;--card:#13102a;--card2:#171333;--gold:#c9a84c;--gold2:#e8c97a;--violet:#7c5cbf;--violet2:#9b7de0;--silver:#d4d0e8;--muted:#8f8aa8;--line:rgba(201,168,76,.22);--glass:rgba(255,255,255,.035);--accent:#e8c97a;--accent-2:#7c5cbf;--infinity:#c26cff;--shadow:0 20px 60px rgba(0,0,0,.45);--btn-grad:linear-gradient(135deg,#e8c97a,#c9a84c);--btn-hover:linear-gradient(135deg,#f2d992,#d8b75c)}
+*{box-sizing:border-box;font-family:'DM Sans',system-ui,sans-serif}html{background:var(--bg)}body{margin:0;min-height:100vh;color:var(--silver);background:radial-gradient(circle at 15% 10%,rgba(124,92,191,.16),transparent 30%),radial-gradient(circle at 85% 20%,rgba(201,168,76,.10),transparent 26%),linear-gradient(180deg,#080612,#0b0818 45%,#080612);overflow-x:hidden}
+body:before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.5;background-image:radial-gradient(circle,rgba(232,201,122,.7) 1px,transparent 1px),radial-gradient(circle,rgba(155,125,224,.45) 1px,transparent 1px);background-size:97px 97px,157px 157px;background-position:12px 21px,73px 42px;mask-image:linear-gradient(to bottom,black,transparent 85%)}
+body:after{content:'';position:fixed;width:500px;height:500px;left:-240px;top:25%;border-radius:50%;background:rgba(124,92,191,.10);filter:blur(80px);pointer-events:none}.container{position:relative;z-index:1;max-width:1380px;margin:0 auto;padding:28px 28px 50px}
+header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:22px;padding:0 0 18px;border-bottom:1px solid var(--line)}.logo{display:flex;align-items:center;gap:14px}.logo-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#120e1e;font-family:'Cormorant Garamond',serif;font-size:25px;font-weight:700;background:radial-gradient(circle at 35% 30%,#f3d994,#c9a84c 62%,#8b6b24);box-shadow:0 0 28px rgba(201,168,76,.22);border:1px solid rgba(232,201,122,.65)}h1{margin:0;font-family:'Cormorant Garamond',serif;font-size:34px;line-height:1;color:var(--gold2);letter-spacing:.02em}.logo-sub{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+.account-info{display:flex;align-items:center;gap:10px;background:rgba(19,16,42,.8);border:1px solid var(--line);padding:7px 12px;border-radius:14px;box-shadow:var(--shadow);backdrop-filter:blur(14px)}.account-avatar{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#e8c97a,#7c5cbf);display:flex;align-items:center;justify-content:center;font-weight:800;color:#100c1b}.account-details{display:flex;flex-direction:column}.account-name{font-weight:700;font-size:13px}.account-level{font-size:11px;color:var(--muted)}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}.btn,.buy-btn,.logout-btn{border:1px solid rgba(232,201,122,.35);background:rgba(201,168,76,.08);color:var(--gold2);padding:9px 13px;border-radius:11px;font-weight:700;cursor:pointer;transition:.18s ease;box-shadow:0 8px 24px rgba(0,0,0,.16)}.btn:hover,.buy-btn:hover,.logout-btn:hover{transform:translateY(-2px);border-color:rgba(232,201,122,.7);background:rgba(201,168,76,.15);box-shadow:0 10px 28px rgba(124,92,191,.16)}.btn:active,.buy-btn:active{transform:translateY(0) scale(.98)}
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.stat-card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(23,19,51,.88),rgba(13,10,29,.9));border:1px solid var(--line);padding:15px 17px;border-radius:16px;box-shadow:var(--shadow);backdrop-filter:blur(12px)}.stat-card:after{content:'';position:absolute;right:-25px;bottom:-35px;width:90px;height:90px;border-radius:50%;background:rgba(124,92,191,.12);filter:blur(12px)}.stat-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}.stat-value{font-family:'Cormorant Garamond',serif;font-size:29px;font-weight:700;color:#f0e7ca}
+.game-area{display:grid;grid-template-columns:minmax(0,2fr) minmax(320px,1fr);gap:16px}.clicker-section,.panel-card{background:linear-gradient(145deg,rgba(19,16,42,.93),rgba(12,9,27,.94));border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);backdrop-filter:blur(16px)}.clicker-section{padding:18px}.big-button{min-height:390px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:17px;border:1px solid rgba(232,201,122,.25);background:radial-gradient(circle at center,rgba(124,92,191,.18),transparent 35%),radial-gradient(circle at 50% 45%,rgba(201,168,76,.08),transparent 48%),linear-gradient(180deg,rgba(255,255,255,.025),rgba(0,0,0,.18));box-shadow:inset 0 0 80px rgba(124,92,191,.05),0 20px 60px rgba(0,0,0,.35);transition:transform .08s ease,border-color .2s,box-shadow .2s}.big-button:hover{border-color:rgba(232,201,122,.48);box-shadow:inset 0 0 100px rgba(124,92,191,.08),0 24px 80px rgba(0,0,0,.42)}.big-button:active{transform:scale(.988)}.big-button:before{content:'✦';position:absolute;top:18px;left:22px;color:var(--gold);font-size:12px;opacity:.65}.big-button:after{content:'✧';position:absolute;right:24px;bottom:18px;color:var(--violet2);font-size:14px;opacity:.6}.arcane-ring{width:205px;height:205px;border-radius:50%;border:1px solid rgba(232,201,122,.48);box-shadow:0 0 0 12px rgba(124,92,191,.035),0 0 55px rgba(124,92,191,.16),inset 0 0 45px rgba(201,168,76,.06);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:18px}.arcane-ring:before,.arcane-ring:after{content:'';position:absolute;border-radius:50%;inset:17px;border:1px dashed rgba(232,201,122,.3);animation:spin 18s linear infinite}.arcane-ring:after{inset:36px;border-style:solid;border-color:rgba(124,92,191,.3);animation-direction:reverse;animation-duration:12s}.arcane-core{width:108px;height:108px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:42px;color:#f4dda0;background:radial-gradient(circle,#c9a84c 0%,#7c5cbf 48%,#241a45 70%,transparent 72%);text-shadow:0 0 22px rgba(232,201,122,.75);box-shadow:0 0 40px rgba(124,92,191,.34)}.click-value{font-family:'Cormorant Garamond',serif;font-size:62px;font-weight:700;line-height:.9;color:#f3ead0;text-shadow:0 0 28px rgba(232,201,122,.16)}.click-power{font-size:13px;color:var(--muted);margin-top:8px}.level-bar{width:100%;height:24px;background:rgba(255,255,255,.035);border:1px solid rgba(232,201,122,.13);border-radius:99px;overflow:hidden;position:relative;display:flex;align-items:center}.big-button>.level-bar{position:absolute;left:6%;bottom:18px;width:88%}.level-progress{height:100%;width:0;background:linear-gradient(90deg,#7c5cbf,#c9a84c,#e8c97a);box-shadow:0 0 16px rgba(201,168,76,.22);transition:width .3s ease}.level-text{position:absolute;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#d9c989;pointer-events:none}.combo-display{position:absolute;top:16px;left:50%;transform:translateX(-50%);padding:7px 12px;border:1px solid rgba(232,201,122,.28);background:rgba(8,6,18,.72);border-radius:99px;backdrop-filter:blur(10px);font-size:11px;color:var(--gold2);font-weight:800}.clicks-leaderboard{position:absolute;top:15px;right:15px;width:205px;padding:11px;background:rgba(8,6,18,.68);border:1px solid rgba(232,201,122,.16);border-radius:14px;backdrop-filter:blur(12px)}.clicks-leaderboard h3{margin:0 0 7px;font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--gold2);text-align:center}.clicks-leaderboard-item{display:flex;gap:6px;justify-content:space-between;font-size:10px;padding:3px 0;color:var(--muted)}.clicks-leaderboard-item.you{color:var(--gold2);font-weight:800}
+.shop-section{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px;max-height:420px;overflow:auto;padding:2px}.shop-item{position:relative;background:linear-gradient(145deg,rgba(255,255,255,.025),rgba(124,92,191,.025));border:1px solid rgba(232,201,122,.13);padding:13px;border-radius:14px;display:flex;flex-direction:column;gap:7px;cursor:pointer;transition:.18s ease}.shop-item:hover{transform:translateY(-3px);border-color:rgba(232,201,122,.42);box-shadow:0 12px 30px rgba(0,0,0,.3)}.shop-title{font-weight:800;font-size:13px;color:#e4ddc7}.shop-price,.upgrade-price,.tree-node-cost{font-weight:800;color:var(--gold2);font-size:12px}
+.side-panel{display:flex;flex-direction:column;gap:16px}.panel-card{padding:17px}.panel-title{font-family:'Cormorant Garamond',serif;color:var(--gold2);font-size:23px;font-weight:700;margin-bottom:11px;display:flex;justify-content:space-between;align-items:center;gap:10px}.small{font-size:11px;color:var(--muted);line-height:1.55}.prestige-tree{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;max-height:280px;overflow:auto;padding-right:3px}.tree-node{background:rgba(124,92,191,.055);border:1px solid rgba(232,201,122,.13);padding:9px;border-radius:11px;text-align:center;cursor:pointer;transition:.16s}.tree-node:hover{border-color:rgba(232,201,122,.42);transform:translateY(-2px)}.tree-node-name{font-weight:800;font-size:10px;margin-bottom:4px;color:#ddd4ba}.tree-node-cost{font-size:10px}.upgrade-panel{max-height:310px;overflow:auto;padding-right:3px}.upgrade-item{background:rgba(255,255,255,.025);border:1px solid rgba(232,201,122,.10);padding:10px;border-radius:11px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;gap:8px}.upgrade-name{font-weight:800;font-size:12px}.infinity-btn{display:none;width:100%;margin-top:10px;padding:10px;border-radius:11px;border:1px solid rgba(194,108,255,.45);background:linear-gradient(135deg,#7c5cbf,#c26cff);color:white;font-weight:900;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(4,2,12,.82);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}.modal-content{width:min(520px,94vw);max-height:90vh;overflow:auto;background:linear-gradient(145deg,#171333,#0c091b);border:1px solid rgba(232,201,122,.32);border-radius:20px;padding:24px;color:var(--silver);box-shadow:0 30px 100px rgba(0,0,0,.65);animation:slideIn .25s ease}.modal-title{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold2);font-weight:700;margin-bottom:17px;text-align:center}.form-group{margin-bottom:12px}.form-label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:6px}.form-input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid rgba(232,201,122,.16);background:#0b0818;color:#fff;outline:none}.form-input:focus{border-color:rgba(232,201,122,.55);box-shadow:0 0 0 3px rgba(201,168,76,.08)}.form-actions{display:flex;gap:9px;margin-top:16px}.tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid rgba(232,201,122,.13);overflow:auto}.tab{padding:9px 10px;cursor:pointer;border-radius:8px 8px 0 0;font-size:10px;white-space:nowrap;font-weight:800;color:var(--muted)}.tab.active{color:var(--gold2);background:rgba(201,168,76,.07);border-bottom:2px solid var(--gold)}.leaderboard-list{max-height:330px;overflow:auto}.leaderboard-item{display:flex;align-items:center;gap:8px;padding:10px;border-bottom:1px solid rgba(232,201,122,.07)}.leaderboard-item:hover{background:rgba(124,92,191,.05)}.leaderboard-item.you{background:rgba(201,168,76,.08);border-radius:8px}.leaderboard-rank{font-weight:900;width:28px;color:var(--gold)}.leaderboard-username{flex:1}.leaderboard-score{font-weight:800;color:var(--gold2)}
+.floating-click{position:absolute;font-weight:900;color:var(--gold2);font-size:18px;pointer-events:none;opacity:1;animation:floatUp 1s ease-out forwards;text-shadow:0 0 12px rgba(232,201,122,.45);z-index:20}.critical-hit{color:#fff0a9!important;text-shadow:0 0 15px rgba(232,201,122,.8)!important;animation:criticalPulse .3s ease-in-out,floatUp 1s ease-out .3s forwards}.toast{position:fixed;top:22px;left:50%;transform:translateX(-50%);background:rgba(13,9,28,.94);border:1px solid rgba(232,201,122,.28);color:#eee5cf;padding:9px 14px;border-radius:99px;font-weight:700;font-size:12px;backdrop-filter:blur(12px);box-shadow:0 12px 35px rgba(0,0,0,.45);z-index:10000;animation:toastPop .65s ease forwards;white-space:nowrap}.badge{position:fixed;left:50%;top:30%;transform:translateX(-50%) scale(0);padding:13px 20px;border-radius:99px;background:linear-gradient(135deg,#e8c97a,#7c5cbf);color:#110d1c;font-weight:900;z-index:10000;animation:badgePop 1s forwards}.golden-orb{position:fixed;display:none;z-index:100;font-size:44px;cursor:pointer;filter:drop-shadow(0 0 16px rgba(232,201,122,.8));animation:goldPulse 1s ease-in-out infinite}
+.logout-btn{background:rgba(180,50,90,.12);color:#e6a5b5;border-color:rgba(180,50,90,.3)}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes floatUp{0%{transform:translateY(0) scale(1);opacity:1}50%{transform:translateY(-30px) scale(1.1);opacity:.8}100%{transform:translateY(-65px) scale(1.2);opacity:0}}@keyframes criticalPulse{50%{transform:scale(1.35)}}@keyframes toastPop{0%{opacity:0;transform:translateX(-50%) translateY(-8px)}20%{opacity:1;transform:translateX(-50%) translateY(0)}100%{opacity:0;transform:translateX(-50%) translateY(-8px)}}@keyframes badgePop{0%{transform:translateX(-50%) scale(0)}50%{transform:translateX(-50%) scale(1.08)}100%{transform:translateX(-50%) scale(1)}}@keyframes slideIn{from{opacity:0;transform:translateY(-15px) scale(.98)}to{opacity:1;transform:none}}@keyframes goldPulse{50%{transform:scale(1.15) rotate(8deg)}}
+@media(max-width:980px){.game-area{grid-template-columns:1fr}.stats-bar{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.container{padding:18px 12px 35px}header{align-items:flex-start;flex-direction:column}h1{font-size:29px}.top-actions{width:100%}.top-actions .btn{flex:1}.stats-bar{gap:8px}.stat-card{padding:12px}.big-button{min-height:340px}.clicks-leaderboard{display:none}.shop-section{grid-template-columns:1fr}.arcane-ring{width:170px;height:170px}.click-value{font-size:52px}.prestige-tree{grid-template-columns:repeat(2,1fr)}}
+</style></head><body>
+<div class="container">
+<header>
+  <div class="logo"><div class="logo-icon">✦</div><div><h1>Ultimate Clicker</h1><div class="logo-sub">Wizard Arcade · Arcane Incremental</div></div></div>
+  <div class="top-actions"><div class="account-info" id="accountInfo" style="display:none"><div class="account-avatar" id="accountAvatar">U</div><div class="account-details"><div class="account-name" id="accountUsername">Guest</div><div class="account-level">Level <span id="accountLevel">1</span></div></div></div><button id="leaderboardBtn" class="btn">Leaderboard</button><button id="accountBtn" class="btn">Account</button><button id="resetBtn" class="btn">Reset</button></div>
+</header>
+<div class="stats-bar"><div class="stat-card"><div class="stat-label">Clicks</div><div class="stat-value" id="statClicks">0</div></div><div class="stat-card"><div class="stat-label">Per Second</div><div class="stat-value" id="statCPS">0</div></div><div class="stat-card"><div class="stat-label">Click Power</div><div class="stat-value" id="statPower">1</div></div><div class="stat-card"><div class="stat-label">Level</div><div class="stat-value" id="statLevel">1</div></div></div>
+<div class="game-area">
+<section class="clicker-section">
+<div class="big-button" id="clickBtn">
+  <div class="combo-display" id="comboDisplay" style="display:none">Combo <span id="comboCount">1</span>x · Multiplier <span id="comboMultiplier">1</span>x</div>
+  <div class="clicks-leaderboard" id="clicksLeaderboard"><h3>✦ Top Clickers</h3><div id="clicksLeaderboardList"></div></div>
+  <div class="arcane-ring"><div class="arcane-core">✦</div></div>
+  <div class="click-value" id="clickCount">0</div><div class="click-power" id="clickPowerText">+1 per click · Click the Arcane Core</div>
+  <div class="level-bar"><div class="level-progress" id="levelProgress"></div><div class="level-text" id="levelText">Lv 1</div></div>
+</div>
+<div class="shop-section" id="shopGrid"></div>
+</section>
+<aside class="side-panel">
+<div class="panel-card"><div class="panel-title">Prestige <button id="prestigeBtn" class="btn">Ascend</button></div><div class="small">Reset your current run to forge permanent power through the prestige tree.</div><div style="margin-top:11px"><div class="small">Progress to next ascension</div><div class="level-bar" style="margin-top:6px"><div class="level-progress" id="prestigeProgress"></div></div></div><div style="margin-top:10px;display:flex;justify-content:space-between"><div>Points: <strong id="prestigePoints">0</strong></div><div class="small">Lvl <span id="prestigeLevel">0</span></div></div><div style="margin-top:15px;font-weight:800;color:#ddd4ba">Prestige Tree</div><div class="prestige-tree" id="prestigeTree"></div></div>
+<div class="panel-card"><div class="panel-title">Automation</div><div style="display:flex;flex-direction:column;gap:9px"><div style="display:flex;justify-content:space-between"><span>Auto-clickers</span><strong id="autoCount">0</strong></div><div style="display:flex;justify-content:space-between"><span>Auto Power</span><strong id="autoPower">0</strong></div><div style="display:flex;justify-content:space-between"><span>Auto CPS</span><strong id="autoCPS">0</strong></div><div style="display:flex;justify-content:space-between"><span>Next Auto</span><strong id="autoPrice">50</strong></div><div style="display:flex;gap:8px"><button id="buyAuto" class="buy-btn" style="flex:1">Buy Auto</button><button id="spawnGolden" class="buy-btn" style="flex:1">Golden</button></div><button id="infinityBtn" class="infinity-btn">INFINITY</button></div></div>
+<div class="panel-card"><div class="panel-title">Arcane Upgrades <span class="small">Permanent & temporary</span></div><div class="upgrade-panel" id="upgradePanel"></div></div>
+</aside></div></div>
+<!-- Legacy account modal retained for the existing game logic -->
+<div id="accountModal" class="modal"><div class="modal-content"><div class="modal-title">Account</div><div id="loginForm"><div class="form-group"><label class="form-label">Username</label><input type="text" id="loginUsername" class="form-input" placeholder="Enter your username"></div><div class="form-group"><label class="form-label">Password</label><input type="password" id="loginPassword" class="form-input" placeholder="Enter your password"></div><div class="form-actions"><button id="loginBtn" class="btn" style="flex:1">Login</button><button id="showRegisterBtn" class="btn" style="flex:1">Register</button></div></div><div id="registerForm" style="display:none"><div class="form-group"><label class="form-label">Username</label><input id="registerUsername" class="form-input"><label class="form-label" style="margin-top:10px">Password</label><input id="registerPassword" type="password" class="form-input"><label class="form-label" style="margin-top:10px">Confirm Password</label><input id="registerConfirmPassword" type="password" class="form-input"></div><div class="form-actions"><button id="registerBtn" class="btn" style="flex:1">Create Account</button><button id="showLoginBtn" class="btn" style="flex:1">Back</button></div></div></div></div>
+<div id="leaderboardModal" class="modal"><div class="modal-content"><div class="modal-title">Hall of Clicks</div><div class="tabs"><div class="tab active" data-tab="clicks">Clicks</div><div class="tab" data-tab="prestige">Prestige</div><div class="tab" data-tab="level">Level</div><div class="tab" data-tab="golden">Golden</div><div class="tab" data-tab="auto">Auto</div></div><div class="leaderboard-list" id="leaderboardList"></div><div style="margin-top:18px;text-align:center"><button id="closeLeaderboardBtn" class="btn">Close</button></div></div></div>
+<div id="infinityModal" class="modal"><div class="modal-content"><div class="modal-title">Infinity Mode</div><div class="form-group"><label class="form-label">Enter Password</label><input type="password" id="infinityPassword" class="form-input" placeholder="Enter the password"></div><div class="form-actions"><button id="activateInfinityBtn" class="btn" style="flex:1">Activate</button><button id="cancelInfinityBtn" class="btn" style="flex:1">Cancel</button></div></div></div>
+<div id="goldenClick" class="golden-orb">✦</div><div id="toastContainer"></div><div id="badgeContainer"></div>
+</body><script>
+    // Game State
+    const gameState = {
+        clicks: 0,
+        clickPower: 1,
+        autoCount: 0,
+        autoPower: 0,
+        autoPrice: 50,
+        prestige: 0,
+        prestigeLevel: 0,
+        prestigePoints: 0,
+        prestigeMultiplier: 1,
+        prestigeCost: 100000,
+        level: 1,
+        xp: 0,
+        xpNeeded: 1000,
+        xpBoost: 1,
+        goldenMultiplier: 5,
+        lastClickTime: 0,
+        clickStreak: 0,
+        comboMultiplier: 1,
+        frenzy: false,
+        dailyStreak: 0,
+        lastDaily: null,
+        shopItems: [],
+        upgrades: [],
+        prestigeNodes: [],
+        autoScale: 1,
+        shopInflation: 1.35,
+        shopBought: 0,
+        goldenChancePercent: 1.0,
+        achievements: [],
+        totalClicks: 0,
+        playTime: 0,
+        clickEfficiency: 1.0,
+        account: null,
+        goldenClicks: 0,
+        clicksPerSecond: 0,
+        lastCPSUpdate: Date.now(),
+        clicksSinceLastUpdate: 0,
+        criticalChance: 5,
+        criticalMultiplier: 2,
+        lastSaveTime: Date.now(),
+        seasonalEvent: false,
+        eventEndTime: null,
+        eventMultiplier: 1,
+        unlockedAchievements: [],
+        soundSettings: {
+            muteAll: false,
+            criticalSounds: true,
+            music: false
+        },
+        infinityMode: false
+    };
+
+    // Initialize the game
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeGame();
+        setupEventListeners();
+        loadGame();
+        startGameLoop();
+        updateUI();
+        renderShop();
+        renderUpgrades();
+        renderPrestigeTree();
+        refreshLeaderboards();
+
+        // Show welcome message
+        showToast('Welcome to Ultimate Clicker — Wizard Arcade Edition!');
+    });
+
+
+
+
+
+    function initializeGame() {
+        // Initialize shop items
+        const baseShop = [
+            ['Click Module (+1 power)', 100, 1, 'inf_click'],
+            ['Smartwatch Bot', 500, 2, 'swb'],
+            ['Mini Drone', 2000, 5, 'drn'],
+            ['Home AI Cam', 8000, 12, 'cam'],
+            ['Smart Hub', 25000, 25, 'hub'],
+            ['VR Arcade Node', 100000, 60, 'vr'],
+            ['Nano Farm', 400000, 150, 'farm'],
+            ['GPU Cluster', 1500000, 400, 'gpu'],
+            ['Quantum Server', 6000000, 1200, 'quant'],
+            ['AI Factory', 25000000, 3500, 'ai'],
+            ['Neural Orb', 100000000, 10000, 'orb'],
+            ['Edge Microgrid', 400000000, 25000, 'emg'],
+            ['Autonomous Fleet', 1500000000, 60000, 'afl'],
+            ['Biochip Plant', 6000000000, 150000, 'bcp'],
+            ['Quantum Cluster X', 25000000000, 400000, 'qcx'],
+            ['Neuro-Lattice', 100000000000, 1000000, 'nl'],
+            ['Holo-Workshop', 400000000000, 2500000, 'hw'],
+            ['Sentient Core', 1500000000000, 6000000, 'sc'],
+            ['MetaFabricator', 6000000000000, 15000000, 'mf'],
+            ['Planetary Mesh', 25000000000000, 40000000, 'pm'],
+            ['Singularity Node', 100000000000000, 100000000, 'sn'],
+            ['AI Ecosystem', 400000000000000, 250000000, 'ae'],
+            ['Orbital Foundry', 1500000000000000, 600000000, 'of'],
+            ['Quantum Sphere', 6000000000000000, 1500000000, 'qs'],
+            ['Neural Nexus', 25000000000000000, 4000000000, 'nn'],
+            ['Autonomous Lab', 100000000000000000, 10000000000, 'al'],
+            ['Galactic Datacenter', 400000000000000000, 25000000000, 'gd'],
+            ['Multiversal Hub', 1500000000000000000, 60000000000, 'mh'],
+            ['OmniCore', 6000000000000000000, 150000000000, 'oc'],
+            ['GodChip', 25000000000000000000, 400000000000, 'gc'],
+	        ['67 Fabricator', 67000000000000000000000000000000000000, 67000000000000, 'sf']
+
+        ];
+
+        gameState.shopItems = [];
+        baseShop.forEach((it, idx) => {
+            gameState.shopItems.push({
+                id: it[3],
+                name: it[0],
+                price: it[1],
+                clickBonus: it[2],
+                purchases: 0
+            });
+        });
+
+        // Initialize upgrades
+        const baseUpgrades = [
+            ['+2 Click Power', 1000, ()=>{ gameState.clickPower += 2; showToast('+2 Click Power!'); }, 1.8],
+            ['GPU Overclock +5', 5000, ()=>{ gameState.clickPower += 5; showToast('GPU Overclock +5!'); }, 1.9],
+            ['Neural Surge +15% golden', 20000, ()=>{ gameState.goldenMultiplier *= 1.15; showToast('Neural Surge +15% golden!'); }, 2.0],
+            ['Clickstorm (15s)', 80000, ()=>{ startClickFrenzy(15000); showToast('Clickstorm activated! 15s of frenzy!'); }, 2.1],
+            ['Quantum Sync (XP+30%)', 300000, ()=>{ gameState.xpBoost = (gameState.xpBoost||1) + 0.3; showToast('Quantum Sync +30% XP!'); }, 2.2],
+            ['Autonomy Boost (+5 auto)', 1200000, ()=>{ gameState.autoPower += 5; showToast('Autonomy Boost +5 auto power!'); }, 2.3],
+            ['Neural Compression (x1.5 click)', 5000000, ()=>{ gameState.clickPower *= 1.5; showToast('Neural Compression x1.5 click power!'); }, 2.4],
+            ['Ledger Deflation (-8% prices)', 20000000, ()=>{ gameState.shopInflation *= 0.92; showToast('Ledger Deflation -8% prices!'); }, 2.5],
+            ['Cloud Scaling (auto+50%)', 80000000, ()=>{ gameState.autoScale = (gameState.autoScale||1) * 1.5; showToast('Cloud Scaling +50% auto power!'); }, 2.6],
+            ['AI Architect (+200 click)', 300000000, ()=>{ gameState.clickPower += 200; showToast('AI Architect +200 click power!'); }, 2.7],
+            ['Golden Magnet (+40% golden)', 1200000000, ()=>{ gameState.goldenMultiplier *= 1.4; showToast('Golden Magnet +40% golden multiplier!'); }, 2.8],
+            ['Autos++ (+50 auto power)', 5000000000, ()=>{ gameState.autoPower += 50; showToast('Autos++ +50 auto power!'); }, 2.9],
+            ['Critical Training (+2% crit)', 50000, ()=>{ gameState.criticalChance += 2; showToast('Critical Training +2% crit chance!'); }, 2.2],
+            ['Precision Strikes (x2.5 crit)', 500000, ()=>{ gameState.criticalMultiplier = 2.5; showToast('Precision Strikes x2.5 crit multiplier!'); }, 2.4],
+            ['Lucky Charm (+5% crit)', 2000000, ()=>{ gameState.criticalChance += 5; showToast('Lucky Charm +5% crit chance!'); }, 2.6]
+        ];
+
+        gameState.upgrades = [];
+        baseUpgrades.forEach((u, i) => {
+            gameState.upgrades.push({
+                id: 'u' + i,
+                name: u[0],
+                desc: u[0],
+                basePrice: u[1],
+                price: u[1],
+                effect: u[2],
+                priceMultiplier: u[3],
+                timesBought: 0
+            });
+        });
+
+        // Initialize prestige nodes
+        const baseNodes = [
+            {id: 'p1', name: 'Prestige Spark', cost: 1, desc: '+4% prestige multiplier', effect: ()=>{ gameState.prestigeMultiplier *= 1.04; showToast('Prestige Spark +4% prestige multiplier!'); }},
+            {id: 'p2', name: 'Auto Tuner', cost: 2, desc: '+8% auto power', effect: ()=>{ gameState.autoScale *= 1.08; showToast('Auto Tuner +8% auto power!'); }},
+            {id: 'p3', name: 'Quantum Cache', cost: 3, desc: '+4% XP boost', effect: ()=>{ gameState.xpBoost = (gameState.xpBoost||1) + 0.04; showToast('Quantum Cache +4% XP boost!'); }},
+            {id: 'p4', name: 'Neural Seed', cost: 4, desc: '+1 permanent click power', effect: ()=>{ gameState.clickPower += 1; showToast('Neural Seed +1 click power!'); }},
+            {id: 'p5', name: 'Factory Line', cost: 6, desc: '-4% shop inflation', effect: ()=>{ gameState.shopInflation *= 0.96; showToast('Factory Line -4% shop inflation!'); }},
+            {id: 'p6', name: 'Golden Beacon', cost: 8, desc: '+8% golden multiplier', effect: ()=>{ gameState.goldenMultiplier *= 1.08; showToast('Golden Beacon +8% golden multiplier!'); }},
+            {id: 'p7', name: 'Cluster Warp', cost: 12, desc: '+20% auto scale', effect: ()=>{ gameState.autoScale *= 1.20; showToast('Cluster Warp +20% auto scale!'); }},
+            {id: 'p8', name: 'Architect Codex', cost: 18, desc: '+75 click power', effect: ()=>{ gameState.clickPower += 75; showToast('Architect Codex +75 click power!'); }},
+            {id: 'p9', name: 'Singularity Node', cost: 30, desc: '+300 click power', effect: ()=>{ gameState.clickPower += 300; showToast('Singularity Node +300 click power!'); }},
+            {id: 'p10', name: 'Critical Insight', cost: 5, desc: '+3% critical chance', effect: ()=>{ gameState.criticalChance += 3; showToast('Critical Insight +3% crit chance!'); }},
+            {id: 'p11', name: 'Lethal Precision', cost: 10, desc: '+0.5 critical multiplier', effect: ()=>{ gameState.criticalMultiplier += 0.5; showToast('Lethal Precision +0.5 crit multiplier!'); }},
+            {id: 'p12', name: 'Infinity Catalyst', cost: 50, desc: 'Unlocks Infinity Mode potential', effect: ()=>{ showToast('Infinity Catalyst activated!'); }},
+            {id: 'p13', name: 'Quantum Entanglement', cost: 75, desc: '+10% to all multipliers', effect: ()=>{ 
+                gameState.prestigeMultiplier *= 1.1;
+                gameState.autoScale *= 1.1;
+                gameState.goldenMultiplier *= 1.1;
+                showToast('Quantum Entanglement +10% to all multipliers!'); 
+            }},
+            {id: 'p14', name: 'Chrono Accelerator', cost: 100, desc: '2x auto-clicker speed', effect: ()=>{ 
+                gameState.autoPower *= 2;
+                showToast('Chrono Accelerator 2x auto-clicker speed!'); 
+            }},
+            {id: 'p15', name: 'Reality Bender', cost: 150, desc: 'Unlocks ultimate power', effect: ()=>{ 
+                gameState.clickPower *= 5;
+                showToast('Reality Bender 5x click power!'); 
+            }}
+        ];
+
+        gameState.prestigeNodes = baseNodes.map(n => Object.assign({}, n, {
+            bought: false,
+            timesBought: 0
+        }));
+    }
+
+    function setupEventListeners() {
+        // Click button
+        document.getElementById('clickBtn').addEventListener('click', handleClick);
+        
+        // Auto-clicker buttons
+        document.getElementById('buyAuto').addEventListener('click', buyAuto);
+        document.getElementById('spawnGolden').addEventListener('click', spawnGoldenDebug);
+        
+        // Prestige
+        document.getElementById('prestigeBtn').addEventListener('click', prestige);
+        
+        // Golden click
+        document.getElementById('goldenClick').addEventListener('click', handleGoldenClick);
+        
+        // Account and Leaderboard
+        document.getElementById('accountBtn').addEventListener('click', showAccountModal);
+        document.getElementById('leaderboardBtn').addEventListener('click', showLeaderboardModal);
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+        
+        // Account modal
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('registerBtn').addEventListener('click', register);
+        document.getElementById('showRegisterBtn').addEventListener('click', showRegisterForm);
+        document.getElementById('showLoginBtn').addEventListener('click', showLoginForm);
+        
+        // Leaderboard modal
+        document.getElementById('closeLeaderboardBtn').addEventListener('click', hideLeaderboardModal);
+        
+        // Infinity Mode
+        document.getElementById('infinityBtn').addEventListener('click', showInfinityModal);
+        document.getElementById('activateInfinityBtn').addEventListener('click', activateInfinityMode);
+        document.getElementById('cancelInfinityBtn').addEventListener('click', hideInfinityModal);
+        
+        // Leaderboard tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                updateLeaderboard(this.dataset.tab);
+            });
+        });
+        
+        // Keyboard shortcut for Infinity Mode
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+                e.preventDefault();
+                document.getElementById('infinityBtn').style.display = 'block';
+                showToast('Infinity Mode button unlocked!');
+            }
+        });
+        
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    function handleClick(e) {
+        const now = Date.now();
+        gameState.clicksSinceLastUpdate++;
+        
+        if (now - gameState.lastClickTime < 1000) {
+            gameState.clickStreak++;
+        } else {
+            gameState.clickStreak = 1;
+        }
+        
+        gameState.comboMultiplier = Math.min(1 + Math.floor(gameState.clickStreak/5), 8);
+        
+        // Check for critical hit
+        const isCritical = Math.random() < (gameState.criticalChance / 100);
+        const criticalMultiplier = isCritical ? gameState.criticalMultiplier : 1;
+        
+        let amount = gameState.clickPower * gameState.comboMultiplier * gameState.prestigeMultiplier * criticalMultiplier;
+        if (gameState.frenzy) amount *= 1.5;
+        if (gameState.seasonalEvent) amount *= gameState.eventMultiplier;
+        if (gameState.infinityMode) amount = Infinity;
+        
+        gameState.clicks += amount;
+
+        // instant leaderboard update for currency (small + modal if open)
+        refreshLeaderboards();
+
+        gameState.totalClicks += 1;
+        gainXP(Math.floor(amount/3));
+        
+        const rect = document.getElementById('clickBtn').getBoundingClientRect();
+        spawnFloatingClick(e.clientX - rect.left, e.clientY - rect.top, Math.floor(amount), gameState.comboMultiplier>1, isCritical);
+        
+        // Update combo display
+        updateComboDisplay();
+        
+        gameState.lastClickTime = now;
+        updateUI();
+        // second refresh is harmless; kept for redundancy
+        refreshLeaderboards();
+        
+        // Play sound (placeholder)
+        if (isCritical) {
+            // Play critical sound
+        } else {
+            // Play normal click sound
+        }
+    }
+
+    function spawnFloatingClick(x, y, amount, combo=false, critical=false) {
+        const span = document.createElement('div');
+        span.className = `floating-click ${critical ? 'critical-hit' : ''}`;
+        span.textContent = `+${gameState.infinityMode ? '∞' : formatNumber(amount)}${combo ? ` x${gameState.comboMultiplier}` : ''}${critical ? ' CRITICAL!' : ''}`;
+        span.style.left = (x + 8) + 'px';
+        span.style.top = (y + 8) + 'px';
+        document.getElementById('clickBtn').appendChild(span);
+        setTimeout(() => span.remove(), 1000);
+    }
+
+    function updateComboDisplay() {
+        const comboDisplay = document.getElementById('comboDisplay');
+        if (gameState.clickStreak > 1) {
+            comboDisplay.style.display = 'block';
+            document.getElementById('comboCount').textContent = gameState.clickStreak;
+            document.getElementById('comboMultiplier').textContent = gameState.comboMultiplier;
+        } else {
+            comboDisplay.style.display = 'none';
+        }
+    }
+
+    function buyAuto() {
+        if (gameState.autoCount >= 1000) {
+            showToast('Auto limit reached (1000)');
+            return;
+        }
+        
+        if (gameState.clicks >= gameState.autoPrice || gameState.infinityMode) {
+            if (!gameState.infinityMode) {
+                gameState.clicks -= gameState.autoPrice;
+            }
+            gameState.autoCount++;
+            gameState.autoPower += 0.5;
+            gameState.autoPrice = Math.ceil(gameState.autoPrice * 1.55);
+            showToast('Auto-clicker purchased');
+            updateUI();
+            refreshLeaderboards();
+        } else {
+            showToast('Not enough clicks');
+        }
+    }
+
+    function spawnGoldenDebug() {
+        const goldenClick = document.getElementById('goldenClick');
+        goldenClick.style.display = 'block';
+        goldenClick.style.left = Math.max(40, Math.random()*(window.innerWidth-180)) + 'px';
+        goldenClick.style.top = Math.max(80, Math.random()*(window.innerHeight-260)) + 'px';
+        setTimeout(() => {
+            if (goldenClick.style.display !== 'none') goldenClick.style.display = 'none';
+        }, 7000);
+    }
+
+    function handleGoldenClick() {
+        const amt = Math.floor(gameState.clickPower * gameState.goldenMultiplier * gameState.prestigeMultiplier * (gameState.seasonalEvent ? gameState.eventMultiplier : 1));
+        
+        gameState.clicks += gameState.infinityMode ? Infinity : amt;
+        gameState.goldenClicks += 1;
+        gainXP(Math.floor(amt/2));
+        showToast(`Golden +${gameState.infinityMode ? '∞' : formatNumber(amt)} clicks`);
+        spawnFloatingClick(window.innerWidth/2, 120, amt);
+        document.getElementById('goldenClick').style.display = 'none';
+        updateUI();
+        refreshLeaderboards();
+        updateClicksLeaderboard(); // harmless but kept for parity
+    }
+
+    function prestige() {
+        if (gameState.clicks >= gameState.prestigeCost || gameState.infinityMode) {
+            const gained = gameState.infinityMode ? Infinity : Math.floor(gameState.clicks / gameState.prestigeCost);
+            gameState.prestige += gained;
+            gameState.prestigeLevel++;
+            gameState.prestigePoints += gained;
+            gameState.prestigeMultiplier = 1 + gameState.prestige * 0.08;
+            
+            // Reset main progression
+            gameState.clicks = 0;
+            gameState.clickPower = 1;
+            gameState.autoCount = 0;
+            gameState.autoPower = 0;
+            gameState.autoPrice = 50;
+            gameState.prestigeCost = Math.floor(100000 * (1 + gameState.prestigeLevel * 0.9));
+            
+            showBadge(`Prestiged! +${gameState.infinityMode ? '∞' : gained} pts`);
+            updateUI();
+            renderShop();
+            renderUpgrades();
+            renderPrestigeTree();
+            refreshLeaderboards();
+        } else {
+            showToast(`Need ${formatNumber(gameState.prestigeCost)} clicks to prestige`);
+        }
+    }
+
+    function gainXP(amount) {
+        amount = Math.floor(amount * gameState.xpBoost);
+        gameState.xp += amount;
+        while (gameState.xp >= gameState.xpNeeded) {
+            gameState.xp -= gameState.xpNeeded;
+            gameState.level++;
+            gameState.xpNeeded = Math.floor(gameState.xpNeeded * 1.2);
+            gameState.clickPower += 0.5;
+            gameState.autoPower += 0.2;
+            showToast(`Level up! Now level ${gameState.level}`);
+        }
+        updateUI();
+    }
+
+    function startClickFrenzy(duration=15000) {
+        if (gameState.frenzy) return;
+        gameState.frenzy = true;
+        showToast('Click Frenzy! 1.5x for a bit');
+        setTimeout(() => {
+            gameState.frenzy = false;
+            showToast('Frenzy ended');
+        }, duration);
+    }
+
+    function updateUI() {
+        // Update main stats
+        document.getElementById('statClicks').textContent = gameState.infinityMode ? '∞' : formatNumber(Math.floor(gameState.clicks));
+        document.getElementById('statCPS').textContent = gameState.infinityMode ? '∞' : formatNumber(Math.floor(gameState.autoCount * gameState.autoPower * gameState.autoScale));
+        document.getElementById('statPower').textContent = gameState.infinityMode ? '∞' : formatNumber(Math.floor(gameState.clickPower));
+        document.getElementById('statLevel').textContent = gameState.level;
+        
+        // Update click button
+        document.getElementById('clickCount').textContent = gameState.infinityMode ? '∞' : formatNumber(Math.floor(gameState.clicks));
+        document.getElementById('clickPowerText').textContent = `+${gameState.infinityMode ? '∞' : formatNumber(Math.floor(gameState.clickPower))} per click`;
+        
+        // Update level bar
+        const levelProgress = (gameState.xp / gameState.xpNeeded) * 100;
+        document.getElementById('levelProgress').style.width = Math.min(100, levelProgress) + '%';
+        document.getElementById('levelText').textContent = `Lv ${gameState.level} • ${gameState.xp}/${gameState.xpNeeded}`;
+        
+        // Update prestige progress bar
+        const prestigeProgress = (gameState.prestige / Math.max(1, gameState.prestigeCost)) * 100;
+        document.getElementById('prestigeProgress').style.width = Math.min(100, prestigeProgress) + '%';
+        document.getElementById('prestigePoints').textContent = gameState.infinityMode ? '∞' : gameState.prestigePoints;
+        document.getElementById('prestigeLevel').textContent = gameState.prestigeLevel;
+        
+        // Update auto section
+        document.getElementById('autoCount').textContent = gameState.autoCount;
+        document.getElementById('autoPower').textContent = gameState.infinityMode ? '∞' : gameState.autoPower.toFixed(1);
+        document.getElementById('autoCPS').textContent = gameState.infinityMode ? '∞' : formatNumber(Math.floor(gameState.autoCount * gameState.autoPower * gameState.autoScale));
+        document.getElementById('autoPrice').textContent = gameState.infinityMode ? '∞' : formatNumber(Math.floor(gameState.autoPrice));
+        
+        // Update account display
+        if (gameState.account) {
+            document.getElementById('accountInfo').style.display = 'flex';
+            document.getElementById('accountUsername').textContent = gameState.account.username;
+            document.getElementById('accountLevel').textContent = gameState.level;
+            document.getElementById('accountAvatar').textContent = gameState.account.username.charAt(0).toUpperCase();
+        }
+    }
+
+    function renderShop() {
+        const shopGrid = document.getElementById('shopGrid');
+        shopGrid.innerHTML = '';
+        
+        gameState.shopItems.forEach(item => {
+            const shopItem = document.createElement('div');
+            shopItem.className = 'shop-item';
+            shopItem.innerHTML = `
+                <div class="shop-title">${item.name}</div>
+                <div class="small">+${formatNumber(item.clickBonus)} per click</div>
+                <div class="small">Purchased: ${item.purchases || 0}</div>
+                <div class="shop-price">${gameState.infinityMode ? '∞' : formatNumber(item.price)} clicks</div>
+            `;
+            
+            shopItem.addEventListener('click', () => {
+                if (gameState.clicks >= item.price || gameState.infinityMode) {
+                    if (!gameState.infinityMode) {
+                        gameState.clicks -= item.price;
+                    }
+                    gameState.clickPower += item.clickBonus;
+                    gameState.autoPower += Math.floor(item.clickBonus/3);
+                    item.purchases = (item.purchases || 0) + 1;
+                    item.price = Math.ceil(item.price * gameState.shopInflation);
+                    gameState.shopBought = (gameState.shopBought || 0) + 1;
+                    showToast(`Bought ${item.name}`);
+                    updateUI();
+                    renderShop();
+                    refreshLeaderboards();
+                } else {
+                    showToast('Not enough clicks');
+                }
+            });
+            
+            shopGrid.appendChild(shopItem);
+        });
+    }
+
+    function renderUpgrades() {
+        const upgradePanel = document.getElementById('upgradePanel');
+        upgradePanel.innerHTML = '';
+        
+        gameState.upgrades.forEach(upgrade => {
+            const boughtTimes = upgrade.timesBought || 0;
+            const currentPrice = Math.floor(upgrade.basePrice * Math.pow(upgrade.priceMultiplier, boughtTimes));
+            
+            const upgradeEl = document.createElement('div');
+            upgradeEl.className = 'upgrade-item';
+            upgradeEl.innerHTML = `
+                <div class="upgrade-name">${upgrade.name}</div>
+                <button class="buy-btn" ${!gameState.infinityMode && gameState.clicks < currentPrice ? 'disabled' : ''}>${gameState.infinityMode ? '∞' : formatNumber(currentPrice)}</button>
+            `;
+            
+            const btn = upgradeEl.querySelector('button');
+            btn.addEventListener('click', () => {
+                if (gameState.clicks >= currentPrice || gameState.infinityMode) {
+                    if (!gameState.infinityMode) {
+                        gameState.clicks -= currentPrice;
+                    }
+                    upgrade.timesBought = (upgrade.timesBought || 0) + 1;
+                    upgrade.effect();
+                    gainXP(30);
+                    updateUI();
+                    renderUpgrades();
+                    refreshLeaderboards();
+                } else {
+                    showToast('Not enough clicks');
+                }
+            });
+            
+            upgradePanel.appendChild(upgradeEl);
+        });
+    }
+
+    function renderPrestigeTree() {
+        const prestigeTree = document.getElementById('prestigeTree');
+        prestigeTree.innerHTML = '';
+        
+        gameState.prestigeNodes.forEach(node => {
+            const timesBought = node.timesBought || 0;
+            const cost = Math.floor(node.cost * Math.pow(1.6, timesBought));
+            
+            const nodeEl = document.createElement('div');
+            nodeEl.className = 'tree-node';
+            nodeEl.innerHTML = `
+                <div class="tree-node-name">${node.name}</div>
+                <div class="small">${node.desc}</div>
+                <div class="tree-node-cost">${gameState.infinityMode ? '∞' : cost} pts</div>
+                <div class="small">Bought: ${timesBought}</div>
+            `;
+            
+            nodeEl.addEventListener('click', () => {
+                if (gameState.prestigePoints >= cost || gameState.infinityMode) {
+                    if (!gameState.infinityMode) {
+                        gameState.prestigePoints -= cost;
+                    }
+                    node.timesBought = (node.timesBought || 0) + 1;
+                    node.effect();
+                    updateUI();
+                    renderPrestigeTree();
+                    refreshLeaderboards();
+                } else {
+                    showToast('Not enough prestige points');
+                }
+            });
+            
+            prestigeTree.appendChild(nodeEl);
+        });
+    }
+
+    function showAccountModal() {
+        document.getElementById('accountModal').style.display = 'flex';
+    }
+
+    function showRegisterForm() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registerForm').style.display = 'block';
+    }
+
+    function showLoginForm() {
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+    }
+
+    function login() {
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        
+        if (!username || !password) {
+            showToast('Please enter both username and password');
+            return;
+        }
+        
+        const accounts = JSON.parse(localStorage.getItem('ucAccounts') || '{}');
+        
+        if (accounts[username] && accounts[username].password === password) {
+            gameState.account = {
+                username: username,
+                password: password
+            };
+            
+            // Load account-specific game state if exists
+            const accountState = JSON.parse(localStorage.getItem(`ucGameState_${username}`));
+            if (accountState) {
+                Object.assign(gameState, accountState);
+                updateUI();
+                renderShop();
+                renderUpgrades();
+                renderPrestigeTree();
+            }
+            
+            showToast(`Welcome back, ${username}!`);
+            document.getElementById('accountModal').style.display = 'none';
+            updateUI();
+            saveGame();
+            refreshLeaderboards();
+        } else {
+            showToast('Invalid username or password');
+        }
+    }
+
+    function register() {
+        const username = document.getElementById('registerUsername').value;
+        const password = document.getElementById('registerPassword').value;
+        const confirmPassword = document.getElementById('registerConfirmPassword').value;
+        
+        if (!username || !password) {
+            showToast('Please enter both username and password');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            showToast('Passwords do not match');
+            return;
+        }
+        
+        const accounts = JSON.parse(localStorage.getItem('ucAccounts') || '{}');
+        
+        if (accounts[username]) {
+            showToast('Username already exists');
+            return;
+        }
+        
+        accounts[username] = {
+            password: password,
+            created: new Date().toISOString()
+        };
+        
+        localStorage.setItem('ucAccounts', JSON.stringify(accounts));
+        
+        gameState.account = {
+            username: username,
+            password: password
+        };
+        
+        showToast(`Account created for ${username}!`);
+        document.getElementById('accountModal').style.display = 'none';
+        updateUI();
+        saveGame();
+        refreshLeaderboards();
+    }
+
+    function showLeaderboardModal() {
+        document.getElementById('leaderboardModal').style.display = 'flex';
+        updateLeaderboard(getActiveLeaderboardTab());
+    }
+
+    function hideLeaderboardModal() {
+        document.getElementById('leaderboardModal').style.display = 'none';
+    }
+
+    // helper: find active tab in the leaderboard modal
+    function getActiveLeaderboardTab() {
+      const tab = document.querySelector('.tab.active');
+      return tab ? tab.dataset.tab : 'clicks';
+    }
+
+    // central refresh helper — call this everywhere instead of updateClicksLeaderboard()
+    function refreshLeaderboards() {
+      // update the small static leaderboard (currency)
+      updateClicksLeaderboard();
+
+      // if the modal is visible, update the big leaderboard using the active tab
+      const modal = document.getElementById('leaderboardModal');
+      if (modal && getComputedStyle(modal).display !== 'none') {
+        updateLeaderboard(getActiveLeaderboardTab());
+      }
+    }
+
+    // --- Updated small static leaderboard (shows currency 'clicks') ---
+    function updateClicksLeaderboard() {
+        const clicksLeaderboardList = document.getElementById('clicksLeaderboardList');
+        clicksLeaderboardList.innerHTML = '';
+
+        // read accounts registry
+        const accounts = JSON.parse(localStorage.getItem('ucAccounts') || '{}');
+        const leaderboardData = [];
+
+        // collect other players from storage (their currency saved under 'clicks')
+        for (const username in accounts) {
+            try {
+                const raw = localStorage.getItem(`ucGameState_${username}`);
+                const accountState = raw ? JSON.parse(raw) : {};
+                const score = Number(accountState.clicks) || 0; // <- use clicks (currency) here
+                // skip current in-memory player; we'll add them explicitly below
+                if (gameState.account && username === gameState.account.username) continue;
+                if (score > 0) leaderboardData.push({ username, score });
+            } catch (e) {
+                continue;
+            }
+        }
+
+        // Always include the current player (in-memory) using gameState.clicks (currency)
+        const currentName = (gameState.account && gameState.account.username) ? gameState.account.username : 'You';
+        const currentScore = Number(gameState.clicks) || 0;
+
+        // remove any existing same-name entry defensively, then push current
+        const existingIdx = leaderboardData.findIndex(p => p.username === currentName);
+        if (existingIdx !== -1) leaderboardData.splice(existingIdx, 1);
+        leaderboardData.push({ username: currentName, score: currentScore });
+
+        // sort descending by currency
+        leaderboardData.sort((a, b) => b.score - a.score);
+
+        // top 5
+        const top5 = leaderboardData.slice(0, 5);
+
+        if (top5.length === 0) {
+            clicksLeaderboardList.innerHTML = '<div style="text-align: center; padding: 10px; color: var(--muted); font-size: 10px;">No players yet</div>';
+            return;
+        }
+
+        // render entries (show currency, not totalClicks)
+        top5.forEach((player, index) => {
+            const item = document.createElement('div');
+            const isYou = (gameState.account && player.username === gameState.account.username) || (!gameState.account && player.username === 'You');
+            item.className = `clicks-leaderboard-item ${isYou ? 'you' : ''}`;
+            item.innerHTML = `
+                <div>
+                    <span class="clicks-rank">${index + 1}.</span>
+                    <span>${player.username}</span>
+                </div>
+                <div>${formatNumber(player.score)}</div> <!-- currency shown here -->
+            `;
+            clicksLeaderboardList.appendChild(item);
+        });
+    }
+
+    // --- Updated big leaderboard modal builder (uses in-memory player for instant updates) ---
+    function updateLeaderboard(type) {
+        const leaderboardList = document.getElementById('leaderboardList');
+        leaderboardList.innerHTML = '';
+
+        // registry of accounts
+        const accounts = JSON.parse(localStorage.getItem('ucAccounts') || '{}');
+        const leaderboardData = [];
+
+        // collect other players from storage
+        for (const username in accounts) {
+            // skip current user — we'll inject in-memory player below
+            if (gameState.account && username === gameState.account.username) continue;
+            try {
+                const raw = localStorage.getItem(`ucGameState_${username}`);
+                const accountState = raw ? JSON.parse(raw) : {};
+                // choose score field based on leaderboard type
+                let score = 0;
+                switch(type) {
+                    case 'clicks': score = Number(accountState.clicks) || 0; break;
+                    case 'prestige': score = Number(accountState.prestigeLevel) || 0; break;
+                    case 'level': score = Number(accountState.level) || 0; break;
+                    case 'golden': score = Number(accountState.goldenClicks) || 0; break;
+                    case 'auto': score = Number(accountState.autoCount) || 0; break;
+                    default: score = Number(accountState.clicks) || 0;
+                }
+                if (score > 0) leaderboardData.push({ username, score, raw: accountState });
+            } catch(e) {
+                // ignore malformed entries
+                continue;
+            }
+        }
+
+        // inject current player (in-memory) so they always show live values
+        const currentName = (gameState.account && gameState.account.username) ? gameState.account.username : 'You';
+        const currentScore = (() => {
+            switch(type) {
+                case 'clicks': return Number(gameState.clicks) || 0;
+                case 'prestige': return Number(gameState.prestigeLevel) || 0;
+                case 'level': return Number(gameState.level) || 0;
+                case 'golden': return Number(gameState.goldenClicks) || 0;
+                case 'auto': return Number(gameState.autoCount) || 0;
+                default: return Number(gameState.clicks) || 0;
+            }
+        })();
+
+        // remove same-name if exists then push current
+        const dupIdx = leaderboardData.findIndex(p => p.username === currentName);
+        if (dupIdx !== -1) leaderboardData.splice(dupIdx, 1);
+        leaderboardData.push({ username: currentName, score: currentScore, raw: gameState });
+
+        // sort and display
+        leaderboardData.sort((a, b) => b.score - a.score);
+
+        if (leaderboardData.length === 0) {
+            leaderboardList.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--muted)">No players yet. Be the first!</div>';
+            return;
+        }
+
+        leaderboardData.forEach((player, index) => {
+            const item = document.createElement('div');
+            item.className = `leaderboard-item ${gameState.account && player.username === gameState.account.username ? 'you' : ''}`;
+            // display text per type
+            let displayText = '';
+            switch(type) {
+                case 'clicks': displayText = `${formatNumber(player.score)} clicks`; break;
+                case 'prestige': displayText = `Level ${player.score}`; break;
+                case 'level': displayText = `Level ${player.score}`; break;
+                case 'golden': displayText = `${formatNumber(player.score)} golden`; break;
+                case 'auto': displayText = `${formatNumber(player.score)} auto`; break;
+                default: displayText = `${formatNumber(player.score)}`;
+            }
+            item.innerHTML = `
+                <div class="leaderboard-rank">${index + 1}</div>
+                <div class="leaderboard-username">${player.username}</div>
+                <div class="leaderboard-score">${displayText}</div>
+            `;
+            leaderboardList.appendChild(item);
+        });
+    }
+
+    function showInfinityModal() {
+        document.getElementById('infinityModal').style.display = 'flex';
+    }
+
+    function hideInfinityModal() {
+        document.getElementById('infinityModal').style.display = 'none';
+    }
+
+    function activateInfinityMode() {
+        const password = document.getElementById('infinityPassword').value;
+        
+        if (password === 'Arnav0928') {
+            gameState.infinityMode = true;
+            gameState.clicks = Infinity;
+            gameState.clickPower = Infinity;
+            gameState.autoPower = Infinity;
+            showBadge('INFINITY MODE ACTIVATED!');
+            hideInfinityModal();
+            updateUI();
+            renderShop();
+            renderUpgrades();
+            renderPrestigeTree();
+            saveGame();
+            refreshLeaderboards();
+        } else {
+            showToast('Incorrect password');
+        }
+    }
+
+    function resetGame() {
+        if (confirm('Are you sure you want to reset your game? This cannot be undone!')) {
+            localStorage.removeItem('ucEnhancedSave');
+            if (gameState.account) {
+                localStorage.removeItem(`ucGameState_${gameState.account.username}`);
+            }
+            
+            // Reset game state (safe defaults)
+            const keys = Object.keys(gameState);
+            keys.forEach(key => {
+                if (typeof gameState[key] === 'number') {
+                    gameState[key] = 0;
+                } else if (Array.isArray(gameState[key])) {
+                    gameState[key] = [];
+                } else if (typeof gameState[key] === 'object' && gameState[key] !== null) {
+                    // reassign to fresh object for nested defaults
+                    gameState[key] = {};
+                } else {
+                    gameState[key] = null;
+                }
+            });
+
+            // Reinitialize safe core values
+            gameState.clicks = 0;
+            gameState.clickPower = 1;
+            gameState.autoCount = 0;
+            gameState.autoPower = 0;
+            gameState.autoPrice = 50;
+            gameState.prestigeCost = 100000;
+            gameState.level = 1;
+            gameState.xpNeeded = 1000;
+            gameState.infinityMode = false;
+            gameState.account = null;
+
+            initializeGame();
+            updateUI();
+            renderShop();
+            renderUpgrades();
+            renderPrestigeTree();
+            refreshLeaderboards();
+            
+            showToast('Game reset!');
+        }
+    }
+
+    function startGameLoop() {
+        // Auto-clicker loop
+        setInterval(() => {
+            if (gameState.autoCount > 0) {
+                let gain = gameState.autoCount * gameState.autoPower * gameState.autoScale * gameState.prestigeMultiplier;
+                if (gameState.frenzy) gain *= 1.5;
+                if (gameState.seasonalEvent) gain *= gameState.eventMultiplier;
+                if (gameState.infinityMode) gain = Infinity;
+                
+                gameState.clicks += gain;
+                gainXP(Math.floor(gain/4));
+                updateUI();
+                refreshLeaderboards();
+            }
+        }, 1000);
+        
+        // Golden orb spawner
+        setInterval(() => {
+            if (Math.random() < (gameState.goldenChancePercent/100)) {
+                spawnGoldenDebug();
+            }
+        }, 5000);
+        
+        // Auto-save loop
+        setInterval(() => {
+            saveGame();
+        }, 15000);
+    }
+
+    function formatNumber(n) {
+        if (n === Infinity) return '∞';
+        if (n >= 1e36) return (n/1e36).toFixed(2)+'Und';
+        if (n >= 1e33) return (n/1e33).toFixed(2)+'Dec';
+        if (n >= 1e30) return (n/1e30).toFixed(2)+'N';
+        if (n >= 1e27) return (n/1e27).toFixed(2)+'Oct';
+        if (n >= 1e24) return (n/1e24).toFixed(2)+'Sp';
+        if (n >= 1e21) return (n/1e21).toFixed(1)+'Sx';
+        if (n >= 1e18) return (n/1e18).toFixed(2)+'Qt';
+        if (n >= 1e15) return (n/1e15).toFixed(2)+'Qd';
+        if (n >= 1e12) return (n/1e12).toFixed(2)+'T';
+        if (n >= 1e9) return (n/1e9).toFixed(2)+'B';
+        if (n >= 1e6) return (n/1e6).toFixed(2)+'M';
+        if (n >= 1e3) return (n/1e3).toFixed(1)+'k';
+        return Math.floor(n).toString();
+    }
+
+    function showToast(msg) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = msg;
+        document.getElementById('toastContainer').appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
+
+    function showBadge(msg) {
+        const badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.textContent = msg;
+        document.getElementById('badgeContainer').appendChild(badge);
+        setTimeout(() => badge.remove(), 1200);
+    }
+
+    function saveGame() {
+        try {
+            gameState.lastSaveTime = Date.now();
+            localStorage.setItem('ucEnhancedSave', JSON.stringify(gameState));
+            
+            // Also save account-specific state
+            if (gameState.account) {
+                localStorage.setItem(`ucGameState_${gameState.account.username}`, JSON.stringify(gameState));
+            }
+        } catch(e) {
+            console.warn('Save failed', e);
+        }
+    }
+
+    function loadGame() {
+        const raw = localStorage.getItem('ucEnhancedSave');
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                Object.assign(gameState, parsed);
+                showToast('Save loaded');
+                refreshLeaderboards();
+            } catch(e) {
+                console.warn('Load error', e);
+                showToast('Failed to load save');
+            }
+        }
+    }
+        const logoutBtn = document.getElementById('logoutBtn');
+
+    logoutBtn.addEventListener('click', () => {
+        if (confirm("Are you sure you want to logout?")) {
+            // Clear all localStorage data
+            localStorage.clear();
+
+            // Optional: toast notification
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = 'Logged out!';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 1500);
+
+            // Reload page or redirect to login
+            setTimeout(() => {
+                window.location.reload(); // or window.location.href = 'login.html';
+            }, 1500);
+        }
+    });
+   
+/* ===========================
+   Ultimate Clicker - Account System v2
+   - Soft logout integrated
+   - Fully tied to gameState & localStorage
+   - Paste before </body>
+===========================*/
+
+/* ---------- storage wrapper ---------- */
+const Storage = {
+  get(key, fallback=null){
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch(e){ console.warn('Storage.get error', e); return fallback; }
+  },
+  set(key, val){
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){ console.warn('Storage.set error', e); }
+  },
+  remove(key){
+    try { localStorage.removeItem(key); } catch(e){ console.warn('Storage.remove error', e); }
+  }
+};
+
+/* ---------- helpers ---------- */
+function shortHash(str){ try{return btoa(str);} catch(e){return str;} }
+function showToastImmediate(txt, t=1400){
+  const to = document.createElement('div');
+  to.className = 'toast';
+  to.textContent = txt;
+  document.getElementById('toastContainer')?.appendChild(to) ?? document.body.appendChild(to);
+  setTimeout(()=>to.remove(), t);
+}
+
+/* ---------- session ---------- */
+function getSession(){ return Storage.get('ucSession', null); }
+function setSession(username){ if(username) Storage.set('ucSession',{username}); else Storage.remove('ucSession'); }
+
+/* ---------- accounts ---------- */
+function getAccounts(){ return Storage.get('ucAccounts',{}); }
+function saveAccountCreds(username,password,avatar='🙂'){
+  const accounts = getAccounts();
+  accounts[username] = { password: shortHash(password), created: new Date().toISOString(), avatar };
+  Storage.set('ucAccounts', accounts);
+}
+function removeAccount(username){
+  const accounts = getAccounts();
+  if(accounts[username]) delete accounts[username];
+  Storage.set('ucAccounts', accounts);
+  Storage.remove(`ucGameState_${username}`);
+}
+
+/* ---------- Account Modal ---------- */
+const AVATARS = ['🙂','😎','🔥','🐉','⭐','👾','💎','🤖','😺','🦄','⚡','🍀','🎯','🌙'];
+
+function ensureAccountModalExists(){
+  let modal = document.getElementById('ucAuthModal');
+  if(modal) return modal;
+  modal = document.createElement('div');
+  modal.id = 'ucAuthModal';
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-content" role="dialog" aria-modal="true" style="max-width:520px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="modal-title">Account</div>
+        <button id="ucCloseAuth" class="btn" style="padding:6px 10px;">Close</button>
+      </div>
+      <div id="ucAuthContent" style="min-height:220px;"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e=>{ if(e.target===modal) modal.style.display='none'; });
+  document.getElementById('ucCloseAuth').addEventListener('click', ()=> modal.style.display='none');
+  return modal;
+}
+
+/* ---------- Login / Register ---------- */
+function renderLoginView(){
+  const modal = ensureAccountModalExists();
+  const container = modal.querySelector('#ucAuthContent');
+  container.innerHTML=`
+    <div id="ucLoginView">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input id="ucLoginUser" class="form-input" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="ucLoginPass" class="form-input" type="password" />
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="ucDoLogin" class="btn" style="flex:1;">Login</button>
+        <button id="ucShowRegister" class="btn" style="background:transparent;color:var(--accent);">Register</button>
+      </div>
+      <div style="margin-top:12px;text-align:center;">
+        <button id="ucGuest" class="btn" style="background:transparent;color:var(--muted);">Play as Guest</button>
+      </div>
+    </div>
+  `;
+  modal.style.display='flex';
+  document.getElementById('ucDoLogin').onclick=()=> authLogin(document.getElementById('ucLoginUser').value.trim(), document.getElementById('ucLoginPass').value);
+  document.getElementById('ucShowRegister').onclick=renderRegisterView;
+  document.getElementById('ucGuest').onclick=()=>{ authGuest(); modal.style.display='none'; };
+}
+
+function renderRegisterView(){
+  const modal = ensureAccountModalExists();
+  const container = modal.querySelector('#ucAuthContent');
+  const avatarButtons = AVATARS.map(a=>`<button class="ucAvatarBtn" data-avatar="${a}" style="font-size:20px;padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03)">${a}</button>`).join(' ');
+  container.innerHTML=`
+    <div id="ucRegisterView">
+      <div class="form-group"><label class="form-label">Username</label><input id="ucRegUser" class="form-input" /></div>
+      <div class="form-group"><label class="form-label">Password</label><input id="ucRegPass" class="form-input" type="password" /></div>
+      <div class="form-group"><label class="form-label">Confirm Password</label><input id="ucRegPass2" class="form-input" type="password" /></div>
+      <div class="form-group"><label class="form-label">Pick an avatar</label><div id="ucAvatarGrid" style="display:flex;gap:8px;flex-wrap:wrap;">${avatarButtons}</div><input type="hidden" id="ucSelectedAvatar" value="🙂" /></div>
+      <div style="display:flex;gap:8px;">
+        <button id="ucDoRegister" class="btn" style="flex:1;">Create Account</button>
+        <button id="ucShowLogin" class="btn" style="background:transparent;color:var(--accent);">Back</button>
+      </div>
+      <div style="margin-top:12px;text-align:center;"><button id="ucGuestFromReg" class="btn" style="background:transparent;color:var(--muted);">Play as Guest</button></div>
+    </div>
+  `;
+  modal.style.display='flex';
+  container.querySelectorAll('.ucAvatarBtn').forEach(btn=>btn.addEventListener('click',()=>{
+    container.querySelectorAll('.ucAvatarBtn').forEach(b=>b.style.boxShadow='none');
+    btn.style.boxShadow='0 6px 18px rgba(0,0,0,0.5) inset';
+    document.getElementById('ucSelectedAvatar').value=btn.dataset.avatar;
+  }));
+  document.getElementById('ucDoRegister').onclick=()=> authRegister(
+    document.getElementById('ucRegUser').value.trim(),
+    document.getElementById('ucRegPass').value,
+    document.getElementById('ucRegPass2').value,
+    document.getElementById('ucSelectedAvatar').value || '🙂'
+  );
+  document.getElementById('ucShowLogin').onclick=renderLoginView;
+  document.getElementById('ucGuestFromReg').onclick=()=>{ authGuest(); modal.style.display='none'; };
+}
+
+/* ---------- Account Stats ---------- */
+function renderAccountStats(){
+  const modal = ensureAccountModalExists();
+  const container = modal.querySelector('#ucAuthContent');
+  const session = getSession();
+  const accounts = getAccounts();
+  const me = session && accounts[session.username] ? accounts[session.username] : null;
+  const username = session?.username || 'Guest';
+  let saved=null;
+  if(session?.username) saved = Storage.get(`ucGameState_${session.username}`, null) || (gameState.account?.username===session.username?gameState:null);
+  const avatar = me?.avatar || saved?.avatar || '🙂';
+  const lvl = saved?.level||gameState.level||1;
+  const clicks = saved?.clicks!==undefined?saved.clicks:Math.floor(gameState.clicks||0);
+  const xp = saved?.xp!==undefined?saved.xp:gameState.xp||0;
+  const xpNeeded = saved?.xpNeeded!==undefined?saved.xpNeeded:gameState.xpNeeded||1000;
+  const autos = saved?.autoCount!==undefined?saved.autoCount:gameState.autoCount||0;
+  const prest = saved?.prestige!==undefined?saved.prestige:gameState.prestige||0;
+  const xpPercent=Math.max(0,Math.min(100,Math.floor((xp/Math.max(1,xpNeeded))*100)));
+
+  container.innerHTML=`
+    <div style="display:flex;gap:16px;align-items:center;">
+      <div style="font-size:44px;">${avatar}</div>
+      <div style="flex:1;">
+        <div style="font-weight:800;font-size:18px;">${username}</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:4px;">Level ${lvl} • Prestige ${prest}</div>
+        <div style="margin-top:10px;">
+          <div class="small">Clicks</div>
+          <div style="font-weight:800;font-size:20px;">${formatNumber(clicks)}</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <div class="small">XP</div>
+      <div class="level-bar" style="height:14px;margin-top:6px;">
+        <div class="level-progress" style="width:${xpPercent}%;box-shadow:none;height:14px;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;">
+        <div class="small">Autos: <strong>${autos}</strong></div>
+        <div class="small">XP: ${xp}/${xpNeeded}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button id="ucEditAvatar" class="btn" style="flex:1;background:transparent;color:var(--accent);">Change Avatar</button>
+      <button id="ucLogout" class="logout-btn" style="flex:1;padding:8px 12px;">Logout</button>
+    </div>
+  `;
+  modal.style.display='flex';
+
+  document.getElementById('ucEditAvatar').onclick=()=>{
+    const grid=AVATARS.map(a=>`<button class="ucAvatarBtnSmall" data-avatar="${a}" style="font-size:22px;padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);margin:4px">${a}</button>`).join('');
+    container.insertAdjacentHTML('beforeend',`<div id="ucAvatarChooser" style="margin-top:12px;display:flex;flex-wrap:wrap;">${grid}</div>`);
+    container.querySelectorAll('.ucAvatarBtnSmall').forEach(b=>b.addEventListener('click',()=>{
+      const a=b.dataset.avatar;
+      const session=getSession();
+      if(!session?.username){ showToastImmediate('No account'); return; }
+      const accounts=getAccounts();
+      if(accounts[session.username]){ accounts[session.username].avatar=a; Storage.set('ucAccounts',accounts); showToastImmediate('Avatar updated'); renderAccountStats(); refreshLeaderboards(); }
+    }));
+  };
+
+  document.getElementById('ucLogout').onclick=()=> {
+    const session=getSession();
+    if(!session?.username){ showToastImmediate('No account'); return; }
+    if(!confirm(`Logout from "${session.username}"? Saved progress remains.`)) return;
+    setSession(null);
+    if(gameState.account && gameState.account.username===session.username) gameState.account=null;
+    updateAccountButton();
+    refreshLeaderboards();
+    showToastImmediate(`Logged out from ${session.username}`);
+    modal.style.display='none';
+  };
+}
+
+/* ---------- Auth logic ---------- */
+function authRegister(u,p,p2,avatar='🙂'){
+  u=String(u||'').trim();
+  if(!u){ showToastImmediate('Enter username'); return; }
+  if(!p){ showToastImmediate('Enter password'); return; }
+  if(p!==p2){ showToastImmediate('Passwords do not match'); return; }
+  const accounts=getAccounts();
+  if(accounts[u]){ showToastImmediate('Username taken'); return; }
+
+  saveAccountCreds(u,p,avatar);
+  const saveForUser=Object.assign({},gameState);
+  saveForUser.account={username:u,password:shortHash(p)};
+  Storage.set(`ucGameState_${u}`,saveForUser);
+  setSession(u);
+  Object.assign(gameState,saveForUser);
+  gameState.account={username:u,password:shortHash(p)};
+
+  updateUI(); renderShop(); renderUpgrades(); renderPrestigeTree(); refreshLeaderboards(); updateAccountButton();
+  const modal=ensureAccountModalExists(); modal.style.display='none';
+  showToastImmediate(`Account created: ${u}`);
+  saveGame();
+}
+
+function authLogin(u,p){
+  u=String(u||'').trim();
+  if(!u||!p){ showToastImmediate('Enter username & password'); return; }
+  const accounts=getAccounts();
+  const record=accounts[u];
+  if(!record){ showToastImmediate('No such account'); return; }
+  if(record.password!==shortHash(p)){ showToastImmediate('Invalid credentials'); return; }
+
+  setSession(u);
+  const saved=Storage.get(`ucGameState_${u}`,null);
+  if(saved) Object.assign(gameState,saved);
+  else Storage.set(`ucGameState_${u}`,Object.assign({},gameState));
+  gameState.account={username:u,password:shortHash(p)};
+
+  updateUI(); renderShop(); renderUpgrades(); renderPrestigeTree(); refreshLeaderboards(); updateAccountButton();
+  ensureAccountModalExists().style.display='none';
+  showToastImmediate(`Welcome back, ${u}!`);
+  saveGame();
+}
+
+function authGuest(){ setSession(null); gameState.account=null; updateAccountButton(); showToastImmediate('Playing as Guest'); }
+
+/* ---------- Account Button ---------- */
+function updateAccountButton(){
+  const btn=document.getElementById('accountBtn');
+  const session=getSession();
+  if(!btn) return;
+  if(session?.username){
+    const accounts=getAccounts();
+    const me=accounts[session.username]||{};
+    const avatar=me.avatar||'🙂';
+    btn.textContent=`${avatar} ${session.username} • Lv ${Math.floor(gameState.level||1)}`;
+  } else btn.textContent='Account';
+}
+function hookAccountButton(){
+  const btn=document.getElementById('accountBtn');
+  if(!btn) return;
+  btn.removeEventListener('click',_accountBtnHandler);
+  btn.addEventListener('click',_accountBtnHandler);
+}
+function _accountBtnHandler(){
+  const session=getSession();
+  if(session?.username) renderAccountStats();
+  else renderLoginView();
+}
+
+/* ---------- Header Logout Button ---------- */
+function hookHeaderLogoutButton(){
+  const btn=document.getElementById('logoutBtn');
+  if(!btn) return;
+  btn.addEventListener('click',()=>{
+    const session=getSession();
+    if(!session?.username){ showToastImmediate('No account logged in'); return; }
+    if(!confirm(`Logout from "${session.username}"? You can log in again later.`)) return;
+    setSession(null);
+    if(gameState.account && gameState.account.username===session.username) gameState.account=null;
+    updateAccountButton();
+    refreshLeaderboards();
+    showToastImmediate(`Logged out from ${session.username}`);
+  });
+}
+
+/* ---------- Initialization ---------- */
+document.addEventListener('DOMContentLoaded',()=>{
+  hookAccountButton();
+  hookHeaderLogoutButton();
+  const sess=getSession();
+  if(sess?.username){
+    const saved=Storage.get(`ucGameState_${sess.username}`,null);
+    if(saved){ Object.assign(gameState,saved); gameState.account={username:sess.username,password:(getAccounts()[sess.username]?.password||'')}; }
+  }
+  updateAccountButton();
+  refreshLeaderboards();
+});
+</script>
+</html>
