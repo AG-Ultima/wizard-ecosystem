@@ -224,7 +224,7 @@ h1 em{
 
 .games{
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-columns:repeat(3,minmax(0,1fr));
   gap:18px;
   padding-bottom:74px;
 }
@@ -351,6 +351,13 @@ h1 em{
 }
 
 @keyframes spin{to{transform:rotate(342deg)}}
+
+@media (max-width:1000px){
+  .games{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
 @media (max-width:760px){
   .shell{width:min(100% - 30px,1200px);padding-top:18px}
   .hero{padding:48px 0 44px}
@@ -358,12 +365,18 @@ h1 em{
   .game-card{min-height:330px}
   .footer{flex-direction:column;align-items:flex-start}
 }
+
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  *,*::before,*::after{
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.001ms!important
+  }
 }
 </style>
 </head>
 <body>
+
 <canvas id="space"></canvas>
 <div class="space-vignette"></div>
 <div class="ambient one"></div>
@@ -382,10 +395,13 @@ h1 em{
   <header class="hero">
     <div class="rune-wrap" aria-hidden="true">
       <div class="runes">✦ · ✧ · ⟡ · ✦ · ◇ · ✧ · ⟡ · ✦ ·</div>
-      <span class="rune-dot d1"></span><span class="rune-dot d2"></span>
-      <span class="rune-dot d3"></span><span class="rune-dot d4"></span>
+      <span class="rune-dot d1"></span>
+      <span class="rune-dot d2"></span>
+      <span class="rune-dot d3"></span>
+      <span class="rune-dot d4"></span>
       <div class="rune-core">🎮</div>
     </div>
+
     <div class="eyebrow">Wizard Ecosystem · Arcade</div>
     <h1>Wizard <em>Arcade</em></h1>
     <p class="hero-copy">A collection of interactive games built inside the Wizard Ecosystem.</p>
@@ -395,6 +411,7 @@ h1 em{
   <div class="section-label">Games</div>
 
   <main class="games">
+
     <a class="game-card" href="/arcade/wasteland">
       <div class="card-content">
         <span class="badge">Adventure · RPG</span>
@@ -414,6 +431,17 @@ h1 em{
         <div class="play">Play Sandbox <span>→</span></div>
       </div>
     </a>
+
+    <a class="game-card" href="/arcade/ultimate-clicker">
+      <div class="card-content">
+        <span class="badge">Original · Incremental</span>
+        <div class="game-icon">✦</div>
+        <h2 class="game-title">Ultimate Clicker</h2>
+        <p class="game-description">The first code I ever wrote. An incremental clicker with upgrades, automation, prestige, achievements, and an absurd amount of clicking.</p>
+        <div class="play">Play the Original <span>→</span></div>
+      </div>
+    </a>
+
   </main>
 
   <footer class="footer">
@@ -432,28 +460,39 @@ h1 em{
 
   function resize(){
     dpr=Math.min(window.devicePixelRatio||1,2);
-    w=window.innerWidth; h=window.innerHeight;
+    w=window.innerWidth;
+    h=window.innerHeight;
+
     canvas.width=Math.floor(w*dpr);
     canvas.height=Math.floor(h*dpr);
     canvas.style.width=w+'px';
     canvas.style.height=h+'px';
+
     ctx.setTransform(dpr,0,0,dpr,0,0);
     build();
   }
 
   function build(){
     const count=Math.min(420,Math.max(170,Math.floor(w*h/5000)));
+
     stars=Array.from({length:count},()=>({
-      x:Math.random()*w,y:Math.random()*h,
+      x:Math.random()*w,
+      y:Math.random()*h,
       r:rand(.25,1.15),
       a:rand(.16,.78),
       phase:rand(0,Math.PI*2),
       twinkle:rand(.35,1.15),
       drift:rand(.001,.008)
     }));
-    dust=Array.from({length:Math.min(90,Math.max(35,Math.floor(w*h/15000)))},()=>({
-      x:Math.random()*w,y:Math.random()*h,
-      r:rand(.4,1.6),a:rand(.025,.10),phase:rand(0,Math.PI*2)
+
+    dust=Array.from({
+      length:Math.min(90,Math.max(35,Math.floor(w*h/15000)))
+    },()=>({
+      x:Math.random()*w,
+      y:Math.random()*h,
+      r:rand(.4,1.6),
+      a:rand(.025,.10),
+      phase:rand(0,Math.PI*2)
     }));
   }
 
@@ -462,6 +501,7 @@ h1 em{
 
     for(const d of dust){
       const alpha=d.a*(.75+.25*Math.sin(t*.00035+d.phase));
+
       ctx.beginPath();
       ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
       ctx.fillStyle=`rgba(124,92,191,${alpha})`;
@@ -472,6 +512,7 @@ h1 em{
       const pulse=.55+.45*Math.sin(t*.001*s.twinkle+s.phase);
       const y=(s.y + (t-last)*s.drift*.08) % h;
       const alpha=s.a*(.58+.42*pulse);
+
       ctx.beginPath();
       ctx.arc(s.x,y,s.r,0,Math.PI*2);
       ctx.fillStyle=`rgba(212,208,232,${alpha})`;
@@ -479,8 +520,10 @@ h1 em{
 
       if(s.r>.88 && pulse>.93){
         ctx.beginPath();
-        ctx.moveTo(s.x-s.r*3,y); ctx.lineTo(s.x+s.r*3,y);
-        ctx.moveTo(s.x,y-s.r*3); ctx.lineTo(s.x,y+s.r*3);
+        ctx.moveTo(s.x-s.r*3,y);
+        ctx.lineTo(s.x+s.r*3,y);
+        ctx.moveTo(s.x,y-s.r*3);
+        ctx.lineTo(s.x,y+s.r*3);
         ctx.strokeStyle=`rgba(232,201,122,${alpha*.34})`;
         ctx.lineWidth=.5;
         ctx.stroke();
@@ -488,27 +531,47 @@ h1 em{
     }
 
     if(Math.random()<.0018) spawnShooting();
+
     shooting=shooting.filter(m=>{
-      m.x+=m.vx; m.y+=m.vy; m.life-=1;
-      const g=ctx.createLinearGradient(m.x,m.y,m.x-m.vx*12,m.y-m.vy*12);
-      g.addColorStop(0,`rgba(232,201,122,${Math.max(0,m.life/m.maxLife)*.9})`);
+      m.x+=m.vx;
+      m.y+=m.vy;
+      m.life-=1;
+
+      const g=ctx.createLinearGradient(
+        m.x,
+        m.y,
+        m.x-m.vx*12,
+        m.y-m.vy*12
+      );
+
+      g.addColorStop(
+        0,
+        `rgba(232,201,122,${Math.max(0,m.life/m.maxLife)*.9})`
+      );
+
       g.addColorStop(1,'rgba(232,201,122,0)');
+
       ctx.beginPath();
       ctx.moveTo(m.x,m.y);
       ctx.lineTo(m.x-m.vx*12,m.y-m.vy*12);
-      ctx.strokeStyle=g;ctx.lineWidth=1.2;ctx.stroke();
+      ctx.strokeStyle=g;
+      ctx.lineWidth=1.2;
+      ctx.stroke();
+
       return m.life>0;
     });
   }
 
   function spawnShooting(){
     const fromLeft=Math.random()>.5;
+
     shooting.push({
       x:fromLeft?rand(-40,w*.55):rand(w*.45,w+40),
       y:rand(20,h*.42),
       vx:fromLeft?rand(5,8):rand(-8,-5),
       vy:rand(2.5,4.2),
-      life:rand(28,52),maxLife:52
+      life:rand(28,52),
+      maxLife:52
     });
   }
 
@@ -519,9 +582,11 @@ h1 em{
   }
 
   window.addEventListener('resize',resize,{passive:true});
+
   resize();
   requestAnimationFrame(animate);
 })();
 </script>
+
 </body>
 </html>
