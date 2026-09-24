@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* ▼▼▼ PASTE YOUR TOMTOM KEY BETWEEN THE QUOTES (keep the quotes) ▼▼▼ */
+window.WIZARD_TT_KEY = 'PASTE_YOUR_TOMTOM_KEY_HERE';
+/* ▲▲▲ built in for everyone, no per-device setup ▲▲▲ */
+</script>
+<script>
+window.addEventListener('error', e => { try {
+  if (document.getElementById('err-banner')) return;
+  const d = document.createElement('div'); d.id = 'err-banner';
+  d.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:9999;background:#5a1d1a;color:#fff;font:12px/1.4 sans-serif;padding:10px 12px;border-radius:12px;max-height:30vh;overflow:auto';
+  d.textContent = 'Wizard Maps error (tap to close): ' + e.message + ' [line ' + e.lineno + ']';
+  d.onclick = () => d.remove(); document.body.appendChild(d);
+} catch {} });
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>Wizard Maps</title>
@@ -2247,12 +2261,15 @@ map.on('load', () => {
 /* ── Wizard Maps upgrade: TomTom traffic, routing, search, signals, voice ── */
 
 (() => {
-// ▼▼▼ PASTE YOUR TOMTOM KEY BETWEEN THE QUOTES ▼▼▼
-const TT_DEFAULT_KEY = 'PASTE_YOUR_TOMTOM_KEY_HERE';
-// ▲▲▲ built in for everyone, no per-device setup ▲▲▲
-const BUILT_IN = pJLfVhEg7BJmNoMaLoHQQUL2stVt4ik2 && !/PASTE/.test(TT_DEFAULT_KEY);
+const TT_DEFAULT_KEY = "pJLfVhEg7BJmNoMaLoHQQUL2stVt4ik2";
+const BUILT_IN = TT_DEFAULT_KEY && !/PASTE/.test(TT_DEFAULT_KEY);
 const LS_KEY = 'wizard_maps_tomtom_key', LS_VOICE = 'wizard_maps_voice';
 const ttKey = () => { if (BUILT_IN) return TT_DEFAULT_KEY; try { return localStorage.getItem(LS_KEY) || ''; } catch { return ''; } };
+const EXT_KEY = 'wizard_maps_ext_v1';
+const EXT = { avoidHighways: false, avoidTolls: false, avoidFerries: false, routeType: 'fastest', callouts: true, cameraAlerts: true, showSigns: true, speedAlert: false, clock24: false, voiceRate: 0.96, keepAwake: true };
+try { Object.assign(EXT, JSON.parse(localStorage.getItem(EXT_KEY) || '{}')); } catch {}
+const saveExt = () => { try { localStorage.setItem(EXT_KEY, JSON.stringify(EXT)); } catch {} };
+let lastOver = 0;
 const LVL_COLOR = ['match', ['coalesce', ['get', 'lvl'], 0], 1, '#f0913a', 2, '#e0453d', 3, '#9b1c1c', '#f2d27c'];
 
 // ───────── styles + settings UI ─────────
@@ -2313,7 +2330,7 @@ window.speak = function (text, soft) {
   const go = () => { try {
     const u = new SpeechSynthesisUtterance(say(text));
     if (chosenVoice) { u.voice = chosenVoice; u.lang = chosenVoice.lang; }
-    u.rate = 0.96; u.pitch = 1; u.volume = 1; u.onerror = () => {};
+    u.rate = EXT.voiceRate; u.pitch = 1; u.volume = 1; u.onerror = () => {};
     speechSynthesis.speak(u);
   } catch {} };
   if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); sq = setTimeout(go, 150); } else go();
@@ -2437,7 +2454,7 @@ function drawExtras(route) {
   if (route._traffic) map.getSource('route').setData({ type: 'FeatureCollection', features: route._traffic.features });
   ['route-line', 'route-line-glow'].forEach(id => { if (map.getLayer(id)) map.setPaintProperty(id, 'line-color', LVL_COLOR); });
   ensureIcons();
-  const fc = { type: 'FeatureCollection', features: (route._ctl || []).map(k => ({ type: 'Feature', properties: { t: k.type }, geometry: { type: 'Point', coordinates: [k.lon, k.lat] } })) };
+  const fc = { type: 'FeatureCollection', features: (EXT.showSigns ? (route._ctl || []) : []).map(k => ({ type: 'Feature', properties: { t: k.type }, geometry: { type: 'Point', coordinates: [k.lon, k.lat] } })) };
   if (map.getSource('route-ctl')) { map.getSource('route-ctl').setData(fc); return; }
   map.addSource('route-ctl', { type: 'geojson', data: fc });
   map.addLayer({ id: 'route-ctl', type: 'symbol', source: 'route-ctl', minzoom: 13, layout: {
@@ -2494,7 +2511,7 @@ window.onPositionUpdate = function (pos) {
         const ahead = k.along - along;
         if (k.said) continue;
         if (ahead <= 0) { k.said = true; continue; }
-        if (ahead < 160) { k.said = true; if (ahead > 50) speak(CALL[k.type], true); break; }
+        if (ahead < 160) { k.said = true; if (ahead > 50 && (k.type === 'speed_camera' ? EXT.cameraAlerts : EXT.callouts)) speak(CALL[k.type], true); break; }
         break;
       }
     }
@@ -2586,7 +2603,8 @@ window.fetchRoute = async function (s, e, p) {
   if (k && TT_MODE[p]) {
     try {
       const car = p === 'driving';
-      const u = `https://api.tomtom.com/routing/1/calculateRoute/${s.lngLat[1]},${s.lngLat[0]}:${e.lngLat[1]},${e.lngLat[0]}/json?key=${k}&travelMode=${TT_MODE[p]}&routeType=fastest&instructionsType=text&language=en-US` + (car ? '&traffic=true&computeTravelTimeFor=all&maxAlternatives=2&sectionType=traffic&sectionType=lanes&sectionType=speedLimit' : '');
+      const av = [EXT.avoidHighways && 'motorways', EXT.avoidTolls && 'tollRoads', EXT.avoidFerries && 'ferries'].filter(Boolean).map(a => '&avoid=' + a).join('');
+      const u = `https://api.tomtom.com/routing/1/calculateRoute/${s.lngLat[1]},${s.lngLat[0]}:${e.lngLat[1]},${e.lngLat[0]}/json?key=${k}&travelMode=${TT_MODE[p]}&routeType=${EXT.routeType}&instructionsType=text&language=en-US` + (car ? av + '&traffic=true&computeTravelTimeFor=all&maxAlternatives=2&sectionType=traffic&sectionType=lanes&sectionType=speedLimit' : '');
       const r = await fetch(u); if (!r.ok) throw 0;
       const rs = (await r.json()).routes; if (!rs || !rs.length) throw 0;
       const all = rs.map(x => ttConvert(x, car)); all.forEach(x => { x._all = all; });
@@ -2666,6 +2684,7 @@ window.onPositionUpdate = function (pos) {
   const r = state.routeData, { longitude: lon, latitude: lat } = pos.coords;
   if (!state.navigationActive || !r) { snapD = [0, 0]; return; }
   buf.push([lon, lat]); if (buf.length > 4) buf.shift();
+  if (EXT.speedAlert && state.currentSpeedLimit && pos.coords.speed != null && pos.coords.speed * 3.6 > state.currentSpeedLimit.kmh + 8 && Date.now() - lastOver > 60000) { lastOver = Date.now(); speak('You are over the speed limit.', true); }
   if (state.routeProfile === 'driving' && ttKey() && buf.length >= 2 && Date.now() - lastSnap > 10000) { lastSnap = Date.now(); snapNow(); }
   if (r._traffic && r._traffic.baked && !r._busy && state.routeProfile === 'driving' && Date.now() - (r._trafficAt || 0) > 240000) {
     r._trafficAt = Date.now(); r._busy = true;
@@ -2706,6 +2725,39 @@ async function toggleRange() {
     map.fitBounds(b.reduce((x, p) => x.extend(p), new maplibregl.LngLatBounds(b[0], b[0])), { padding: 60, duration: 800 });
   } catch { showToast('Could not get range'); }
 }
+// ───────── extra settings (all persisted, all wired) ─────────
+document.querySelector('#settings-sheet .foot').insertAdjacentHTML('beforebegin', `
+<div style="margin-top:22px"><span class="label">Route type (TomTom)</span>
+<div class="seg" id="rt-seg"><button data-v="fastest">Fastest</button><button data-v="shortest">Shortest</button></div>
+<div style="margin-top:8px">${[['avoidHighways','Avoid highways'],['avoidTolls','Avoid toll roads'],['avoidFerries','Avoid ferries']].map(([k, t]) => `<div class="toggle-row"><span>${t}</span><div class="toggle" id="x-${k}" role="switch" aria-label="${t}"></div></div>`).join('')}</div>
+<span class="label" style="margin-top:22px">Voice speed</span>
+<div class="seg" id="rate-seg"><button data-v="0.85">Slow</button><button data-v="0.96">Normal</button><button data-v="1.1">Fast</button></div>
+<span class="label" style="margin-top:22px">Clock</span>
+<div class="seg" id="clock-seg"><button data-v="12">12-hour</button><button data-v="24">24-hour</button></div>
+<div style="margin-top:14px">${[['callouts','Traffic light and stop sign alerts'],['cameraAlerts','Speed camera alerts'],['speedAlert','Warn when over the speed limit'],['showSigns','Show lights and stop signs on map'],['keepAwake','Keep screen on while navigating']].map(([k, t]) => `<div class="toggle-row"><span>${t}</span><div class="toggle" id="x-${k}" role="switch" aria-label="${t}"></div></div>`).join('')}</div></div>`);
+const refreshRoute = () => { if (state.endPoint) { state.routes = {}; previewRoutes(); } };
+['avoidHighways', 'avoidTolls', 'avoidFerries', 'callouts', 'cameraAlerts', 'speedAlert', 'showSigns', 'keepAwake'].forEach(k => {
+  const el = $('x-' + k); el.classList.toggle('active', !!EXT[k]);
+  el.addEventListener('click', () => {
+    el.classList.toggle('active'); EXT[k] = el.classList.contains('active'); saveExt();
+    if (/^avoid/.test(k)) refreshRoute();
+    if (k === 'showSigns' && state.routeData) drawExtras(state.routeData);
+  });
+});
+[['rt-seg', 'routeType', String, true], ['rate-seg', 'voiceRate', Number, false], ['clock-seg', 'clock24', v => v === '24', false]].forEach(([id, key, parse, reroute]) => {
+  const paint = () => document.querySelectorAll(`#${id} button`).forEach(b => b.classList.toggle('active', parse(b.dataset.v) === EXT[key]));
+  paint();
+  document.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener('click', () => {
+    EXT[key] = parse(b.dataset.v); saveExt(); paint();
+    if (reroute) refreshRoute();
+    if (key === 'voiceRate') speak('In a quarter mile, turn right.');
+    if (key === 'clock24' && state.routeData) renderSummary(state.routeData);
+  }));
+});
+const _fc = window.formatClock;
+window.formatClock = d => d.toLocaleTimeString([], EXT.clock24 ? { hour: '2-digit', minute: '2-digit', hour12: false } : { hour: 'numeric', minute: '2-digit' });
+const _rw = window.requestWakeLock;
+window.requestWakeLock = () => EXT.keepAwake ? _rw() : Promise.resolve();
 })();
 
 </script>
