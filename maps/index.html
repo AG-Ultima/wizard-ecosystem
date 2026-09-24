@@ -697,11 +697,15 @@ body.navigating .toast { bottom: calc(var(--safe-bottom) + 100px); }
 // CONFIG
 // ══════════════════════════════════════
 const CONFIG = {
-    STYLES: {
-        wizard:   'https://tiles.openfreemap.org/styles/dark',
-        liberty:  'https://tiles.openfreemap.org/styles/liberty',
-        positron: 'https://tiles.openfreemap.org/styles/positron'
-    },
+    STYLES: (() => {
+        const OFM = { wizard: 'https://tiles.openfreemap.org/styles/dark', liberty: 'https://tiles.openfreemap.org/styles/liberty', positron: 'https://tiles.openfreemap.org/styles/positron' };
+        let k = '';
+        try { k = String(window.WIZARD_TT_KEY || '').trim(); if (!k || /PASTE/.test(k)) k = localStorage.getItem('wizard_maps_tomtom_key') || ''; } catch {}
+        window.WIZARD_OFM = OFM; window.WIZARD_TT_MAP = !!k;
+        if (!k) return OFM;
+        const tt = m => `https://api.tomtom.com/maps/orbis/assets/styles/0.*/style?key=${k}&apiVersion=1&map=${m}`;
+        return { wizard: tt('basic_street-dark'), liberty: tt('basic_street-light'), positron: tt('basic_mono-light'), satellite: tt('basic_street-satellite'), nightdrive: tt('basic_street-dark-driving'), daydrive: tt('basic_street-light-driving'), monodark: tt('basic_mono-dark') };
+    })(),
     GEOCODE_URL: 'https://photon.komoot.io/api/',
     REVERSE_URL: 'https://photon.komoot.io/reverse',
     ROUTE_SERVERS: {
@@ -898,7 +902,7 @@ const map = new maplibregl.Map({
     attributionControl: false,
     maxPitch: 70
 });
-map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: 'OpenFreeMap' }), 'bottom-left');
+map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: window.WIZARD_TT_MAP ? '© TomTom' : 'OpenFreeMap' }), 'bottom-left');
 
 // Recolor the dark base style into the wizard palette
 function wizardify() {
@@ -2816,6 +2820,65 @@ window.updateNavUI = function () { _unav(); pipDraw(); };
 $('nav-end-btn').addEventListener('click', pipStop);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && state.navigationActive && pip.video && !document.pictureInPictureElement) pipEnter(); });
 document.head.insertAdjacentHTML('beforeend', '<style>@media (max-height:520px){.nav-dist{font-size:30px}.nav-icon{width:48px;height:48px;padding:6px}.nav-card{padding:8px 12px}.lanes-strip,.nav-then{display:none!important}.eta{font-size:24px}.eta-sub{display:none}.end-btn,.round-btn{height:40px;width:auto;min-width:40px}}@media (max-width:340px){.cur-speed{display:none!important}}</style>');
+// ───────── TomTom Orbis base map: more themes, satellite, wizard recolor, 3D ─────────
+if (window.WIZARD_TT_MAP) {
+  const extra = [
+    ['satellite', 'Satellite', 'linear-gradient(135deg,#2c3e2a,#5a6b4a 50%,#8a7a5a)'],
+    ['nightdrive', 'Night drive', 'linear-gradient(135deg,#0a0a14 55%,#e8c97a 55%,#e8c97a 62%,#0a0a14 62%)'],
+    ['daydrive', 'Day drive', 'linear-gradient(135deg,#f3f1ea 55%,#3f7fd6 55%,#3f7fd6 62%,#f3f1ea 62%)'],
+    ['monodark', 'Mono dark', 'linear-gradient(135deg,#1c1c22,#3a3a44)']];
+  $('styles').insertAdjacentHTML('beforeend', extra.map(([k, t, bg]) => `<div class="style-opt" data-style="${k}"><div class="swatch" style="background:${bg}"></div>${t}</div>`).join(''));
+  $('styles').querySelectorAll('.style-opt').forEach(o => { if (extra.some(e => e[0] === o.dataset.style)) o.addEventListener('click', () => {
+    state.style = o.dataset.style; saveSettings(); syncSettingsUI(); map.setStyle(CONFIG.STYLES[state.style]); }); });
+  let fell = false;
+  map.on('error', e => {
+    const u = (e && e.error && e.error.url) || '';
+    if (!fell && /api\.tomtom\.com\/maps\/orbis\/assets\/styles/.test(u)) {
+      fell = true; showToast('TomTom map unavailable, using backup map');
+      map.setStyle(window.WIZARD_OFM[state.style] || window.WIZARD_OFM.wizard);
+    }
+  });
+  const foot = document.querySelector('#settings-sheet .foot');
+  foot.innerHTML = foot.innerHTML.replace(/tiles by <a[^>]*>OpenFreeMap<\/a>/, 'map by <a href="https://www.tomtom.com" target="_blank" rel="noopener">TomTom</a>');
+}
+window.wizardify = function () {
+  const style = map.getStyle(); if (!style) return;
+  const P = { ink: '#080612', land: '#0b0919', park: '#0e0c24', water: '#1a1440', building: '#171332', pave: '#141030', minor: '#251e4d', mid: '#382d6e', major: '#5b4b96', motor: '#a88a3d', rail: '#2b2456', boundary: '#4a3d85', text: '#a9a5c4', place: '#e8c97a' };
+  style.layers.forEach(l => {
+    const k = (l.id + ' ' + (l['source-layer'] || '')).toLowerCase();
+    try {
+      if (l.type === 'background') map.setPaintProperty(l.id, 'background-color', P.ink);
+      else if (l.type === 'fill') {
+        if (l.paint && l.paint['fill-pattern']) return;
+        map.setPaintProperty(l.id, 'fill-color', /water|ocean|sea|lake|river/.test(k) ? P.water : /building/.test(k) ? P.building : /park|green|forest|wood|grass|vegetation|landcover|landuse|nature/.test(k) ? P.park : /road|transport|aeroway|pedestrian|parking/.test(k) ? P.pave : P.land);
+      } else if (l.type === 'line') {
+        map.setPaintProperty(l.id, 'line-color', /waterway|water|river|stream/.test(k) ? P.water : /boundary|border/.test(k) ? P.boundary : /casing|outline/.test(k) ? P.ink : /rail|transit|ferry|subway/.test(k) ? P.rail : /motorway|trunk|freeway|highway/.test(k) ? P.motor : /primary|arterial/.test(k) ? P.major : /secondary|tertiary|collector/.test(k) ? P.mid : P.minor);
+      } else if (l.type === 'symbol' && l.layout && l.layout['text-field']) {
+        const place = /place|city|town|country|state|village|locality|neighbou?rhood/.test(k);
+        map.setPaintProperty(l.id, 'text-color', place ? P.place : P.text); map.setPaintProperty(l.id, 'text-halo-color', P.ink);
+      }
+    } catch {}
+  });
+};
+window.enable3DBuildings = function () {
+  if (map.getLayer('3d-buildings')) return;
+  try {
+    const b = (map.getStyle().layers || []).find(l => /building/i.test(l.id) && l['source-layer'] && l.source);
+    const sat = state.style === 'satellite';
+    map.addLayer({ id: '3d-buildings', source: b ? b.source : 'openmaptiles', 'source-layer': b ? b['source-layer'] : 'building', type: 'fill-extrusion', minzoom: 14,
+      paint: { 'fill-extrusion-color': state.style === 'wizard' ? '#3a2d6b' : sat ? '#d8d2c4' : '#cfc9e6',
+        'fill-extrusion-height': ['case', ['has', 'render_height'], ['to-number', ['get', 'render_height']], ['has', 'height'], ['to-number', ['get', 'height']], 14],
+        'fill-extrusion-base': ['case', ['has', 'render_min_height'], ['to-number', ['get', 'render_min_height']], 0],
+        'fill-extrusion-opacity': 0.88, 'fill-extrusion-vertical-gradient': true } }, firstLabelId());
+    if (!state.navigationActive) map.easeTo({ pitch: 62, duration: 900 });
+    try { map.setSky({ 'sky-color': '#0e0b1e', 'horizon-color': '#7c5cbf', 'fog-color': '#080612', 'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.5, 'fog-ground-blend': 0.4 }); } catch {}
+    if (state.routeData) addRouteLayers(state.routeData);
+  } catch {}
+};
+window.disable3DBuildings = function () {
+  if (map.getLayer('3d-buildings')) map.removeLayer('3d-buildings');
+  if (!state.navigationActive) map.easeTo({ pitch: 0, duration: 600 });
+};
 })();
 
 </script>
