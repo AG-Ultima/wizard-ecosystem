@@ -3,7 +3,7 @@
 <head>
 <script>
 /* ▼▼▼ PASTE YOUR TOMTOM KEY BETWEEN THE QUOTES (keep the quotes) ▼▼▼ */
-window.WIZARD_TT_KEY = 'PASTE_YOUR_TOMTOM_KEY_HERE';
+window.WIZARD_TT_KEY = 'pJLfVhEg7BJmNoMaLoHQQUL2stVt4ik2';
 /* ▲▲▲ built in for everyone, no per-device setup ▲▲▲ */
 </script>
 <script>
@@ -2261,7 +2261,7 @@ map.on('load', () => {
 /* ── Wizard Maps upgrade: TomTom traffic, routing, search, signals, voice ── */
 
 (() => {
-const TT_DEFAULT_KEY = "pJLfVhEg7BJmNoMaLoHQQUL2stVt4ik2";
+const TT_DEFAULT_KEY = String(window.WIZARD_TT_KEY || '').trim();
 const BUILT_IN = TT_DEFAULT_KEY && !/PASTE/.test(TT_DEFAULT_KEY);
 const LS_KEY = 'wizard_maps_tomtom_key', LS_VOICE = 'wizard_maps_voice';
 const ttKey = () => { if (BUILT_IN) return TT_DEFAULT_KEY; try { return localStorage.getItem(LS_KEY) || ''; } catch { return ''; } };
@@ -2758,6 +2758,64 @@ const _fc = window.formatClock;
 window.formatClock = d => d.toLocaleTimeString([], EXT.clock24 ? { hour: '2-digit', minute: '2-digit', hour12: false } : { hour: 'numeric', minute: '2-digit' });
 const _rw = window.requestWakeLock;
 window.requestWakeLock = () => EXT.keepAwake ? _rw() : Promise.resolve();
+// ───────── floating nav window (Picture-in-Picture) so it keeps working over YouTube ─────────
+const pip = { video: null, ctx: null, imgs: {} };
+function pipSetup() {
+  if (pip.video || !document.pictureInPictureEnabled && !HTMLVideoElement.prototype.webkitSetPresentationMode) return;
+  const cv = document.createElement('canvas'); cv.width = 480; cv.height = 270;
+  const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', '');
+  v.srcObject = cv.captureStream(5);
+  v.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
+  document.body.appendChild(v);
+  pip.video = v; pip.ctx = cv.getContext('2d');
+  v.play().catch(() => {}); pipDraw();
+  try { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Wizard Maps navigation' }); navigator.mediaSession.setActionHandler('enterpictureinpicture', () => { pipEnter(); }); } catch {}
+}
+function pipDraw() {
+  const x = pip.ctx; if (!x) return;
+  x.fillStyle = '#080612'; x.fillRect(0, 0, 480, 270);
+  const r = state.routeData;
+  if (!r || !state.navigationActive) { x.fillStyle = '#e8c97a'; x.font = 'bold 30px Georgia,serif'; x.fillText('Wizard Maps', 24, 140); return; }
+  const steps = r.legs[0].steps, s = steps[Math.min(nav.currentStepIndex, steps.length - 1)];
+  const svg = maneuverSvg(s).replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"').replace(/currentColor/g, '#e8c97a');
+  let img = pip.imgs[svg];
+  if (!img) { img = new Image(); img.onload = pipDraw; img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg); pip.imgs[svg] = img; }
+  if (img.complete && img.naturalWidth) x.drawImage(img, 24, 24, 120, 120);
+  x.fillStyle = '#e8c97a'; x.font = 'bold 64px Georgia,serif'; x.fillText($('nav-dist').textContent, 164, 84);
+  x.fillStyle = '#d4d0e8'; x.font = '24px sans-serif';
+  const words = $('nav-main').textContent.split(' '), lines = []; let c = '';
+  words.forEach(w => { if (x.measureText(c + ' ' + w).width > 290 && c) { lines.push(c); c = w; } else c = c ? c + ' ' + w : w; });
+  lines.push(c); lines.slice(0, 2).forEach((l, i) => x.fillText(l, 164, 122 + i * 30));
+  x.fillStyle = '#e8c97a'; x.font = 'bold 40px Georgia,serif'; x.fillText($('nav-eta').textContent, 24, 232);
+  x.fillStyle = '#8f86b8'; x.font = '22px sans-serif'; x.fillText($('nav-eta-sub').textContent, 24, 260);
+}
+async function pipEnter() {
+  try {
+    pipSetup(); if (!pip.video) throw 0;
+    await pip.video.play(); pipDraw();
+    if (pip.video.requestPictureInPicture) await pip.video.requestPictureInPicture();
+    else pip.video.webkitSetPresentationMode('picture-in-picture');
+  } catch { showToast('Floating view is not supported here'); }
+}
+async function pipToggle() {
+  if (document.pictureInPictureElement) { try { await document.exitPictureInPicture(); } catch {} return; }
+  pipEnter();
+}
+function pipStop() {
+  try { if (document.pictureInPictureElement) document.exitPictureInPicture(); } catch {}
+  if (pip.video) { pip.video.pause(); pip.video.remove(); pip.video = null; pip.ctx = null; }
+}
+if (document.pictureInPictureEnabled || HTMLVideoElement.prototype.webkitSetPresentationMode) {
+  $('nav-voice-btn').insertAdjacentHTML('beforebegin', '<button class="round-btn" id="nav-pip-btn" aria-label="Float navigation over other apps"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1" fill="currentColor"/></svg></button>');
+  $('nav-pip-btn').addEventListener('click', pipToggle);
+}
+const _bn = window.beginNavigation;
+window.beginNavigation = async function () { await _bn(); try { pipSetup(); } catch {} };
+const _unav = window.updateNavUI;
+window.updateNavUI = function () { _unav(); pipDraw(); };
+$('nav-end-btn').addEventListener('click', pipStop);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && state.navigationActive && pip.video && !document.pictureInPictureElement) pipEnter(); });
+document.head.insertAdjacentHTML('beforeend', '<style>@media (max-height:520px){.nav-dist{font-size:30px}.nav-icon{width:48px;height:48px;padding:6px}.nav-card{padding:8px 12px}.lanes-strip,.nav-then{display:none!important}.eta{font-size:24px}.eta-sub{display:none}.end-btn,.round-btn{height:40px;width:auto;min-width:40px}}@media (max-width:340px){.cur-speed{display:none!important}}</style>');
 })();
 
 </script>
