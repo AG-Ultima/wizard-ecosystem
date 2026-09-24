@@ -2238,5 +2238,471 @@ map.on('load', () => {
     }
 });
 </script>
+<script>
+/* ── Wizard Maps upgrade: TomTom traffic, routing, search, signals, voice ── */
+
+(() => {
+// ▼▼▼ PASTE YOUR TOMTOM KEY BETWEEN THE QUOTES ▼▼▼
+const TT_DEFAULT_KEY = 'pJLfVhEg7BJmNoMaLoHQQUL2stVt4ik2';
+// ▲▲▲ built in for everyone, no per-device setup ▲▲▲
+const BUILT_IN = TT_DEFAULT_KEY && !/PASTE/.test(TT_DEFAULT_KEY);
+const LS_KEY = 'wizard_maps_tomtom_key', LS_VOICE = 'wizard_maps_voice';
+const ttKey = () => { if (BUILT_IN) return TT_DEFAULT_KEY; try { return localStorage.getItem(LS_KEY) || ''; } catch { return ''; } };
+const LVL_COLOR = ['match', ['coalesce', ['get', 'lvl'], 0], 1, '#f0913a', 2, '#e0453d', 3, '#9b1c1c', '#f2d27c'];
+
+// ───────── styles + settings UI ─────────
+document.head.insertAdjacentHTML('beforeend', '<style>.summary{flex-wrap:wrap}.x-field{width:100%;height:48px;background:var(--ink);border:1px solid var(--border);border-radius:12px;padding:0 14px;color:var(--silver);font-size:16px;font-family:var(--ui);margin-bottom:8px;outline:none}.x-field:focus{border-color:var(--border-strong)}.x-hint{font-size:12.5px;color:var(--silver-dim);line-height:1.5}</style>');
+document.querySelector('#settings-sheet .foot').insertAdjacentHTML('beforebegin',
+ `<div style="margin-top:22px"><span class="label">Voice</span><select id="voice-pick" class="x-field"></select>
+  <span class="label" style="margin-top:14px">Live traffic key (TomTom, free)</span>
+  <input id="tt-key" class="x-field" placeholder="Paste API key" autocomplete="off" autocapitalize="off" spellcheck="false">
+  <div class="x-hint">Gets you red/orange traffic on the route and traffic-aware ETAs. Free at developer.tomtom.com.</div></div>`);
+if (BUILT_IN) { const k = $('tt-key'); [k.previousElementSibling, k, k.nextElementSibling].forEach(e => e.style.display = 'none'); }
+$('tt-key').value = (() => { try { return localStorage.getItem(LS_KEY) || ''; } catch { return ''; } })();
+$('tt-key').addEventListener('change', () => {
+  try { localStorage.setItem(LS_KEY, $('tt-key').value.trim()); } catch {}
+  showToast($('tt-key').value.trim() ? 'Traffic key saved' : 'Traffic key removed');
+  const r = state.routeData; if (r && !r._busy) { r._started = false; addRouteLayers(r); }
+});
+
+// ───────── voice ─────────
+let chosenVoice = null;
+const BAD = /compact|espeak|novelty|albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph/;
+function scoreVoice(v) {
+  const n = v.name.toLowerCase(); let s = 0;
+  if (!/^en/i.test(v.lang)) return -99;
+  if (/en[-_]us/i.test(v.lang)) s += 3;
+  if (/premium|enhanced|neural|natural|online/.test(n)) s += 10;
+  if (/siri|google|samantha|ava|allison|zoe|evan|nicky|aria|jenny|guy|daniel|karen|moira/.test(n)) s += 6;
+  if (!v.localService) s += 2;
+  if (BAD.test(n)) s -= 20;
+  return s;
+}
+function pickVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices(); if (!vs.length) return;
+  const en = vs.filter(v => scoreVoice(v) > -50).sort((a, b) => scoreVoice(b) - scoreVoice(a));
+  let saved = null; try { saved = localStorage.getItem(LS_VOICE); } catch {}
+  chosenVoice = en.find(v => v.name === saved) || en[0] || null;
+  $('voice-pick').innerHTML = en.map(v => `<option value="${escapeHtml(v.name)}" ${v === chosenVoice ? 'selected' : ''}>${escapeHtml(v.name)}</option>`).join('');
+}
+$('voice-pick').addEventListener('change', () => {
+  chosenVoice = speechSynthesis.getVoices().find(v => v.name === $('voice-pick').value) || chosenVoice;
+  try { localStorage.setItem(LS_VOICE, chosenVoice.name); } catch {}
+  speak('In a quarter mile, turn right onto Main Street.');
+});
+if ('speechSynthesis' in window) { speechSynthesis.addEventListener('voiceschanged', pickVoice); pickVoice(); }
+
+const say = t => t
+  .replace(/\bI-(\d+)/g, 'Interstate $1').replace(/\bUS-?(\d+)/g, 'U.S. $1').replace(/\b(?:AZ|SR)-?(\d+)/g, 'State Route $1')
+  .replace(/\bSt\b\.?/g, 'Street').replace(/\bAve\b\.?/g, 'Avenue').replace(/\bBlvd\b\.?/g, 'Boulevard').replace(/\bRd\b\.?/g, 'Road')
+  .replace(/\bDr\b\.?/g, 'Drive').replace(/\bLn\b\.?/g, 'Lane').replace(/\bCt\b\.?/g, 'Court').replace(/\bHwy\b\.?/g, 'Highway').replace(/\bPkwy\b\.?/g, 'Parkway')
+  .replace(/\bN\b/g, 'North').replace(/\bS\b/g, 'South').replace(/\bE\b/g, 'East').replace(/\bW\b/g, 'West');
+
+let sq = null;
+window.speak = function (text, soft) {
+  if (!nav.voiceEnabled || !('speechSynthesis' in window)) return;
+  if (soft && (speechSynthesis.speaking || speechSynthesis.pending)) return; // never cut off a turn instruction
+  try { warmSpeech(); } catch {}
+  clearTimeout(sq);
+  const go = () => { try {
+    const u = new SpeechSynthesisUtterance(say(text));
+    if (chosenVoice) { u.voice = chosenVoice; u.lang = chosenVoice.lang; }
+    u.rate = 0.96; u.pitch = 1; u.volume = 1; u.onerror = () => {};
+    speechSynthesis.speak(u);
+  } catch {} };
+  if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); sq = setTimeout(go, 150); } else go();
+};
+window.formatDistanceSpoken = function (m) {
+  if (state.units === 'imperial') {
+    const mi = m / 1609.344;
+    if (mi >= 0.9) return mi < 10 ? (Math.round(mi * 10) / 10 === 1 ? '1 mile' : `${(Math.round(mi * 10) / 10).toFixed(1)} miles`) : `${Math.round(mi)} miles`;
+    if (mi >= 0.42 && mi <= 0.6) return 'half a mile';
+    if (mi >= 0.2 && mi <= 0.36) return 'a quarter mile';
+    const ft = m * 3.28084; return `${Math.max(50, Math.round(ft / 50) * 50)} feet`;
+  }
+  if (m < 1000) return `${Math.max(50, Math.round(m / 50) * 50)} meters`;
+  const km = m / 1000; return km < 10 ? `${(Math.round(km * 10) / 10).toFixed(1)} kilometers` : `${Math.round(km)} kilometers`;
+};
+
+// ───────── route enrichment: signals / stops / cameras + traffic ─────────
+const cumOf = c => { const a = [0]; for (let i = 1; i < c.length; i++) a.push(a[i - 1] + distanceMeters(c[i - 1][0], c[i - 1][1], c[i][0], c[i][1])); return a; };
+const idxAt = (cum, d) => { let i = 0; while (i < cum.length - 1 && cum[i] < d) i++; return i; };
+function nearestOn(route, lon, lat) {
+  const c = route.geometry.coordinates; let m = 1e12, ix = -1;
+  for (let i = 0; i < c.length - 1; i++) { const d = pointToSegment(lon, lat, c[i][0], c[i][1], c[i + 1][0], c[i + 1][1]); if (d < m) { m = d; ix = i; } }
+  return { dist: m, index: ix };
+}
+
+async function loadControls(route) {
+  const c = route.geometry.coordinates, cum = route._cum;
+  if (cum[cum.length - 1] > 80000) return [];
+  const pts = []; let last = -1e9;
+  c.forEach((p, i) => { if (cum[i] - last >= 35 || i === c.length - 1) { pts.push(p[1].toFixed(5), p[0].toFixed(5)); last = cum[i]; } });
+  const q = `[out:json][timeout:25];node(around:9,${pts.join(',')})["highway"~"^(traffic_signals|stop|speed_camera)$"];out;`;
+  const res = await fetch(CONFIG.OVERPASS_URL, { method: 'POST', body: 'data=' + encodeURIComponent(q) });
+  if (!res.ok) return [];
+  const els = (await res.json()).elements || [];
+  const found = els.map(e => ({ type: e.tags.highway, lon: e.lon, lat: e.lat, n: nearestOn(route, e.lon, e.lat) }))
+    .filter(k => k.n.dist <= 12 && k.n.index >= 0).map(k => ({ type: k.type, lon: k.lon, lat: k.lat, along: cum[k.n.index] }))
+    .sort((a, b) => a.along - b.along);
+  return found.filter((k, i) => !found.slice(0, i).some(o => o.type === k.type && Math.abs(o.along - k.along) < 25));
+}
+
+async function loadTraffic(route) {
+  const key = ttKey(); if (!key) return null;
+  const c = route.geometry.coordinates, cum = route._cum, D = cum[cum.length - 1];
+  const n = Math.max(1, Math.min(20, Math.round(D / 1200))), L = D / n;
+  const idxs = []; for (let i = 0; i < n; i++) idxs.push(idxAt(cum, i * L)); idxs.push(c.length - 1);
+  const flows = await Promise.all(Array.from({ length: n }, async (_, i) => {
+    const p = c[idxAt(cum, (i + 0.5) * L)];
+    try {
+      const r = await fetch(`https://api.tomtom.com/traffic/services/4/flowSegmentData/relative0/10/json?point=${p[1]},${p[0]}&unit=KMPH&key=${key}`);
+      if (!r.ok) return null;
+      return (await r.json()).flowSegmentData || null;
+    } catch { return null; }
+  }));
+  if (flows.every(f => !f)) return null;
+  let delay = 0; const features = [];
+  flows.forEach((f, i) => {
+    let lvl = 0;
+    if (f && f.freeFlowSpeed > 0) {
+      const ratio = f.currentSpeed / f.freeFlowSpeed;
+      lvl = f.roadClosure ? 3 : ratio >= 0.8 ? 0 : ratio >= 0.55 ? 1 : ratio >= 0.3 ? 2 : 3;
+      if (f.currentSpeed > 0) delay += Math.max(0, L / (f.currentSpeed / 3.6) - L / (f.freeFlowSpeed / 3.6));
+    }
+    let a = idxs[i], b = idxs[i + 1]; if (b <= a) b = Math.min(a + 1, c.length - 1);
+    const coords = c.slice(a, b + 1);
+    if (coords.length > 1) features.push({ type: 'Feature', properties: { lvl }, geometry: { type: 'LineString', coordinates: coords } });
+  });
+  return { features, delay };
+}
+
+function applyTrafficEta(route) {
+  const t = route._traffic; if (!t) return;
+  if (t.baked) { route._delay = t.delay; return; }
+  route._base = route._base || route.duration;
+  const nd = route._base + t.delay, f = nd / route.duration;
+  route.duration = nd; route.legs.forEach(l => { l.duration *= f; l.steps.forEach(s => { s.duration *= f; }); });
+  route._delay = t.delay;
+}
+
+async function enrich(route) {
+  if (route._busy) return; route._busy = true;
+  const prof = state.routeProfile;
+  try {
+    route._cum = route._cum || cumOf(route.geometry.coordinates);
+    const jobs = [];
+    if (!route._ctl && prof !== 'walking') jobs.push(loadControls(route).then(r => { route._ctl = r; }).catch(() => { route._ctl = []; }));
+    if (prof === 'driving' && !route._traffic) jobs.push(loadTraffic(route).then(t => { route._traffic = t; route._trafficAt = Date.now(); }).catch(() => {}));
+    await Promise.all(jobs);
+    applyTrafficEta(route);
+  } finally { route._busy = false; }
+  if (state.routeData === route) { drawExtras(route); renderSummary(route); updateModeTimes(); }
+}
+
+// ───────── map drawing ─────────
+function ensureIcons() {
+  const mk = (name, draw) => {
+    if (map.hasImage(name)) return;
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const x = c.getContext('2d'); draw(x);
+    map.addImage(name, x.getImageData(0, 0, 64, 64), { pixelRatio: 2 });
+  };
+  mk('ctl-traffic_signals', x => {
+    x.fillStyle = '#14101f'; x.strokeStyle = '#e8c97a'; x.lineWidth = 3;
+    x.beginPath(); x.roundRect(18, 3, 28, 58, 9); x.fill(); x.stroke();
+    [['#e0453d', 15], ['#f0b93a', 32], ['#3fbf6b', 49]].forEach(([col, y]) => { x.fillStyle = col; x.beginPath(); x.arc(32, y, 7, 0, 7); x.fill(); });
+  });
+  mk('ctl-stop', x => {
+    x.beginPath();
+    for (let i = 0; i < 8; i++) { const a = Math.PI / 8 + i * Math.PI / 4; x[i ? 'lineTo' : 'moveTo'](32 + 29 * Math.cos(a), 32 + 29 * Math.sin(a)); }
+    x.closePath(); x.fillStyle = '#d9413a'; x.fill(); x.strokeStyle = '#fff'; x.lineWidth = 3; x.stroke();
+    x.fillStyle = '#fff'; x.font = 'bold 17px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('STOP', 32, 33);
+  });
+  mk('ctl-speed_camera', x => {
+    x.fillStyle = '#14101f'; x.strokeStyle = '#f0913a'; x.lineWidth = 4;
+    x.beginPath(); x.arc(32, 32, 27, 0, 7); x.fill(); x.stroke();
+    x.fillStyle = '#f0913a'; x.beginPath(); x.roundRect(16, 22, 32, 20, 5); x.fill();
+    x.fillStyle = '#14101f'; x.beginPath(); x.arc(32, 32, 6, 0, 7); x.fill();
+  });
+}
+function drawExtras(route) {
+  if (!map.getSource('route')) return;
+  if (route._traffic) map.getSource('route').setData({ type: 'FeatureCollection', features: route._traffic.features });
+  ['route-line', 'route-line-glow'].forEach(id => { if (map.getLayer(id)) map.setPaintProperty(id, 'line-color', LVL_COLOR); });
+  ensureIcons();
+  const fc = { type: 'FeatureCollection', features: (route._ctl || []).map(k => ({ type: 'Feature', properties: { t: k.type }, geometry: { type: 'Point', coordinates: [k.lon, k.lat] } })) };
+  if (map.getSource('route-ctl')) { map.getSource('route-ctl').setData(fc); return; }
+  map.addSource('route-ctl', { type: 'geojson', data: fc });
+  map.addLayer({ id: 'route-ctl', type: 'symbol', source: 'route-ctl', minzoom: 13, layout: {
+    'icon-image': ['concat', 'ctl-', ['get', 't']], 'icon-allow-overlap': true,
+    'icon-size': ['interpolate', ['linear'], ['zoom'], 13, 0.4, 17, 0.85] } });
+}
+
+// ───────── hooks into the main script ─────────
+const _clear = window.clearRouteLayers;
+window.clearRouteLayers = function () {
+  if (map.getLayer('route-alts')) map.removeLayer('route-alts');
+  if (map.getSource('route-alts')) map.removeSource('route-alts');
+  if (map.getLayer('route-ctl')) map.removeLayer('route-ctl');
+  if (map.getSource('route-ctl')) map.removeSource('route-ctl');
+  _clear();
+};
+const _add = window.addRouteLayers;
+window.addRouteLayers = function (route) {
+  _add(route);
+  drawExtras(route);
+  drawAlts(route);
+  if (!route._started) { route._started = true; enrich(route); }
+};
+const _rs = window.renderSummary;
+window.renderSummary = function (route) {
+  _rs(route);
+  const c = route._ctl || [], n = t => c.filter(k => k.type === t).length, bits = [];
+  if (n('traffic_signals')) bits.push(`🚦 ${n('traffic_signals')}`);
+  if (n('stop')) bits.push(`🛑 ${n('stop')}`);
+  if (route._traffic) {
+    const m = Math.round((route._delay || 0) / 60);
+    bits.push(m >= 1 ? `<b style="color:${m >= 5 ? '#e0453d' : '#f0913a'}">+${m} min traffic</b>` : '<b style="color:#3fbf6b">Light traffic</b>');
+  }
+  if (route._all && route._all.length > 1) {
+    const via = r => (r.legs[0].steps.reduce((a, b) => b.distance > a.distance ? b : a).name || 'route');
+    $('summary').insertAdjacentHTML('beforeend', '<div style="flex-basis:100%;display:flex;gap:8px;margin-top:10px;overflow-x:auto">' + route._all.map((r, i) => `<button class="chip alt-pick" data-i="${i}" style="${r === route ? 'border-color:var(--gold);color:var(--gold-light)' : ''}">${formatDuration(r.duration)} · ${escapeHtml(via(r))}</button>`).join('') + '</div>');
+    $('summary').querySelectorAll('.alt-pick').forEach(b => b.onclick = () => { const r = route._all[+b.dataset.i]; if (r === route) return; state.routes[state.routeProfile] = r; applyRoute(r, false); });
+  }
+  if (bits.length) $('summary').insertAdjacentHTML('beforeend', `<div class="summary-meta" style="flex-basis:100%;margin-top:4px">${bits.join(' · ')}</div>`);
+};
+
+const CALL = { traffic_signals: 'Traffic light ahead', stop: 'Stop sign ahead', speed_camera: 'Speed camera ahead' };
+const _opu = window.onPositionUpdate;
+window.onPositionUpdate = function (pos) {
+  _opu(pos);
+  const r = state.routeData;
+  if (!state.navigationActive || !r) return;
+  const { longitude: lon, latitude: lat } = pos.coords;
+  if (r._ctl && r._ctl.length && r._cum) {
+    const { index, dist } = nearestOn(r, lon, lat);
+    if (dist < 40 && index >= 0) {
+      const along = r._cum[index];
+      for (const k of r._ctl) {
+        const ahead = k.along - along;
+        if (k.said) continue;
+        if (ahead <= 0) { k.said = true; continue; }
+        if (ahead < 160) { k.said = true; if (ahead > 50) speak(CALL[k.type], true); break; }
+        break;
+      }
+    }
+  }
+  if (r._traffic && !r._traffic.baked && !r._busy && state.routeProfile === 'driving' && Date.now() - r._trafficAt > 240000) {
+    r._trafficAt = Date.now(); r._busy = true;
+    const before = r._delay || 0;
+    loadTraffic(r).then(t => {
+      if (!t) return; r._traffic = t; applyTrafficEta(r); drawExtras(r);
+      const diff = Math.round((r._delay - before) / 60);
+      if (Math.abs(diff) >= 2) showToast(diff > 0 ? `Traffic got worse: +${diff} min` : `Traffic eased: ${diff} min`);
+    }).catch(() => {}).finally(() => { r._busy = false; });
+  }
+};
+
+// ───────── TomTom map overlays (traffic flow + incidents) ─────────
+let flowOn = false, incOn = false;
+function ttOverlays() {
+  const k = ttKey(); if (!k) return;
+  const before = map.getLayer('route-line-glow') ? 'route-line-glow' : firstLabelId();
+  const add = (id, url, on) => {
+    if (!on || map.getLayer(id)) return;
+    if (!map.getSource(id)) map.addSource(id, { type: 'raster', tiles: [url + '?key=' + k], tileSize: 256, maxzoom: 18 });
+    map.addLayer({ id, type: 'raster', source: id, paint: { 'raster-opacity': 0.9 } }, before);
+  };
+  add('tt-flow', 'https://api.tomtom.com/traffic/map/4/tile/flow/relative0/{z}/{x}/{y}.png', flowOn);
+  add('tt-inc', 'https://api.tomtom.com/traffic/map/4/tile/incidents/s3/{z}/{x}/{y}.png', incOn);
+}
+function ttRemove(id) { if (map.getLayer(id)) map.removeLayer(id); if (map.getSource(id)) map.removeSource(id); }
+$('toggle-speedlimit').closest('.toggle-row').insertAdjacentHTML('afterend',
+  '<div class="toggle-row"><span>Traffic on map</span><div class="toggle" id="toggle-flow" role="switch" aria-label="Traffic on map"></div></div>' +
+  '<div class="toggle-row"><span>Crashes and road work</span><div class="toggle" id="toggle-inc" role="switch" aria-label="Crashes and road work"></div></div>');
+const guard = (el, on) => { if (on && !ttKey()) { $(el).classList.remove('active'); showToast('Add your TomTom key first'); return false; } return true; };
+bindToggle('toggle-flow', on => { if (!guard('toggle-flow', on)) return; flowOn = on; on ? ttOverlays() : ttRemove('tt-flow'); });
+bindToggle('toggle-inc', on => { if (!guard('toggle-inc', on)) return; incOn = on; on ? ttOverlays() : ttRemove('tt-inc'); });
+map.on('style.load', ttOverlays);
+// ───────── TomTom Routing / Search / Reverse geocoding ─────────
+function manOf(i) {
+  const m = i.maneuver || '', t = i.instructionType || '';
+  if (/DEPART/.test(m + t)) return ['depart', ''];
+  if (/ARRIVE|ARRIVAL/.test(m + t)) return ['arrive', ''];
+  if (/ROUNDABOUT/.test(m)) return ['roundabout', ''];
+  if (/UTURN/.test(m)) return ['turn', 'uturn'];
+  if (/EXIT/.test(m)) return ['off ramp', ''];
+  if (/ENTER|ENTRANCE/.test(m)) return ['on ramp', ''];
+  const side = /LEFT/.test(m) ? 'left' : /RIGHT/.test(m) ? 'right' : '';
+  if (/KEEP/.test(m)) return ['fork', side];
+  if (/BEAR/.test(m)) return ['turn', 'slight ' + side];
+  if (/SHARP/.test(m)) return ['turn', 'sharp ' + side];
+  if (/TURN/.test(m)) return ['turn', side];
+  return ['continue', 'straight'];
+}
+function ttConvert(rt, car = true) {
+  const pts = rt.legs.flatMap(l => l.points).map(p => [p.longitude, p.latitude]);
+  const ins = rt.guidance.instructions, S = rt.summary, sec = rt.sections || [];
+  const lanesSec = sec.filter(s => s.sectionType === 'LANES');
+  const steps = ins.map((a, i) => {
+    const b = ins[i + 1], [type, modifier] = manOf(a);
+    const st = { maneuver: { type, modifier, location: [a.point.longitude, a.point.latitude], exit: a.roundaboutExitNumber },
+      name: a.street || (a.roadNumbers && a.roadNumbers[0]) || '',
+      distance: b ? b.routeOffsetInMeters - a.routeOffsetInMeters : 0,
+      duration: b ? b.travelTimeInSeconds - a.travelTimeInSeconds : 0,
+      geometry: { type: 'LineString', coordinates: pts.slice(a.pointIndex, (b ? b.pointIndex : a.pointIndex) + 2) } };
+    if (b) {
+      const ls = lanesSec.find(s => b.pointIndex >= s.startPointIndex && b.pointIndex <= s.endPointIndex + 1);
+      if (ls && ls.lanes) st.intersections = [{ lanes: ls.lanes.map(l => ({ valid: !!l.follow, indications: (l.directions || []).map(d => d.toLowerCase().replace('u_turn', 'uturn').replace(/_/g, ' ')) })) }];
+    }
+    return st;
+  });
+  const ann = Array.from({ length: pts.length - 1 }, () => ({ unknown: true }));
+  sec.filter(s => s.sectionType === 'SPEED_LIMIT').forEach(s => {
+    const v = s.maxSpeedLimitInKmh != null ? s.maxSpeedLimitInKmh : s.speedLimitInKmh;
+    if (v != null) for (let j = s.startPointIndex; j < s.endPointIndex && j < ann.length; j++) ann[j] = { speed: v, unit: 'km/h' };
+  });
+  const lv = s => s.simpleCategory === 'ROAD_CLOSURE' ? 3 : s.simpleCategory === 'JAM' ? (s.magnitudeOfDelay >= 3 ? 3 : s.magnitudeOfDelay === 2 ? 2 : 1) : 0;
+  const segs = sec.filter(s => s.sectionType === 'TRAFFIC' && lv(s) > 0).sort((a, b) => a.startPointIndex - b.startPointIndex);
+  const feats = []; let cur = 0;
+  const push = (a, b, l) => { if (b > a) feats.push({ type: 'Feature', properties: { lvl: l }, geometry: { type: 'LineString', coordinates: pts.slice(a, b + 1) } }); };
+  segs.forEach(s => { if (s.startPointIndex < cur) return; push(cur, s.startPointIndex, 0); push(s.startPointIndex, s.endPointIndex, lv(s)); cur = s.endPointIndex; });
+  push(cur, pts.length - 1, 0);
+  return { distance: S.lengthInMeters, duration: S.travelTimeInSeconds, geometry: { type: 'LineString', coordinates: pts },
+    legs: [{ steps, distance: S.lengthInMeters, duration: S.travelTimeInSeconds, annotation: { maxspeed: ann } }],
+    _traffic: car ? { features: feats, delay: S.trafficDelayInSeconds || 0, baked: true } : undefined, _trafficAt: Date.now() };
+}
+const _fr = window.fetchRoute;
+const TT_MODE = { driving: 'car', walking: 'pedestrian', cycling: 'bicycle' };
+window.fetchRoute = async function (s, e, p) {
+  const k = ttKey();
+  if (k && TT_MODE[p]) {
+    try {
+      const car = p === 'driving';
+      const u = `https://api.tomtom.com/routing/1/calculateRoute/${s.lngLat[1]},${s.lngLat[0]}:${e.lngLat[1]},${e.lngLat[0]}/json?key=${k}&travelMode=${TT_MODE[p]}&routeType=fastest&instructionsType=text&language=en-US` + (car ? '&traffic=true&computeTravelTimeFor=all&maxAlternatives=2&sectionType=traffic&sectionType=lanes&sectionType=speedLimit' : '');
+      const r = await fetch(u); if (!r.ok) throw 0;
+      const rs = (await r.json()).routes; if (!rs || !rs.length) throw 0;
+      const all = rs.map(x => ttConvert(x, car)); all.forEach(x => { x._all = all; });
+      return all[0];
+    } catch {}
+  }
+  return _fr(s, e, p);
+};
+function ttFeature(r) {
+  const a = r.address || {}, v = r.viewport, geo = r.type === 'Geography';
+  return { geometry: { coordinates: [r.position.lon, r.position.lat] },
+    bbox: geo && v ? [v.topLeftPoint.lon, v.btmRightPoint.lat, v.btmRightPoint.lon, v.topLeftPoint.lat] : null,
+    properties: { name: r.poi ? r.poi.name : geo ? a.freeformAddress : '', street: a.streetName, housenumber: a.streetNumber,
+      city: a.municipality, state: a.countrySubdivision, postcode: a.postalCode, country: a.country, osm_value: r.poi || geo ? 'poi' : 'house' } };
+}
+const _ps = window.photonSearch;
+window.photonSearch = async function (q, limit = 6) {
+  const k = ttKey(); if (!k) return _ps(q, limit);
+  try {
+    const c = map.getCenter();
+    const r = await fetch(`https://api.tomtom.com/search/2/search/${encodeURIComponent(q)}.json?key=${k}&typeahead=true&limit=${limit}&language=en-US&lat=${c.lat.toFixed(3)}&lon=${c.lng.toFixed(3)}`);
+    if (!r.ok) throw 0;
+    const res = (await r.json()).results || []; if (!res.length) throw 0;
+    res.forEach(x => { const id = x.dataSources && x.dataSources.chargingAvailability && x.dataSources.chargingAvailability.id; if (id) evId[x.position.lon + ',' + x.position.lat] = id; });
+    return res.map(ttFeature);
+  } catch { return _ps(q, limit); }
+};
+const _rg = window.reverseGeocode;
+window.reverseGeocode = async function (lon, lat) {
+  const k = ttKey(); if (!k) return _rg(lon, lat);
+  try {
+    const r = await fetch(`https://api.tomtom.com/search/2/reverseGeocode/${lat},${lon}.json?key=${k}&language=en-US`);
+    if (!r.ok) throw 0;
+    const a = (await r.json()).addresses?.[0]; if (!a) throw 0;
+    return photonFeatureToResult(ttFeature({ position: { lat, lon }, address: a.address }));
+  } catch { return _rg(lon, lat); }
+};
+const _rc = window.renderChips;
+window.renderChips = function () {
+  _rc();
+  const el = $('chips'), g = el.querySelector('#places-chip');
+  [['⛽', 'Gas', 'gas station'], ['🍔', 'Food', 'restaurant'], ['⚡', 'EV charging', 'EV charging station'], ['☕', 'Coffee', 'coffee']].forEach(([e, t, q]) => {
+    const b = document.createElement('button'); b.className = 'chip'; b.innerHTML = `<span>${e}</span>${t}`;
+    b.onclick = () => { searchInput.value = q; searchInput.dispatchEvent(new Event('input')); searchInput.focus(); };
+    el.insertBefore(b, g);
+  });
+  const rb = document.createElement('button'); rb.className = 'chip'; rb.innerHTML = '<span>⏱</span>15 min range'; rb.onclick = toggleRange; el.insertBefore(rb, g);
+};
+// ───────── alternatives on map, traffic refresh, snap, EV availability, reachable range ─────────
+function drawAlts(route) {
+  const fc = { type: 'FeatureCollection', features: (route._all || []).filter(r => r !== route).map(r => ({ type: 'Feature', properties: {}, geometry: r.geometry })) };
+  if (map.getSource('route-alts')) { map.getSource('route-alts').setData(fc); return; }
+  map.addSource('route-alts', { type: 'geojson', data: fc });
+  map.addLayer({ id: 'route-alts', type: 'line', source: 'route-alts', layout: { 'line-cap': 'round', 'line-join': 'round' },
+    paint: { 'line-color': '#8f86b8', 'line-width': 5, 'line-opacity': 0.7 } }, 'route-line-glow');
+}
+let snapD = [0, 0], lastSnap = 0; const buf = [];
+const _um = window.updateUserMarker;
+window.updateUserMarker = function (lon, lat, h) {
+  const on = state.navigationActive && state.routeProfile === 'driving';
+  _um(on ? lon + snapD[0] : lon, on ? lat + snapD[1] : lat, h);
+};
+async function snapNow() {
+  const raw = buf[buf.length - 1];
+  try {
+    const f = '{projectedPoints{type,geometry{type,coordinates},properties{routeIndex,snapResult}}}';
+    const r = await fetch(`https://api.tomtom.com/snapToRoads/1?key=${ttKey()}&points=${buf.map(p => p[0] + ',' + p[1]).join(';')}&fields=${encodeURIComponent(f)}&vehicleType=PassengerCar`);
+    if (!r.ok) throw 0;
+    const pp = (await r.json()).projectedPoints, a = pp && pp[pp.length - 1]; if (!a) throw 0;
+    const s = a.geometry.coordinates;
+    snapD = distanceMeters(raw[0], raw[1], s[0], s[1]) < 25 ? [s[0] - raw[0], s[1] - raw[1]] : [0, 0];
+  } catch {}
+}
+const _opu2 = window.onPositionUpdate;
+window.onPositionUpdate = function (pos) {
+  _opu2(pos);
+  const r = state.routeData, { longitude: lon, latitude: lat } = pos.coords;
+  if (!state.navigationActive || !r) { snapD = [0, 0]; return; }
+  buf.push([lon, lat]); if (buf.length > 4) buf.shift();
+  if (state.routeProfile === 'driving' && ttKey() && buf.length >= 2 && Date.now() - lastSnap > 10000) { lastSnap = Date.now(); snapNow(); }
+  if (r._traffic && r._traffic.baked && !r._busy && state.routeProfile === 'driving' && Date.now() - (r._trafficAt || 0) > 240000) {
+    r._trafficAt = Date.now(); r._busy = true;
+    const rem = computeRemaining().time;
+    fetchRoute({ lngLat: [lon, lat] }, state.endPoint, 'driving').then(nr => {
+      if (state.routeData !== r || !nr._traffic) return;
+      const d = rem - nr.duration;
+      if (d >= 120) {
+        speak(`Found a faster route. It saves ${Math.round(d / 60)} minutes.`); showToast(`Faster route: saves ${Math.round(d / 60)} min`);
+        state.routeData = nr; state.routes.driving = nr; state.currentSpeedLimit = null;
+        computeDestinationSide(nr); addRouteLayers(nr);
+        nav.currentStepIndex = 0; nav.renderedStep = -1; nav.lastAnnouncedAt = -1; updateNavUI();
+      } else if (d <= -180) showToast(`Traffic got worse: +${Math.round(-d / 60)} min`);
+    }).catch(() => {}).finally(() => { r._busy = false; });
+  }
+};
+const evId = {};
+async function showEv(dest) {
+  const id = evId[dest.lngLat[0] + ',' + dest.lngLat[1]]; if (!id || !ttKey()) return;
+  try {
+    const r = await fetch(`https://api.tomtom.com/search/2/chargingAvailability.json?key=${ttKey()}&chargingAvailability=${id}`); if (!r.ok) throw 0;
+    let a = 0, t = 0; ((await r.json()).connectors || []).forEach(c => { t += c.total || 0; a += (c.availability && c.availability.current && c.availability.current.available) || 0; });
+    if (t && state.endPoint === dest) { const el = $('card-addr'); el.textContent = `⚡ ${a} of ${t} plugs free` + (el.textContent ? ' · ' + el.textContent : ''); }
+  } catch {}
+}
+const _sd = window.selectDestination;
+window.selectDestination = function (dest, opts) { const p = _sd(dest, opts); showEv(dest); return p; };
+async function toggleRange() {
+  if (map.getLayer('tt-range')) { ['tt-range', 'tt-range-line'].forEach(i => map.removeLayer(i)); map.removeSource('tt-range'); return; }
+  const k = ttKey(); if (!k) { showToast('Add your TomTom key first'); return; }
+  const o = state.userLoc ? [state.userLoc.lon, state.userLoc.lat] : map.getCenter().toArray();
+  try {
+    const r = await fetch(`https://api.tomtom.com/routing/1/calculateReachableRange/${o[1]},${o[0]}/json?key=${k}&timeBudgetInSec=900&travelMode=car&traffic=true`); if (!r.ok) throw 0;
+    const b = (await r.json()).reachableRange.boundary.map(p => [p.longitude, p.latitude]); b.push(b[0]);
+    map.addSource('tt-range', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [b] } } });
+    map.addLayer({ id: 'tt-range', type: 'fill', source: 'tt-range', paint: { 'fill-color': '#7c5cbf', 'fill-opacity': 0.22 } }, firstLabelId());
+    map.addLayer({ id: 'tt-range-line', type: 'line', source: 'tt-range', paint: { 'line-color': '#e8c97a', 'line-width': 2 } }, firstLabelId());
+    map.fitBounds(b.reduce((x, p) => x.extend(p), new maplibregl.LngLatBounds(b[0], b[0])), { padding: 60, duration: 800 });
+  } catch { showToast('Could not get range'); }
+}
+})();
+
+</script>
 </body>
 </html>
