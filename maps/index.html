@@ -500,6 +500,11 @@ body.navigating .toast { bottom: calc(var(--safe-bottom) + 100px); }
     *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
 }
 </style>
+<style>
+/* chips: mobile = swipe row with edge fade, laptop = wraps, never cut off */
+.chips{padding-right:40px;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}
+@media (min-width:720px){.chips{flex-wrap:wrap;overflow:visible;width:auto;right:16px;max-width:640px;padding:0;-webkit-mask-image:none;mask-image:none}}
+</style>
 </head>
 <body>
 
@@ -2243,7 +2248,7 @@ map.on('load', () => {
 
 (() => {
 // ▼▼▼ PASTE YOUR TOMTOM KEY BETWEEN THE QUOTES ▼▼▼
-const TT_DEFAULT_KEY = 'pJLfVhEg7BJmNoMaLoHQQUL2stVt4ik2';
+const TT_DEFAULT_KEY = 'PASTE_YOUR_TOMTOM_KEY_HERE';
 // ▲▲▲ built in for everyone, no per-device setup ▲▲▲
 const BUILT_IN = TT_DEFAULT_KEY && !/PASTE/.test(TT_DEFAULT_KEY);
 const LS_KEY = 'wizard_maps_tomtom_key', LS_VOICE = 'wizard_maps_voice';
@@ -2623,12 +2628,12 @@ const _rc = window.renderChips;
 window.renderChips = function () {
   _rc();
   const el = $('chips'), g = el.querySelector('#places-chip');
-  [['⛽', 'Gas', 'gas station'], ['🍔', 'Food', 'restaurant'], ['⚡', 'EV charging', 'EV charging station'], ['☕', 'Coffee', 'coffee']].forEach(([e, t, q]) => {
+  [['⛽', 'Gas', 'gas station'], ['🍔', 'Food', 'restaurant'], ['⚡', 'EV', 'EV charging station'], ['☕', 'Coffee', 'coffee']].forEach(([e, t, q]) => {
     const b = document.createElement('button'); b.className = 'chip'; b.innerHTML = `<span>${e}</span>${t}`;
     b.onclick = () => { searchInput.value = q; searchInput.dispatchEvent(new Event('input')); searchInput.focus(); };
     el.insertBefore(b, g);
   });
-  const rb = document.createElement('button'); rb.className = 'chip'; rb.innerHTML = '<span>⏱</span>15 min range'; rb.onclick = toggleRange; el.insertBefore(rb, g);
+  const rb = document.createElement('button'); rb.className = 'chip'; rb.innerHTML = '<span>⏱</span>15 min'; rb.onclick = toggleRange; el.insertBefore(rb, g);
 };
 // ───────── alternatives on map, traffic refresh, snap, EV availability, reachable range ─────────
 function drawAlts(route) {
