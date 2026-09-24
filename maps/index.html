@@ -2250,7 +2250,7 @@ map.on('load', () => {
 // ▼▼▼ PASTE YOUR TOMTOM KEY BETWEEN THE QUOTES ▼▼▼
 const TT_DEFAULT_KEY = 'PASTE_YOUR_TOMTOM_KEY_HERE';
 // ▲▲▲ built in for everyone, no per-device setup ▲▲▲
-const BUILT_IN = TT_DEFAULT_KEY && !/PASTE/.test(TT_DEFAULT_KEY);
+const BUILT_IN = pJLfVhEg7BJmNoMaLoHQQUL2stVt4ik2 && !/PASTE/.test(TT_DEFAULT_KEY);
 const LS_KEY = 'wizard_maps_tomtom_key', LS_VOICE = 'wizard_maps_voice';
 const ttKey = () => { if (BUILT_IN) return TT_DEFAULT_KEY; try { return localStorage.getItem(LS_KEY) || ''; } catch { return ''; } };
 const LVL_COLOR = ['match', ['coalesce', ['get', 'lvl'], 0], 1, '#f0913a', 2, '#e0453d', 3, '#9b1c1c', '#f2d27c'];
