@@ -2865,9 +2865,10 @@ window.enable3DBuildings = function () {
   try {
     const b = (map.getStyle().layers || []).find(l => /building/i.test(l.id) && l['source-layer'] && l.source);
     const sat = state.style === 'satellite';
+    const H3 = ['case', ['has', 'render_height'], ['to-number', ['get', 'render_height']], ['has', 'height'], ['to-number', ['get', 'height']], 14];
     map.addLayer({ id: '3d-buildings', source: b ? b.source : 'openmaptiles', 'source-layer': b ? b['source-layer'] : 'building', type: 'fill-extrusion', minzoom: 14,
-      paint: { 'fill-extrusion-color': state.style === 'wizard' ? '#3a2d6b' : sat ? '#d8d2c4' : '#cfc9e6',
-        'fill-extrusion-height': ['case', ['has', 'render_height'], ['to-number', ['get', 'render_height']], ['has', 'height'], ['to-number', ['get', 'height']], 14],
+      paint: { 'fill-extrusion-color': state.style === 'wizard' ? ['interpolate', ['linear'], H3, 0, '#2a2150', 40, '#3a2d6b', 120, '#7c5cbf', 300, '#e8c97a'] : sat ? '#d8d2c4' : '#cfc9e6',
+        'fill-extrusion-height': H3,
         'fill-extrusion-base': ['case', ['has', 'render_min_height'], ['to-number', ['get', 'render_min_height']], 0],
         'fill-extrusion-opacity': 0.88, 'fill-extrusion-vertical-gradient': true } }, firstLabelId());
     if (!state.navigationActive) map.easeTo({ pitch: 62, duration: 900 });
@@ -2879,6 +2880,56 @@ window.disable3DBuildings = function () {
   if (map.getLayer('3d-buildings')) map.removeLayer('3d-buildings');
   if (!state.navigationActive) map.easeTo({ pitch: 0, duration: 600 });
 };
+// ───────── 3D wow: flyover, globe, terrain tilt, auto-3D ─────────
+const wizSky = () => { try { map.setSky({ 'sky-color': '#0e0b1e', 'horizon-color': '#7c5cbf', 'fog-color': '#080612', 'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.5, 'fog-ground-blend': 0.4 }); } catch {} };
+window.enableTerrain = function () {
+  if (!map.getSource('terrain-dem')) map.addSource('terrain-dem', { type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'], tileSize: 256, encoding: 'terrarium', maxzoom: 15 });
+  map.setTerrain({ source: 'terrain-dem', exaggeration: 1.4 }); wizSky();
+  if (!state.navigationActive) map.easeTo({ pitch: 65, duration: 900 });
+};
+window.disableTerrain = function () { map.setTerrain(null); if (!state.navigationActive) map.easeTo({ pitch: state.buildings3D ? 62 : 0, duration: 600 }); };
+map.on('style.load', () => { if (state.buildings3D || state.terrain) wizSky(); if (EXT.globe) try { map.setProjection({ type: 'globe' }); } catch {} });
+$('x-keepAwake').closest('.toggle-row').insertAdjacentHTML('afterend',
+  [['globe', 'Globe view when zoomed out'], ['auto3d', '3D buildings on by default']].map(([k, t]) => `<div class="toggle-row"><span>${t}</span><div class="toggle" id="x-${k}" role="switch" aria-label="${t}"></div></div>`).join(''));
+['globe', 'auto3d'].forEach(k => {
+  const el = $('x-' + k); el.classList.toggle('active', !!EXT[k]);
+  el.addEventListener('click', () => {
+    el.classList.toggle('active'); EXT[k] = el.classList.contains('active'); saveExt();
+    if (k === 'globe') try { map.setProjection({ type: EXT.globe ? 'globe' : 'mercator' }); } catch {}
+    if (k === 'auto3d' && EXT.auto3d && !state.buildings3D) $('toggle-3d').click();
+  });
+});
+map.on('load', () => { if (EXT.auto3d && !state.buildings3D) $('toggle-3d').click(); if (EXT.globe) try { map.setProjection({ type: 'globe' }); } catch {} });
+
+let fly = null;
+function stopFly(fit) {
+  if (!fly) return; cancelAnimationFrame(fly.raf); const tmp = fly.tmp3d; fly = null;
+  if (tmp && !state.buildings3D) disable3DBuildings();
+  if (fit && state.routeData) fitRoute(state.routeData);
+}
+$('card-steps').insertAdjacentHTML('afterend', '<button class="btn icon-only" id="card-fly" aria-label="Fly over the route"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></button>');
+$('card-fly').addEventListener('click', () => {
+  if (fly) { stopFly(true); return; }
+  const r = state.routeData; if (!r) return;
+  const c = r.geometry.coordinates, cum = r._cum || (r._cum = cumOf(c)), D = cum[cum.length - 1];
+  const dur = Math.min(45000, Math.max(9000, D / 1000 * 2500)), t0 = performance.now();
+  fly = { raf: 0, b: null, tmp3d: !map.getLayer('3d-buildings') };
+  if (fly.tmp3d) enable3DBuildings();
+  const frame = now => {
+    if (!fly) return;
+    const p = Math.min(1, (now - t0) / dur), d = p * D, i = Math.min(idxAt(cum, d), c.length - 2);
+    const a = c[i], b = c[i + 1], f = Math.max(0, Math.min(1, (d - cum[i]) / (cum[i + 1] - cum[i] || 1)));
+    const lon = a[0] + (b[0] - a[0]) * f, lat = a[1] + (b[1] - a[1]) * f, la = c[Math.min(idxAt(cum, d + 150), c.length - 1)];
+    const brg = bearing(lat, lon, la[1], la[0]);
+    fly.b = fly.b == null ? brg : fly.b + (((brg - fly.b + 540) % 360) - 180) * 0.08;
+    map.jumpTo({ center: [lon, lat], bearing: fly.b, pitch: 66, zoom: 16.6 });
+    if (p < 1) fly.raf = requestAnimationFrame(frame); else stopFly(true);
+  };
+  map.stop(); fly.raf = requestAnimationFrame(frame);
+});
+map.on('dragstart', () => stopFly(false));
+$('card-start').addEventListener('click', () => stopFly(false));
+$('card-close').addEventListener('click', () => stopFly(false));
 })();
 
 </script>
