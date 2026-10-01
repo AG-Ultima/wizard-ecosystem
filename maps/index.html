@@ -519,6 +519,28 @@ body.navigating .toast { bottom: calc(var(--safe-bottom) + 100px); }
 .chips{padding-right:40px;-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}
 @media (min-width:720px){.chips{flex-wrap:wrap;overflow:visible;width:auto;right:16px;max-width:640px;padding:0;-webkit-mask-image:none;mask-image:none}}
 </style>
+<style>
+.stop-item{display:flex;align-items:center;gap:6px;background:var(--ink);border:1px solid var(--border);border-radius:14px;padding:0 8px 0 14px;height:44px;margin-top:8px}
+.stop-item .from-dot{border-color:var(--violet);flex-shrink:0}
+.stop-item .stop-name{flex:1;min-width:0;font-size:14px;color:var(--silver);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stop-btn{width:30px;height:30px;border:none;background:none;color:var(--silver-dim);border-radius:50%;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
+.stop-btn:active{background:var(--violet-dim);color:var(--gold-light)}
+.stop-btn[disabled]{opacity:.3;pointer-events:none}
+.card-extra{font-size:12.5px;color:var(--gold-light);margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;min-height:0}
+.card-extra a{color:var(--gold-light)}
+#summary-share-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--ink-3);color:var(--silver-dim);display:grid;place-items:center;cursor:pointer;margin-left:auto;flex-shrink:0}
+#summary-share-btn:active{background:var(--violet-dim);color:var(--gold-light)}
+#measure-pill{position:fixed;left:50%;top:calc(74px + var(--safe-top));transform:translateX(-50%);z-index:150;display:none;align-items:center;gap:10px;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--border-strong);border-radius:22px;padding:10px 10px 10px 18px;box-shadow:0 10px 30px rgba(0,0,0,0.5);font-size:14px;color:var(--gold-light);font-weight:600}
+#measure-pill.show{display:flex}
+#measure-pill button{width:30px;height:30px;border:none;border-radius:50%;background:var(--ink-3);color:var(--silver-dim);display:grid;place-items:center;cursor:pointer}
+.measure-fab.on{border-color:var(--gold);color:var(--gold-light);background:var(--gold-glow)}
+#nav-pip-btn.on{border-color:var(--gold);color:var(--gold-light);background:var(--gold-glow)}
+#ios-install-banner{position:fixed;left:10px;right:10px;bottom:calc(10px + var(--safe-bottom));z-index:400;display:none;align-items:center;gap:12px;background:var(--ink-2);border:1px solid var(--border-strong);border-radius:20px;padding:12px 14px;box-shadow:0 12px 34px rgba(0,0,0,0.6);font-size:13.5px;color:var(--silver)}
+#ios-install-banner.show{display:flex}
+#ios-install-banner b{color:var(--gold-light)}
+#ios-install-banner button{flex-shrink:0;border:none;background:none;color:var(--silver-dim);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+@media (min-width:720px){#ios-install-banner{left:16px;right:auto;width:380px;bottom:16px}#measure-pill{left:16px;transform:none}}
+</style>
 </head>
 <body>
 
@@ -560,6 +582,7 @@ body.navigating .toast { bottom: calc(var(--safe-bottom) + 100px); }
         <div>
             <div class="card-title" id="card-name">—</div>
             <div class="card-sub" id="card-addr"></div>
+            <div class="card-extra" id="card-extra"></div>
         </div>
         <button class="x-btn" id="card-close" aria-label="Close" data-icon="close"></button>
     </div>
@@ -571,6 +594,16 @@ body.navigating .toast { bottom: calc(var(--safe-bottom) + 100px); }
         </div>
         <div class="ac-box" id="route-start-box"></div>
     </div>
+
+    <div id="stops-row"></div>
+    <div class="stop-add-row" id="stop-add-row" style="display:none;position:relative;margin-top:8px">
+        <div class="from-field">
+            <span class="from-dot" style="border-color:var(--violet)"></span>
+            <input type="text" id="stop-add-input" placeholder="Search for a stop" autocomplete="off" enterkeyhint="go" aria-label="Add a stop">
+        </div>
+        <div class="ac-box" id="stop-add-box"></div>
+    </div>
+    <button class="add-btn" id="add-stop-btn" style="margin:8px 0 0;height:42px;font-size:14px">+ Add a stop</button>
 
     <div class="modes" id="modes">
         <button class="mode active" data-profile="driving"><span class="ico" data-icon="car"></span><span>Drive</span><span class="t" id="t-driving"></span></button>
@@ -685,6 +718,7 @@ body.navigating .toast { bottom: calc(var(--safe-bottom) + 100px); }
                 <button class="btn primary" id="add-save">Save place</button>
             </div>
         </div>
+        <div id="recents-list"></div>
         <div id="places-list"></div>
         <button class="add-btn" id="add-btn"><span class="ico" data-icon="plus"></span>Add a place</button>
     </div>
@@ -767,7 +801,7 @@ function maneuverSvg(step) {
     const mod = m.modifier || '';
     const attrs = 'fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"';
     let inner;
-    if (t === 'arrive') {
+    if (t === 'arrive' || t === 'waypoint') {
         inner = '<path d="M24 44s-12-11-12-20a12 12 0 0 1 24 0c0 9-12 20-12 20z"/><circle cx="24" cy="24" r="4"/>';
     } else if (t === 'depart') {
         inner = '<circle cx="24" cy="38" r="4"/><path d="M24 30V10M14 20l10-10 10 10"/>';
@@ -805,6 +839,7 @@ const state = {
     routeData: null,
     startPoint: null,      // custom start, null = my location
     endPoint: null,
+    waypoints: [],         // ordered mid-route stops [{lngLat,name}]
     previewToken: 0,
     navigationActive: false,
     buildings3D: false,
@@ -1101,7 +1136,7 @@ function photonFeatureToResult(feature) {
     const isPOI = p.osm_value && !['house', 'residential', 'yes'].includes(p.osm_value);
     const title = isPOI && p.name ? p.name : (line1 || p.name || 'Unknown place');
     const subtitle = isPOI ? [line1, line2].filter(Boolean).join(', ') : line2;
-    return { name: title, subtitle, line1, line2, center: feature.geometry.coordinates, bbox: feature.bbox || null };
+    return { name: title, subtitle, line1, line2, center: feature.geometry.coordinates, bbox: feature.bbox || null, phone: p.phone || null, url: p.url || null, category: p.category || null };
 }
 
 // Shared autocomplete
@@ -1117,7 +1152,7 @@ function attachAutocomplete({ input, box, includeSaved = true, delay = 300, onPi
         if (input.value.trim() !== q) return;
         const items = [
             ...saved.map(p => ({ saved: true, emoji: p.emoji, title: p.name, subtitle: p.address, center: p.center })),
-            ...feats.map(f => { const r = photonFeatureToResult(f); return { saved: false, title: r.name, subtitle: r.subtitle, center: r.center, bbox: r.bbox }; })
+            ...feats.map(f => { const r = photonFeatureToResult(f); return { saved: false, title: r.name, subtitle: r.subtitle, center: r.center, bbox: r.bbox, phone: r.phone, url: r.url, category: r.category }; })
         ];
         if (!items.length) { box.innerHTML = '<div class="ac-note">Nothing found. Try a fuller name or address.</div>'; return; }
         box.innerHTML = items.map((it, i) => `
@@ -1151,7 +1186,7 @@ attachAutocomplete({
     onPick: (it) => {
         searchInput.value = it.title;
         searchInput.blur();
-        selectDestination({ lngLat: it.center, name: it.title, address: it.subtitle }, { bbox: it.bbox });
+        selectDestination({ lngLat: it.center, name: it.title, address: it.subtitle, phone: it.phone, url: it.url, category: it.category }, { bbox: it.bbox });
     }
 });
 searchInput.addEventListener('input', () => searchClear.classList.toggle('show', searchInput.value.length > 0));
@@ -1223,22 +1258,44 @@ function updateUserMarker(lon, lat, heading) {
 // ══════════════════════════════════════
 // ROUTING
 // ══════════════════════════════════════
+function flattenLegs(route) {
+    // Merge a multi-waypoint route's legs into one, so the rest of the app
+    // (which only ever reads route.legs[0]) works unchanged with stops.
+    if (!route.legs || route.legs.length <= 1) return route;
+    const legs = route.legs;
+    legs.forEach((leg, li) => {
+        if (li < legs.length - 1 && leg.steps?.length) {
+            const last = leg.steps[leg.steps.length - 1];
+            last.maneuver = Object.assign({}, last.maneuver, { type: 'waypoint' });
+        }
+        if (li > 0 && leg.steps?.length) {
+            const first = leg.steps[0];
+            if (first.maneuver?.type === 'depart') first.maneuver = Object.assign({}, first.maneuver, { type: 'continue', modifier: 'straight' });
+        }
+    });
+    const steps = legs.flatMap(l => l.steps || []);
+    const ann = legs.flatMap(l => l.annotation?.maxspeed || []);
+    route.legs = [{ steps, distance: route.distance, duration: route.duration, annotation: { maxspeed: ann } }];
+    return route;
+}
+function routeChain(start, end) { return [start, ...(state.waypoints || []), end]; }
 async function fetchRoute(start, end, profile = 'driving') {
-    const coords = `${start.lngLat[0]},${start.lngLat[1]};${end.lngLat[0]},${end.lngLat[1]}`;
+    const chain = routeChain(start, end);
+    const coords = chain.map(p => `${p.lngLat[0]},${p.lngLat[1]}`).join(';');
     try {
         const base = CONFIG.ROUTE_SERVERS[profile] || CONFIG.ROUTE_SERVERS.driving;
         const extra = profile === 'driving' ? '&annotations=maxspeed' : '';
         const res = await fetch(`${base}${coords}?overview=full&geometries=geojson&steps=true${extra}`);
         if (res.ok) {
             const data = await res.json();
-            if (data.code === 'Ok' && data.routes?.length) return data.routes[0];
+            if (data.code === 'Ok' && data.routes?.length) return flattenLegs(data.routes[0]);
         }
     } catch {}
     const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`);
     if (!res.ok) throw new Error('Routing failed');
     const data = await res.json();
     if (data.code !== 'Ok' || !data.routes?.length) throw new Error('No route');
-    return adjustDuration(data.routes[0], profile);
+    return flattenLegs(adjustDuration(data.routes[0], profile));
 }
 function adjustDuration(route, profile) {
     const speed = CONFIG.FALLBACK_SPEEDS[profile];
@@ -1651,6 +1708,7 @@ function buildManeuver(step) {
     switch (type) {
         case 'depart': action = 'Start'; break;
         case 'arrive': action = 'Arrive at destination'; break;
+        case 'waypoint': action = 'Arrive at stop'; break;
         case 'turn':
         case 'end of road':
             if (mod === 'uturn') action = 'Make a U-turn';
@@ -1687,7 +1745,7 @@ function buildManeuver(step) {
     }
     let full = action;
     if (target && !action.includes(target)) {
-        if (type === 'arrive') full = action;
+        if (type === 'arrive' || type === 'waypoint') full = action;
         else if (type === 'depart') full = `Start on ${target}`;
         else full = `${action} onto ${target}`;
     }
@@ -2556,6 +2614,7 @@ map.on('style.load', ttOverlays);
 function manOf(i) {
   const m = i.maneuver || '', t = i.instructionType || '';
   if (/DEPART/.test(m + t)) return ['depart', ''];
+  if (/WAYPOINT/.test(m + t)) return ['waypoint', ''];
   if (/ARRIVE|ARRIVAL/.test(m + t)) return ['arrive', ''];
   if (/ROUNDABOUT/.test(m)) return ['roundabout', ''];
   if (/UTURN/.test(m)) return ['turn', 'uturn'];
@@ -2607,11 +2666,13 @@ window.fetchRoute = async function (s, e, p) {
   if (k && TT_MODE[p]) {
     try {
       const car = p === 'driving';
+      const chain = routeChain(s, e).map(pt => `${pt.lngLat[1]},${pt.lngLat[0]}`).join(':');
+      const hasStops = (state.waypoints || []).length > 0;
       const av = [EXT.avoidHighways && 'motorways', EXT.avoidTolls && 'tollRoads', EXT.avoidFerries && 'ferries'].filter(Boolean).map(a => '&avoid=' + a).join('');
-      const u = `https://api.tomtom.com/routing/1/calculateRoute/${s.lngLat[1]},${s.lngLat[0]}:${e.lngLat[1]},${e.lngLat[0]}/json?key=${k}&travelMode=${TT_MODE[p]}&routeType=${EXT.routeType}&instructionsType=text&language=en-US` + (car ? av + '&traffic=true&computeTravelTimeFor=all&maxAlternatives=2&sectionType=traffic&sectionType=lanes&sectionType=speedLimit' : '');
+      const u = `https://api.tomtom.com/routing/1/calculateRoute/${chain}/json?key=${k}&travelMode=${TT_MODE[p]}&routeType=${EXT.routeType}&instructionsType=text&language=en-US` + (car ? av + '&traffic=true&computeTravelTimeFor=all' + (hasStops ? '' : '&maxAlternatives=2') + '&sectionType=traffic&sectionType=lanes&sectionType=speedLimit' : '');
       const r = await fetch(u); if (!r.ok) throw 0;
       const rs = (await r.json()).routes; if (!rs || !rs.length) throw 0;
-      const all = rs.map(x => ttConvert(x, car)); all.forEach(x => { x._all = all; });
+      const all = rs.map(x => flattenLegs(ttConvert(x, car))); all.forEach(x => { x._all = all; });
       return all[0];
     } catch {}
   }
@@ -2622,7 +2683,9 @@ function ttFeature(r) {
   return { geometry: { coordinates: [r.position.lon, r.position.lat] },
     bbox: geo && v ? [v.topLeftPoint.lon, v.btmRightPoint.lat, v.btmRightPoint.lon, v.topLeftPoint.lat] : null,
     properties: { name: r.poi ? r.poi.name : geo ? a.freeformAddress : '', street: a.streetName, housenumber: a.streetNumber,
-      city: a.municipality, state: a.countrySubdivision, postcode: a.postalCode, country: a.country, osm_value: r.poi || geo ? 'poi' : 'house' } };
+      city: a.municipality, state: a.countrySubdivision, postcode: a.postalCode, country: a.country, osm_value: r.poi || geo ? 'poi' : 'house',
+      phone: (r.poi && r.poi.phone) || null, url: (r.poi && r.poi.url) || null,
+      category: (r.poi && r.poi.categories && r.poi.categories[0]) ? r.poi.categories[0].replace(/\b\w/g, ch => ch.toUpperCase()) : null } };
 }
 const _ps = window.photonSearch;
 window.photonSearch = async function (q, limit = 6) {
@@ -2763,16 +2826,28 @@ window.formatClock = d => d.toLocaleTimeString([], EXT.clock24 ? { hour: '2-digi
 const _rw = window.requestWakeLock;
 window.requestWakeLock = () => EXT.keepAwake ? _rw() : Promise.resolve();
 // ───────── floating nav window (Picture-in-Picture) so it keeps working over YouTube ─────────
-const pip = { video: null, ctx: null, imgs: {} };
+const pip = { video: null, ctx: null, imgs: {}, ready: false };
+const pipSupported = () => !!(document.pictureInPictureEnabled || (typeof HTMLVideoElement !== 'undefined' && HTMLVideoElement.prototype.webkitSupportsPresentationMode));
 function pipSetup() {
-  if (pip.video || !document.pictureInPictureEnabled && !HTMLVideoElement.prototype.webkitSetPresentationMode) return;
+  if (pip.video || !pipSupported()) return;
   const cv = document.createElement('canvas'); cv.width = 480; cv.height = 270;
-  const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.setAttribute('playsinline', '');
-  v.srcObject = cv.captureStream(5);
-  v.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none';
+  const v = document.createElement('video');
+  v.muted = true; v.defaultMuted = true; v.playsInline = true;
+  v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', ''); v.setAttribute('autoplay', '');
+  v.disablePictureInPicture = false;
+  // Kept a real, moderately-sized element off-screen (not opacity:0 / 2px) — some
+  // mobile browsers exclude near-invisible or near-zero-size video from PiP eligibility.
+  v.style.cssText = 'position:fixed;left:-9999px;top:0;width:160px;height:90px;background:#000';
   document.body.appendChild(v);
   pip.video = v; pip.ctx = cv.getContext('2d');
-  v.play().catch(() => {}); pipDraw();
+  v.srcObject = cv.captureStream(5);
+  v.addEventListener('loadedmetadata', () => { pip.ready = true; });
+  v.addEventListener('leavepictureinpicture', () => { $('nav-pip-btn')?.classList.remove('on'); });
+  v.addEventListener('webkitpresentationmodechanged', () => {
+    $('nav-pip-btn')?.classList.toggle('on', v.webkitPresentationMode === 'picture-in-picture');
+  });
+  const tryPlay = () => v.play().catch(() => {});
+  tryPlay(); pipDraw();
   try { navigator.mediaSession.metadata = new MediaMetadata({ title: 'Wizard Maps navigation' }); navigator.mediaSession.setActionHandler('enterpictureinpicture', () => { pipEnter(); }); } catch {}
 }
 function pipDraw() {
@@ -2793,23 +2868,49 @@ function pipDraw() {
   x.fillStyle = '#e8c97a'; x.font = 'bold 40px Georgia,serif'; x.fillText($('nav-eta').textContent, 24, 232);
   x.fillStyle = '#8f86b8'; x.font = '22px sans-serif'; x.fillText($('nav-eta-sub').textContent, 24, 260);
 }
+function pipDiagnose(err) {
+  const name = err && err.name || '';
+  const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (iOS && standalone) {
+    showToast('iPhone/iPad blocks floating video for home-screen apps (a confirmed Apple bug) — open this page in a Safari tab instead of the home-screen icon to use it.');
+  } else if (name === 'NotAllowedError') {
+    showToast(/android/i.test(navigator.userAgent)
+      ? 'Blocked: enable Picture-in-picture for this browser in Android Settings > Apps > (your browser) > Permissions'
+      : 'The browser blocked floating mode for this tap. Try tapping the button again.');
+  } else if (name === 'InvalidStateError' || name === 'NotSupportedError') {
+    showToast('This phone/browser does not support floating video (' + name + ')');
+  } else {
+    showToast('Floating view failed' + (name ? ': ' + name : ''));
+  }
+}
 async function pipEnter() {
+  pipSetup();
+  if (!pip.video) { showToast('Floating view is not supported in this browser'); return; }
   try {
-    pipSetup(); if (!pip.video) throw 0;
-    await pip.video.play(); pipDraw();
-    if (pip.video.requestPictureInPicture) await pip.video.requestPictureInPicture();
-    else pip.video.webkitSetPresentationMode('picture-in-picture');
-  } catch { showToast('Floating view is not supported here'); }
+    // Request PiP as directly as possible after the tap — some mobile browsers
+    // revoke the "user gesture" the moment an await resolves, so skip re-awaiting
+    // play() when the video is already running.
+    if (pip.video.paused) { try { await pip.video.play(); } catch {} }
+    pipDraw();
+    if (pip.video.requestPictureInPicture) {
+      await pip.video.requestPictureInPicture();
+      $('nav-pip-btn')?.classList.add('on');
+    } else if (pip.video.webkitSupportsPresentationMode && pip.video.webkitSupportsPresentationMode('picture-in-picture')) {
+      pip.video.webkitSetPresentationMode('picture-in-picture');
+    } else throw Object.assign(new Error('no pip api'), { name: 'NotSupportedError' });
+  } catch (err) { pipDiagnose(err); }
 }
 async function pipToggle() {
-  if (document.pictureInPictureElement) { try { await document.exitPictureInPicture(); } catch {} return; }
+  if (document.pictureInPictureElement) { try { await document.exitPictureInPicture(); } catch {} $('nav-pip-btn')?.classList.remove('on'); return; }
+  if (pip.video && pip.video.webkitPresentationMode === 'picture-in-picture') { try { pip.video.webkitSetPresentationMode('inline'); } catch {} $('nav-pip-btn')?.classList.remove('on'); return; }
   pipEnter();
 }
 function pipStop() {
   try { if (document.pictureInPictureElement) document.exitPictureInPicture(); } catch {}
-  if (pip.video) { pip.video.pause(); pip.video.remove(); pip.video = null; pip.ctx = null; }
+  if (pip.video) { pip.video.pause(); pip.video.remove(); pip.video = null; pip.ctx = null; pip.ready = false; }
 }
-if (document.pictureInPictureEnabled || HTMLVideoElement.prototype.webkitSetPresentationMode) {
+if (pipSupported()) {
   $('nav-voice-btn').insertAdjacentHTML('beforebegin', '<button class="round-btn" id="nav-pip-btn" aria-label="Float navigation over other apps"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1" fill="currentColor"/></svg></button>');
   $('nav-pip-btn').addEventListener('click', pipToggle);
 }
@@ -2930,6 +3031,290 @@ $('card-fly').addEventListener('click', () => {
 map.on('dragstart', () => stopFly(false));
 $('card-start').addEventListener('click', () => stopFly(false));
 $('card-close').addEventListener('click', () => stopFly(false));
+// ═══════════════════════════════════════════════════════════
+// Batch: distance tool, recents, share ETA, road-event alerts,
+// multi-stop UI, PWA/iOS install polish
+// ═══════════════════════════════════════════════════════════
+
+// ───────── multi-stop UI ─────────
+const upSvg = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>';
+const downSvg = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+const rmSvg = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+function renderStops() {
+  const el = $('stops-row'); if (!el) return;
+  el.innerHTML = state.waypoints.map((w, i) => `
+    <div class="stop-item" data-i="${i}">
+      <span class="from-dot"></span>
+      <span class="stop-name">${escapeHtml(w.name)}</span>
+      <button class="stop-btn" data-act="up" ${i === 0 ? 'disabled' : ''} aria-label="Move stop earlier">${upSvg}</button>
+      <button class="stop-btn" data-act="down" ${i === state.waypoints.length - 1 ? 'disabled' : ''} aria-label="Move stop later">${downSvg}</button>
+      <button class="stop-btn" data-act="rm" aria-label="Remove stop">${rmSvg}</button>
+    </div>`).join('');
+  el.querySelectorAll('.stop-item').forEach(row => {
+    const i = +row.dataset.i;
+    row.querySelector('[data-act="up"]')?.addEventListener('click', () => { if (i > 0) { [state.waypoints[i - 1], state.waypoints[i]] = [state.waypoints[i], state.waypoints[i - 1]]; renderStops(); previewRoutes(); } });
+    row.querySelector('[data-act="down"]')?.addEventListener('click', () => { if (i < state.waypoints.length - 1) { [state.waypoints[i + 1], state.waypoints[i]] = [state.waypoints[i], state.waypoints[i + 1]]; renderStops(); previewRoutes(); } });
+    row.querySelector('[data-act="rm"]')?.addEventListener('click', () => { state.waypoints.splice(i, 1); renderStops(); previewRoutes(); });
+  });
+}
+$('add-stop-btn').addEventListener('click', () => {
+  const row = $('stop-add-row'); const show = row.style.display === 'none';
+  row.style.display = show ? 'block' : 'none';
+  if (show) $('stop-add-input').focus(); else $('stop-add-input').value = '';
+});
+attachAutocomplete({
+  input: $('stop-add-input'), box: $('stop-add-box'), delay: 250,
+  onPick: (it) => {
+    state.waypoints.push({ lngLat: it.center, name: it.title });
+    $('stop-add-input').value = ''; $('stop-add-row').style.display = 'none';
+    renderStops(); previewRoutes();
+  }
+});
+// Passing a stop mid-drive removes it, so a reroute only routes through what's left
+const _opuStops = window.onPositionUpdate;
+window.onPositionUpdate = function (pos) {
+  const before = nav.currentStepIndex;
+  _opuStops(pos);
+  const r = state.routeData;
+  if (r?.legs?.[0]?.steps && nav.currentStepIndex > before) {
+    for (let i = before; i < nav.currentStepIndex; i++) {
+      if (r.legs[0].steps[i]?.maneuver?.type === 'waypoint' && state.waypoints.length) { state.waypoints.shift(); renderStops(); }
+    }
+  }
+};
+
+// ───────── rich place card (phone / website / category) + EV text, unified ─────────
+const cardExtraBits = {};
+function renderCardExtra() { const el = $('card-extra'); if (el) el.innerHTML = Object.values(cardExtraBits).filter(Boolean).join(' · '); }
+const _showEv = window.showEv;
+window.showEv = async function (dest) {
+  const id = evId[dest.lngLat[0] + ',' + dest.lngLat[1]]; if (!id || !ttKey()) return;
+  try {
+    const r = await fetch(`https://api.tomtom.com/search/2/chargingAvailability.json?key=${ttKey()}&chargingAvailability=${id}`); if (!r.ok) throw 0;
+    let a = 0, t = 0; ((await r.json()).connectors || []).forEach(c => { t += c.total || 0; a += (c.availability?.current?.available) || 0; });
+    if (t && state.endPoint === dest) { cardExtraBits.ev = `⚡ ${a} of ${t} plugs free`; renderCardExtra(); }
+  } catch {}
+};
+const _sdRich = window.selectDestination;
+window.selectDestination = function (dest, opts) {
+  state.waypoints = []; renderStops(); $('stop-add-row').style.display = 'none';
+  cardExtraBits.ev = '';
+  cardExtraBits.info = [dest.category ? escapeHtml(dest.category) : '', dest.phone ? `<a href="tel:${dest.phone}">${escapeHtml(dest.phone)}</a>` : '', dest.url ? `<a href="${escapeHtml(dest.url)}" target="_blank" rel="noopener">Website</a>` : ''].filter(Boolean).join(' · ');
+  renderCardExtra();
+  pushRecent(dest);
+  const p = _sdRich(dest, opts); window.showEv(dest); return p;
+};
+const _ccRich = window.closeCard;
+window.closeCard = function () {
+  _ccRich();
+  state.waypoints = []; renderStops(); $('stop-add-row').style.display = 'none';
+  cardExtraBits.ev = ''; cardExtraBits.info = ''; renderCardExtra();
+};
+
+// ───────── recent destinations ─────────
+const RECENTS_KEY = 'wizard_maps_recents_v1';
+function loadRecents() { try { return JSON.parse(localStorage.getItem(RECENTS_KEY) || '[]'); } catch { return []; } }
+function pushRecent(dest) {
+  if (!dest?.lngLat) return;
+  let arr = loadRecents().filter(r => !(Math.abs(r.center[0] - dest.lngLat[0]) < 0.0003 && Math.abs(r.center[1] - dest.lngLat[1]) < 0.0003));
+  arr.unshift({ name: dest.name || 'Pinned location', address: dest.address || '', center: dest.lngLat });
+  try { localStorage.setItem(RECENTS_KEY, JSON.stringify(arr.slice(0, 10))); } catch {}
+  renderRecents();
+}
+function renderRecents() {
+  const el = $('recents-list'); if (!el) return;
+  const arr = loadRecents();
+  if (!arr.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<span class="label" style="margin-top:0">Recent</span>' + arr.map((r, i) => `
+    <div class="place" data-ri="${i}">
+      <div class="place-emoji">🕘</div>
+      <div class="place-info"><div class="place-name">${escapeHtml(r.name)}</div><div class="place-addr">${escapeHtml(r.address || '')}</div></div>
+    </div>`).join('');
+  el.querySelectorAll('.place').forEach(row => row.addEventListener('click', () => {
+    const r = arr[+row.dataset.ri]; closeSheets(); selectDestination({ lngLat: r.center, name: r.name, address: r.address });
+  }));
+}
+renderRecents();
+
+// ───────── share ETA ─────────
+async function shareEta() {
+  const eta = state.navigationActive ? $('nav-eta').textContent : (state.routeData ? formatClock(new Date(Date.now() + state.routeData.duration * 1000)) : '');
+  if (!eta || eta === '—') { showToast('Pick a destination first'); return; }
+  const dest = state.endPoint?.name || 'my destination';
+  const text = `On my way to ${dest}. ETA ${eta}.`;
+  if (navigator.share) { try { await navigator.share({ text }); } catch {} return; }
+  try { await navigator.clipboard.writeText(text); showToast('ETA copied to clipboard'); } catch { showToast(text); }
+}
+$('summary').addEventListener('click', e => { if (e.target.closest('#summary-share-btn')) shareEta(); });
+const _rsShare = window.renderSummary;
+window.renderSummary = function (route) {
+  _rsShare(route);
+  $('summary').insertAdjacentHTML('beforeend', '<button id="summary-share-btn" aria-label="Share ETA"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-3.9M8.6 13.5l6.8 3.9"/></svg></button>');
+};
+
+// ───────── distance measurement tool ─────────
+let measuring = false, measurePts = [];
+function ensureMeasureLayers() {
+  if (map.getSource('measure')) return;
+  map.addSource('measure', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({ id: 'measure-line', type: 'line', source: 'measure', filter: ['==', ['geometry-type'], 'LineString'], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#e8c97a', 'line-width': 3, 'line-dasharray': [1.5, 1.2] } });
+  map.addLayer({ id: 'measure-pts', type: 'circle', source: 'measure', filter: ['==', ['geometry-type'], 'Point'], paint: { 'circle-radius': 5, 'circle-color': '#e8c97a', 'circle-stroke-color': '#080612', 'circle-stroke-width': 2 } });
+}
+function updateMeasure() {
+  const feats = measurePts.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: p } }));
+  if (measurePts.length > 1) feats.push({ type: 'Feature', geometry: { type: 'LineString', coordinates: measurePts } });
+  map.getSource('measure')?.setData({ type: 'FeatureCollection', features: feats });
+  const total = measurePts.reduce((s, p, i) => i ? s + distanceMeters(measurePts[i - 1][0], measurePts[i - 1][1], p[0], p[1]) : 0, 0);
+  $('measure-pill-text').textContent = measurePts.length ? formatDistance(total) : 'Tap the map to measure';
+}
+function measureOn() {
+  measuring = true; measurePts = [];
+  $('measure-fab')?.classList.add('on');
+  map.getCanvas().style.cursor = 'crosshair';
+  ensureMeasureLayers(); updateMeasure();
+  $('measure-pill').classList.add('show');
+}
+function measureOff() {
+  measuring = false; measurePts = [];
+  $('measure-fab')?.classList.remove('on');
+  map.getCanvas().style.cursor = '';
+  map.getSource('measure')?.setData({ type: 'FeatureCollection', features: [] });
+  $('measure-pill').classList.remove('show');
+}
+document.body.insertAdjacentHTML('beforeend', '<div id="measure-pill"><span id="measure-pill-text">Tap the map to measure</span><button id="measure-pill-x" aria-label="Stop measuring">' + icon('close') + '</button></div>');
+$('measure-pill-x').querySelector('svg').style.cssText = 'width:16px;height:16px';
+$('measure-pill-x').addEventListener('click', measureOff);
+$('fabs').insertAdjacentHTML('afterbegin', '<button class="fab measure-fab" id="measure-fab" aria-label="Measure distance"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5L16.5 3l4.5 4.5L7.5 21z"/><path d="M6 13.5l2 2M9.5 10l2 2M13 6.5l2 2"/></svg></button>');
+$('measure-fab').addEventListener('click', () => measuring ? measureOff() : measureOn());
+map.on('click', e => { if (!measuring) return; measurePts.push([e.lngLat.lng, e.lngLat.lat]); updateMeasure(); });
+map.on('style.load', () => { if (measuring) ensureMeasureLayers(); });
+
+// ───────── spoken road-event (crash / road-work) alerts ─────────
+if (EXT.roadEvents === undefined) EXT.roadEvents = true;
+$('x-auto3d').closest('.toggle-row').insertAdjacentHTML('afterend',
+  '<div class="toggle-row"><span>Crash and road work alerts</span><div class="toggle" id="x-roadEvents" role="switch" aria-label="Crash and road work alerts"></div></div>');
+$('x-roadEvents').classList.toggle('active', !!EXT.roadEvents);
+$('x-roadEvents').addEventListener('click', () => { $('x-roadEvents').classList.toggle('active'); EXT.roadEvents = $('x-roadEvents').classList.contains('active'); saveExt(); });
+const INC_SPEECH = { 1: 'Crash ahead', 3: 'Hazard ahead', 6: 'Traffic jam ahead', 7: 'Lane closed ahead', 8: 'Road closed ahead', 9: 'Road work ahead', 11: 'Flooding ahead', 14: 'Vehicle stopped ahead' };
+async function loadIncidents(route) {
+  const key = ttKey(); if (!key) return [];
+  const c = route.geometry.coordinates;
+  let minLon = 1e9, minLat = 1e9, maxLon = -1e9, maxLat = -1e9;
+  c.forEach(([lo, la]) => { if (lo < minLon) minLon = lo; if (lo > maxLon) maxLon = lo; if (la < minLat) minLat = la; if (la > maxLat) maxLat = la; });
+  const pad = 0.03, bbox = `${minLon - pad},${minLat - pad},${maxLon + pad},${maxLat + pad}`;
+  const fields = '{incidents{type,geometry{type,coordinates},properties{iconCategory}}}';
+  try {
+    const r = await fetch(`https://api.tomtom.com/traffic/services/5/incidentDetails?bbox=${bbox}&fields=${encodeURIComponent(fields)}&language=en-US&key=${key}`);
+    if (!r.ok) return [];
+    const js = await r.json();
+    return (js.incidents || []).map(f => {
+      const g = f.geometry || {}; let pt;
+      if (g.type === 'Point') pt = g.coordinates;
+      else { const coords = (g.type === 'LineString' ? g.coordinates : (g.coordinates || []).flat()) || []; pt = coords[Math.floor(coords.length / 2)]; }
+      if (!pt) return null;
+      const n = nearestOn(route, pt[0], pt[1]);
+      return n.dist <= 60 && n.index >= 0 ? { cat: f.properties?.iconCategory, lon: pt[0], lat: pt[1], along: route._cum[n.index] } : null;
+    }).filter(Boolean).filter(k => INC_SPEECH[k.cat]).sort((a, b) => a.along - b.along);
+  } catch { return []; }
+}
+const _enrichInc = window.enrich;
+window.enrich = async function (route) {
+  if (!route._inc && state.routeProfile === 'driving' && ttKey()) route._inc = await loadIncidents(route).catch(() => []);
+  return _enrichInc(route);
+};
+const _opuInc = window.onPositionUpdate;
+window.onPositionUpdate = function (pos) {
+  _opuInc(pos);
+  const r = state.routeData;
+  if (!state.navigationActive || !r || !EXT.roadEvents || !r._inc?.length || !r._cum) return;
+  const { longitude: lon, latitude: lat } = pos.coords;
+  const { index, dist } = nearestOn(r, lon, lat);
+  if (dist >= 40 || index < 0) return;
+  const along = r._cum[index];
+  for (const k of r._inc) {
+    const ahead = k.along - along;
+    if (k.said) continue;
+    if (ahead <= 0) { k.said = true; continue; }
+    if (ahead < 900) { k.said = true; speak(`${INC_SPEECH[k.cat]}, in ${formatDistanceSpoken(ahead)}.`, true); break; }
+    break;
+  }
+};
+
+// ───────── PWA / iOS install polish ─────────
+function pngIcon(size) {
+  const c = document.createElement('canvas'); c.width = c.height = size; const x = c.getContext('2d');
+  x.fillStyle = '#080612'; x.beginPath(); x.roundRect(0, 0, size, size, size * 0.22); x.fill();
+  x.translate(size / 2, size / 2); x.fillStyle = '#c9a84c'; x.beginPath();
+  const R = size * 0.34, r = size * 0.14;
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2;
+    x.moveTo(0, 0);
+    x.lineTo(Math.cos(a) * -r, Math.sin(a) * -r);
+    x.lineTo(Math.cos(a) * R, Math.sin(a) * R);
+    x.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+  }
+  x.closePath(); x.fill();
+  return c.toDataURL('image/png');
+}
+try {
+  const icon180 = pngIcon(180), icon192 = pngIcon(192), icon512 = pngIcon(512), icon32 = pngIcon(32);
+  const touch = document.querySelector('link[rel="apple-touch-icon"]'); if (touch) touch.href = icon180;
+  const fav = document.querySelector('link[rel="icon"]'); if (fav) fav.href = icon32;
+  const manifest = { name: 'Wizard Maps', short_name: 'Wizard Maps', start_url: '.', display: 'standalone', background_color: '#080612', theme_color: '#080612',
+    icons: [{ src: icon192, sizes: '192x192', type: 'image/png' }, { src: icon512, sizes: '512x512', type: 'image/png' }] };
+  const link = document.createElement('link'); link.rel = 'manifest';
+  link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+  document.head.appendChild(link);
+} catch {}
+
+const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+document.body.classList.toggle('standalone', isStandalone);
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
+
+// iOS blocks Picture-in-Picture entirely for standalone (Home Screen, chromeless)
+// web apps — this is a confirmed WebKit bug, not something we can patch around
+// while staying in standalone mode. "Safari-tab mode" strips the tags that make
+// Add to Home Screen create a standalone launch, so a fresh Home Screen icon
+// instead opens as a normal Safari tab (address bar visible) with full PiP support.
+const SAFARI_TAB_KEY = 'wizard_maps_safari_tab_mode';
+let safariTabMode = false; try { safariTabMode = localStorage.getItem(SAFARI_TAB_KEY) === '1'; } catch {}
+if (safariTabMode) {
+  document.querySelectorAll('meta[name="apple-mobile-web-app-capable"], meta[name="apple-mobile-web-app-status-bar-style"], link[rel="manifest"]').forEach(el => el.remove());
+}
+if (isIOS) {
+  document.querySelector('#settings-sheet .foot').insertAdjacentHTML('beforebegin', `
+    <div style="margin-top:22px">
+      <div class="toggle-row"><span>Safari-tab mode (enables floating video)</span><div class="toggle" id="x-safariTab" role="switch" aria-label="Safari-tab mode"></div></div>
+      <div class="x-hint">iPhone/iPad block floating video for Home Screen apps — this is an Apple bug, confirmed in WebKit's own bug tracker. Turn this on, remove your current Home Screen icon, then Share → Add to Home Screen again. The new icon opens as a Safari tab (you'll see the address bar) but floating video will work. Turn it off and re-add to go back to the full-screen look.</div>
+    </div>`);
+  $('x-safariTab').classList.toggle('active', safariTabMode);
+  $('x-safariTab').addEventListener('click', () => {
+    safariTabMode = !safariTabMode;
+    try { localStorage.setItem(SAFARI_TAB_KEY, safariTabMode ? '1' : '0'); } catch {}
+    showToast(safariTabMode ? 'On — remove and re-add the Home Screen icon to apply' : 'Off — remove and re-add the Home Screen icon to apply');
+    setTimeout(() => location.reload(), 1400);
+  });
+}
+if (isIOS && isSafari && !isStandalone) {
+  let dismissed = false; try { dismissed = localStorage.getItem('wizard_maps_install_dismissed') === '1'; } catch {}
+  if (!dismissed) {
+    document.body.insertAdjacentHTML('beforeend',
+      '<div id="ios-install-banner"><span>Install <b>Wizard Maps</b> — tap <b>Share</b>, then <b>Add to Home Screen</b>.</span><button id="ios-install-close" aria-label="Dismiss">' + icon('close') + '</button></div>');
+    $('ios-install-close').querySelector('svg').style.cssText = 'width:16px;height:16px';
+    requestAnimationFrame(() => $('ios-install-banner').classList.add('show'));
+    $('ios-install-close').addEventListener('click', () => { $('ios-install-banner').classList.remove('show'); try { localStorage.setItem('wizard_maps_install_dismissed', '1'); } catch {} });
+  }
+}
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstall = e; });
+document.querySelector('#settings-sheet .foot').insertAdjacentHTML('beforebegin',
+  '<div style="margin-top:22px"><button class="add-btn" id="install-app-btn" style="height:48px">Install Wizard Maps</button></div>');
+$('install-app-btn').addEventListener('click', async () => {
+  if (deferredInstall) { deferredInstall.prompt(); await deferredInstall.userChoice; deferredInstall = null; }
+  else if (isIOS) showToast('On iPhone: tap Share, then Add to Home Screen');
+  else showToast('Use your browser menu → Install app / Add to Home Screen');
+});
 })();
 
 </script>
