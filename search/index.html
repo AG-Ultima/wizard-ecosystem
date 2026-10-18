@@ -684,268 +684,794 @@
         </div>
     </div>
 
-    <script>
-        /* ── Starfield ── */
-        (function() {
-            const canvas = document.getElementById('starfield');
-            const ctx = canvas.getContext('2d');
-            let W, H;
-            const stars = Array.from({ length: 200 }, () => ({
-                x: Math.random(), y: Math.random(),
-                r: Math.random() * 1.3 + 0.2,
-                phase: Math.random() * Math.PI * 2,
-                speed: Math.random() * 0.8 + 0.3
-            }));
-            function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
-            resize();
-            window.addEventListener('resize', resize);
-            (function draw() {
-                ctx.clearRect(0, 0, W, H);
-                const t = Date.now() / 1000;
-                stars.forEach(s => {
-                    const a = 0.25 + 0.5 * (Math.sin(t * s.speed + s.phase) * 0.5 + 0.5);
-                    ctx.beginPath();
-                    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(212,208,232,${a})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            })();
-        })();
+   
+<script>
+(() => {
+    "use strict";
 
-        /* ── REWRITTEN JAVASCRIPT ── */
-        const API = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null;
-        let searchTimeout = null;
+    /* =========================================================
+       CONFIGURATION
+    ========================================================= */
+    const API = "https://arnav0928.pythonanywhere.com";
 
-        // Toast notification
-        let toastTimer;
-        function showToast(msg, type = 'success') {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.className = `toast ${type} show`;
-            clearTimeout(toastTimer);
-            toastTimer = setTimeout(() => { t.classList.remove('show'); }, 3000);
+    let currentUser = null;
+    let searchTimeout = null;
+    let toastTimer = null;
+    let activeSearchController = null;
+    let searchRequestId = 0;
+
+    const $ = (id) => document.getElementById(id);
+
+    /* =========================================================
+       STARFIELD
+    ========================================================= */
+    (() => {
+        const canvas = $("starfield");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        let width = 0;
+        let height = 0;
+        let animationFrame = null;
+
+        const stars = Array.from({ length: 200 }, () => ({
+            x: Math.random(),
+            y: Math.random(),
+            r: Math.random() * 1.3 + 0.2,
+            phase: Math.random() * Math.PI * 2,
+            speed: Math.random() * 0.8 + 0.3
+        }));
+
+        function resize() {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            width = window.innerWidth;
+            height = window.innerHeight;
+
+            canvas.width = Math.round(width * dpr);
+            canvas.height = Math.round(height * dpr);
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
+
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
 
-        // Escape HTML
-        function esc(str) {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
+        function draw() {
+            ctx.clearRect(0, 0, width, height);
 
-        // ========== AUTHENTICATION ==========
-        async function checkAuth() {
-            try {
-                const res = await fetch(`${API}/api/check-auth`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated && data.user) {
-                        currentUser = data.user;
-                        document.getElementById('user-pill').style.display = 'flex';
-                        document.getElementById('user-email-txt').textContent = currentUser.email;
-                        document.getElementById('signin-btn').style.display = 'none';
-                        return;
-                    }
-                }
-            } catch(e) {}
-            document.getElementById('user-pill').style.display = 'none';
-            document.getElementById('signin-btn').style.display = 'block';
-        }
+            const time = Date.now() / 1000;
 
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value.trim();
-            const errEl = document.getElementById('login-error');
-            if (!email || !password) { errEl.textContent = 'Email and password required'; return; }
-            try {
-                const res = await fetch(`${API}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    currentUser = data.user;
-                    closeModal();
-                    document.getElementById('user-pill').style.display = 'flex';
-                    document.getElementById('user-email-txt').textContent = currentUser.email;
-                    document.getElementById('signin-btn').style.display = 'none';
-                    showToast('Welcome back!');
-                } else {
-                    errEl.textContent = data.error || 'Login failed';
-                }
-            } catch(e) { errEl.textContent = 'Connection error'; }
-        }
+            for (const star of stars) {
+                const alpha =
+                    0.25 +
+                    0.5 *
+                    (Math.sin(time * star.speed + star.phase) * 0.5 + 0.5);
 
-        async function handleLogout() {
-            await fetch(`${API}/api/logout`, { method: 'POST', credentials: 'include' });
-            currentUser = null;
-            document.getElementById('user-pill').style.display = 'none';
-            document.getElementById('signin-btn').style.display = 'block';
-            showToast('Signed out');
-        }
+                ctx.beginPath();
+                ctx.arc(
+                    star.x * width,
+                    star.y * height,
+                    star.r,
+                    0,
+                    Math.PI * 2
+                );
 
-        function openModal() { document.getElementById('modal-overlay').classList.add('show'); }
-        function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
-
-        // ========== SEARCH SUGGESTIONS ==========
-        async function getSuggestions(query) {
-            if (!query || query.length < 2) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API}/api/search/suggest?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                
-                if (data.suggestions && data.suggestions.length > 0) {
-                    console.log(`📝 Got ${data.suggestions.length} suggestions for "${query}"`);
-                    // Suggestions are handled by the backend via API call
-                }
-            } catch (error) {
-                console.error('Suggestions error:', error);
-            }
-        }
-
-        // ========== SEARCH ==========
-        async function performSearch() {
-            const query = document.getElementById('search-input').value.trim();
-            if (!query) { showToast('Enter a search term', 'error'); return; }
-
-            // Update URL
-            const newUrl = `${location.pathname}?q=${encodeURIComponent(query)}`;
-            window.history.pushState({}, '', newUrl);
-
-            const area = document.getElementById('results');
-            area.innerHTML = `
-                <div class="loading-spinner">
-                    <div class="spinner-ring"></div>
-                    <p class="loading-text">Consulting the arcane archives…</p>
-                </div>`;
-
-            try {
-                const res = await fetch(`${API}/api/search`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ query })
-                });
-                const data = await res.json();
-                
-                if (!res.ok || !data.success) {
-                    throw new Error(data.error || 'Search failed');
-                }
-                
-                renderResults(data);
-                
-            } catch(err) {
-                const q = encodeURIComponent(query);
-                area.innerHTML = `
-                    <div class="no-results">
-                        <span class="no-results-icon">⚠️</span>
-                        <h3>Search Interrupted</h3>
-                        <p>${esc(err.message)}</p>
-                        <div class="fallback-btns">
-                            <button class="fallback-btn fallback-google" onclick="window.open('https://www.google.com/search?q=${q}','_blank')">🔍 Google</button>
-                            <button class="fallback-btn fallback-ddg" onclick="window.open('https://duckduckgo.com/?q=${q}','_blank')">🦆 DuckDuckGo</button>
-                        </div>
-                    </div>`;
-            }
-        }
-
-        function renderResults(data) {
-            const area = document.getElementById('results');
-            let html = '';
-
-            // AI Summary - comes from Groq API via backend
-            if (data.summary) {
-                html += `
-                    <div class="ai-summary" role="region" aria-label="AI Summary">
-                        <div class="summary-header">
-                            <span class="summary-icon" aria-hidden="true">🧙</span>
-                            <span class="summary-label">About "${esc(data.query)}"</span>
-                        </div>
-                        <p class="summary-text">${esc(data.summary)}</p>
-                    </div>`;
+                ctx.fillStyle = `rgba(212,208,232,${alpha})`;
+                ctx.fill();
             }
 
-            if (!data.results || !data.results.length) {
-                const q = encodeURIComponent(data.query);
-                html += `
-                    <div class="no-results">
-                        <span class="no-results-icon">🔍</span>
-                        <h3>No results for "${esc(data.query)}"</h3>
-                        <p>Try rephrasing your query, or search directly:</p>
-                        <div class="fallback-btns">
-                            <button class="fallback-btn fallback-google" onclick="window.open('https://www.google.com/search?q=${q}','_blank')">🔍 Google</button>
-                            <button class="fallback-btn fallback-ddg" onclick="window.open('https://duckduckgo.com/?q=${q}','_blank')">🦆 DuckDuckGo</button>
-                        </div>
-                    </div>`;
-                area.innerHTML = html;
-                return;
-            }
-
-            html += `<div class="source-badge">✦ ${data.results.length} results · ${esc(data.source)}</div>`;
-
-            for (const r of data.results) {
-                html += `
-                    <article class="result-card" role="article" onclick="window.open('${esc(r.url)}','_blank')" tabindex="0"
-                        onkeydown="if(event.key==='Enter'||event.key===' '){window.open('${esc(r.url)}','_blank')}">
-                        <div class="result-title">${esc(r.title)}</div>
-                        <div class="result-url">${esc(r.url)}</div>
-                        <p class="result-snippet">${esc(r.snippet)}</p>
-                    </article>`;
-            }
-
-            area.innerHTML = html;
+            animationFrame = requestAnimationFrame(draw);
         }
 
-        function loadFromURL() {
-            const q = new URLSearchParams(location.search).get('q');
-            if (q) {
-                document.getElementById('search-input').value = decodeURIComponent(q);
-                performSearch();
+        resize();
+        window.addEventListener("resize", resize);
+        draw();
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                cancelAnimationFrame(animationFrame);
+                animationFrame = null;
+            } else if (animationFrame === null) {
+                draw();
             }
-        }
-
-        // Input event for suggestions (debounced)
-        function setupSearchInput() {
-            const input = document.getElementById('search-input');
-            input.addEventListener('input', (e) => {
-                if (searchTimeout) clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => getSuggestions(e.target.value), 300);
-            });
-        }
-
-        // ========== EVENT LISTENERS ==========
-        document.getElementById('search-btn').addEventListener('click', performSearch);
-        document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') performSearch(); });
-        document.getElementById('signin-btn').addEventListener('click', openModal);
-        document.getElementById('login-submit').addEventListener('click', handleLogin);
-        document.getElementById('logout-btn').addEventListener('click', handleLogout);
-        document.getElementById('show-signup').addEventListener('click', () => { window.location.href = 'https://wizardecosystem.dev'; });
-        
-        // Close modal when clicking outside
-        document.getElementById('modal-overlay').addEventListener('click', e => { 
-            if (e.target === document.getElementById('modal-overlay')) closeModal(); 
         });
-        
-        // Enter key in modal inputs
-        document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
-        document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+    })();
 
-        // Setup search suggestions
-        setupSearchInput();
+    /* =========================================================
+       UTILITIES
+    ========================================================= */
 
-        // Initialize
-        checkAuth();
-        loadFromURL();
-        
-        console.log('🧙 Wizard Search ready!');
-    </script>
+    function esc(value) {
+        const div = document.createElement("div");
+        div.textContent = String(value ?? "");
+        return div.innerHTML;
+    }
+
+    function showToast(message, type = "success") {
+        const toast = $("toast");
+        if (!toast) return;
+
+        toast.textContent = message;
+        toast.className = `toast ${type} show`;
+
+        clearTimeout(toastTimer);
+
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3000);
+    }
+
+    function setText(id, value) {
+        const element = $(id);
+        if (element) element.textContent = value ?? "";
+    }
+
+    function setDisplay(id, display) {
+        const element = $(id);
+        if (element) element.style.display = display;
+    }
+
+    function getSearchUrl(engine, query) {
+        const encoded = encodeURIComponent(query);
+
+        if (engine === "google") {
+            return `https://www.google.com/search?q=${encoded}`;
+        }
+
+        return `https://duckduckgo.com/?q=${encoded}`;
+    }
+
+    function openExternalUrl(url) {
+        try {
+            const parsed = new URL(url);
+
+            if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+                return;
+            }
+
+            window.open(parsed.href, "_blank", "noopener,noreferrer");
+        } catch {
+            // Ignore malformed or unsafe URLs.
+        }
+    }
+
+    async function apiRequest(path, options = {}) {
+        const response = await fetch(`${API}${path}`, {
+            ...options,
+            credentials: "include",
+            headers: {
+                ...(options.body ? { "Content-Type": "application/json" } : {}),
+                ...(options.headers || {})
+            }
+        });
+
+        const contentType = response.headers.get("content-type") || "";
+
+        let data = {};
+
+        if (contentType.includes("application/json")) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+
+            if (text) {
+                data = { error: text.slice(0, 300) };
+            }
+        }
+
+        if (!response.ok) {
+            const error = new Error(
+                data.error || `Request failed (${response.status})`
+            );
+
+            error.status = response.status;
+            error.data = data;
+
+            throw error;
+        }
+
+        return data;
+    }
+
+    /* =========================================================
+       AUTHENTICATION
+    ========================================================= */
+
+    function updateAuthUI() {
+        if (currentUser) {
+            setDisplay("user-pill", "flex");
+            setDisplay("signin-btn", "none");
+
+            setText(
+                "user-email-txt",
+                currentUser.email || currentUser.username || "Signed in"
+            );
+        } else {
+            setDisplay("user-pill", "none");
+            setDisplay("signin-btn", "block");
+        }
+    }
+
+    async function checkAuth() {
+        try {
+            const data = await apiRequest("/api/check-auth");
+
+            if (data.authenticated && data.user) {
+                currentUser = data.user;
+            } else {
+                currentUser = null;
+            }
+        } catch (error) {
+            currentUser = null;
+
+            if (error.status && error.status !== 401) {
+                console.warn("Authentication check failed:", error.message);
+            }
+        }
+
+        updateAuthUI();
+    }
+
+    async function handleLogin() {
+        const email = $("login-email").value.trim();
+        const password = $("login-password").value;
+        const errorElement = $("login-error");
+        const submitButton = $("login-submit");
+
+        if (!email || !password) {
+            errorElement.textContent = "Email and password required";
+            return;
+        }
+
+        errorElement.textContent = "";
+        submitButton.disabled = true;
+        submitButton.textContent = "Signing in…";
+
+        try {
+            const data = await apiRequest("/api/login", {
+                method: "POST",
+                body: JSON.stringify({ email, password })
+            });
+
+            if (!data.user) {
+                throw new Error(
+                    "Login response did not include a user. Check your backend."
+                );
+            }
+
+            currentUser = data.user;
+
+            closeModal();
+            updateAuthUI();
+
+            $("login-password").value = "";
+
+            showToast("Welcome back!");
+
+        } catch (error) {
+            errorElement.textContent =
+                error.status === 401
+                    ? "Invalid email or password"
+                    : error.message || "Login failed";
+
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = "Enter the Realm";
+        }
+    }
+
+    async function handleLogout() {
+        const logoutButton = $("logout-btn");
+
+        if (logoutButton) logoutButton.disabled = true;
+
+        try {
+            await apiRequest("/api/logout", { method: "POST" });
+
+            currentUser = null;
+            updateAuthUI();
+
+            showToast("Signed out");
+
+        } catch (error) {
+            showToast(
+                error.status === 401
+                    ? "You are already signed out"
+                    : "Could not sign out. Check your connection.",
+                error.status === 401 ? "success" : "error"
+            );
+
+            if (error.status === 401) {
+                currentUser = null;
+                updateAuthUI();
+            }
+        } finally {
+            if (logoutButton) logoutButton.disabled = false;
+        }
+    }
+
+    function openModal() {
+        $("modal-overlay").classList.add("show");
+        $("login-error").textContent = "";
+
+        setTimeout(() => $("login-email").focus(), 50);
+    }
+
+    function closeModal() {
+        $("modal-overlay").classList.remove("show");
+    }
+
+    /* =========================================================
+       SEARCH SUGGESTIONS
+       Requires an optional /api/search/suggest endpoint.
+    ========================================================= */
+
+    async function getSuggestions(query) {
+        if (!query || query.length < 2) return;
+
+        try {
+            const data = await apiRequest(
+                `/api/search/suggest?q=${encodeURIComponent(query)}`
+            );
+
+            if (Array.isArray(data.suggestions) && data.suggestions.length) {
+                console.log(
+                    `Received ${data.suggestions.length} search suggestions.`
+                );
+            }
+        } catch (error) {
+            // Suggestions are optional; don't interrupt searching.
+            if (error.status !== 404) {
+                console.debug("Suggestions unavailable:", error.message);
+            }
+        }
+    }
+
+    function setupSearchInput() {
+        const input = $("search-input");
+
+        input.addEventListener("input", () => {
+            clearTimeout(searchTimeout);
+
+            const query = input.value.trim();
+
+            searchTimeout = setTimeout(() => {
+                getSuggestions(query);
+            }, 350);
+        });
+    }
+
+    /* =========================================================
+       SEARCH UI
+    ========================================================= */
+
+    function showLoading() {
+        const area = $("results");
+        area.replaceChildren();
+
+        const container = document.createElement("div");
+        container.className = "loading-spinner";
+
+        const spinner = document.createElement("div");
+        spinner.className = "spinner-ring";
+        spinner.setAttribute("aria-hidden", "true");
+
+        const message = document.createElement("p");
+        message.className = "loading-text";
+        message.textContent = "Consulting the arcane archives…";
+
+        container.append(spinner, message);
+        area.appendChild(container);
+    }
+
+    function showMessage(icon, title, message, query, error = false) {
+        const area = $("results");
+        area.replaceChildren();
+
+        const container = document.createElement("div");
+        container.className = "no-results";
+
+        const glyph = document.createElement("span");
+        glyph.className = "no-results-icon";
+        glyph.textContent = icon;
+
+        const heading = document.createElement("h3");
+        heading.textContent = title;
+
+        const paragraph = document.createElement("p");
+        paragraph.textContent = message;
+
+        const buttons = document.createElement("div");
+        buttons.className = "fallback-btns";
+
+        const google = document.createElement("button");
+        google.className = "fallback-btn fallback-google";
+        google.textContent = "🔍 Google";
+        google.addEventListener("click", () => {
+            openExternalUrl(getSearchUrl("google", query));
+        });
+
+        const duckduckgo = document.createElement("button");
+        duckduckgo.className = "fallback-btn fallback-ddg";
+        duckduckgo.textContent = "🦆 DuckDuckGo";
+        duckduckgo.addEventListener("click", () => {
+            openExternalUrl(getSearchUrl("duckduckgo", query));
+        });
+
+        buttons.append(google, duckduckgo);
+        container.append(glyph, heading, paragraph, buttons);
+        area.appendChild(container);
+
+        if (error) {
+            console.error("Search failed:", message);
+        }
+    }
+
+    function createResultCard(result) {
+        const card = document.createElement("article");
+        card.className = "result-card";
+        card.setAttribute("role", "article");
+
+        const title = document.createElement("div");
+        title.className = "result-title";
+        title.textContent = result.title || "Untitled result";
+
+        const url = document.createElement("div");
+        url.className = "result-url";
+
+        const snippet = document.createElement("p");
+        snippet.className = "result-snippet";
+        snippet.textContent =
+            result.content || result.snippet || result.description || "";
+
+        let safeUrl = "";
+
+        try {
+            const parsed = new URL(result.url || "");
+
+            if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+                safeUrl = parsed.href;
+            }
+        } catch {
+            // Summary entries and malformed URLs aren't clickable.
+        }
+
+        if (safeUrl) {
+            const link = document.createElement("a");
+            link.href = safeUrl;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = result.url;
+
+            // Keep the URL visible and accessible.
+            link.style.color = "inherit";
+            link.style.textDecoration = "none";
+
+            url.appendChild(link);
+
+            card.tabIndex = 0;
+            card.setAttribute("aria-label", result.title || "Open search result");
+
+            const openResult = (event) => {
+                if (event.target.closest("a")) return;
+                openExternalUrl(safeUrl);
+            };
+
+            card.addEventListener("click", openResult);
+
+            card.addEventListener("keydown", (event) => {
+                if (
+                    event.target === card &&
+                    (event.key === "Enter" || event.key === " ")
+                ) {
+                    event.preventDefault();
+                    openExternalUrl(safeUrl);
+                }
+            });
+
+            card.style.cursor = "pointer";
+        } else {
+            url.textContent = result.is_answer ? "AI-generated summary" : "";
+            card.style.cursor = "default";
+        }
+
+        card.append(title, url, snippet);
+
+        return card;
+    }
+
+    function renderResults(data) {
+        const area = $("results");
+        area.replaceChildren();
+
+        const results = Array.isArray(data.results) ? data.results : [];
+
+        // Accept either backend response format.
+        const answerResult = results.find(
+            result => result && result.is_answer === true
+        );
+
+        const summary =
+            data.summary ||
+            data.answer ||
+            (answerResult ? answerResult.content : "");
+
+        const webResults = results.filter(result => {
+            if (!result || result.is_answer === true) return false;
+
+            return Boolean(
+                result.url &&
+                (result.content || result.snippet || result.title)
+            );
+        });
+
+        // AI summary
+        if (summary) {
+            const summaryCard = document.createElement("section");
+            summaryCard.className = "ai-summary";
+            summaryCard.setAttribute("aria-label", "Search summary");
+
+            const header = document.createElement("div");
+            header.className = "summary-header";
+
+            const icon = document.createElement("span");
+            icon.className = "summary-icon";
+            icon.setAttribute("aria-hidden", "true");
+            icon.textContent = "🧙";
+
+            const label = document.createElement("span");
+            label.className = "summary-label";
+            label.textContent = `About "${data.query || ""}"`;
+
+            const text = document.createElement("p");
+            text.className = "summary-text";
+            text.textContent = summary;
+
+            header.append(icon, label);
+            summaryCard.append(header, text);
+            area.appendChild(summaryCard);
+        }
+
+        // No usable results
+        if (webResults.length === 0) {
+            if (!summary) {
+                showMessage(
+                    "🔍",
+                    `No results for "${data.query || ""}"`,
+                    "Try another search term or search directly below.",
+                    data.query || ""
+                );
+            } else {
+                const note = document.createElement("p");
+                note.className = "result-snippet";
+                note.textContent =
+                    "No individual web links were returned for this query.";
+
+                area.appendChild(note);
+            }
+
+            return;
+        }
+
+        // Source badge
+        const badge = document.createElement("div");
+        badge.className = "source-badge";
+
+        const sourceNames = {
+            tavily: "Tavily",
+            duckduckgo: "DuckDuckGo",
+            fallback: "Web Search"
+        };
+
+        const source =
+            sourceNames[String(data.source || "").toLowerCase()] ||
+            data.source ||
+            "Web Search";
+
+        badge.textContent = `✦ ${webResults.length} results · ${source}`;
+        area.appendChild(badge);
+
+        // Result cards
+        const fragment = document.createDocumentFragment();
+
+        for (const result of webResults) {
+            fragment.appendChild(createResultCard(result));
+        }
+
+        area.appendChild(fragment);
+    }
+
+    /* =========================================================
+       PERFORM SEARCH
+    ========================================================= */
+
+    async function performSearch() {
+        const input = $("search-input");
+        const button = $("search-btn");
+        const query = input.value.trim();
+
+        if (!query) {
+            showToast("Enter a search term", "error");
+            input.focus();
+            return;
+        }
+
+        if (query.length > 500) {
+            showToast("Search must be 500 characters or fewer", "error");
+            return;
+        }
+
+        // Abort the previous request when a newer search starts.
+        if (activeSearchController) {
+            activeSearchController.abort();
+        }
+
+        activeSearchController = new AbortController();
+
+        const controller = activeSearchController;
+        const requestId = ++searchRequestId;
+
+        // Update the address bar without double-encoding the query.
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set("q", query);
+
+        window.history.pushState({ query }, "", newUrl);
+
+        showLoading();
+
+        button.disabled = true;
+        button.textContent = "Searching…";
+        input.setAttribute("aria-busy", "true");
+
+        try {
+            const data = await apiRequest("/api/search", {
+                method: "POST",
+                signal: controller.signal,
+                body: JSON.stringify({ query })
+            });
+
+            // Ignore stale responses.
+            if (requestId !== searchRequestId) return;
+
+            if (data.success !== true) {
+                throw new Error(data.error || "Search failed");
+            }
+
+            renderResults({
+                ...data,
+                query: data.query || query
+            });
+
+        } catch (error) {
+            if (error.name === "AbortError") return;
+
+            if (requestId !== searchRequestId) return;
+
+            if (error.status === 401) {
+                showMessage(
+                    "🔐",
+                    "Sign in required",
+                    "Please sign in to use Wizard Search.",
+                    query,
+                    true
+                );
+
+                showToast("Please sign in first", "error");
+            } else {
+                showMessage(
+                    "⚠️",
+                    "Search Interrupted",
+                    error.message || "Unable to connect to the search server.",
+                    query,
+                    true
+                );
+            }
+
+        } finally {
+            if (requestId === searchRequestId) {
+                activeSearchController = null;
+
+                button.disabled = false;
+                button.textContent = "Search";
+
+                input.removeAttribute("aria-busy");
+            }
+        }
+    }
+
+    /* =========================================================
+       URL RESTORATION / BROWSER NAVIGATION
+    ========================================================= */
+
+    function loadFromURL() {
+        // URLSearchParams.get() already decodes the value.
+        const query = new URLSearchParams(window.location.search).get("q");
+
+        if (query) {
+            $("search-input").value = query;
+            performSearch();
+        }
+    }
+
+    window.addEventListener("popstate", () => {
+        const query = new URLSearchParams(window.location.search).get("q") || "";
+
+        $("search-input").value = query;
+
+        if (query.trim()) {
+            performSearch();
+        } else {
+            if (activeSearchController) {
+                activeSearchController.abort();
+                activeSearchController = null;
+            }
+
+            searchRequestId++;
+            $("results").replaceChildren();
+        }
+    });
+
+    /* =========================================================
+       EVENT LISTENERS
+    ========================================================= */
+
+    $("search-btn").addEventListener("click", performSearch);
+
+    $("search-input").addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            performSearch();
+        }
+    });
+
+    $("signin-btn").addEventListener("click", openModal);
+
+    $("login-submit").addEventListener("click", handleLogin);
+
+    $("logout-btn").addEventListener("click", handleLogout);
+
+    $("show-signup").addEventListener("click", () => {
+        window.location.href = "https://wizardecosystem.dev";
+    });
+
+    $("modal-overlay").addEventListener("click", event => {
+        if (event.target === $("modal-overlay")) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener("keydown", event => {
+        if (
+            event.key === "Escape" &&
+            $("modal-overlay").classList.contains("show")
+        ) {
+            closeModal();
+        }
+    });
+
+    $("login-email").addEventListener("keydown", event => {
+        if (event.key === "Enter") handleLogin();
+    });
+
+    $("login-password").addEventListener("keydown", event => {
+        if (event.key === "Enter") handleLogin();
+    });
+
+    setupSearchInput();
+
+    /* =========================================================
+       INITIALIZE
+    ========================================================= */
+
+    checkAuth();
+    loadFromURL();
+
+    console.log("🧙 Wizard Search initialized.");
+
+})();
+</script>
+
 </body>
 </html>
