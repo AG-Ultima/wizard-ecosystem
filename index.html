@@ -154,6 +154,19 @@ main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:clamp(32
 #cl{list-style:none;max-height:340px;overflow:auto;padding:8px}
 #cl li{display:flex;gap:12px;align-items:center;padding:10px 14px;border-radius:12px;cursor:pointer;font-size:15px}
 #cl li.sel{background:var(--gold-glow)}
+/* v4 */
+.card::before{background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),var(--gold-glow),transparent 62%)}
+.ht{display:flex;align-items:center;gap:10px}
+.gi{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:17px;background:linear-gradient(135deg,var(--violet-dim),var(--gold-glow));border:1px solid var(--border)}
+.att{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.ac{display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:18px;border:1px solid var(--border);background:rgba(8,6,18,.45);font-weight:400;color:var(--silver);transition:transform .2s,border-color .2s}
+.ac:hover{transform:translateY(-2px);border-color:var(--gold)}
+.ai{font-size:20px}
+.ac.l1{border-color:rgba(232,201,122,.5)}
+.ac.l2{border-color:rgba(240,138,138,.6);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 30px -14px rgba(240,138,138,.7)}50%{box-shadow:0 0 30px -4px rgba(240,138,138,.7)}}
+.bento .card:nth-child(n+6){animation-delay:.35s}
+.nt+.nt{border-top:1px solid rgba(201,168,76,.1)}.sub+.nt{margin-top:12px}
 /* sign-in modal */
 dialog{margin:auto;width:min(420px,92vw);padding:0;border:1px solid var(--border-strong);border-radius:28px;background:var(--ink-2);color:var(--silver);overflow:visible}
 dialog::backdrop{background:rgba(8,6,18,.7);backdrop-filter:blur(4px)}
@@ -265,7 +278,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.cont
 const now=new Date();
 $('#date').textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
 const get=p=>fetch(API+p,{credentials:'include'}).then(r=>{if(r.status===401)throw 401;if(!r.ok)throw r.status;return r.json()});
-function card(title,app,cls){const c=el('section','card '+(cls||''));const GL={calendar:'📅',notes:'📝',finance:'💰',heat:'🌡️'},h=el('h2');h.append(el('span',null,GL[app]+'  '+title));const a=el('a',null,'Open '+app);a.href=url(app);h.append(a);c.append(h);const body=el('div');body.style.cssText='display:flex;flex-direction:column;flex:1';body.append(el('div','skel'),el('div','skel'),el('div','skel'));c.append(body);return[c,body]}
+function card(title,app,cls){const c=el('section','card '+(cls||''));const GL={calendar:'📅',notes:'📝',finance:'💰',heat:'🌡️',mail:'📧',chat:'💬',firewatch:'🔥'},h=el('h2'),tt=el('span','ht');tt.append(el('span','gi',GL[app]||'✦'),document.createTextNode(title));h.append(tt);const a=el('a',null,'Open '+app);a.href=url(app);h.append(a);c.append(h);const body=el('div');body.style.cssText='display:flex;flex-direction:column;flex:1';body.append(el('div','skel'),el('div','skel'),el('div','skel'));c.append(body);return[c,body]}
 const fill=(b,...n)=>b.replaceChildren(...n);
 const fail=b=>fill(b,el('p','err','Couldn’t load this right now. Open the app to see it.'));
 function dayLabel(d){const s=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate()),diff=Math.round((s(d)-s(now))/864e5);return diff<=0?'Today':diff===1?'Tomorrow':d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}
@@ -280,6 +293,7 @@ function load(){const m=now.getMonth()+1,y=now.getFullYear();return Promise.all(
   get('/api/calendar/events').then(r=>D.ev=(r.events||[]).map(e=>({...e,s:new Date(e.start),e2:new Date(e.end)}))).catch(()=>0),
   get('/api/notes').then(r=>D.notes=(r.notes||[]).sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at))).catch(()=>0),
   get(`/api/finance/transactions?month=${m}&year=${y}&limit=500`).then(r=>D.tx=r.transactions||[]).catch(()=>0),
+  get('/api/chat/conversations').then(r=>D.chat=r.conversations||[]).catch(()=>0),
   get('/api/finance/budgets').then(r=>D.bu=r.budgets||[]).catch(()=>0),
   coords().then(c=>(D.near=!!c,get(`/api/heat/current?lat=${(c||PHX)[0]}&lon=${(c||PHX)[1]}`))).then(r=>D.heat=r).catch(()=>0)])}
 function fin(){const m=now.getMonth()+1,y=now.getFullYear(),ex=(D.tx||[]).filter(x=>(x.transaction_type||'expense')==='expense');
@@ -305,14 +319,32 @@ function moneyC(b){if(!D.tx)return fail(b);const{ex,spent,cap}=fin(),cats={};ex.
   if(!ex.length)out.push(el('p','empty','No spending logged yet this month.'));fill(b,...out)}
 function notesC(b){const n=D.notes;if(!n)return fail(b);if(!n.length)return fill(b,el('p','empty','No notes yet. Start one in Wizard Notes.'));
   fill(b,...n.slice(0,4).map(x=>{const a=el('a','nt'),sn=String(x.content||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,90);a.href=url('notes');a.append(el('b',null,x.title||'Untitled'),el('span',null,sn||'No text yet'),el('em',null,dayLabel(new Date(x.updated_at))));return a}))}
-function brief(){const s=[],n=new Date(),ev=D.ev;
-  if(ev){const td=ev.filter(e=>sameDay(e.s,n)&&e.e2>=n).sort((a,b)=>a.s-b.s);s.push(td.length?`${td.length} thing${td.length>1?'s':''} left on your calendar today. Next up: ${td[0].title} at ${hm(td[0].s)}.`:'Your calendar is clear for the rest of today.')}
-  const r=D.heat&&D.heat.risk,c=D.heat&&D.heat.current,h=D.heat&&D.heat.hydrations;
-  if(r&&c)s.push(`It’s ${Math.round(c.temp)}° with a ${String(r.level).toLowerCase()} heat risk.`);
-  if(h&&h.goal&&n.getHours()>=12&&h.percent<50)s.push(`You’re at ${h.percent}% of your water goal.`);
-  ctx=s.join(' ');const f=fin();
-  if(f.cap&&f.spent/f.cap*100>n.getDate()/new Date(n.getFullYear(),n.getMonth()+1,0).getDate()*100+10)s.push(`You’ve used ${Math.round(f.spent/f.cap*100)}% of this month’s budget.`);
-  if(s.length)$('#brief').textContent=s.join(' ')}
+const nm=f=>String(f||'').replace(/<[^>]*>/g,'').replace(/["']/g,'').trim()||'Someone',plural=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+function countUp(e,n){if(matchMedia('(prefers-reduced-motion:reduce)').matches||n<1){e.textContent=n;return}let i=0;const t=setInterval(()=>{i++;e.textContent=Math.round(n*i/20);if(i>=20)clearInterval(t)},25)}
+function feed(){const it=[],n=new Date(),ev=D.ev,r=D.heat&&D.heat.risk,h=D.heat&&D.heat.hydrations,fw=D.fire;
+  if(ev){const nx=ev.filter(e=>e.e2>=n).sort((a,b)=>a.s-b.s)[0];if(nx){const m=Math.round((nx.s-n)/6e4);
+    if(m<=0)it.push([1,'📅',`${nx.title} is happening now`,'calendar']);else if(m<=120)it.push([1,'📅',`${nx.title} starts in ${m<60?m+' min':Math.round(m/6)/10+' hr'}`,'calendar']);else if(sameDay(nx.s,n))it.push([0,'📅',`Next: ${nx.title} at ${hm(nx.s)}`,'calendar'])}}
+  if(D.mail){const u=D.mail.filter(x=>!x.is_read).length;if(u)it.push([u>9?1:0,'📧',plural(u,'unread email'),'mail'])}
+  if(D.chat){const u=D.chat.reduce((a,c)=>a+(c.unread_count||0),0);if(u)it.push([1,'💬',`${plural(u,'new message')} from ${D.chat.filter(c=>c.unread_count).map(c=>String(c.name).split(' ')[0]).slice(0,2).join(' and ')}`,'chat'])}
+  if(fw){const al=fw.alerts||[],cr=al.filter(a=>a.critical).length;if(cr)it.push([2,'🔥',`${plural(cr,'critical fire alert')} near you`,'firewatch']);else if(al.length)it.push([1,'🔥',String(al[0].message).replace(/^[^A-Za-z0-9]+/,''),'firewatch'])}
+  if(r){const l=/extreme|danger|high/i.test(r.level)?2:/moderate/i.test(r.level)?1:0;if(l)it.push([l,'🌡️',`${r.level} heat risk right now`,'heat'])}
+  if(h&&h.goal&&n.getHours()>=12&&h.percent<50)it.push([1,'💧',`Water goal at ${h.percent}%`,'heat']);
+  const f=fin();if(f.cap&&f.spent/f.cap*100>n.getDate()/new Date(n.getFullYear(),n.getMonth()+1,0).getDate()*100+10)it.push([1,'💰',`${Math.round(f.spent/f.cap*100)}% of this month’s budget used`,'finance']);
+  return it.sort((a,b)=>b[0]-a[0])}
+function attn(b){const it=feed();if(!it.length)return fill(b,el('p','empty','✦ All clear. Nothing needs you right now.'));
+  const g=el('div','att');it.forEach(([l,i,t,app])=>{const a=el('a','ac l'+l);a.href=url(app);a.append(el('span','ai',i),el('span',null,t));g.append(a)});fill(b,g)}
+function brief(){if(!(D.ev||D.mail||D.chat||D.heat||D.fire||D.tx))return;const it=feed(),c=D.heat&&D.heat.current;
+  ctx=it.map(x=>x[2]).join('. ')+(c?`. It’s ${Math.round(c.temp)}° outside.`:'');
+  $('#brief').textContent=it.length?`${plural(it.length,'thing')} ${it.length===1?'needs':'need'} you today. ${it[0][2]}.`:'You’re all caught up. Nothing needs you right now.'}
+function mailC(b){const m=D.mail;if(!m)return fill(b,el('p','empty','Connect your email in Wizard Mail to see unread messages here.'));const u=m.filter(x=>!x.is_read),big=el('div','big','0');countUp(big,u.length);
+  fill(b,big,el('p','sub',`unread of your latest ${m.length}`),...u.slice(0,3).map(x=>{const a=el('a','nt');a.href=url('mail');a.append(el('b',null,x.subject||'(no subject)'),el('span',null,nm(x.from)),el('em',null,dayLabel(new Date(x.date))));return a}))}
+function chatC(b){const c=D.chat;if(!c)return fail(b);const un=c.filter(x=>x.unread_count),t=un.reduce((a,x)=>a+x.unread_count,0),big=el('div','big','0');countUp(big,t);
+  fill(b,big,el('p','sub',t?`unread in ${plural(un.length,'conversation')}`:'You’re all caught up'),...un.slice(0,3).map(x=>{const a=el('a','nt');a.href=url('chat');a.append(el('b',null,x.name),el('span',null,x.last_message||''),el('em',null,x.last_message_time?dayLabel(new Date(x.last_message_time)):''));return a}))}
+function fireC(b){const f=D.fire;if(!f||!f.risk)return fail(b);const r=f.risk,w=f.weather||{},fl=f.fires||[],big=el('div','big',r.level);
+  big.style.color=/extreme|high/i.test(r.level)?'#f08a8a':/moderate/i.test(r.level)?'var(--gold-light)':'#8fd9a8';
+  const bar=el('div','bar'),i=el('i'),row=el('div','row');i.style.width=Math.min(100,r.percentage||0)+'%';bar.append(i);row.style.marginTop='12px';
+  row.append(el('span','t',`${plural(fl.length,'active fire')} nearby`),el('span','m',w.humidity!=null?`${w.humidity}% humidity`:''));
+  fill(b,big,el('p','sub',r.detail||'Fire danger today'),bar,row)}
 function arc(){const n=new Date(),f=(n.getHours()+n.getMinutes()/60)/24,P=f=>[160-130*Math.cos(Math.PI*f),170-130*Math.sin(Math.PI*f)],[dx,dy]=P(f),day=n.getHours()>=6&&n.getHours()<19,
   td=(D.ev||[]).filter(e=>sameDay(e.s,n)),tk=td.map(e=>{const[a,b]=P((e.s.getHours()+e.s.getMinutes()/60)/24);return `<circle cx="${a.toFixed(1)}" cy="${b.toFixed(1)}" r="4.5" fill="#7c5cbf" stroke="#e8c97a" stroke-width="1.5"/>`}).join('');
   $('#arc').innerHTML=`<svg viewBox="0 0 320 200" role="img" aria-label="Where you are in today"><defs><linearGradient id="ag"><stop offset="0" stop-color="#7c5cbf"/><stop offset="1" stop-color="#e8c97a"/></linearGradient><radialGradient id="gl"><stop offset="0" stop-color="#e8c97a" stop-opacity=".7"/><stop offset="1" stop-color="#e8c97a" stop-opacity="0"/></radialGradient></defs><path d="M30 170A130 130 0 0 1 290 170" fill="none" stroke="rgba(212,208,232,.12)" stroke-width="3"/><path d="M30 170A130 130 0 0 1 ${dx.toFixed(1)} ${dy.toFixed(1)}" fill="none" stroke="url(#ag)" stroke-width="3" stroke-linecap="round"/>${tk}<circle cx="${dx.toFixed(1)}" cy="${dy.toFixed(1)}" r="22" fill="url(#gl)"/><text x="${dx.toFixed(1)}" y="${(dy+6).toFixed(1)}" font-size="16" text-anchor="middle">${day?'☀️':'🌙'}</text><text x="160" y="148" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="40" fill="#fff">${hm(n)}</text><text x="160" y="174" text-anchor="middle" font-size="13" fill="rgba(212,208,232,.6)">${n.toLocaleDateString(undefined,{weekday:'long'})}${D.ev?` · ${td.length} event${td.length==1?'':'s'}`:''}</text></svg>`}
@@ -371,10 +403,14 @@ function signedIn(u){signed=true;
   $('#hello').replaceChildren(document.createTextNode(g+', '),el('em',null,u.first_name||'wizard'));
   $('#who').replaceChildren(el('span',null,[u.first_name,u.last_name].filter(Boolean).join(' ')),el('span','avatar',(u.first_name||'W')[0].toUpperCase()));
   $('#go').textContent='Ask Wizard';$('#sw').hidden=false;$('#q').placeholder='Ask Wizard about your day, or search the web';
-  const defs=[['Today','calendar',timeline,'s2'],['Heat','heat',heatC],['Finance','finance',moneyC],['This week','calendar',week,'s2'],['Notes','notes',notesC,'s2']],wrap=el('div','bento'),bodies=[];
-  defs.forEach(([t,app,fn,cls])=>{const[c,b]=card(t,app,cls);wrap.append(c);bodies.push([fn,b])});
+  const defs=[['Needs your attention','attn',attn,'s4'],['Today','calendar',timeline,'s2'],['Inbox','mail',mailC],['Messages','chat',chatC],['Heat','heat',heatC],['Finance','finance',moneyC],['FireWatch','firewatch',fireC],['Notes','notes',notesC],['This week','calendar',week,'s4']],wrap=el('div','bento'),bodies=[];
+  defs.forEach(([t,app,fn,cls])=>{const[c,b]=card(t,app,cls);if(fn===attn)c.querySelector('h2 a').remove();wrap.append(c);bodies.push([fn,b])});
   $('#view').replaceChildren(wrap);
-  load().then(()=>{bodies.forEach(([fn,b])=>fn(b));brief();arc()})}
+  wrap.addEventListener('pointermove',e=>{const c=e.target.closest('.card');if(c){const r=c.getBoundingClientRect();c.style.setProperty('--mx',e.clientX-r.left+'px');c.style.setProperty('--my',e.clientY-r.top+'px')}});
+  const ready=load(),later=(path,key,pick,fns)=>Promise.all([get(path).then(r=>D[key]=pick(r)).catch(()=>0),ready]).then(()=>{fns.forEach(f=>{const x=bodies.find(y=>y[0]===f);x&&f(x[1])});brief()});
+  ready.then(()=>{bodies.forEach(([fn,b])=>{if(fn!==mailC&&fn!==fireC)fn(b)});brief();arc()});
+  later('/api/mail/emails?folder=INBOX','mail',r=>r.emails||[],[mailC,attn]);
+  later('/api/firewatch/status?location=Phoenix%2C%20AZ','fire',r=>r,[fireC,attn])}
 get('/api/check-auth').then(d=>d.authenticated?signedIn(d.user):signedOut()).catch(signedOut);
 </script>
 </body>
