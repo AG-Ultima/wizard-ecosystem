@@ -167,6 +167,33 @@ main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:clamp(32
 @keyframes pulse{0%,100%{box-shadow:0 0 30px -14px rgba(240,138,138,.7)}50%{box-shadow:0 0 30px -4px rgba(240,138,138,.7)}}
 .bento .card:nth-child(n+6){animation-delay:.35s}
 .nt+.nt{border-top:1px solid rgba(201,168,76,.1)}.sub+.nt{margin-top:12px}
+/* v5 */
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.mh b{font-family:'Cormorant Garamond',serif;font-weight:400;font-size:20px;color:#fff}
+.mh button{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);font-size:18px;line-height:1}
+.mh button:hover{border-color:var(--gold)}
+.mg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.dw{font-size:11.5px;color:var(--muted);padding:4px 0}
+.md{aspect-ratio:1;max-height:38px;border-radius:50%;font-size:13px;color:var(--silver);position:relative;transition:background .15s}
+.md:hover{background:var(--violet-dim)}
+.md.today{border:1px solid var(--gold)}.md.sel{background:var(--gold);color:var(--ink);font-weight:500}
+.md.has::after{content:"";position:absolute;bottom:3px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--gold-light)}
+.md.sel.has::after{background:var(--ink)}
+.ag{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.dn{display:flex;gap:22px;align-items:center;margin-top:16px;flex-wrap:wrap}
+.leg{flex:1;min-width:150px;display:grid;gap:8px;font-size:14px}
+.leg div{display:flex;align-items:center;gap:9px}.leg i{width:10px;height:10px;border-radius:3px;flex:none}.leg .m{margin-left:auto}
+.mr{display:grid;grid-template-columns:38px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid rgba(201,168,76,.1)}
+.av{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:500;color:#fff}
+.mr b{display:block;font-weight:400;color:var(--silver-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mr span{display:block;font-size:13px;color:var(--silver-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mr.un b{font-weight:500;color:#fff}.mr em{font-style:normal;font-size:12px;color:var(--muted)}
+.ideas{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;max-width:640px}
+.ideas button{padding:7px 14px;border-radius:100px;border:1px solid var(--border);font-size:13px;color:var(--silver-dim);transition:border-color .2s,color .2s}
+.ideas button:hover{border-color:var(--gold);color:var(--gold-light)}
+.ring.sm{width:64px;height:64px;margin:0}.ring.sm span{width:50px;height:50px;font-size:17px}
+.hy{display:flex;align-items:center;gap:14px;margin-top:16px}
+.out{font-size:13px;color:var(--silver-dim);border-bottom:1px solid transparent}.out:hover{color:var(--gold-light);border-color:var(--gold)}
 /* sign-in modal */
 dialog{margin:auto;width:min(420px,92vw);padding:0;border:1px solid var(--border-strong);border-radius:28px;background:var(--ink-2);color:var(--silver);overflow:visible}
 dialog::backdrop{background:rgba(8,6,18,.7);backdrop-filter:blur(4px)}
@@ -268,7 +295,8 @@ const url=id=>`${SITE}/${id}`;
 function item(href,g,name,desc,tag,dl){const a=el('a','item');a.href=href;if(dl){a.setAttribute('download','');}const gl=el('span','g',g);gl.setAttribute('aria-hidden','true');const b=el('div'),n=el('b',null,name);if(tag)n.append(el('span','tag',tag));b.append(n,el('small',null,desc));a.append(gl,b);return a}
 WEB.forEach(a=>$('#webList').append(item(url(a[0]),a[1],a[2],a[3],a[4])));
 DESK.forEach(d=>$('#deskList').append(item(d[3],d[0],d[1],d[2],'Windows',true)));
-$('#dock').append(...WEB.map(a=>{const l=el('a','dk');l.href=url(a[0]);const g=el('span',null,a[1]);g.setAttribute('aria-hidden','true');l.append(g,el('span',null,a[2].replace('Wizard ','')));return l}));
+let use={};try{use=JSON.parse(localStorage.getItem('wz_use')||'{}')}catch{}
+$('#dock').append(...[...WEB].sort((a,b)=>(use[b[0]]||0)-(use[a[0]]||0)).map(a=>{const l=el('a','dk');l.href=url(a[0]);const g=el('span',null,a[1]);g.setAttribute('aria-hidden','true');l.append(g,el('span',null,a[2].replace('Wizard ','')));l.addEventListener('click',()=>{try{use[a[0]]=(use[a[0]]||0)+1;localStorage.setItem('wz_use',JSON.stringify(use))}catch{}});return l}));
 const openBtn=$('#open');
 function toggle(on){document.body.classList.toggle('open',on);openBtn.setAttribute('aria-expanded',on);$('#side').setAttribute('aria-hidden',!on);if(on)$('#close').focus();else openBtn.focus()}
 openBtn.onclick=()=>toggle(true);$('#close').onclick=$('#scrim').onclick=()=>toggle(false);
@@ -311,12 +339,29 @@ function heatC(b){const d=D.heat;if(!d||!d.current)return fail(b);const w=d.curr
   const out=[el('div','big',Math.round(w.temp)+'°'),el('p','sub',`${w.condition||''} · feels like ${Math.round(w.feels_like)}° · ${D.near?'near you':'Phoenix'}`)];
   const rr=el('div','row'),dot=el('span','dot');rr.style.marginTop='14px';if(/^#[0-9a-f]{3,8}$/i.test(r.color||''))dot.style.background=r.color;
   rr.append(dot,el('span','t',`${r.emoji||''} ${r.level||'Heat risk'}`.trim()),el('span','m',`UV ${w.uv_index??'–'} · ${w.humidity}%`));out.push(rr);
-  if(h.goal){const bar=el('div','bar'),i=el('i');i.style.width=Math.min(100,h.percent||0)+'%';bar.append(i);out.push(bar,el('p','sub',`${h.today_total??0} of ${h.goal} oz of water today`))}fill(b,...out)}
-function moneyC(b){if(!D.tx)return fail(b);const{ex,spent,cap}=fin(),cats={};ex.forEach(x=>cats[x.category]=(cats[x.category]||0)+Math.abs(x.amount||0));
-  const out=[el('div','big',money(spent)),el('p','sub',cap?`of ${money(cap)} budgeted this month`:'spent this month')];
+  if(h.goal){const p=Math.min(100,h.percent||0),rg=el('div','ring sm'),w=el('div','hy');rg.style.setProperty('--p',p);rg.append(el('span',null,p+'%'));w.append(rg,el('p','sub',`${h.today_total??0} of ${h.goal} oz of water today`));out.push(w)}fill(b,...out)}
+let mSel=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+function month(b){const ev=D.ev;if(!ev)return fail(b);b._m=b._m||new Date(mSel.getFullYear(),mSel.getMonth(),1);
+  const draw=()=>{const f=b._m,y=f.getFullYear(),m=f.getMonth(),hd=el('div','mh'),pv=el('button',null,'‹'),nx=el('button',null,'›');
+    pv.setAttribute('aria-label','Previous month');nx.setAttribute('aria-label','Next month');pv.onclick=()=>{b._m=new Date(y,m-1,1);draw()};nx.onclick=()=>{b._m=new Date(y,m+1,1);draw()};
+    hd.append(pv,el('b',null,f.toLocaleDateString(undefined,{month:'long',year:'numeric'})),nx);
+    const g=el('div','mg');'SMTWTFS'.split('').forEach(d=>g.append(el('span','dw',d)));for(let i=0;i<f.getDay();i++)g.append(el('span'));
+    for(let d=1;d<=new Date(y,m+1,0).getDate();d++){const dt=new Date(y,m,d),x=el('button','md'+(sameDay(dt,now)?' today':'')+(sameDay(dt,mSel)?' sel':'')+(ev.some(e=>sameDay(e.s,dt))?' has':''),String(d));x.onclick=()=>{mSel=dt;draw()};g.append(x)}
+    const ag=el('div','ag'),td=ev.filter(e=>sameDay(e.s,mSel)).sort((a,c)=>a.s-c.s);ag.append(el('p','sub',mSel.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})));
+    td.length?td.slice(0,4).forEach(e=>{const r=el('div','row');r.append(el('span','dot'),el('span','t',e.title),el('span','m',e.all_day?'All day':hm(e.s)));ag.append(r)}):ag.append(el('p','empty','Nothing scheduled.'));
+    fill(b,hd,g,ag)};draw()}
+function mailC(b){const m=D.mail;if(!m)return fill(b,el('p','empty','Connect your email in Wizard Mail to see your inbox here.'));const u=m.filter(x=>!x.is_read).length,big=el('div','big','0');countUp(big,u);
+  fill(b,big,el('p','sub',`unread of your latest ${m.length}`),...m.slice(0,5).map(x=>{const n=nm(x.from),a=el('a','mr'+(x.is_read?'':' un')),av=el('span','av',n[0].toUpperCase()),t=el('div');
+    av.style.background=`hsl(${[...n].reduce((h,c)=>h+c.charCodeAt(0),0)*37%360} 45% 36%)`;a.href=url('mail');t.append(el('b',null,n),el('span',null,x.subject||'(no subject)'));a.append(av,t,el('em',null,dayLabel(new Date(x.date))));return a}))}
+function donut(cats,total){const cols=['#c9a84c','#7c5cbf','#e8c97a','#5d8fd9','#8fd9a8'],R=42,C=2*Math.PI*R;let off=0;
+  return `<svg viewBox="0 0 120 120" width="120" height="120" aria-hidden="true"><circle r="${R}" cx="60" cy="60" fill="none" stroke="rgba(212,208,232,.08)" stroke-width="14"/>${cats.map(([k,v],i)=>{const l=v/total*C,s=`<circle r="${R}" cx="60" cy="60" fill="none" stroke="${cols[i%5]}" stroke-width="14" stroke-dasharray="${l.toFixed(1)} ${(C-l).toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 60 60)"/>`;off+=l;return s}).join('')}</svg>`}
+function moneyC(b){if(!D.tx)return fail(b);const{ex,spent,cap}=fin(),cats={};ex.forEach(x=>cats[x.category||'Other']=(cats[x.category||'Other']||0)+Math.abs(x.amount||0));
+  const top=Object.entries(cats).sort((a,c)=>c[1]-a[1]).slice(0,5),out=[el('div','big',money(spent)),el('p','sub',cap?`of ${money(cap)} budgeted this month`:'spent this month')];
   if(cap){const bar=el('div','bar'),i=el('i');i.style.width=Math.min(100,spent/cap*100)+'%';bar.append(i);out.push(bar)}
-  Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,3).forEach(([k,v])=>{const r=el('div','cat'),bb=el('div','bar'),i=el('i');i.style.width=v/spent*100+'%';bb.append(i);r.append(el('span',null,k),el('span','m',money(v)),bb);out.push(r)});
-  if(!ex.length)out.push(el('p','empty','No spending logged yet this month.'));fill(b,...out)}
+  if(!top.length)out.push(el('p','empty','No spending logged yet this month.'));
+  else{const w=el('div','dn'),d=el('div'),l=el('div','leg'),cols=['#c9a84c','#7c5cbf','#e8c97a','#5d8fd9','#8fd9a8'];d.innerHTML=donut(top,spent);
+    top.forEach(([k,v],i)=>{const r=el('div'),sw=el('i');sw.style.background=cols[i];r.append(sw,el('span',null,k),el('span','m',money(v)));l.append(r)});w.append(d,l);out.push(w)}
+  fill(b,...out)}
 function notesC(b){const n=D.notes;if(!n)return fail(b);if(!n.length)return fill(b,el('p','empty','No notes yet. Start one in Wizard Notes.'));
   fill(b,...n.slice(0,4).map(x=>{const a=el('a','nt'),sn=String(x.content||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,90);a.href=url('notes');a.append(el('b',null,x.title||'Untitled'),el('span',null,sn||'No text yet'),el('em',null,dayLabel(new Date(x.updated_at))));return a}))}
 const nm=f=>String(f||'').replace(/<[^>]*>/g,'').replace(/["']/g,'').trim()||'Someone',plural=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
@@ -336,8 +381,6 @@ function attn(b){const it=feed();if(!it.length)return fill(b,el('p','empty','✦
 function brief(){if(!(D.ev||D.mail||D.chat||D.heat||D.fire||D.tx))return;const it=feed(),c=D.heat&&D.heat.current;
   ctx=it.map(x=>x[2]).join('. ')+(c?`. It’s ${Math.round(c.temp)}° outside.`:'');
   $('#brief').textContent=it.length?`${plural(it.length,'thing')} ${it.length===1?'needs':'need'} you today. ${it[0][2]}.`:'You’re all caught up. Nothing needs you right now.'}
-function mailC(b){const m=D.mail;if(!m)return fill(b,el('p','empty','Connect your email in Wizard Mail to see unread messages here.'));const u=m.filter(x=>!x.is_read),big=el('div','big','0');countUp(big,u.length);
-  fill(b,big,el('p','sub',`unread of your latest ${m.length}`),...u.slice(0,3).map(x=>{const a=el('a','nt');a.href=url('mail');a.append(el('b',null,x.subject||'(no subject)'),el('span',null,nm(x.from)),el('em',null,dayLabel(new Date(x.date))));return a}))}
 function chatC(b){const c=D.chat;if(!c)return fail(b);const un=c.filter(x=>x.unread_count),t=un.reduce((a,x)=>a+x.unread_count,0),big=el('div','big','0');countUp(big,t);
   fill(b,big,el('p','sub',t?`unread in ${plural(un.length,'conversation')}`:'You’re all caught up'),...un.slice(0,3).map(x=>{const a=el('a','nt');a.href=url('chat');a.append(el('b',null,x.name),el('span',null,x.last_message||''),el('em',null,x.last_message_time?dayLabel(new Date(x.last_message_time)):''));return a}))}
 function fireC(b){const f=D.fire;if(!f||!f.risk)return fail(b);const r=f.risk,w=f.weather||{},fl=f.fires||[],big=el('div','big',r.level);
@@ -401,9 +444,9 @@ function signedOut(){
 function signedIn(u){signed=true;
   const h=now.getHours(),g=h<5?'Still up':h<12?'Good morning':h<18?'Good afternoon':'Good evening';
   $('#hello').replaceChildren(document.createTextNode(g+', '),el('em',null,u.first_name||'wizard'));
-  $('#who').replaceChildren(el('span',null,[u.first_name,u.last_name].filter(Boolean).join(' ')),el('span','avatar',(u.first_name||'W')[0].toUpperCase()));
-  $('#go').textContent='Ask Wizard';$('#sw').hidden=false;$('#q').placeholder='Ask Wizard about your day, or search the web';
-  const defs=[['Needs your attention','attn',attn,'s4'],['Today','calendar',timeline,'s2'],['Inbox','mail',mailC],['Messages','chat',chatC],['Heat','heat',heatC],['Finance','finance',moneyC],['FireWatch','firewatch',fireC],['Notes','notes',notesC],['This week','calendar',week,'s4']],wrap=el('div','bento'),bodies=[];
+  $('#who').replaceChildren(el('span',null,[u.first_name,u.last_name].filter(Boolean).join(' ')),el('span','avatar',(u.first_name||'W')[0].toUpperCase()),Object.assign(el('button','out','Sign out'),{type:'button',onclick:()=>fetch(API+'/api/logout',{method:'POST',credentials:'include'}).finally(()=>location.reload())}));
+  const ch=el('div','ideas');['What’s my day look like?','Is it safe to be outside?','Anything I should deal with first?'].forEach(t=>{const x=el('button',null,t);x.type='button';x.onclick=()=>{$('#q').value=t;ask(t)};ch.append(x)});$('#omni').after(ch);$('#go').textContent='Ask Wizard';$('#sw').hidden=false;$('#q').placeholder='Ask Wizard about your day, or search the web';
+  const defs=[['Needs your attention','attn',attn,'s4'],['Today','calendar',timeline,'s2'],['Calendar','calendar',month,'s2'],['Inbox','mail',mailC,'s2'],['Messages','chat',chatC],['Notes','notes',notesC],['Heat','heat',heatC],['Finance','finance',moneyC,'s2'],['FireWatch','firewatch',fireC]],wrap=el('div','bento'),bodies=[];
   defs.forEach(([t,app,fn,cls])=>{const[c,b]=card(t,app,cls);if(fn===attn)c.querySelector('h2 a').remove();wrap.append(c);bodies.push([fn,b])});
   $('#view').replaceChildren(wrap);
   wrap.addEventListener('pointermove',e=>{const c=e.target.closest('.card');if(c){const r=c.getBoundingClientRect();c.style.setProperty('--mx',e.clientX-r.left+'px');c.style.setProperty('--my',e.clientY-r.top+'px')}});
