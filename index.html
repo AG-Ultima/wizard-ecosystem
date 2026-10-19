@@ -194,6 +194,22 @@ main{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:clamp(32
 .ring.sm{width:64px;height:64px;margin:0}.ring.sm span{width:50px;height:50px;font-size:17px}
 .hy{display:flex;align-items:center;gap:14px;margin-top:16px}
 .out{font-size:13px;color:var(--silver-dim);border-bottom:1px solid transparent}.out:hover{color:var(--gold-light);border-color:var(--gold)}
+/* v6 */
+.hl>*{animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+.hl>:nth-child(2){animation-delay:.08s}.hl>:nth-child(3){animation-delay:.16s}.hl>:nth-child(4){animation-delay:.24s}.hl>:nth-child(5){animation-delay:.32s}.hl>:nth-child(6){animation-delay:.4s}
+.arcbox{animation:pop 1s cubic-bezier(.2,.8,.2,1) .2s both}
+@keyframes pop{from{opacity:0;transform:scale(.92)}}
+.hero h1 em{background:linear-gradient(90deg,var(--gold),var(--gold-light),#fff,var(--gold-light),var(--gold));background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:none;animation:shine 7s linear infinite}
+@keyframes shine{to{background-position:-220% 0}}
+.a1{background:radial-gradient(circle,var(--sky,#3a1f6e),transparent 70%)}
+.demo{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-top:32px;padding:12px 12px 12px 22px;border-radius:100px;border:1px dashed var(--border-strong);background:var(--gold-glow);font-size:14px;color:var(--gold-light)}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.swap{margin-top:96px}
+.swap h2{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(32px,5vw,52px);color:#fff;line-height:1.1}
+.swg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:26px}
+.sr{display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:18px;border:1px solid var(--border);background:rgba(19,16,42,.5);transition:transform .25s,border-color .25s,background .25s}
+.sr:hover{transform:translateY(-2px);border-color:var(--gold);background:var(--gold-glow)}
+.gg{color:var(--silver-dim)}.ar{color:var(--gold)}.wz{margin-left:auto;font-weight:500;color:#fff}
 /* sign-in modal */
 dialog{margin:auto;width:min(420px,92vw);padding:0;border:1px solid var(--border-strong);border-radius:28px;background:var(--ink-2);color:var(--silver);overflow:visible}
 dialog::backdrop{background:rgba(8,6,18,.7);backdrop-filter:blur(4px)}
@@ -259,6 +275,11 @@ body.open .scrim{opacity:1;pointer-events:auto}
   </section>
   <section class="card answer" id="answer" hidden aria-live="polite"></section>
   <div id="view"></div>
+  <section class="swap" aria-labelledby="swh">
+    <h2 id="swh">Switching from Google? Here’s your map.</h2>
+    <p class="lede">Every Google tool you use every day has a Wizard counterpart. Wizard Mail connects to Gmail, so you can try Wizard without moving a single email.</p>
+    <div class="swg"><a class="sr" href="https://wizardecosystem.dev/mail"><span class="gg">Gmail</span><span class="ar" aria-hidden="true">→</span><span class="wz">📧 Wizard Mail</span></a><a class="sr" href="https://wizardecosystem.dev/calendar"><span class="gg">Google Calendar</span><span class="ar" aria-hidden="true">→</span><span class="wz">📅 Wizard Calendar</span></a><a class="sr" href="https://wizardecosystem.dev/notes"><span class="gg">Google Keep</span><span class="ar" aria-hidden="true">→</span><span class="wz">📝 Wizard Notes</span></a><a class="sr" href="https://wizardecosystem.dev/chat"><span class="gg">Google Chat</span><span class="ar" aria-hidden="true">→</span><span class="wz">💬 Wizard Chat</span></a><a class="sr" href="https://wizardecosystem.dev/maps"><span class="gg">Google Maps</span><span class="ar" aria-hidden="true">→</span><span class="wz">🗺️ Wizard Maps</span></a><a class="sr" href="https://wizardecosystem.dev/search"><span class="gg">Google Search</span><span class="ar" aria-hidden="true">→</span><span class="wz">🔍 Wizard Search</span></a><a class="sr" href="https://wizardecosystem.dev/ai"><span class="gg">Gemini</span><span class="ar" aria-hidden="true">→</span><span class="wz">🧠 Wizard AI</span></a><a class="sr" href="https://wizardecosystem.dev/finance"><span class="gg">Google Finance</span><span class="ar" aria-hidden="true">→</span><span class="wz">💰 Wizard Finance</span></a></div>
+  </section>
   <section class="dir" aria-labelledby="dirh">
     <h2 id="dirh">Every Wizard app, one account</h2>
     <p class="lede">Wizard Ecosystem brings an AI assistant, web search, email, calendar, notes, personal finance, maps, wildfire and heat safety tools, and games together under a single sign-in, on the web and on your desktop.</p>
@@ -313,7 +334,7 @@ function dayLabel(d){const s=x=>new Date(x.getFullYear(),x.getMonth(),x.getDate(
 const money=n=>n.toLocaleString(undefined,{style:'currency',currency:'USD',maximumFractionDigits:0});
 
 /* dashboard */
-const D={},PHX=[33.4484,-112.074];let signed=false,ctx='';
+const D={},PHX=[33.4484,-112.074];let signed=false,isDemo=false,ctx='';
 const hm=d=>d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}),sameDay=(a,b)=>a.toDateString()===b.toDateString();
 const go=q=>{location.href=q?`${url('search')}?q=${encodeURIComponent(q)}`:url('search')};
 function coords(){return new Promise(r=>{if(!navigator.permissions||!navigator.geolocation)return r(null);navigator.permissions.query({name:'geolocation'}).then(p=>p.state==='granted'?navigator.geolocation.getCurrentPosition(x=>r([x.coords.latitude,x.coords.longitude]),()=>r(null),{timeout:4000}):r(null)).catch(()=>r(null))})}
@@ -391,7 +412,7 @@ function fireC(b){const f=D.fire;if(!f||!f.risk)return fail(b);const r=f.risk,w=
 function arc(){const n=new Date(),f=(n.getHours()+n.getMinutes()/60)/24,P=f=>[160-130*Math.cos(Math.PI*f),170-130*Math.sin(Math.PI*f)],[dx,dy]=P(f),day=n.getHours()>=6&&n.getHours()<19,
   td=(D.ev||[]).filter(e=>sameDay(e.s,n)),tk=td.map(e=>{const[a,b]=P((e.s.getHours()+e.s.getMinutes()/60)/24);return `<circle cx="${a.toFixed(1)}" cy="${b.toFixed(1)}" r="4.5" fill="#7c5cbf" stroke="#e8c97a" stroke-width="1.5"/>`}).join('');
   $('#arc').innerHTML=`<svg viewBox="0 0 320 200" role="img" aria-label="Where you are in today"><defs><linearGradient id="ag"><stop offset="0" stop-color="#7c5cbf"/><stop offset="1" stop-color="#e8c97a"/></linearGradient><radialGradient id="gl"><stop offset="0" stop-color="#e8c97a" stop-opacity=".7"/><stop offset="1" stop-color="#e8c97a" stop-opacity="0"/></radialGradient></defs><path d="M30 170A130 130 0 0 1 290 170" fill="none" stroke="rgba(212,208,232,.12)" stroke-width="3"/><path d="M30 170A130 130 0 0 1 ${dx.toFixed(1)} ${dy.toFixed(1)}" fill="none" stroke="url(#ag)" stroke-width="3" stroke-linecap="round"/>${tk}<circle cx="${dx.toFixed(1)}" cy="${dy.toFixed(1)}" r="22" fill="url(#gl)"/><text x="${dx.toFixed(1)}" y="${(dy+6).toFixed(1)}" font-size="16" text-anchor="middle">${day?'☀️':'🌙'}</text><text x="160" y="148" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="40" fill="#fff">${hm(n)}</text><text x="160" y="174" text-anchor="middle" font-size="13" fill="rgba(212,208,232,.6)">${n.toLocaleDateString(undefined,{weekday:'long'})}${D.ev?` · ${td.length} event${td.length==1?'':'s'}`:''}</text></svg>`}
-async function ask(q){const box=$('#answer');box.hidden=false;box.replaceChildren(el('p','sub','Thinking…'));
+async function ask(q){const box=$('#answer');box.hidden=false;if(isDemo){box.replaceChildren(el('p',null,'Demo mode: sign in and Wizard will answer about your real day, using your schedule and the weather.'));return}box.replaceChildren(el('p','sub','Thinking…'));
   try{const r=await fetch(API+'/api/chat/simple',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'Normal',prompt:`You are Wizard, the assistant on the user’s home screen. Be concise and friendly.\nToday: ${ctx||'no calendar or weather data'}\nQuestion: ${q}`})});
     const d=await r.json().catch(()=>({})),t=String(d.response||'').replace(/<think>[\s\S]*?<\/think>/g,'').trim();
     box.replaceChildren(el('p',null,t||d.error||'Couldn’t get an answer. Try again.'),Object.assign(el('a','more','Continue in Wizard AI'),{href:url('ai')}))}
@@ -433,23 +454,34 @@ $('#lf').onsubmit=async e=>{e.preventDefault();const btn=$('#lb');btn.disabled=t
 const signInBtn=c=>{const b=el('button',c,'Sign in');b.type='button';b.onclick=openLogin;return b};
 
 /* auth */
-arc();setInterval(arc,30000);
+arc();setInterval(arc,30000);{const h=now.getHours();document.documentElement.style.setProperty('--sky',h<6||h>=20?'#3a1f6e':h<12?'#6e4a1f':h<18?'#1f4a6e':'#6e2f4a')}
 function signedOut(){
   $('#who').replaceChildren(signInBtn('pill solid'));
   const g=el('section','gate'),chips=el('div','chips');
   WEB.forEach(a=>{const c=el('a','chip',a[1]+' '+a[2].replace('Wizard ',''));c.href=url(a[0]);chips.append(c)});
   const btn=signInBtn('pill solid');btn.textContent='Sign in to Wizard';
-  g.append(el('h2',null,'Your whole day, in one place'),el('p',null,'Sign in to see today’s schedule, the heat outlook, your spending, and recent notes here, and to ask Wizard about your day. Or jump straight into any app.'),btn,chips);
+  g.append(el('h2',null,'Your whole day, in one place'),el('p',null,'Sign in to see today’s schedule, the heat outlook, your spending, and recent notes here, and to ask Wizard about your day. Or jump straight into any app.'),Object.assign(el('div','ctas'),{}),chips);const cta=g.querySelector('.ctas'),dm=el('button','pill','✦ Try the live demo');dm.type='button';dm.onclick=()=>signedIn({first_name:'Alex'},true);cta.append(btn,dm);
   $('#view').replaceChildren(g)}
-function signedIn(u){signed=true;
+function sample(){const at=m=>new Date(+now+m*6e4),day=(o,h,mi=0)=>new Date(now.getFullYear(),now.getMonth(),now.getDate()+o,h,mi),iso=m=>new Date(+now-m*6e4).toISOString(),
+  E=(title,s,mins,location)=>({title,s,e2:new Date(+s+mins*6e4),all_day:false,location}),
+  tx=[['Groceries',142],['Dinner out',86],['Gas',64],['Groceries',97],['Streaming',23],['Shopping',188],['Dinner out',54],['Rent share',700],['Gas',58],['Coffee',31]].map(([category,amount])=>({category,amount,transaction_type:'expense'}));
+  return{near:false,tx,bu:[{amount:1800}],
+  ev:[E('Team standup',at(40),30,'Zoom'),E('Lunch with Mom',day(0,12,30),60,'Downtown café'),E('Soccer practice',day(0,17),90,'Field 3'),E('Dentist',day(1,9),45),E('Project work session',day(2,15),120),E('Sam’s birthday',day(4,19),180),E('Piano recital',day(7,18),90),E('Trip to Flagstaff',day(10,8),600)],
+  notes:[{title:'Trip packing list',content:'Passports, chargers, sunscreen, hiking boots, snacks for the drive',updated_at:iso(30)},{title:'Gift ideas for Sam',content:'Headphones, a good book, concert tickets if we can find them',updated_at:iso(400)},{title:'Project outline',content:'Intro, research, three main points, conclusion, sources',updated_at:iso(2000)}],
+  heat:{current:{temp:104,feels_like:107,condition:'Sunny',uv_index:9,humidity:12},risk:{level:'High',color:'#f08a8a',emoji:'🥵'},hydrations:{goal:100,today_total:34,percent:34}},
+  chat:[{name:'Sam Rivera',last_message:'Are we still on for tonight?',last_message_time:iso(8),unread_count:2},{name:'Mom',last_message:'Call me when you can',last_message_time:iso(90),unread_count:1},{name:'Study group',last_message:'Thanks everyone!',last_message_time:iso(1500),unread_count:0}],
+  mail:[['GitHub <noreply@github.com>','Your deploy succeeded',12,0],['Mom <mom@example.com>','Dinner Sunday?',55,0],['School Office','Picture day reminder',300,1],['Spotify','Your weekly mix is ready',900,1],['Sam Rivera','Notes from today',1500,0]].map(([from,subject,m,r])=>({from,subject,date:iso(m),is_read:!!r})),
+  fire:{risk:{level:'Moderate',percentage:45,detail:'Moderate fire danger. Exercise caution.'},fires:[{},{}],alerts:[{message:'⚠️ Red Flag Warning',critical:false}],weather:{humidity:12}}}}
+function signedIn(u,demo){signed=true;isDemo=!!demo;if(!demo)for(const k in D)delete D[k];
   const h=now.getHours(),g=h<5?'Still up':h<12?'Good morning':h<18?'Good afternoon':'Good evening';
   $('#hello').replaceChildren(document.createTextNode(g+', '),el('em',null,u.first_name||'wizard'));
   $('#who').replaceChildren(el('span',null,[u.first_name,u.last_name].filter(Boolean).join(' ')),el('span','avatar',(u.first_name||'W')[0].toUpperCase()),Object.assign(el('button','out','Sign out'),{type:'button',onclick:()=>fetch(API+'/api/logout',{method:'POST',credentials:'include'}).finally(()=>location.reload())}));
-  const ch=el('div','ideas');['What’s my day look like?','Is it safe to be outside?','Anything I should deal with first?'].forEach(t=>{const x=el('button',null,t);x.type='button';x.onclick=()=>{$('#q').value=t;ask(t)};ch.append(x)});$('#omni').after(ch);$('#go').textContent='Ask Wizard';$('#sw').hidden=false;$('#q').placeholder='Ask Wizard about your day, or search the web';
+  const ch=el('div','ideas');['What’s my day look like?','Is it safe to be outside?','Anything I should deal with first?'].forEach(t=>{const x=el('button',null,t);x.type='button';x.onclick=()=>{$('#q').value=t;ask(t)};ch.append(x)});$('#omni').after(ch);$('#go').textContent='Ask Wizard';$('#sw').hidden=false;const ph=['What’s my day look like?','Is it safe to be outside?','What should I deal with first?'];let pi=0;$('#q').placeholder='Ask Wizard about your day, or search the web';setInterval(()=>{if(document.activeElement!==$('#q')&&!$('#q').value)$('#q').placeholder='Ask Wizard: '+ph[pi++%ph.length]},3500);
   const defs=[['Needs your attention','attn',attn,'s4'],['Today','calendar',timeline,'s2'],['Calendar','calendar',month,'s2'],['Inbox','mail',mailC,'s2'],['Messages','chat',chatC],['Notes','notes',notesC],['Heat','heat',heatC],['Finance','finance',moneyC,'s2'],['FireWatch','firewatch',fireC]],wrap=el('div','bento'),bodies=[];
   defs.forEach(([t,app,fn,cls])=>{const[c,b]=card(t,app,cls);if(fn===attn)c.querySelector('h2 a').remove();wrap.append(c);bodies.push([fn,b])});
   $('#view').replaceChildren(wrap);
   wrap.addEventListener('pointermove',e=>{const c=e.target.closest('.card');if(c){const r=c.getBoundingClientRect();c.style.setProperty('--mx',e.clientX-r.left+'px');c.style.setProperty('--my',e.clientY-r.top+'px')}});
+  if(demo){Object.assign(D,sample());bodies.forEach(([fn,b])=>fn(b));brief();arc();const bn=el('div','demo');bn.append(el('span',null,'✦ You’re looking at demo data. Nothing here is real.'),signInBtn('pill'));$('#view').prepend(bn);$('#who').replaceChildren(el('span',null,'Demo mode'),Object.assign(el('button','out','Exit demo'),{type:'button',onclick:()=>location.reload()}));return}
   const ready=load(),later=(path,key,pick,fns)=>Promise.all([get(path).then(r=>D[key]=pick(r)).catch(()=>0),ready]).then(()=>{fns.forEach(f=>{const x=bodies.find(y=>y[0]===f);x&&f(x[1])});brief()});
   ready.then(()=>{bodies.forEach(([fn,b])=>{if(fn!==mailC&&fn!==fireC)fn(b)});brief();arc()});
   later('/api/mail/emails?folder=INBOX','mail',r=>r.emails||[],[mailC,attn]);
