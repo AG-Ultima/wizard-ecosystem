@@ -4,1962 +4,2099 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#100d19">
-  <meta name="description" content="Wizard Search — AI-powered results that are real, clickable, and intelligent.">
-  <title>Wizard Search</title>
+  <meta name="description" content="Wizard Search — AI-powered web search with real, clickable results and intelligent summaries. Part of the Wizard Ecosystem by Arnav Gupta.">
+  <meta name="keywords" content="Wizard Search, AI search engine, web search, AI summary, Wizard Ecosystem">
+  <meta name="author" content="Arnav Gupta">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#080612">
+  <meta property="og:title" content="Wizard Search — AI-Powered Web Search">
+  <meta property="og:description" content="Real, clickable web results with AI-generated summaries. Part of the Wizard Ecosystem.">
+  <meta property="og:url" content="https://wizardecosystem.dev/search">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://wizardecosystem.dev/search">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Wizard Search",
+    "url": "https://wizardecosystem.dev/search",
+    "description": "AI-powered web search with real clickable results and intelligent summaries.",
+    "applicationCategory": "SearchApplication",
+    "author": {
+      "@type": "Person",
+      "name": "Arnav Gupta"
+    }
+  }
+  </script>
+
+  <title>Wizard Search — AI-Powered Web Search</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;450;500;550;600;650;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
   <style>
-    :root {
-      color-scheme: dark;
-      --bg: #100d19;
-      --bg-deep: #0b0911;
-      --panel: #171321;
-      --panel-raised: #1d1829;
-      --panel-hover: #241d31;
-      --gold: #e7c77c;
-      --gold-bright: #f5dda0;
-      --gold-dim: #a98c50;
-      --text: #f4f0f8;
-      --muted: #aaa2b8;
-      --subtle: #777087;
-      --border: rgba(229, 201, 143, .15);
-      --border-hover: rgba(229, 201, 143, .36);
-      --purple: #a58adf;
-      --danger: #ff969d;
-      --success: #9ed8b1;
-      --radius: 20px;
-      --page-width: 1000px;
-      --ease: cubic-bezier(.2, .75, .25, 1);
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    * { box-sizing: border-box; }
+    :root {
+      --ink: #080612;
+      --ink-2: #0e0b1e;
+      --ink-3: #13102a;
+      --ink-4: #1a1635;
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --gold-dim: rgba(201,168,76,.12);
+      --gold-glow: rgba(201,168,76,.22);
+      --violet: #7c5cbf;
+      --violet-dim: rgba(124,92,191,.2);
+      --silver: #d4d0e8;
+      --silver-dim: rgba(212,208,232,.5);
+      --muted: rgba(212,208,232,.35);
+      --border: rgba(201,168,76,.16);
+      --border-strong: rgba(201,168,76,.42);
+      --danger: #e07070;
+    }
 
     html {
-      min-height: 100%;
       scroll-behavior: smooth;
-      scrollbar-color: #44364f var(--bg);
     }
 
     body {
       min-height: 100vh;
-      margin: 0;
       overflow-x: hidden;
-      background:
-        radial-gradient(ellipse at 50% -15%, rgba(100, 66, 140, .19), transparent 54%),
-        radial-gradient(ellipse at 95% 55%, rgba(105, 71, 134, .065), transparent 34%),
-        var(--bg);
-      color: var(--text);
+      background: var(--ink);
+      color: var(--silver);
       font-family: "DM Sans", sans-serif;
-      font-size: 14px;
-      -webkit-font-smoothing: antialiased;
     }
 
-    body::before {
-      position: fixed;
-      z-index: -1;
-      inset: 0;
-      pointer-events: none;
-      content: "";
-      opacity: .15;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.14'/%3E%3C/svg%3E");
+    button, input {
+      font: inherit;
     }
 
-    button, input { font: inherit; }
-    button, a { -webkit-tap-highlight-color: transparent; }
-    button { color: inherit; }
-
-    button:focus-visible,
-    a:focus-visible,
-    input:focus-visible {
-      outline: 2px solid var(--gold);
+    button:focus-visible, a:focus-visible, input:focus-visible {
+      outline: 2px solid var(--gold-light);
       outline-offset: 4px;
-    }
-
-    a { color: inherit; }
-
-    .ambient {
-      position: fixed;
-      z-index: -1;
-      width: 440px;
-      height: 440px;
-      border-radius: 50%;
-      pointer-events: none;
-      filter: blur(105px);
-      opacity: .11;
-    }
-
-    .ambient-one {
-      top: 8%;
-      left: -300px;
-      background: #7954b2;
-    }
-
-    .ambient-two {
-      top: 40%;
-      right: -350px;
-      background: #b18b4b;
-      opacity: .06;
     }
 
     #starfield {
       position: fixed;
-      z-index: -1;
       inset: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
-      opacity: .65;
+      z-index: 0;
     }
 
-    .site-header {
-      position: relative;
-      z-index: 5;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      min-height: 76px;
-      padding: 0 6.2%;
-      border-bottom: 1px solid rgba(255,255,255,.055);
-      background: rgba(13, 10, 20, .64);
-      backdrop-filter: blur(18px);
-    }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 11px;
-      min-width: 0;
-      text-decoration: none;
-    }
-
-    .brand-mark {
-      display: grid;
-      place-items: center;
-      width: 39px;
-      height: 39px;
-      flex-shrink: 0;
-      border: 1px solid rgba(231,199,124,.33);
-      border-radius: 13px;
-      background: linear-gradient(145deg, rgba(231,199,124,.12), rgba(125,89,161,.12));
-      color: var(--gold);
-      font-size: 22px;
-      box-shadow: inset 0 0 18px rgba(231,199,124,.035);
-    }
-
-    .brand-name {
-      font-family: "Cormorant Garamond", serif;
-      font-size: 25px;
-      font-weight: 600;
-      letter-spacing: -.45px;
-      line-height: 1;
-    }
-
-    .brand-name span { color: var(--gold); }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .ecosystem-link {
-      color: var(--muted);
-      font-size: 12px;
-      text-decoration: none;
-      transition: color .2s ease;
-    }
-
-    .ecosystem-link:hover { color: var(--gold); }
-
-    .header-divider {
-      width: 1px;
-      height: 23px;
-      background: rgba(255,255,255,.1);
-    }
-
-    .account-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .user-label {
-      max-width: 155px;
-      overflow: hidden;
-      color: var(--muted);
-      font-size: 12px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 39px;
-      padding: 0 16px;
-      border: 1px solid transparent;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      text-decoration: none;
-      transition:
-        background .2s ease,
-        border-color .2s ease,
-        color .2s ease,
-        transform .2s var(--ease);
-    }
-
-    .button:active { transform: scale(.98); }
-    .button:disabled { opacity: .55; cursor: wait; }
-
-    .button-gold {
-      background: var(--gold);
-      color: #21180e;
-      box-shadow: 0 2px 15px rgba(231,199,124,.08);
-    }
-
-    .button-gold:hover {
-      background: var(--gold-bright);
-      box-shadow: 0 4px 24px rgba(231,199,124,.15);
-    }
-
-    .button-quiet {
-      border-color: var(--border);
-      background: rgba(255,255,255,.025);
-      color: var(--text);
-    }
-
-    .button-quiet:hover {
-      border-color: var(--border-hover);
-      background: rgba(255,255,255,.055);
-    }
-
-    .button-text {
-      min-height: 34px;
-      padding: 0 9px;
-      background: transparent;
-      color: var(--muted);
-    }
-
-    .button-text:hover { color: var(--gold); }
-
-    .page {
-      width: min(var(--page-width), calc(100% - 48px));
-      min-height: calc(100vh - 146px);
-      margin: 0 auto;
-      padding: 86px 0 100px;
-    }
-
-    .hero {
-      max-width: 750px;
-      margin: 0 auto;
-      text-align: center;
-      animation: rise-in .75s var(--ease) both;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 9px;
-      margin-bottom: 23px;
-      color: var(--gold);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 2.6px;
-      text-transform: uppercase;
-    }
-
-    .eyebrow::before,
-    .eyebrow::after {
-      width: 23px;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--gold-dim));
-      content: "";
-    }
-
-    .eyebrow::after { transform: rotate(180deg); }
-
-    .hero-glyph {
-      display: grid;
-      place-items: center;
-      width: 76px;
-      height: 76px;
-      margin: 0 auto 19px;
-      border: 1px solid rgba(231,199,124,.24);
-      border-radius: 25px;
-      background:
-        radial-gradient(circle at 50% 20%, rgba(231,199,124,.13), transparent 70%),
-        rgba(24,19,34,.75);
-      color: var(--gold);
-      font-size: 38px;
-      box-shadow:
-        0 0 0 7px rgba(231,199,124,.018),
-        0 15px 55px rgba(0,0,0,.19),
-        inset 0 0 30px rgba(231,199,124,.035);
-    }
-
-    h1 {
-      margin: 0;
-      font-family: "Cormorant Garamond", serif;
-      font-size: clamp(57px, 8vw, 88px);
-      font-weight: 500;
-      letter-spacing: -2.8px;
-      line-height: .98;
-    }
-
-    h1 .gold { color: var(--gold); }
-
-    .hero-subtitle {
-      margin: 19px 0 0;
-      color: #b9b0c5;
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 1.8;
-    }
-
-    .search-wrap {
-      width: min(690px, 100%);
-      margin: 42px auto 0;
-      text-align: left;
-    }
-
-    .search-box {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-height: 68px;
-      padding: 8px 9px 8px 21px;
-      border: 1px solid rgba(231,199,124,.24);
-      border-radius: 19px;
-      background: rgba(24,20,34,.9);
-      box-shadow:
-        0 12px 45px rgba(0,0,0,.18),
-        inset 0 1px 0 rgba(255,255,255,.025);
-      transition:
-        border-color .25s ease,
-        box-shadow .25s ease,
-        background .25s ease;
-    }
-
-    .search-box:focus-within {
-      border-color: rgba(231,199,124,.65);
-      background: #1b1626;
-      box-shadow:
-        0 0 0 4px rgba(231,199,124,.055),
-        0 14px 50px rgba(0,0,0,.2);
-    }
-
-    .search-icon {
-      width: 21px;
-      height: 21px;
-      flex-shrink: 0;
-      color: var(--gold);
-      opacity: .85;
-    }
-
-    .search-input {
-      width: 100%;
-      min-width: 0;
-      height: 45px;
-      padding: 0;
-      border: 0;
-      outline: 0;
-      background: transparent;
-      color: var(--text);
-      font-size: 14px;
-    }
-
-    .search-input::placeholder { color: #81788f; }
-    .search-input:focus-visible { outline: none; }
-
-    .search-submit {
-      width: 46px;
-      height: 46px;
-      flex-shrink: 0;
-      padding: 0;
-      border-radius: 14px;
-    }
-
-    .search-submit svg { width: 20px; height: 20px; }
-
-    .search-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 13px 4px 0;
-      color: var(--subtle);
-      font-size: 11px;
-    }
-
-    .search-meta strong {
-      color: #b4a7c3;
-      font-weight: 500;
-    }
-
-    .keyboard-hint {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    kbd {
-      display: inline-grid;
-      place-items: center;
-      min-width: 22px;
-      height: 21px;
-      padding: 0 5px;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 6px;
-      background: rgba(255,255,255,.035);
-      color: #bcb2c8;
-      font-family: inherit;
-      font-size: 10px;
-    }
-
-    .results-section {
-      width: min(790px, 100%);
-      margin: 62px auto 0;
-      scroll-margin-top: 30px;
-    }
-
-    .results-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding-bottom: 17px;
-      border-bottom: 1px solid rgba(255,255,255,.075);
-    }
-
-    .results-heading {
-      margin: 0;
-      color: var(--text);
-      font-family: "Cormorant Garamond", serif;
-      font-size: 27px;
-      font-weight: 500;
-    }
-
-    .results-count {
-      color: var(--subtle);
-      font-size: 11px;
-    }
-
-    .summary-card {
-      position: relative;
-      margin: 20px 0 29px;
-      padding: 23px 25px 24px;
-      overflow: hidden;
-      border: 1px solid rgba(174,140,224,.19);
-      border-radius: 17px;
-      background:
-        radial-gradient(ellipse at 0% 0%, rgba(133,99,183,.12), transparent 68%),
-        rgba(24,19,35,.83);
-    }
-
-    .summary-card::before {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      width: 2px;
-      background: linear-gradient(180deg, var(--gold), rgba(165,138,223,.45));
-      content: "";
-    }
-
-    .section-kicker {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 13px;
-      color: var(--gold);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    .section-kicker svg { width: 15px; height: 15px; }
-
-    .summary-text {
-      margin: 0;
-      color: #d9d1e2;
-      font-size: 13px;
-      line-height: 1.9;
-      overflow-wrap: anywhere;
-    }
-
-    .results-list {
-      display: grid;
-      gap: 12px;
-    }
-
-    .result-card {
-      position: relative;
-      padding: 20px 22px;
-      border: 1px solid rgba(255,255,255,.075);
-      border-radius: 16px;
-      background: rgba(24,20,34,.65);
-      transition:
-        transform .23s var(--ease),
-        border-color .23s ease,
-        background .23s ease;
-      animation: rise-in .42s var(--ease) both;
-    }
-
-    .result-card:hover {
-      transform: translateY(-2px);
-      border-color: rgba(231,199,124,.24);
-      background: rgba(30,24,42,.92);
-    }
-
-    .result-topline {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      min-width: 0;
-      margin-bottom: 9px;
-    }
-
-    .result-favicon {
-      display: grid;
-      place-items: center;
-      width: 25px;
-      height: 25px;
-      flex-shrink: 0;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 8px;
-      background: rgba(255,255,255,.04);
-      color: var(--gold);
-      font-size: 11px;
-    }
-
-    .result-favicon img {
-      width: 16px;
-      height: 16px;
-      object-fit: contain;
-    }
-
-    .result-domain {
-      overflow: hidden;
-      color: #a49aae;
-      font-size: 11px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .result-number {
-      margin-left: auto;
-      color: #70677e;
-      font-size: 10px;
-    }
-
-    .result-title {
-      display: inline-block;
-      margin: 0;
-      color: #e8d7a9;
-      font-size: 15px;
-      font-weight: 600;
-      line-height: 1.5;
-      text-decoration: none;
-      overflow-wrap: anywhere;
-      transition: color .2s ease;
-    }
-
-    .result-title:hover {
-      color: var(--gold-bright);
-      text-decoration: underline;
-      text-decoration-color: rgba(245,221,160,.45);
-      text-underline-offset: 4px;
-    }
-
-    .result-snippet {
-      margin: 9px 0 0;
-      color: #a9a1b5;
-      font-size: 12px;
-      line-height: 1.85;
-      overflow-wrap: anywhere;
-    }
-
-    .empty-state {
-      padding: 46px 20px;
-      border: 1px dashed rgba(255,255,255,.1);
-      border-radius: 17px;
-      text-align: center;
-    }
-
-    .empty-glyph {
-      margin-bottom: 12px;
-      color: var(--gold-dim);
-      font-size: 26px;
-    }
-
-    .empty-state h3 {
-      margin: 0;
-      font-family: "Cormorant Garamond", serif;
-      font-size: 25px;
-      font-weight: 500;
-    }
-
-    .empty-state p {
-      max-width: 390px;
-      margin: 9px auto 0;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.8;
-    }
-
-    .loading-state {
-      padding: 43px 20px;
-      text-align: center;
-      color: var(--muted);
-    }
-
-    .spinner {
-      width: 25px;
-      height: 25px;
-      margin: 0 auto 15px;
-      border: 2px solid rgba(231,199,124,.16);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-    }
-
-    .loading-state p {
-      margin: 0;
-      font-size: 12px;
-    }
-
-    .status-message {
-      margin-top: 15px;
-      padding: 12px 14px;
-      border: 1px solid rgba(255,150,157,.2);
-      border-radius: 11px;
-      background: rgba(255,150,157,.055);
-      color: var(--danger);
-      font-size: 12px;
-      line-height: 1.65;
-    }
-
-    .status-message[hidden] { display: none; }
-
-    .status-message.success {
-      border-color: rgba(158,216,177,.22);
-      background: rgba(158,216,177,.05);
-      color: var(--success);
-    }
-
-    .results-footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      margin-top: 18px;
-      color: var(--subtle);
-      font-size: 10px;
-    }
-
-    .results-footer span { overflow-wrap: anywhere; }
-
-    .site-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 24px 6.2%;
-      border-top: 1px solid rgba(255,255,255,.055);
-      color: #766e83;
-      font-size: 10px;
-    }
-
-    .footer-brand {
-      color: #a39aae;
-      font-family: "Cormorant Garamond", serif;
-      font-size: 17px;
-    }
-
-    .footer-brand span { color: var(--gold-dim); }
-
-    .footer-note { text-align: right; }
-
-    /* Authentication modal */
-
-    .modal-overlay {
+    .amb {
       position: fixed;
-      z-index: 50;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-      background: rgba(7,5,11,.78);
-      backdrop-filter: blur(12px);
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity .22s ease, visibility .22s ease;
+      border-radius: 50%;
+      filter: blur(130px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: .35;
+      animation: drift 20s ease-in-out infinite alternate;
     }
 
-    .modal-overlay.show {
-      opacity: 1;
-      visibility: visible;
+    .amb-1 {
+      width: 600px;
+      height: 600px;
+      top: -200px;
+      left: -200px;
+      background: radial-gradient(circle, #3a1f6e, transparent 70%);
     }
 
-    .modal {
-      position: relative;
-      width: min(440px, 100%);
-      max-height: min(88vh, 760px);
-      padding: 30px;
-      overflow-y: auto;
-      border: 1px solid rgba(231,199,124,.2);
-      border-radius: 22px;
-      background:
-        radial-gradient(ellipse at 50% 0%, rgba(117,78,153,.15), transparent 65%),
-        #171321;
-      box-shadow: 0 25px 100px rgba(0,0,0,.48);
-      transform: translateY(12px) scale(.99);
-      transition: transform .25s var(--ease);
+    .amb-2 {
+      width: 500px;
+      height: 500px;
+      bottom: -100px;
+      right: -100px;
+      background: radial-gradient(circle, #5c3a1e, transparent 70%);
+      animation-delay: -10s;
     }
 
-    .modal-overlay.show .modal { transform: translateY(0) scale(1); }
-
-    .modal-close {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      display: grid;
-      place-items: center;
-      width: 34px;
-      height: 34px;
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 10px;
-      background: rgba(255,255,255,.025);
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 20px;
-      transition: color .2s, background .2s;
+    @keyframes drift {
+      from { transform: translate(0,0) scale(1); }
+      to { transform: translate(40px,30px) scale(1.1); }
     }
 
-    .modal-close:hover {
-      background: rgba(255,255,255,.07);
-      color: white;
+    @keyframes levitate {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
     }
 
-    .modal-mark {
-      display: grid;
-      place-items: center;
-      width: 52px;
-      height: 52px;
-      margin-bottom: 18px;
-      border: 1px solid rgba(231,199,124,.23);
-      border-radius: 17px;
-      background: rgba(231,199,124,.06);
-      color: var(--gold);
-      font-size: 27px;
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-
-    .modal h2 {
-      margin: 0;
-      font-family: "Cormorant Garamond", serif;
-      font-size: 35px;
-      font-weight: 500;
-      letter-spacing: -.4px;
-    }
-
-    .modal-description {
-      margin: 8px 0 24px;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.8;
-    }
-
-    .form-field { margin-bottom: 16px; }
-
-    .form-field label {
-      display: block;
-      margin-bottom: 8px;
-      color: #d4cbdc;
-      font-size: 11px;
-      font-weight: 600;
-    }
-
-    .form-field input {
-      display: block;
-      width: 100%;
-      height: 45px;
-      padding: 0 13px;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 11px;
-      outline: none;
-      background: rgba(8,6,14,.4);
-      color: var(--text);
-      font-size: 12px;
-      transition: border-color .2s, box-shadow .2s;
-    }
-
-    .form-field input::placeholder { color: #6f667d; }
-
-    .form-field input:focus {
-      border-color: rgba(231,199,124,.55);
-      box-shadow: 0 0 0 3px rgba(231,199,124,.055);
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    .modal-submit {
-      width: 100%;
-      min-height: 46px;
-      margin-top: 5px;
-    }
-
-    .modal-switch {
-      margin: 21px 0 0;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.8;
-      text-align: center;
-    }
-
-    .inline-action {
-      padding: 0;
-      border: 0;
-      background: transparent;
-      color: var(--gold);
-      cursor: pointer;
-      font-size: inherit;
-      font-weight: 600;
-    }
-
-    .inline-action:hover { color: var(--gold-bright); }
-
-    .modal-divider {
-      height: 1px;
-      margin: 22px 0;
-      background: rgba(255,255,255,.07);
-    }
-
-    .verification-note {
-      margin: -5px 0 19px;
-      padding: 12px;
-      border: 1px solid rgba(231,199,124,.12);
-      border-radius: 11px;
-      background: rgba(231,199,124,.035);
-      color: #b9afc6;
-      font-size: 11px;
-      line-height: 1.8;
-    }
-
-    .verification-note strong { color: var(--gold); }
-
-    .code-input {
-      text-align: center;
-      font-size: 21px !important;
-      font-weight: 600;
-      letter-spacing: 7px;
-    }
-
-    .modal-message {
-      margin: 0 0 15px;
-      padding: 10px 12px;
-      border: 1px solid rgba(255,150,157,.2);
-      border-radius: 10px;
-      background: rgba(255,150,157,.05);
-      color: var(--danger);
-      font-size: 11px;
-      line-height: 1.7;
-    }
-
-    .modal-message.success {
-      border-color: rgba(158,216,177,.2);
-      background: rgba(158,216,177,.045);
-      color: var(--success);
-    }
-
-    .modal-message[hidden] { display: none; }
-
-    .modal-step[hidden],
-    [hidden] { display: none !important; }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    @keyframes rise-in {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+    .shell {
+      position: relative;
+      z-index: 10;
+      max-width: 1100px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 24px 24px 80px;
+      display: flex;
+      flex-direction: column;
     }
 
-    @media (min-width: 1100px) {
-      .page { padding-top: 94px; }
+    /* Navigation */
+
+    .topnav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 44px;
+      padding: 14px 20px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
     }
 
-    @media (max-width: 650px) {
-      .site-header {
-        min-height: 67px;
-        padding: 0 20px;
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-glyph {
+      font-size: 28px;
+      animation: levitate 5s ease-in-out infinite;
+      filter: drop-shadow(0 0 12px rgba(201,168,76,.4));
+    }
+
+    .logo-name {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: .01em;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .app-nav {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .nav-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: none;
+      transition: all .25s ease;
+    }
+
+    .nav-pill:hover {
+      background: rgba(255,255,255,.05);
+      border-color: var(--border-strong);
+      color: var(--silver);
+    }
+
+    .nav-pill.active {
+      background: linear-gradient(135deg, rgba(201,168,76,.18), rgba(201,168,76,.06));
+      border-color: var(--border-strong);
+      color: var(--gold-light);
+    }
+
+    .nav-pill-icon {
+      font-size: 15px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 5px 14px 5px 6px;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--violet), #3d2280);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .user-email-txt {
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      color: var(--silver-dim);
+    }
+
+    .logout-btn {
+      background: none;
+      border: none;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      margin-left: 4px;
+    }
+
+    .logout-btn:hover {
+      color: var(--danger);
+    }
+
+    .signin-btn {
+      background: linear-gradient(135deg, var(--gold), #a8751e);
+      border: none;
+      border-radius: 100px;
+      padding: 8px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+
+    .signin-btn:hover {
+      opacity: .85;
+    }
+
+    /* Hero */
+
+    .search-hero {
+      text-align: center;
+      padding: 40px 0 36px;
+    }
+
+    .hero-glyph {
+      display: block;
+      font-size: 72px;
+      margin-bottom: 18px;
+      animation: levitate 5s ease-in-out infinite;
+      filter: drop-shadow(0 0 40px rgba(201,168,76,.3))
+              drop-shadow(0 0 80px rgba(124,92,191,.2));
+    }
+
+    .hero-title {
+      font-family: "Cormorant Garamond", serif;
+      font-size: clamp(38px, 6vw, 64px);
+      font-weight: 300;
+      color: var(--silver);
+      letter-spacing: -.02em;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--muted);
+      letter-spacing: .02em;
+    }
+
+    /* Search and autosuggest */
+
+    .search-wrap {
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto 50px;
+      position: relative;
+      z-index: 30;
+    }
+
+    .search-field {
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 6px 6px 22px;
+      transition: border-color .3s, box-shadow .3s;
+    }
+
+    .search-field:focus-within {
+      border-color: rgba(201,168,76,.55);
+      box-shadow: 0 0 0 3px rgba(201,168,76,.07),
+                  0 8px 32px rgba(0,0,0,.3);
+    }
+
+    .search-ico {
+      font-size: 16px;
+      margin-right: 10px;
+      opacity: .45;
+      flex-shrink: 0;
+    }
+
+    .search-field input {
+      flex: 1;
+      width: 0;
+      min-width: 0;
+      background: none;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--silver);
+      padding: 13px 0;
+    }
+
+    .search-field input::placeholder {
+      color: var(--muted);
+    }
+
+    .search-field input:focus-visible {
+      outline: none;
+    }
+
+    .search-go {
+      background: linear-gradient(135deg, var(--gold), #a8751e);
+      border: none;
+      border-radius: 100px;
+      padding: 11px 26px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      letter-spacing: .03em;
+      transition: opacity .2s, box-shadow .2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .search-go:hover {
+      opacity: .88;
+      box-shadow: 0 4px 20px rgba(201,168,76,.35);
+    }
+
+    .search-go:disabled,
+    .btn-primary:disabled {
+      opacity: .55;
+      cursor: wait;
+    }
+
+    .suggestions-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      right: 0;
+      overflow: hidden;
+      background: rgba(14,11,30,.98);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.55);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+    }
+
+    .suggestions-dropdown.open {
+      display: block;
+      animation: fade-up .15s ease both;
+    }
+
+    .suggestion-heading {
+      padding: 13px 20px 8px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+    }
+
+    .suggestion-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 18px;
+      text-align: left;
+      color: var(--silver);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 300;
+    }
+
+    .suggestion-item:hover,
+    .suggestion-item.active {
+      background: rgba(201,168,76,.1);
+      color: var(--gold-light);
+    }
+
+    .suggestion-icon {
+      color: var(--gold);
+      opacity: .7;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .suggestion-text {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .suggestion-status {
+      padding: 15px 18px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--silver-dim);
+    }
+
+    .suggestion-status.error {
+      color: #e7a0a0;
+    }
+
+    .suggestion-status strong {
+      color: var(--gold-light);
+      font-weight: 500;
+    }
+
+    /* Results */
+
+    .results-area {
+      flex: 1;
+      animation: fade-up .4s ease both;
+    }
+
+    .ai-summary {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(201,168,76,.06), rgba(124,92,191,.08));
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      border-radius: 20px;
+      padding: 26px 28px;
+      margin-bottom: 28px;
+    }
+
+    .ai-summary::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, var(--gold), transparent);
+      opacity: .4;
+    }
+
+    .summary-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .summary-icon {
+      font-size: 22px;
+    }
+
+    .summary-label {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gold-light);
+    }
+
+    .summary-text {
+      font-size: 14.5px;
+      font-weight: 300;
+      color: var(--silver-dim);
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      background: var(--gold-dim);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 12px;
+      color: var(--gold);
+      letter-spacing: .04em;
+      margin-bottom: 20px;
+    }
+
+    .result-card {
+      position: relative;
+      overflow: hidden;
+      background: rgba(255,255,255,.025);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px 24px;
+      margin-bottom: 12px;
+      transition: transform .25s, border-color .25s,
+                  background .25s, box-shadow .25s;
+    }
+
+    .result-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--gold), transparent);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .result-card:hover {
+      transform: translateX(6px);
+      border-color: var(--border-strong);
+      background: rgba(201,168,76,.04);
+      box-shadow: 0 8px 30px rgba(0,0,0,.3);
+    }
+
+    .result-card:hover::before {
+      opacity: 1;
+    }
+
+    .result-title {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gold-light);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .result-link {
+      display: inline-block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      word-break: break-all;
+      text-decoration: none;
+    }
+
+    .result-link:hover {
+      color: var(--gold-light);
+      text-decoration: underline;
+    }
+
+    .result-snippet {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--silver-dim);
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+    }
+
+    .loading-spinner,
+    .no-results {
+      text-align: center;
+      padding: 80px 20px;
+    }
+
+    .spinner-ring {
+      width: 48px;
+      height: 48px;
+      border: 2px solid rgba(201,168,76,.15);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    .loading-text {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 18px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .no-results-icon {
+      display: block;
+      font-size: 56px;
+      margin-bottom: 20px;
+      opacity: .4;
+    }
+
+    .no-results h3 {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 26px;
+      font-weight: 400;
+      color: var(--silver-dim);
+      margin-bottom: 10px;
+    }
+
+    .no-results p {
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.7;
+    }
+
+    .fallback-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .fallback-btn {
+      border: none;
+      border-radius: 100px;
+      padding: 10px 22px;
+      font-size: 13px;
+      font-weight: 500;
+      color: white;
+      cursor: pointer;
+    }
+
+    .fallback-btn:hover {
+      opacity: .82;
+    }
+
+    .fallback-google {
+      background: #4285f4;
+    }
+
+    .fallback-ddg {
+      background: #de5833;
+    }
+
+    /* Toast */
+
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      max-width: calc(100vw - 32px);
+      padding: 12px 24px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.success {
+      background: linear-gradient(135deg, var(--gold), #a8751e);
+    }
+
+    .toast.error {
+      background: #c0444a;
+      color: white;
+    }
+
+    /* Footer */
+
+    footer {
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,.05);
+      padding-top: 30px;
+      margin-top: 60px;
+    }
+
+    .footer-brand {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 17px;
+      color: rgba(212,208,232,.3);
+      margin-bottom: 6px;
+    }
+
+    .footer-meta {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .footer-meta a {
+      color: var(--gold);
+      text-decoration: none;
+      opacity: .7;
+    }
+
+    .footer-meta a:hover {
+      opacity: 1;
+    }
+
+    /* Auth modal */
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5,3,14,.93);
+      backdrop-filter: blur(18px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 42px 36px;
+      width: 400px;
+      max-width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      text-align: center;
+      box-shadow: 0 40px 100px rgba(0,0,0,.6);
+      animation: modal-in .3s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(.9) translateY(16px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-glyph {
+      display: block;
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .modal-title {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--silver);
+      margin-bottom: 26px;
+    }
+
+    .field {
+      display: block;
+      width: 100%;
+      background: rgba(0,0,0,.3);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      padding: 13px 16px;
+      color: var(--silver);
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .field:focus {
+      border-color: rgba(201,168,76,.5);
+    }
+
+    .field::placeholder {
+      color: var(--muted);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, var(--gold), #a8751e);
+      border: none;
+      border-radius: 14px;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .btn-primary:hover {
+      opacity: .88;
+      box-shadow: 0 6px 24px rgba(201,168,76,.3);
+    }
+
+    .btn-ghost {
+      background: none;
+      border: none;
+      color: var(--gold);
+      font-size: 13px;
+      cursor: pointer;
+      margin-top: 14px;
+      opacity: .8;
+      width: 100%;
+      padding: 5px;
+    }
+
+    .btn-ghost:hover {
+      opacity: 1;
+    }
+
+    .field-error {
+      color: var(--danger);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .field-note {
+      color: var(--silver-dim);
+      font-size: 12px;
+      line-height: 1.6;
+      margin: -10px 0 14px;
+    }
+
+    @media (max-width: 700px) {
+      .shell {
+        padding: 14px 14px 50px;
       }
 
-      .brand-mark {
-        width: 35px;
-        height: 35px;
-        border-radius: 11px;
-        font-size: 20px;
+      .topnav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 28px;
       }
 
-      .brand-name { font-size: 23px; }
-      .header-right { gap: 12px; }
-      .ecosystem-link { display: none; }
-      .header-divider { display: none; }
-      .user-label { display: none; }
+      .app-nav {
+        width: 100%;
+      }
 
-      .page {
-        width: calc(100% - 36px);
-        min-height: calc(100vh - 135px);
-        padding: 65px 0 70px;
+      .nav-pill {
+        padding: 7px 10px;
+      }
+
+      .nav-right {
+        width: 100%;
+      }
+
+      .search-hero {
+        padding: 25px 0 28px;
       }
 
       .hero-glyph {
-        width: 65px;
-        height: 65px;
-        border-radius: 22px;
-        font-size: 33px;
+        font-size: 58px;
       }
 
-      h1 {
-        font-size: clamp(54px, 13vw, 73px);
-        letter-spacing: -2px;
+      .hero-sub {
+        font-size: 13px;
+        line-height: 1.7;
       }
 
-      .hero-subtitle {
-        max-width: 330px;
-        margin: 15px auto 0;
-        font-size: 12px;
-      }
-
-      .search-wrap { margin-top: 31px; }
-
-      .search-box {
-        min-height: 61px;
-        padding-left: 15px;
+      .search-field {
+        padding: 8px 12px;
         border-radius: 16px;
       }
 
-      .search-input { font-size: 13px; }
-      .search-submit { width: 43px; height: 43px; border-radius: 12px; }
-      .search-meta { font-size: 10px; }
-
-      .results-section { margin-top: 48px; }
-      .results-heading { font-size: 25px; }
-
-      .summary-card { padding: 20px 18px 21px; }
-      .result-card { padding: 17px; }
-      .result-title { font-size: 14px; }
-
-      .site-footer {
-        align-items: flex-start;
-        padding: 20px;
+      .search-go {
+        padding: 12px 18px;
       }
 
-      .footer-note { max-width: 190px; line-height: 1.8; }
-      .modal { padding: 25px 21px; }
-    }
+      .result-card {
+        padding: 18px;
+      }
 
-    @media (max-width: 390px) {
-      .site-header { padding: 0 14px; }
-      .brand-name { font-size: 21px; }
-      .account-area .button { padding: 0 11px; }
-      .page { width: calc(100% - 28px); }
-      .keyboard-hint { display: none; }
-      .form-row { grid-template-columns: 1fr; gap: 0; }
+      .result-title {
+        font-size: 18px;
+      }
+
+      .ai-summary {
+        padding: 22px 20px;
+      }
+
+      .modal-box {
+        padding: 34px 24px;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
-        scroll-behavior: auto !important;
         animation-duration: .01ms !important;
         animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
         transition-duration: .01ms !important;
       }
-
-      #starfield { display: none; }
     }
   </style>
 </head>
 
 <body>
-  <div class="ambient ambient-one"></div>
-  <div class="ambient ambient-two"></div>
   <canvas id="starfield" aria-hidden="true"></canvas>
+  <div class="amb amb-1" aria-hidden="true"></div>
+  <div class="amb amb-2" aria-hidden="true"></div>
 
-  <header class="site-header">
-    <a class="brand" href="https://wizardecosystem.dev" aria-label="Wizard Ecosystem home">
-      <span class="brand-mark" aria-hidden="true">✧</span>
-      <span class="brand-name">Wizard <span>Ecosystem</span></span>
-    </a>
+  <div class="shell">
+    <nav class="topnav" aria-label="Wizard Ecosystem navigation">
+      <a class="logo" href="https://wizardecosystem.dev" aria-label="Wizard Ecosystem home">
+        <span class="logo-glyph" aria-hidden="true">🧙</span>
+        <span class="logo-name">Wizard Ecosystem</span>
+      </a>
 
-    <div class="header-right">
-      <a class="ecosystem-link" href="https://wizardecosystem.dev">Explore the ecosystem ↗</a>
-      <span class="header-divider" aria-hidden="true"></span>
-      <div class="account-area">
-        <span id="user-label" class="user-label" hidden></span>
-        <button id="auth-button" class="button button-quiet" type="button">Sign in</button>
-        <button id="logout-button" class="button button-quiet" type="button" hidden>Sign out</button>
+      <div class="app-nav">
+        <a class="nav-pill" href="https://wizardecosystem.dev/ai">
+          <span class="nav-pill-icon" aria-hidden="true">🧠</span> AI
+        </a>
+        <a class="nav-pill active" href="https://wizardecosystem.dev/search" aria-current="page">
+          <span class="nav-pill-icon" aria-hidden="true">🔍</span> Search
+        </a>
+        <a class="nav-pill" href="https://wizardecosystem.dev/mail">
+          <span class="nav-pill-icon" aria-hidden="true">📧</span> Mail
+        </a>
+        <a class="nav-pill" href="https://wizardecosystem.dev/calendar">
+          <span class="nav-pill-icon" aria-hidden="true">📅</span> Calendar
+        </a>
+        <a class="nav-pill" href="https://wizardecosystem.dev/chat">
+          <span class="nav-pill-icon" aria-hidden="true">💬</span> Chat
+        </a>
       </div>
+
+      <div class="nav-right">
+        <div class="user-pill" id="user-pill" style="display:none" role="status">
+          <div class="user-avatar" aria-hidden="true">🧙</div>
+          <span id="user-email-txt" class="user-email-txt"></span>
+          <button id="logout-btn" class="logout-btn" type="button" aria-label="Sign out" title="Sign out">✕</button>
+        </div>
+        <button id="signin-btn" class="signin-btn" type="button" style="display:none">Sign In</button>
+      </div>
+    </nav>
+
+    <header class="search-hero">
+      <span class="hero-glyph" aria-hidden="true">🔍</span>
+      <h1 class="hero-title">Wizard <em>Search</em></h1>
+      <p class="hero-sub">AI-powered results — real, clickable, and intelligent</p>
+    </header>
+
+    <div class="search-wrap" role="search">
+      <div class="search-field">
+        <span class="search-ico" aria-hidden="true">✦</span>
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Search the web…"
+          aria-label="Search the web"
+          aria-autocomplete="list"
+          aria-controls="search-suggestions"
+          aria-expanded="false"
+          autocomplete="off"
+          spellcheck="false"
+          maxlength="500"
+        >
+        <button class="search-go" id="search-btn" type="button">Search</button>
+      </div>
+
+      <div
+        id="search-suggestions"
+        class="suggestions-dropdown"
+        role="listbox"
+        aria-label="Search suggestions"
+      ></div>
     </div>
-  </header>
 
-  <main class="page">
-    <section class="hero" aria-labelledby="page-title">
-      <div class="eyebrow">A little magic, a lot of knowledge</div>
+    <main id="results" class="results-area" aria-live="polite" aria-label="Search results"></main>
 
-      <div class="hero-glyph" aria-hidden="true">✧</div>
+    <footer>
+      <p class="footer-brand">🧙 Wizard Search</p>
+      <p class="footer-meta">
+        Results via DDG · Brave · Startpage &nbsp;·&nbsp;
+        AI summaries by Llama 4 &nbsp;·&nbsp;
+        Built by <a href="https://wizardecosystem.dev" rel="author">Arnav Gupta</a>
+      </p>
+    </footer>
+  </div>
 
-      <h1 id="page-title">Wizard <span class="gold">Search</span></h1>
-      <p class="hero-subtitle">AI-powered results — real, clickable, and intelligent</p>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-      <div class="search-wrap">
-        <form id="search-form" role="search" autocomplete="off">
-          <div class="search-box">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.7"/>
-              <path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-            </svg>
+  <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <span class="modal-glyph" aria-hidden="true">🧙</span>
+      <h2 class="modal-title" id="modal-title">Sign In</h2>
 
-            <input
-              id="search-input"
-              class="search-input"
-              type="search"
-              name="q"
-              placeholder="Ask the universe anything..."
-              aria-label="Search the web"
-              spellcheck="false"
-              maxlength="500"
-              required
-            >
-
-            <button id="search-submit" class="button button-gold search-submit" type="submit" aria-label="Search">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M5 12h14M13 5l7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        </form>
-
-        <div class="search-meta">
-          <span>Curiosity is your superpower.</span>
-          <span class="keyboard-hint"><kbd>Enter ↵</kbd> to search</span>
+      <form id="auth-form">
+        <div id="signup-fields" hidden>
+          <input class="field" type="text" id="register-first-name" placeholder="First name" autocomplete="given-name" maxlength="100">
+          <input class="field" type="text" id="register-last-name" placeholder="Last name" autocomplete="family-name" maxlength="100">
         </div>
 
-        <div id="search-message" class="status-message" role="status" aria-live="polite" hidden></div>
-      </div>
-    </section>
+        <input class="field" type="email" id="login-email" placeholder="Email address" autocomplete="email" required>
+        <input class="field" type="password" id="login-password" placeholder="Password" autocomplete="current-password" required minlength="1">
 
-    <section id="results-section" class="results-section" aria-label="Search results" hidden>
-      <div class="results-top">
-        <h2 class="results-heading">Your discoveries</h2>
-        <span id="results-count" class="results-count"></span>
-      </div>
-
-      <div id="loading-state" class="loading-state" hidden>
-        <div class="spinner" aria-hidden="true"></div>
-        <p>Searching the universe...</p>
-      </div>
-
-      <article id="summary-card" class="summary-card" hidden>
-        <div class="section-kicker">
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-2-5.8L4 11l6-2.2L12 3Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-            <path d="m19 15 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z" fill="currentColor"/>
-          </svg>
-          AI-powered summary
-        </div>
-        <p id="summary-text" class="summary-text"></p>
-      </article>
-
-      <div id="results-list" class="results-list"></div>
-
-      <div id="empty-state" class="empty-state" hidden>
-        <div class="empty-glyph" aria-hidden="true">✧</div>
-        <h3>No discoveries this time</h3>
-        <p>Try a different search. Sometimes the best answers begin with a different question.</p>
-      </div>
-
-      <div id="results-footer" class="results-footer" hidden>
-        <span id="source-label"></span>
-        <span>Explore thoughtfully ✦</span>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <a class="brand footer-brand" href="https://wizardecosystem.dev">
-      <span>✧</span> Wizard Search
-    </a>
-    <div class="footer-note">Results via DDG · Brave · Startpage · AI summaries by Llama 4</div>
-  </footer>
-
-  <!-- Authentication modal -->
-  <div id="modal-overlay" class="modal-overlay" aria-hidden="true">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <button id="modal-close" class="modal-close" type="button" aria-label="Close dialog">×</button>
-
-      <div class="modal-mark" aria-hidden="true">✧</div>
-      <h2 id="modal-title">Welcome back.</h2>
-      <p id="modal-description" class="modal-description">Sign in to continue your journey through the web.</p>
-
-      <div id="modal-message" class="modal-message" role="status" aria-live="polite" hidden></div>
-
-      <form id="login-form" class="modal-step" novalidate>
-        <div class="form-field">
-          <label for="login-email">Email address</label>
-          <input id="login-email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+        <div id="verification-fields" hidden>
+          <input class="field" type="text" id="verification-code" placeholder="Verification code" inputmode="numeric" autocomplete="one-time-code" maxlength="12">
+          <p class="field-note">Enter the verification code sent to your email.</p>
         </div>
 
-        <div class="form-field">
-          <label for="login-password">Password</label>
-          <input id="login-password" name="password" type="password" placeholder="Your password" autocomplete="current-password" required>
-        </div>
-
-        <button class="button button-gold modal-submit" type="submit">Sign in <span aria-hidden="true">→</span></button>
-
-        <p class="modal-switch">
-          New around here?
-          <button id="show-signup" class="inline-action" type="button">Create an account</button>
-        </p>
+        <div id="login-error" class="field-error" role="alert"></div>
+        <button class="btn-primary" id="login-submit" type="submit">Enter the Realm</button>
       </form>
 
-      <form id="register-form" class="modal-step" novalidate hidden>
-        <div class="form-row">
-          <div class="form-field">
-            <label for="register-first">First name</label>
-            <input id="register-first" name="firstName" type="text" placeholder="First name" autocomplete="given-name" required>
-          </div>
-          <div class="form-field">
-            <label for="register-last">Last name</label>
-            <input id="register-last" name="lastName" type="text" placeholder="Last name" autocomplete="family-name" required>
-          </div>
-        </div>
-
-        <div class="form-field">
-          <label for="register-email">Email address</label>
-          <input id="register-email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required>
-        </div>
-
-        <div class="form-field">
-          <label for="register-password">Create a password</label>
-          <input id="register-password" name="password" type="password" placeholder="At least 6 characters" autocomplete="new-password" minlength="6" required>
-        </div>
-
-        <button class="button button-gold modal-submit" type="submit">Create account <span aria-hidden="true">→</span></button>
-
-        <p class="modal-switch">
-          Already have an account?
-          <button id="show-login" class="inline-action" type="button">Sign in</button>
-        </p>
-      </form>
-
-      <form id="verify-form" class="modal-step" novalidate hidden>
-        <div class="verification-note">
-          A verification code has been sent to <strong id="verification-email"></strong>.
-          Enter the code to finish creating your account.
-        </div>
-
-        <div class="form-field">
-          <label for="verification-code">Verification code</label>
-          <input id="verification-code" class="code-input" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="12" placeholder="••••••" required>
-        </div>
-
-        <button class="button button-gold modal-submit" type="submit">Verify email <span aria-hidden="true">→</span></button>
-
-        <p class="modal-switch">
-          Didn't get a code?
-          <button id="resend-code" class="inline-action" type="button">Resend code</button>
-        </p>
-
-        <p class="modal-switch">
-          <button id="back-to-register" class="inline-action" type="button">← Back to registration</button>
-        </p>
-      </form>
-    </section>
+      <button class="btn-ghost" id="show-signup" type="button">Create an account →</button>
+      <button class="btn-ghost" id="resend-code" type="button" hidden>Resend verification code</button>
+      <button class="btn-ghost" id="cancel-auth" type="button">Cancel</button>
+    </div>
   </div>
 
   <script>
+  (() => {
+    "use strict";
+
+    const API = "https://arnav0928.pythonanywhere.com";
+    const $ = id => document.getElementById(id);
+
+    let currentUser = null;
+    let toastTimer = null;
+    let suggestionTimer = null;
+    let suggestionController = null;
+    let searchController = null;
+    let suggestionRequestId = 0;
+    let searchRequestId = 0;
+    let suggestions = [];
+    let activeSuggestion = -1;
+    let authMode = "login";
+    let pendingRegistrationId = null;
+    let lastFocusedElement = null;
+
+    const input = $("search-input");
+    const suggestionBox = $("search-suggestions");
+    const searchButton = $("search-btn");
+    const resultsArea = $("results");
+    const modal = $("modal-overlay");
+
+    /* Starfield */
+
     (() => {
-      "use strict";
+      const canvas = $("starfield");
+      const ctx = canvas?.getContext("2d");
+      if (!ctx) return;
 
-      const API = "https://arnav0928.pythonanywhere.com";
+      const stars = Array.from({ length: 200 }, () => ({
+        x: Math.random(),
+        y: Math.random(),
+        r: Math.random() * 1.3 + .2,
+        phase: Math.random() * Math.PI * 2,
+        speed: Math.random() * .8 + .3
+      }));
 
-      const $ = (id) => document.getElementById(id);
+      let width = 0;
+      let height = 0;
+      let frame = null;
 
-      const els = {
-        searchForm: $("search-form"),
-        searchInput: $("search-input"),
-        searchSubmit: $("search-submit"),
-        searchMessage: $("search-message"),
-        resultsSection: $("results-section"),
-        resultsCount: $("results-count"),
-        loading: $("loading-state"),
-        summaryCard: $("summary-card"),
-        summaryText: $("summary-text"),
-        resultsList: $("results-list"),
-        emptyState: $("empty-state"),
-        resultsFooter: $("results-footer"),
-        sourceLabel: $("source-label"),
-        authButton: $("auth-button"),
-        logoutButton: $("logout-button"),
-        userLabel: $("user-label"),
-        overlay: $("modal-overlay"),
-        modalClose: $("modal-close"),
-        modalTitle: $("modal-title"),
-        modalDescription: $("modal-description"),
-        modalMessage: $("modal-message"),
-        loginForm: $("login-form"),
-        registerForm: $("register-form"),
-        verifyForm: $("verify-form"),
-        verificationEmail: $("verification-email"),
-        verificationCode: $("verification-code"),
-        showSignup: $("show-signup"),
-        showLogin: $("show-login"),
-        resendCode: $("resend-code"),
-        backToRegister: $("back-to-register")
-      };
-
-      const state = {
-        user: null,
-        activeSearch: null,
-        pendingId: null,
-        pendingEmail: "",
-        previousFocus: null,
-        modalMode: "login",
-        authCheckComplete: false
-      };
-
-      function apiRequest(path, options = {}) {
-        const headers = new Headers(options.headers || {});
-        const requestOptions = {
-          ...options,
-          headers,
-          credentials: "include"
-        };
-
-        if (options.body !== undefined && !(options.body instanceof FormData)) {
-          headers.set("Content-Type", "application/json");
-        }
-
-        return fetch(`${API}${path}`, requestOptions);
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
 
-      async function readResponse(response) {
-        const data = await response.json().catch(() => ({}));
+      function draw() {
+        if (document.hidden) {
+          frame = null;
+          return;
+        }
 
-        if (!response.ok || data.success === false) {
-          const error = new Error(
-            data.error || data.message ||
-            `The request failed (${response.status}).`
+        ctx.clearRect(0, 0, width, height);
+        const time = Date.now() / 1000;
+
+        for (const star of stars) {
+          const alpha = .25 + .5 * (
+            Math.sin(time * star.speed + star.phase) * .5 + .5
           );
-          error.status = response.status;
-          error.data = data;
-          throw error;
+
+          ctx.beginPath();
+          ctx.arc(star.x * width, star.y * height, star.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(212,208,232,${alpha})`;
+          ctx.fill();
         }
 
-        return data;
+        frame = requestAnimationFrame(draw);
       }
 
-      function showSearchMessage(message, type = "error") {
-        els.searchMessage.textContent = message;
-        els.searchMessage.classList.toggle("success", type === "success");
-        els.searchMessage.hidden = !message;
-      }
-
-      function clearSearchMessage() {
-        showSearchMessage("");
-      }
-
-      function showModalMessage(message, type = "error") {
-        els.modalMessage.textContent = message;
-        els.modalMessage.classList.toggle("success", type === "success");
-        els.modalMessage.hidden = !message;
-      }
-
-      function clearModalMessage() {
-        showModalMessage("");
-      }
-
-      function setBusy(button, busy, busyText = "Please wait...") {
-        if (!button) return;
-
-        if (busy) {
-          if (!button.dataset.originalText) {
-            button.dataset.originalText = button.innerHTML;
-          }
-          button.disabled = true;
-          button.textContent = busyText;
-        } else {
-          button.disabled = false;
-          if (button.dataset.originalText) {
-            button.innerHTML = button.dataset.originalText;
-            delete button.dataset.originalText;
-          }
-        }
-      }
-
-      function updateAccountUI(user) {
-        state.user = user || null;
-        const signedIn = Boolean(user);
-
-        els.authButton.hidden = signedIn;
-        els.logoutButton.hidden = !signedIn;
-        els.userLabel.hidden = !signedIn;
-
-        if (signedIn) {
-          const displayName =
-            user.firstName ||
-            user.first_name ||
-            user.name ||
-            user.email ||
-            "Signed in";
-
-          els.userLabel.textContent = displayName;
-          els.userLabel.title = user.email || displayName;
-        } else {
-          els.userLabel.textContent = "";
-          els.userLabel.removeAttribute("title");
-        }
-      }
-
-      async function checkAuth() {
-        try {
-          const response = await apiRequest("/api/check-auth");
-          const data = await response.json().catch(() => ({}));
-
-          if (response.ok && data.authenticated) {
-            updateAccountUI(data.user || null);
-          } else {
-            updateAccountUI(null);
-          }
-        } catch (error) {
-          // Search can still display its page when auth checking is unavailable.
-          console.warn("Wizard Search: couldn't check authentication.", error);
-          updateAccountUI(null);
-        } finally {
-          state.authCheckComplete = true;
-        }
-      }
-
-      function openModal(mode = "login") {
-        state.previousFocus = document.activeElement;
-        els.overlay.classList.add("show");
-        els.overlay.setAttribute("aria-hidden", "false");
-        document.body.style.overflow = "hidden";
-        switchModalMode(mode);
-
-        requestAnimationFrame(() => {
-          const firstInput = els.overlay.querySelector(
-            ".modal-step:not([hidden]) input"
-          );
-          firstInput?.focus();
-        });
-      }
-
-      function closeModal() {
-        els.overlay.classList.remove("show");
-        els.overlay.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
-
-        if (state.previousFocus && typeof state.previousFocus.focus === "function") {
-          state.previousFocus.focus();
-        }
-      }
-
-      function switchModalMode(mode) {
-        state.modalMode = mode;
-        clearModalMessage();
-
-        els.loginForm.hidden = mode !== "login";
-        els.registerForm.hidden = mode !== "register";
-        els.verifyForm.hidden = mode !== "verify";
-
-        const content = {
-          login: {
-            title: "Welcome back.",
-            description: "Sign in to continue your journey through the web."
-          },
-          register: {
-            title: "Find your magic.",
-            description: "Create an account and make yourself at home in the Wizard Ecosystem."
-          },
-          verify: {
-            title: "One last little spell.",
-            description: "Verify your email address to complete your account."
-          }
-        }[mode] || {
-          title: "Welcome back.",
-          description: "Sign in to continue your journey through the web."
-        };
-
-        els.modalTitle.textContent = content.title;
-        els.modalDescription.textContent = content.description;
-      }
-
-      function requireAuth() {
-        openModal("login");
-        showModalMessage("Sign in to use Wizard Search.");
-      }
-
-      async function handleLogin(event) {
-        event.preventDefault();
-        clearModalMessage();
-
-        const form = new FormData(els.loginForm);
-        const email = String(form.get("email") || "").trim();
-        const password = String(form.get("password") || "");
-        const button = els.loginForm.querySelector('button[type="submit"]');
-
-        if (!email || !password) {
-          showModalMessage("Enter your email address and password.");
-          return;
-        }
-
-        setBusy(button, true, "Signing in...");
-
-        try {
-          const response = await apiRequest("/api/login", {
-            method: "POST",
-            body: JSON.stringify({ email, password })
-          });
-
-          const data = await readResponse(response);
-
-          if (data.success === false) {
-            throw new Error(data.error || "Unable to sign in.");
-          }
-
-          updateAccountUI(data.user || null);
-          closeModal();
-          els.loginForm.reset();
-          clearSearchMessage();
-
-          // Retry a search that was attempted before signing in.
-          if (state.pendingSearchAfterLogin) {
-            const query = state.pendingSearchAfterLogin;
-            state.pendingSearchAfterLogin = "";
-            els.searchInput.value = query;
-            performSearch(query);
-          }
-        } catch (error) {
-          showModalMessage(error.message || "Unable to sign in. Please try again.");
-        } finally {
-          setBusy(button, false);
-        }
-      }
-
-      async function handleRegister(event) {
-        event.preventDefault();
-        clearModalMessage();
-
-        const form = new FormData(els.registerForm);
-        const firstName = String(form.get("firstName") || "").trim();
-        const lastName = String(form.get("lastName") || "").trim();
-        const email = String(form.get("email") || "").trim();
-        const password = String(form.get("password") || "");
-
-        if (!firstName || !lastName || !email || !password) {
-          showModalMessage("Please fill in every field.");
-          return;
-        }
-
-        if (password.length < 6) {
-          showModalMessage("Your password must be at least 6 characters long.");
-          return;
-        }
-
-        const button = els.registerForm.querySelector('button[type="submit"]');
-        setBusy(button, true, "Sending verification...");
-
-        try {
-          const response = await apiRequest("/api/register/init", {
-            method: "POST",
-            body: JSON.stringify({ email, firstName, lastName, password })
-          });
-
-          const data = await readResponse(response);
-
-          state.pendingEmail = email;
-          state.pendingId = data.pending_id || null;
-
-          els.verificationEmail.textContent = email;
-          els.verificationCode.value = "";
-          switchModalMode("verify");
-
-          // A dev code is only displayed if the backend explicitly returns one.
-          if (data.dev_code) {
-            showModalMessage(`Development verification code: ${data.dev_code}`, "success");
-          } else {
-            showModalMessage(data.message || "Verification code sent. Check your inbox.", "success");
-          }
-        } catch (error) {
-          showModalMessage(error.message || "Couldn't start registration. Please try again.");
-        } finally {
-          setBusy(button, false);
-        }
-      }
-
-      async function handleVerify(event) {
-        event.preventDefault();
-        clearModalMessage();
-
-        const code = String(els.verificationCode.value || "").trim();
-
-        if (!code) {
-          showModalMessage("Enter the verification code from your email.");
-          els.verificationCode.focus();
-          return;
-        }
-
-        const button = els.verifyForm.querySelector('button[type="submit"]');
-        setBusy(button, true, "Verifying...");
-
-        try {
-          const payload = {
-            email: state.pendingEmail,
-            code
-          };
-
-          if (state.pendingId) {
-            payload.pending_id = state.pendingId;
-          }
-
-          const response = await apiRequest("/api/register/verify", {
-            method: "POST",
-            body: JSON.stringify(payload)
-          });
-
-          const data = await readResponse(response);
-
-          updateAccountUI(data.user || null);
-          els.registerForm.reset();
-          els.verifyForm.reset();
-          closeModal();
-
-          if (state.pendingSearchAfterLogin) {
-            const query = state.pendingSearchAfterLogin;
-            state.pendingSearchAfterLogin = "";
-            els.searchInput.value = query;
-            performSearch(query);
-          }
-        } catch (error) {
-          showModalMessage(error.message || "Verification failed. Check the code and try again.");
-        } finally {
-          setBusy(button, false);
-        }
-      }
-
-      async function handleResendCode() {
-        clearModalMessage();
-        setBusy(els.resendCode, true, "Sending...");
-
-        try {
-          const payload = {};
-          if (state.pendingId) payload.pending_id = state.pendingId;
-
-          const response = await apiRequest("/api/resend-code", {
-            method: "POST",
-            body: JSON.stringify(payload)
-          });
-
-          const data = await readResponse(response);
-
-          if (data.dev_code) {
-            showModalMessage(`Development verification code: ${data.dev_code}`, "success");
-          } else {
-            showModalMessage(data.message || "A new verification code has been sent.", "success");
-          }
-        } catch (error) {
-          showModalMessage(error.message || "Couldn't resend the code. Please try again.");
-        } finally {
-          setBusy(els.resendCode, false);
-        }
-      }
-
-      async function handleLogout() {
-        els.logoutButton.disabled = true;
-
-        try {
-          const response = await apiRequest("/api/logout", { method: "POST" });
-          await readResponse(response);
-          updateAccountUI(null);
-          showSearchMessage("You've signed out.", "success");
-        } catch (error) {
-          showSearchMessage(error.message || "Couldn't sign out. Please try again.");
-        } finally {
-          els.logoutButton.disabled = false;
-        }
-      }
-
-      function clearResults() {
-        els.summaryCard.hidden = true;
-        els.summaryText.textContent = "";
-        els.resultsList.replaceChildren();
-        els.emptyState.hidden = true;
-        els.resultsFooter.hidden = true;
-        els.resultsCount.textContent = "";
-      }
-
-      function showLoading(query) {
-        els.resultsSection.hidden = false;
-        els.loading.hidden = false;
-        clearResults();
-        els.resultsCount.textContent = "Searching...";
-        showSearchMessage("");
-        els.searchSubmit.disabled = true;
-        els.searchInput.setAttribute("aria-busy", "true");
-      }
-
-      function finishLoading() {
-        els.loading.hidden = true;
-        els.searchSubmit.disabled = false;
-        els.searchInput.removeAttribute("aria-busy");
-      }
-
-      function safeHttpUrl(value) {
-        try {
-          const url = new URL(value);
-          if (url.protocol !== "https:" && url.protocol !== "http:") return null;
-          return url;
-        } catch {
-          return null;
-        }
-      }
-
-      function createResultCard(result, index) {
-        const url = safeHttpUrl(result && result.url);
-        if (!url) return null;
-
-        const card = document.createElement("article");
-        card.className = "result-card";
-        card.style.animationDelay = `${Math.min(index * 45, 270)}ms`;
-
-        const topLine = document.createElement("div");
-        topLine.className = "result-topline";
-
-        const faviconBox = document.createElement("span");
-        faviconBox.className = "result-favicon";
-        faviconBox.setAttribute("aria-hidden", "true");
-        faviconBox.textContent = "✧";
-
-        const domain = document.createElement("span");
-        domain.className = "result-domain";
-        domain.textContent = url.hostname.replace(/^www\./, "");
-
-        const number = document.createElement("span");
-        number.className = "result-number";
-        number.textContent = String(index + 1).padStart(2, "0");
-
-        topLine.append(faviconBox, domain, number);
-
-        const title = document.createElement("a");
-        title.className = "result-title";
-        title.href = url.href;
-        title.target = "_blank";
-        title.rel = "noopener noreferrer";
-        title.textContent = String(result.title || url.hostname);
-
-        const snippet = document.createElement("p");
-        snippet.className = "result-snippet";
-        snippet.textContent = String(result.snippet || "Open this result to learn more.");
-
-        card.append(topLine, title, snippet);
-
-        // Use the domain's favicon as a progressive enhancement.
-        const favicon = document.createElement("img");
-        favicon.alt = "";
-        favicon.loading = "lazy";
-        favicon.referrerPolicy = "no-referrer";
-        favicon.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(url.hostname)}&sz=32`;
-        favicon.addEventListener("load", () => {
-          if (favicon.naturalWidth > 0) faviconBox.replaceChildren(favicon);
-        }, { once: true });
-        favicon.addEventListener("error", () => favicon.remove(), { once: true });
-
-        return card;
-      }
-
-      function renderResults(data) {
-        clearResults();
-
-        const results = Array.isArray(data.results) ? data.results : [];
-        const summary = typeof data.summary === "string" ? data.summary.trim() : "";
-
-        if (summary) {
-          els.summaryText.textContent = summary;
-          els.summaryCard.hidden = false;
-        }
-
-        const fragment = document.createDocumentFragment();
-        let renderedCount = 0;
-
-        results.forEach((result) => {
-          const card = createResultCard(result, renderedCount);
-          if (card) {
-            fragment.appendChild(card);
-            renderedCount += 1;
-          }
-        });
-
-        els.resultsList.appendChild(fragment);
-        els.resultsCount.textContent = `${renderedCount} result${renderedCount === 1 ? "" : "s"}`;
-        els.emptyState.hidden = renderedCount > 0 || Boolean(summary);
-        els.resultsFooter.hidden = renderedCount === 0 && !summary;
-        els.sourceLabel.textContent = data.source ? `Source: ${String(data.source)}` : "";
-      }
-
-      async function performSearch(rawQuery) {
-        const query = String(rawQuery || "").trim();
-
-        if (!query) {
-          showSearchMessage("Type something to search for first.");
-          els.searchInput.focus();
-          return;
-        }
-
-        if (!state.authCheckComplete) {
-          await checkAuth();
-        }
-
-        if (!state.user) {
-          state.pendingSearchAfterLogin = query;
-          requireAuth();
-          return;
-        }
-
-        if (state.activeSearch) {
-          state.activeSearch.abort();
-        }
-
-        const controller = new AbortController();
-        state.activeSearch = controller;
-
-        showLoading(query);
-
-        const url = new URL(window.location.href);
-        url.searchParams.set("q", query);
-        history.replaceState({ query }, "", url);
-
-        try {
-          const response = await apiRequest("/api/search", {
-            method: "POST",
-            signal: controller.signal,
-            body: JSON.stringify({ query })
-          });
-
-          const data = await readResponse(response);
-
-          if (controller.signal.aborted) return;
-
-          if (data.authenticated === false || response.status === 401) {
-            state.pendingSearchAfterLogin = query;
-            updateAccountUI(null);
-            finishLoading();
-            requireAuth();
-            return;
-          }
-
-          renderResults(data);
-        } catch (error) {
-          if (error.name === "AbortError") return;
-
-          finishLoading();
-
-          if (error.status === 401) {
-            state.pendingSearchAfterLogin = query;
-            updateAccountUI(null);
-            requireAuth();
-            return;
-          }
-
-          clearResults();
-          els.resultsSection.hidden = false;
-          els.emptyState.hidden = false;
-          els.resultsCount.textContent = "Search unavailable";
-
-          const title = els.emptyState.querySelector("h3");
-          const description = els.emptyState.querySelector("p");
-
-          title.textContent = "We hit a little snag.";
-          description.textContent =
-            "Wizard Search couldn't reach the search service. Please try again in a moment.";
-
-          showSearchMessage(error.message || "Search failed. Please try again.");
-        } finally {
-          if (state.activeSearch === controller) {
-            state.activeSearch = null;
-            finishLoading();
-          }
-        }
-
-        els.resultsSection.scrollIntoView({
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "auto"
-            : "smooth",
-          block: "start"
-        });
-      }
-
-      function loadFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const query = params.get("q");
-
-        if (query) {
-          els.searchInput.value = query;
-          // Wait for the initial session check before searching.
-          checkAuth().then(() => {
-            if (state.user) {
-              performSearch(query);
-            } else {
-              // Keep the query visible without unexpectedly opening the modal.
-              state.pendingSearchAfterLogin = query;
-            }
-          });
-        }
-      }
-
-      // Search
-      els.searchForm.addEventListener("submit", (event) => {
-        event.preventDefault();
-        performSearch(els.searchInput.value);
-      });
-
-      // Authentication
-      els.authButton.addEventListener("click", () => openModal("login"));
-      els.logoutButton.addEventListener("click", handleLogout);
-      els.modalClose.addEventListener("click", closeModal);
-
-      els.overlay.addEventListener("click", (event) => {
-        if (event.target === els.overlay) closeModal();
-      });
-
-      document.addEventListener("keydown", (event) => {
-        // Null-safe even if the modal markup is changed or temporarily missing.
-        if (event.key === "Escape" && els.overlay?.classList.contains("show")) {
-          closeModal();
-        }
-
-        if (
-          event.key === "/" &&
-          !event.ctrlKey &&
-          !event.metaKey &&
-          !event.altKey &&
-          !["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)
-        ) {
-          event.preventDefault();
-          els.searchInput.focus();
+      resize();
+      window.addEventListener("resize", resize);
+      draw();
+
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          if (frame !== null) cancelAnimationFrame(frame);
+          frame = null;
+        } else if (frame === null) {
+          draw();
         }
       });
-
-      els.loginForm.addEventListener("submit", handleLogin);
-      els.registerForm.addEventListener("submit", handleRegister);
-      els.verifyForm.addEventListener("submit", handleVerify);
-
-      els.showSignup.addEventListener("click", () => switchModalMode("register"));
-      els.showLogin.addEventListener("click", () => switchModalMode("login"));
-      els.resendCode.addEventListener("click", handleResendCode);
-      els.backToRegister.addEventListener("click", () => switchModalMode("register"));
-
-      // Lightweight starfield. Disabled automatically for reduced-motion users.
-      function initStarfield() {
-        const canvas = $("starfield");
-        const context = canvas?.getContext("2d");
-        if (!canvas || !context) return;
-
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        const stars = [];
-        let width = 0;
-        let height = 0;
-        let frame = 0;
-
-        function resize() {
-          const ratio = Math.min(window.devicePixelRatio || 1, 2);
-          width = window.innerWidth;
-          height = window.innerHeight;
-          canvas.width = Math.floor(width * ratio);
-          canvas.height = Math.floor(height * ratio);
-          context.setTransform(ratio, 0, 0, ratio, 0, 0);
-
-          stars.length = 0;
-          const count = Math.min(105, Math.floor((width * height) / 12500));
-
-          for (let i = 0; i < count; i++) {
-            stars.push({
-              x: Math.random() * width,
-              y: Math.random() * height,
-              radius: Math.random() * 1.15 + .2,
-              opacity: Math.random() * .42 + .12,
-              phase: Math.random() * Math.PI * 2,
-              speed: Math.random() * .006 + .002
-            });
-          }
-
-          draw(0);
-        }
-
-        function draw(time) {
-          context.clearRect(0, 0, width, height);
-
-          for (const star of stars) {
-            const pulse = reducedMotion
-              ? 1
-              : .72 + Math.sin(time * star.speed + star.phase) * .28;
-
-            context.beginPath();
-            context.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-            context.fillStyle = `rgba(232, 216, 183, ${star.opacity * pulse})`;
-            context.fill();
-          }
-
-          if (!reducedMotion) frame = requestAnimationFrame(draw);
-        }
-
-        window.addEventListener("resize", resize, { passive: true });
-        resize();
-
-        return () => {
-          cancelAnimationFrame(frame);
-          window.removeEventListener("resize", resize);
-        };
-      }
-
-      initStarfield();
-
-      // Initialize session and restore a query from the URL, if present.
-      checkAuth().then(() => {
-        const params = new URLSearchParams(window.location.search);
-        const query = params.get("q");
-
-        if (query) {
-          els.searchInput.value = query;
-
-          if (state.user) {
-            performSearch(query);
-          } else {
-            state.pendingSearchAfterLogin = query;
-          }
-        }
-      });
-
-      console.info("✧ Wizard Search initialized.");
     })();
+
+    /* Helpers */
+
+    function setText(id, value) {
+      const el = $(id);
+      if (el) el.textContent = value ?? "";
+    }
+
+    function showToast(message, type = "success") {
+      const toast = $("toast");
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 3500);
+    }
+
+    function safeExternalUrl(value) {
+      try {
+        const url = new URL(value);
+        if (url.protocol === "https:" || url.protocol === "http:") {
+          return url.href;
+        }
+      } catch (error) {
+        // Invalid URL.
+      }
+      return "";
+    }
+
+    function openExternalUrl(value) {
+      const url = safeExternalUrl(value);
+      if (url) window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    function searchEngineUrl(engine, query) {
+      const q = encodeURIComponent(query);
+      return engine === "google"
+        ? `https://www.google.com/search?q=${q}`
+        : `https://duckduckgo.com/?q=${q}`;
+    }
+
+    async function apiRequest(path, options = {}) {
+      const response = await fetch(`${API}${path}`, {
+        ...options,
+        credentials: "include",
+        headers: {
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
+          ...(options.headers || {})
+        }
+      });
+
+      const contentType = response.headers.get("content-type") || "";
+      let data = {};
+
+      if (contentType.includes("application/json")) {
+        try {
+          data = await response.json();
+        } catch (error) {
+          throw new Error(`The API returned invalid JSON (${response.status}).`);
+        }
+      } else {
+        const bodyText = await response.text();
+        if (bodyText) data = { error: bodyText.slice(0, 300) };
+      }
+
+      if (!response.ok) {
+        const error = new Error(
+          data.error || data.message || `Request failed (${response.status})`
+        );
+        error.status = response.status;
+        error.data = data;
+        throw error;
+      }
+
+      return data;
+    }
+
+    function showApiError(context, error) {
+      console.error(`[Wizard Search] ${context}`, {
+        message: error.message,
+        status: error.status,
+        data: error.data,
+        api: API
+      });
+    }
+
+    /* Authentication */
+
+    function updateAuthUI() {
+      $("user-pill").style.display = currentUser ? "flex" : "none";
+      $("signin-btn").style.display = currentUser ? "none" : "block";
+
+      setText(
+        "user-email-txt",
+        currentUser?.email || currentUser?.username || "Signed in"
+      );
+    }
+
+    async function checkAuth() {
+      try {
+        const data = await apiRequest("/api/check-auth");
+        currentUser = data.authenticated && data.user ? data.user : null;
+      } catch (error) {
+        currentUser = null;
+
+        if (error.status !== 401) {
+          showApiError("Authentication check failed", error);
+        }
+      }
+
+      updateAuthUI();
+    }
+
+    function openModal(mode = "login") {
+      lastFocusedElement = document.activeElement;
+      modal.classList.add("show");
+      setAuthMode(mode);
+      $("login-error").textContent = "";
+
+      const focusTarget = mode === "verify"
+        ? $("verification-code")
+        : $("login-email");
+
+      setTimeout(() => focusTarget?.focus(), 50);
+    }
+
+    function closeModal() {
+      modal.classList.remove("show");
+      $("login-error").textContent = "";
+      lastFocusedElement?.focus?.();
+    }
+
+    function setAuthMode(mode) {
+      authMode = mode;
+
+      $("signup-fields").hidden = mode !== "register";
+      $("verification-fields").hidden = mode !== "verify";
+      $("login-password").hidden = mode === "verify";
+      $("login-password").required = mode !== "verify";
+      $("login-email").readOnly = mode === "verify";
+
+      $("modal-title").textContent = {
+        login: "Sign In",
+        register: "Create an Account",
+        verify: "Verify Your Email"
+      }[mode];
+
+      $("login-submit").textContent = {
+        login: "Enter the Realm",
+        register: "Create Account",
+        verify: "Verify Code"
+      }[mode];
+
+      $("show-signup").hidden = mode !== "login";
+      $("resend-code").hidden = mode !== "verify";
+
+      $("login-password").autocomplete =
+        mode === "register" ? "new-password" : "current-password";
+    }
+
+    async function handleLogin() {
+      const email = $("login-email").value.trim();
+      const password = $("login-password").value;
+      const errorEl = $("login-error");
+      const button = $("login-submit");
+
+      if (!email || !password) {
+        errorEl.textContent = "Enter your email and password.";
+        return;
+      }
+
+      errorEl.textContent = "";
+      button.disabled = true;
+
+      try {
+        const data = await apiRequest("/api/login", {
+          method: "POST",
+          body: JSON.stringify({ email, password })
+        });
+
+        if (!data.user) {
+          throw new Error("The login response did not include a user.");
+        }
+
+        currentUser = data.user;
+        closeModal();
+        updateAuthUI();
+        $("login-password").value = "";
+        showToast("Welcome back!");
+      } catch (error) {
+        showApiError("Login failed", error);
+        errorEl.textContent = error.status === 401
+          ? "Invalid email or password."
+          : error.message || "Login failed. Check your connection.";
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function handleRegister() {
+      const email = $("login-email").value.trim();
+      const password = $("login-password").value;
+      const firstName = $("register-first-name").value.trim();
+      const lastName = $("register-last-name").value.trim();
+      const errorEl = $("login-error");
+      const button = $("login-submit");
+
+      if (!email || !password || !firstName || !lastName) {
+        errorEl.textContent = "Please complete every field.";
+        return;
+      }
+
+      if (password.length < 8) {
+        errorEl.textContent = "Use a password with at least 8 characters.";
+        return;
+      }
+
+      errorEl.textContent = "";
+      button.disabled = true;
+
+      try {
+        const data = await apiRequest("/api/register/init", {
+          method: "POST",
+          body: JSON.stringify({ email, firstName, lastName, password })
+        });
+
+        pendingRegistrationId = data.pending_id || null;
+        setAuthMode("verify");
+
+        if (data.dev_code) {
+          console.info("[Wizard Search] Development verification code:", data.dev_code);
+          showToast("Development code available in the console.");
+        } else {
+          showToast(data.message || "Verification code sent.");
+        }
+      } catch (error) {
+        showApiError("Registration failed", error);
+        errorEl.textContent = error.message || "Could not start registration.";
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function handleVerify() {
+      const email = $("login-email").value.trim();
+      const code = $("verification-code").value.trim();
+      const errorEl = $("login-error");
+      const button = $("login-submit");
+
+      if (!code) {
+        errorEl.textContent = "Enter the verification code.";
+        return;
+      }
+
+      errorEl.textContent = "";
+      button.disabled = true;
+
+      try {
+        const body = { email, code };
+        if (pendingRegistrationId) body.pending_id = pendingRegistrationId;
+
+        const data = await apiRequest("/api/register/verify", {
+          method: "POST",
+          body: JSON.stringify(body)
+        });
+
+        if (!data.user) {
+          throw new Error("Verification succeeded but no user was returned.");
+        }
+
+        currentUser = data.user;
+        closeModal();
+        updateAuthUI();
+        $("auth-form").reset();
+        pendingRegistrationId = null;
+        showToast("Your account is ready!");
+      } catch (error) {
+        showApiError("Email verification failed", error);
+        errorEl.textContent = error.message || "Verification failed.";
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function resendCode() {
+      const errorEl = $("login-error");
+      errorEl.textContent = "";
+
+      try {
+        const body = pendingRegistrationId
+          ? { pending_id: pendingRegistrationId }
+          : {};
+
+        const data = await apiRequest("/api/resend-code", {
+          method: "POST",
+          body: JSON.stringify(body)
+        });
+
+        if (data.dev_code) {
+          console.info("[Wizard Search] Development verification code:", data.dev_code);
+        }
+
+        showToast(data.message || "Verification code resent.");
+      } catch (error) {
+        showApiError("Resending verification code failed", error);
+        errorEl.textContent = error.message || "Could not resend the code.";
+      }
+    }
+
+    async function handleLogout() {
+      $("logout-btn").disabled = true;
+
+      try {
+        await apiRequest("/api/logout", { method: "POST" });
+        currentUser = null;
+        updateAuthUI();
+        showToast("Signed out.");
+      } catch (error) {
+        showApiError("Logout failed", error);
+
+        if (error.status === 401) {
+          currentUser = null;
+          updateAuthUI();
+          showToast("You are already signed out.");
+        } else {
+          showToast("Could not sign out. Check your connection.", "error");
+        }
+      } finally {
+        $("logout-btn").disabled = false;
+      }
+    }
+
+    $("auth-form").addEventListener("submit", event => {
+      event.preventDefault();
+
+      if (authMode === "login") handleLogin();
+      else if (authMode === "register") handleRegister();
+      else if (authMode === "verify") handleVerify();
+    });
+
+    $("signin-btn").addEventListener("click", () => openModal("login"));
+    $("logout-btn").addEventListener("click", handleLogout);
+
+    $("show-signup").addEventListener("click", () => {
+      $("login-error").textContent = "";
+      setAuthMode("register");
+    });
+
+    $("resend-code").addEventListener("click", resendCode);
+    $("cancel-auth").addEventListener("click", closeModal);
+
+    modal.addEventListener("click", event => {
+      if (event.target === modal) closeModal();
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && modal?.classList.contains("show")) {
+        closeModal();
+      }
+    });
+
+    /* Autosuggest */
+
+    function closeSuggestions() {
+      suggestionBox.classList.remove("open");
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+      activeSuggestion = -1;
+    }
+
+    function showSuggestionStatus(message, type = "") {
+      suggestions = [];
+      activeSuggestion = -1;
+      suggestionBox.replaceChildren();
+
+      const status = document.createElement("div");
+      status.className = `suggestion-status ${type}`.trim();
+      status.setAttribute("role", "status");
+      status.textContent = message;
+      suggestionBox.appendChild(status);
+
+      suggestionBox.classList.add("open");
+      input.setAttribute("aria-expanded", "true");
+    }
+
+    function normalizeSuggestions(data) {
+      if (!Array.isArray(data?.suggestions)) return [];
+
+      const seen = new Set();
+
+      return data.suggestions
+        .map(item => {
+          if (typeof item === "string") return item.trim();
+
+          if (item && typeof item === "object") {
+            return String(
+              item.query ?? item.text ?? item.title ?? item.suggestion ?? ""
+            ).trim();
+          }
+
+          return "";
+        })
+        .filter(item => {
+          if (!item) return false;
+
+          const key = item.toLocaleLowerCase();
+          if (seen.has(key)) return false;
+
+          seen.add(key);
+          return true;
+        })
+        .slice(0, 8);
+    }
+
+    function renderSuggestions(items) {
+      suggestions = items;
+      activeSuggestion = -1;
+      suggestionBox.replaceChildren();
+
+      if (!items.length) {
+        closeSuggestions();
+        return;
+      }
+
+      const heading = document.createElement("div");
+      heading.className = "suggestion-heading";
+      heading.textContent = "Suggested searches";
+      suggestionBox.appendChild(heading);
+
+      items.forEach((suggestion, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "suggestion-item";
+        button.id = `search-suggestion-${index}`;
+        button.setAttribute("role", "option");
+        button.setAttribute("aria-selected", "false");
+
+        const icon = document.createElement("span");
+        icon.className = "suggestion-icon";
+        icon.textContent = "⌕";
+        icon.setAttribute("aria-hidden", "true");
+
+        const text = document.createElement("span");
+        text.className = "suggestion-text";
+        text.textContent = suggestion;
+
+        button.append(icon, text);
+
+        button.addEventListener("pointerdown", event => {
+          // Prevent input blur before selection.
+          event.preventDefault();
+          selectSuggestion(index, true);
+        });
+
+        suggestionBox.appendChild(button);
+      });
+
+      suggestionBox.classList.add("open");
+      input.setAttribute("aria-expanded", "true");
+    }
+
+    function setActiveSuggestion(index) {
+      const buttons = suggestionBox.querySelectorAll(".suggestion-item");
+
+      buttons.forEach((button, i) => {
+        const active = i === index;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", String(active));
+      });
+
+      activeSuggestion = index;
+
+      if (index >= 0 && buttons[index]) {
+        input.setAttribute("aria-activedescendant", buttons[index].id);
+        buttons[index].scrollIntoView({ block: "nearest" });
+      } else {
+        input.removeAttribute("aria-activedescendant");
+      }
+    }
+
+    function selectSuggestion(index, searchImmediately = false) {
+      if (index < 0 || index >= suggestions.length) return;
+
+      input.value = suggestions[index];
+      closeSuggestions();
+
+      if (searchImmediately) {
+        performSearch();
+      } else {
+        input.focus();
+      }
+    }
+
+    async function getSuggestions(rawQuery) {
+      const query = rawQuery.trim();
+      const requestId = ++suggestionRequestId;
+
+      if (suggestionController) {
+        suggestionController.abort();
+        suggestionController = null;
+      }
+
+      if (query.length < 2) {
+        closeSuggestions();
+        return;
+      }
+
+      const controller = new AbortController();
+      suggestionController = controller;
+
+      showSuggestionStatus("Looking for suggestions…");
+
+      console.debug("[Wizard Search] Autosuggest request:", query);
+
+      try {
+        const data = await apiRequest(
+          `/api/search/suggest?q=${encodeURIComponent(query)}`,
+          { signal: controller.signal }
+        );
+
+        if (requestId !== suggestionRequestId) return;
+
+        if (data.success === false) {
+          throw new Error(data.error || "The suggestion service returned an error.");
+        }
+
+        const items = normalizeSuggestions(data);
+
+        console.debug("[Wizard Search] Autosuggest response:", {
+          source: data.source || "unspecified",
+          count: items.length,
+          data
+        });
+
+        if (input.value.trim() !== query) return;
+
+        if (items.length) {
+          renderSuggestions(items);
+        } else {
+          showSuggestionStatus("No suggestions found. Keep typing or press Enter to search.");
+        }
+      } catch (error) {
+        if (error.name === "AbortError") return;
+        if (requestId !== suggestionRequestId) return;
+
+        showApiError("Autosuggest request failed", error);
+
+        if (error.status === 404) {
+          showSuggestionStatus(
+            "Autosuggest API route not found. Add and deploy GET /api/search/suggest in your Flask backend.",
+            "error"
+          );
+        } else if (error.status === 401) {
+          showSuggestionStatus(
+            "Suggestions require authentication. Sign in, or configure this endpoint to allow public suggestions.",
+            "error"
+          );
+        } else if (error instanceof TypeError) {
+          showSuggestionStatus(
+            "Could not reach the suggestion API. Check the network and backend CORS settings.",
+            "error"
+          );
+        } else {
+          showSuggestionStatus(
+            `Suggestions failed: ${error.message || "Unknown API error"}. You can still press Enter to search.`,
+            "error"
+          );
+        }
+      } finally {
+        if (suggestionController === controller) {
+          suggestionController = null;
+        }
+      }
+    }
+
+    input.addEventListener("input", () => {
+      clearTimeout(suggestionTimer);
+
+      const query = input.value.trim();
+
+      if (query.length < 2) {
+        suggestionRequestId++;
+
+        if (suggestionController) suggestionController.abort();
+
+        closeSuggestions();
+        return;
+      }
+
+      suggestionTimer = setTimeout(() => getSuggestions(query), 250);
+    });
+
+    input.addEventListener("keydown", event => {
+      const isOpen = suggestionBox.classList.contains("open");
+
+      if (event.key === "ArrowDown" && suggestions.length) {
+        event.preventDefault();
+        if (!isOpen) {
+          suggestionBox.classList.add("open");
+          input.setAttribute("aria-expanded", "true");
+        }
+
+        setActiveSuggestion(
+          activeSuggestion >= suggestions.length - 1 ? 0 : activeSuggestion + 1
+        );
+      } else if (event.key === "ArrowUp" && suggestions.length) {
+        event.preventDefault();
+
+        setActiveSuggestion(
+          activeSuggestion <= 0 ? suggestions.length - 1 : activeSuggestion - 1
+        );
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+
+        if (isOpen && activeSuggestion >= 0) {
+          selectSuggestion(activeSuggestion, true);
+        } else {
+          closeSuggestions();
+          performSearch();
+        }
+      } else if (event.key === "Escape" && isOpen) {
+        event.preventDefault();
+        closeSuggestions();
+      }
+    });
+
+    document.addEventListener("pointerdown", event => {
+      if (!event.target.closest(".search-wrap")) {
+        closeSuggestions();
+      }
+    });
+
+    /* Search results */
+
+    function showLoading() {
+      resultsArea.replaceChildren();
+
+      const container = document.createElement("div");
+      container.className = "loading-spinner";
+
+      const spinner = document.createElement("div");
+      spinner.className = "spinner-ring";
+      spinner.setAttribute("aria-hidden", "true");
+
+      const message = document.createElement("p");
+      message.className = "loading-text";
+      message.textContent = "Consulting the arcane archives…";
+
+      container.append(spinner, message);
+      resultsArea.appendChild(container);
+    }
+
+    function showMessage(icon, title, message, query, isError = false) {
+      resultsArea.replaceChildren();
+
+      const container = document.createElement("div");
+      container.className = "no-results";
+
+      const glyph = document.createElement("span");
+      glyph.className = "no-results-icon";
+      glyph.textContent = icon;
+
+      const heading = document.createElement("h3");
+      heading.textContent = title;
+
+      const paragraph = document.createElement("p");
+      paragraph.textContent = message;
+
+      const buttons = document.createElement("div");
+      buttons.className = "fallback-btns";
+
+      const google = document.createElement("button");
+      google.type = "button";
+      google.className = "fallback-btn fallback-google";
+      google.textContent = "🔍 Google";
+      google.addEventListener("click", () => {
+        openExternalUrl(searchEngineUrl("google", query));
+      });
+
+      const ddg = document.createElement("button");
+      ddg.type = "button";
+      ddg.className = "fallback-btn fallback-ddg";
+      ddg.textContent = "🦆 DuckDuckGo";
+      ddg.addEventListener("click", () => {
+        openExternalUrl(searchEngineUrl("duckduckgo", query));
+      });
+
+      buttons.append(google, ddg);
+      container.append(glyph, heading, paragraph, buttons);
+      resultsArea.appendChild(container);
+
+      if (isError) {
+        console.error("[Wizard Search] Search display error:", message);
+      }
+    }
+
+    function createResultCard(result) {
+      const card = document.createElement("article");
+      card.className = "result-card";
+
+      const title = document.createElement("h2");
+      title.className = "result-title";
+      title.textContent = result.title || "Untitled result";
+
+      const url = safeExternalUrl(result.url || "");
+
+      const snippet = document.createElement("p");
+      snippet.className = "result-snippet";
+      snippet.textContent =
+        result.content || result.snippet || result.description || "";
+
+      if (url) {
+        const link = document.createElement("a");
+        link.className = "result-link";
+        link.href = url;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = result.url;
+        card.append(title, link, snippet);
+      } else {
+        const label = document.createElement("div");
+        label.className = "result-link";
+        label.textContent = result.is_answer ? "AI-generated summary" : "";
+        card.append(title, label, snippet);
+      }
+
+      return card;
+    }
+
+    function renderResults(data) {
+      resultsArea.replaceChildren();
+
+      const results = Array.isArray(data.results) ? data.results : [];
+      const answer = results.find(item => item && item.is_answer === true);
+
+      const summary =
+        data.summary ||
+        data.answer ||
+        (answer ? answer.content || answer.snippet : "");
+
+      const webResults = results.filter(item =>
+        item &&
+        item.is_answer !== true &&
+        safeExternalUrl(item.url || "") &&
+        (item.content || item.snippet || item.title)
+      );
+
+      if (summary) {
+        const summaryCard = document.createElement("section");
+        summaryCard.className = "ai-summary";
+        summaryCard.setAttribute("aria-label", "Search summary");
+
+        const header = document.createElement("div");
+        header.className = "summary-header";
+
+        const icon = document.createElement("span");
+        icon.className = "summary-icon";
+        icon.setAttribute("aria-hidden", "true");
+        icon.textContent = "🧙";
+
+        const label = document.createElement("span");
+        label.className = "summary-label";
+        label.textContent = `About "${data.query || ""}"`;
+
+        const text = document.createElement("p");
+        text.className = "summary-text";
+        text.textContent = summary;
+
+        header.append(icon, label);
+        summaryCard.append(header, text);
+        resultsArea.appendChild(summaryCard);
+      }
+
+      if (!webResults.length) {
+        if (!summary) {
+          showMessage(
+            "🔍",
+            `No results for "${data.query || ""}"`,
+            "Try another search term or search directly below.",
+            data.query || ""
+          );
+        } else {
+          const note = document.createElement("p");
+          note.className = "result-snippet";
+          note.textContent = "No individual web links were returned for this query.";
+          resultsArea.appendChild(note);
+        }
+        return;
+      }
+
+      const sourceNames = {
+        tavily: "Tavily",
+        duckduckgo: "DuckDuckGo",
+        fallback: "Web Search"
+      };
+
+      const sourceKey = String(data.source || "").toLowerCase();
+      const source = sourceNames[sourceKey] || data.source || "Web Search";
+
+      const badge = document.createElement("div");
+      badge.className = "source-badge";
+      badge.textContent = `✦ ${webResults.length} results · ${source}`;
+      resultsArea.appendChild(badge);
+
+      const fragment = document.createDocumentFragment();
+
+      webResults.forEach(result => {
+        fragment.appendChild(createResultCard(result));
+      });
+
+      resultsArea.appendChild(fragment);
+    }
+
+    async function performSearch() {
+      const query = input.value.trim();
+
+      if (!query) {
+        showToast("Enter a search term.", "error");
+        input.focus();
+        return;
+      }
+
+      if (query.length > 500) {
+        showToast("Search must be 500 characters or fewer.", "error");
+        return;
+      }
+
+      closeSuggestions();
+
+      if (searchController) searchController.abort();
+
+      const controller = new AbortController();
+      searchController = controller;
+      const requestId = ++searchRequestId;
+
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set("q", query);
+      window.history.pushState({ query }, "", newUrl);
+
+      showLoading();
+      searchButton.disabled = true;
+      searchButton.textContent = "Searching…";
+      input.setAttribute("aria-busy", "true");
+
+      try {
+        const data = await apiRequest("/api/search", {
+          method: "POST",
+          signal: controller.signal,
+          body: JSON.stringify({ query })
+        });
+
+        if (requestId !== searchRequestId) return;
+
+        if (data.success === false) {
+          throw new Error(data.error || "Search failed.");
+        }
+
+        renderResults({ ...data, query: data.query || query });
+      } catch (error) {
+        if (error.name === "AbortError") return;
+        if (requestId !== searchRequestId) return;
+
+        showApiError("Search request failed", error);
+
+        if (error.status === 401) {
+          showMessage(
+            "🔐",
+            "Sign in required",
+            "Please sign in to use Wizard Search.",
+            query,
+            true
+          );
+          showToast("Please sign in first.", "error");
+        } else {
+          showMessage(
+            "⚠️",
+            "Search Interrupted",
+            error.message || "Unable to connect to the search server.",
+            query,
+            true
+          );
+        }
+      } finally {
+        if (requestId === searchRequestId) {
+          searchController = null;
+          searchButton.disabled = false;
+          searchButton.textContent = "Search";
+          input.removeAttribute("aria-busy");
+        }
+      }
+    }
+
+    searchButton.addEventListener("click", performSearch);
+
+    window.addEventListener("popstate", () => {
+      const query = new URLSearchParams(window.location.search).get("q") || "";
+      input.value = query;
+
+      if (query.trim()) {
+        performSearch();
+      } else {
+        if (searchController) searchController.abort();
+        searchRequestId++;
+        resultsArea.replaceChildren();
+      }
+    });
+
+    /* Initialize */
+
+    async function initialize() {
+      await checkAuth();
+
+      const query = new URLSearchParams(window.location.search).get("q");
+      if (query) {
+        input.value = query;
+        performSearch();
+      }
+
+      console.info("[Wizard Search] Initialized.", {
+        api: API,
+        autosuggestEndpoint: `${API}/api/search/suggest`
+      });
+    }
+
+    initialize();
+  })();
   </script>
 </body>
 </html>
