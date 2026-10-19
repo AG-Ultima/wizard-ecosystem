@@ -24,7 +24,10 @@
       "url": "https://wizardecosystem.dev/search",
       "description": "AI-powered web search with real clickable results and intelligent summaries.",
       "applicationCategory": "SearchApplication",
-      "author": { "@type": "Person", "name": "Arnav Gupta" }
+      "author": {
+        "@type": "Person",
+        "name": "Arnav Gupta"
+      }
     }
     </script>
 
@@ -35,27 +38,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --ink:           #080612;
-            --ink-2:         #0e0b1e;
-            --ink-3:         #13102a;
-            --ink-4:         #1a1635;
-            --gold:          #c9a84c;
-            --gold-light:    #e8c97a;
-            --gold-dim:      rgba(201,168,76,0.12);
-            --gold-glow:     rgba(201,168,76,0.22);
-            --violet:        #7c5cbf;
-            --violet-dim:    rgba(124,92,191,0.2);
-            --silver:        #d4d0e8;
-            --silver-dim:    rgba(212,208,232,0.5);
-            --muted:         rgba(212,208,232,0.35);
-            --border:        rgba(201,168,76,0.16);
-            --border-strong: rgba(201,168,76,0.42);
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        html { scroll-behavior: smooth; }
+        :root {
+            --ink: #080612;
+            --ink-2: #0e0b1e;
+            --ink-3: #13102a;
+            --ink-4: #1a1635;
+            --gold: #c9a84c;
+            --gold-light: #e8c97a;
+            --gold-dim: rgba(201,168,76,0.12);
+            --gold-glow: rgba(201,168,76,0.22);
+            --violet: #7c5cbf;
+            --violet-dim: rgba(124,92,191,0.2);
+            --silver: #d4d0e8;
+            --silver-dim: rgba(212,208,232,0.5);
+            --muted: rgba(212,208,232,0.35);
+            --border: rgba(201,168,76,0.16);
+            --border-strong: rgba(201,168,76,0.42);
+            --danger: #e07070;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-color: rgba(201,168,76,0.3) var(--ink);
+        }
 
         body {
             font-family: 'DM Sans', sans-serif;
@@ -65,15 +76,40 @@
             overflow-x: hidden;
         }
 
-        /* ── Canvas starfield ── */
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        button, input {
+            font: inherit;
+        }
+
+        button:focus-visible,
+        a:focus-visible,
+        input:focus-visible {
+            outline: 2px solid var(--gold-light);
+            outline-offset: 4px;
+        }
+
+        button:disabled {
+            cursor: not-allowed !important;
+            opacity: 0.55 !important;
+            box-shadow: none !important;
+        }
+
+        /* Starfield */
+
         #starfield {
             position: fixed;
             inset: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
             z-index: 0;
         }
 
-        /* ── Ambient blobs ── */
+        /* Ambient background */
+
         .amb {
             position: fixed;
             border-radius: 50%;
@@ -83,23 +119,59 @@
             opacity: 0.35;
             animation: drift 20s ease-in-out infinite alternate;
         }
-        .amb-1 { width: 600px; height: 600px; top: -200px; left: -200px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
-        .amb-2 { width: 500px; height: 500px; bottom: -100px; right: -100px; background: radial-gradient(circle, #5c3a1e, transparent 70%); animation-delay: -10s; }
-        @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,30px) scale(1.1); } }
 
-        /* ── Layout ── */
+        .amb-1 {
+            width: 600px;
+            height: 600px;
+            top: -200px;
+            left: -200px;
+            background: radial-gradient(circle, #3a1f6e, transparent 70%);
+        }
+
+        .amb-2 {
+            width: 500px;
+            height: 500px;
+            bottom: -100px;
+            right: -100px;
+            background: radial-gradient(circle, #5c3a1e, transparent 70%);
+            animation-delay: -10s;
+        }
+
+        @keyframes drift {
+            from { transform: translate(0,0) scale(1); }
+            to { transform: translate(40px,30px) scale(1.1); }
+        }
+
+        @keyframes levitate {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Layout */
+
         .shell {
             position: relative;
             z-index: 10;
+            width: 100%;
             max-width: 1100px;
             margin: 0 auto;
-            padding: 24px 24px 80px;
+            padding: 24px 24px 48px;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
-        /* ── Top Nav ── */
+        /* Navigation */
+
         .topnav {
             display: flex;
             align-items: center;
@@ -112,140 +184,197 @@
             border: 1px solid var(--border);
             border-radius: 20px;
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
         }
 
         .logo {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
             cursor: pointer;
             text-decoration: none;
         }
+
         .logo-glyph {
             font-size: 28px;
             animation: levitate 5s ease-in-out infinite;
             filter: drop-shadow(0 0 12px rgba(201,168,76,0.4));
         }
-        @keyframes levitate { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
         .logo-name {
             font-family: 'Cormorant Garamond', serif;
             font-size: 20px;
             font-weight: 600;
             background: linear-gradient(135deg, var(--gold-light), var(--gold));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: 0.01em;
         }
 
         .app-nav {
             display: flex;
+            align-items: center;
             gap: 6px;
             flex-wrap: wrap;
         }
+
         .nav-pill {
             display: flex;
             align-items: center;
             gap: 6px;
             padding: 7px 14px;
             border-radius: 100px;
-            border: 1px solid var(--border);
+            border: 1px solid transparent;
             background: transparent;
             color: var(--muted);
-            font-family: 'DM Sans', sans-serif;
             font-size: 13px;
             font-weight: 400;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: background 0.25s, border-color 0.25s, color 0.25s;
             text-decoration: none;
+            white-space: nowrap;
         }
-        .nav-pill:hover { background: rgba(255,255,255,0.05); border-color: var(--border-strong); color: var(--silver); }
+
+        .nav-pill:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: var(--border-strong);
+            color: var(--silver);
+        }
+
         .nav-pill.active {
             background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.06));
             border-color: var(--border-strong);
             color: var(--gold-light);
         }
-        .nav-pill-icon { font-size: 15px; }
 
-        .nav-right { display: flex; align-items: center; gap: 10px; }
+        .nav-pill-icon {
+            font-size: 15px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .user-pill {
             display: flex;
             align-items: center;
             gap: 8px;
+            min-width: 0;
             background: rgba(255,255,255,0.04);
             border: 1px solid var(--border);
             border-radius: 100px;
             padding: 5px 14px 5px 6px;
         }
+
         .user-avatar {
-            width: 28px; height: 28px;
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
             background: linear-gradient(135deg, var(--violet), #3d2280);
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 14px;
         }
-        .user-email-txt { font-size: 12px; color: var(--silver-dim); }
+
+        .user-email-txt {
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            color: var(--silver-dim);
+        }
+
         .logout-btn {
-            background: none; border: none;
-            font-size: 13px; color: var(--muted);
-            cursor: pointer; margin-left: 4px;
+            background: none;
+            border: none;
+            font-size: 13px;
+            color: var(--muted);
+            cursor: pointer;
+            margin-left: 4px;
             transition: color 0.2s;
         }
-        .logout-btn:hover { color: #e07070; }
+
+        .logout-btn:hover {
+            color: var(--danger);
+        }
 
         .signin-btn {
             background: linear-gradient(135deg, var(--gold), #a8751e);
             border: none;
             border-radius: 100px;
             padding: 8px 20px;
-            font-family: 'DM Sans', sans-serif;
             font-size: 13px;
             font-weight: 500;
             color: var(--ink);
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
         }
-        .signin-btn:hover { opacity: 0.85; }
 
-        /* ── Hero (search mode) ── */
+        .signin-btn:hover {
+            opacity: 0.9;
+            box-shadow: 0 4px 18px rgba(201,168,76,0.2);
+        }
+
+        /* Hero */
+
         .search-hero {
             text-align: center;
             padding: 40px 0 36px;
         }
+
         .hero-glyph {
             font-size: 72px;
             display: block;
             margin-bottom: 18px;
             animation: levitate 5s ease-in-out infinite;
-            filter: drop-shadow(0 0 40px rgba(201,168,76,0.3)) drop-shadow(0 0 80px rgba(124,92,191,0.2));
+            filter: drop-shadow(0 0 40px rgba(201,168,76,0.3))
+                    drop-shadow(0 0 80px rgba(124,92,191,0.2));
         }
+
         .hero-title {
             font-family: 'Cormorant Garamond', serif;
             font-size: clamp(38px, 6vw, 64px);
             font-weight: 300;
             color: var(--silver);
             letter-spacing: -0.02em;
-            line-height: 1;
+            line-height: 1.05;
             margin-bottom: 10px;
         }
+
         .hero-title em {
             font-style: italic;
             background: linear-gradient(135deg, var(--gold-light), var(--gold));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
         .hero-sub {
             font-size: 15px;
             font-weight: 300;
             color: var(--muted);
             letter-spacing: 0.02em;
+            line-height: 1.7;
         }
 
-        /* ── Search Bar ── */
+        /* Search */
+
         .search-wrap {
+            position: relative;
+            z-index: 20;
+            width: 100%;
             max-width: 720px;
             margin: 0 auto 50px;
         }
+
         .search-field {
             display: flex;
             align-items: center;
@@ -253,53 +382,127 @@
             border: 1px solid var(--border);
             border-radius: 100px;
             padding: 6px 6px 6px 22px;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
         }
+
         .search-field:focus-within {
-            border-color: rgba(201,168,76,0.55);
-            box-shadow: 0 0 0 3px rgba(201,168,76,0.07), 0 8px 32px rgba(0,0,0,0.3);
+            border-color: rgba(201,168,76,0.65);
+            background: rgba(255,255,255,0.055);
+            box-shadow: 0 0 0 3px rgba(201,168,76,0.07),
+                        0 8px 32px rgba(0,0,0,0.3);
         }
-        .search-ico { font-size: 16px; margin-right: 10px; opacity: 0.45; flex-shrink: 0; }
+
+        .search-ico {
+            font-size: 16px;
+            margin-right: 10px;
+            opacity: 0.45;
+            flex-shrink: 0;
+        }
+
         .search-field input {
             flex: 1;
+            min-width: 0;
             background: none;
             border: none;
             outline: none;
-            font-family: 'DM Sans', sans-serif;
             font-size: 15px;
             font-weight: 300;
             color: var(--silver);
             padding: 13px 0;
         }
-        .search-field input::placeholder { color: var(--muted); }
+
+        .search-field input::placeholder {
+            color: var(--muted);
+        }
+
+        .search-field input:focus-visible {
+            outline: none;
+        }
+
         .search-go {
             background: linear-gradient(135deg, var(--gold), #a8751e);
             border: none;
             border-radius: 100px;
             padding: 11px 26px;
-            font-family: 'DM Sans', sans-serif;
             font-size: 14px;
             font-weight: 500;
             color: var(--ink);
             cursor: pointer;
             letter-spacing: 0.03em;
-            transition: opacity 0.2s, box-shadow 0.2s;
+            transition: opacity 0.2s, box-shadow 0.2s, transform 0.2s;
             white-space: nowrap;
             flex-shrink: 0;
         }
-        .search-go:hover { opacity: 0.88; box-shadow: 0 4px 20px rgba(201,168,76,0.35); }
 
-        /* ── Results ── */
+        .search-go:hover {
+            opacity: 0.9;
+            box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+        }
+
+        .search-go:active {
+            transform: scale(0.98);
+        }
+
+        /* Autocomplete */
+
+        .suggestions {
+            display: none;
+            position: absolute;
+            top: calc(100% + 9px);
+            left: 8px;
+            right: 8px;
+            padding: 6px;
+            background: rgba(19,16,42,0.98);
+            border: 1px solid var(--border-strong);
+            border-radius: 17px;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.48);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            overflow: hidden;
+            z-index: 30;
+        }
+
+        .suggestions.show {
+            display: block;
+            animation: fade-up 0.15s ease both;
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 14px;
+            border: none;
+            border-radius: 11px;
+            background: transparent;
+            color: var(--silver-dim);
+            text-align: left;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .suggestion-item:hover,
+        .suggestion-item[aria-selected="true"] {
+            background: rgba(201,168,76,0.09);
+            color: var(--gold-light);
+        }
+
+        .suggestion-icon {
+            color: var(--gold);
+            opacity: 0.65;
+            flex-shrink: 0;
+        }
+
+        /* Results */
+
         .results-area {
             flex: 1;
+            min-width: 0;
             animation: fade-up 0.4s ease both;
         }
-        @keyframes fade-up {
-            from { opacity: 0; transform: translateY(18px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
 
-        /* AI Summary */
         .ai-summary {
             background: linear-gradient(135deg, rgba(201,168,76,0.06), rgba(124,92,191,0.08));
             border: 1px solid var(--border);
@@ -310,36 +513,47 @@
             position: relative;
             overflow: hidden;
         }
+
         .ai-summary::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 1px;
             background: linear-gradient(90deg, var(--gold), transparent);
             opacity: 0.4;
         }
+
         .summary-header {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 12px;
         }
-        .summary-icon { font-size: 22px; }
+
+        .summary-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
         .summary-label {
             font-family: 'Cormorant Garamond', serif;
             font-size: 18px;
             font-weight: 600;
             color: var(--gold-light);
             letter-spacing: 0.01em;
+            overflow-wrap: anywhere;
         }
+
         .summary-text {
             font-size: 14.5px;
             font-weight: 300;
             color: var(--silver-dim);
-            line-height: 1.75;
+            line-height: 1.8;
+            overflow-wrap: anywhere;
         }
 
-        /* Source badge */
         .source-badge {
             display: inline-flex;
             align-items: center;
@@ -355,34 +569,50 @@
             margin-bottom: 20px;
         }
 
-        /* Result card */
         .result-card {
             background: rgba(255,255,255,0.025);
             border: 1px solid var(--border);
             border-radius: 18px;
             padding: 22px 24px;
             margin-bottom: 12px;
-            cursor: pointer;
             position: relative;
             overflow: hidden;
-            transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), border-color 0.25s, background 0.25s, box-shadow 0.25s;
+            transition: transform 0.25s, border-color 0.25s,
+                        background 0.25s, box-shadow 0.25s;
         }
+
         .result-card::before {
             content: '';
             position: absolute;
-            left: 0; top: 0; bottom: 0;
+            left: 0;
+            top: 0;
+            bottom: 0;
             width: 3px;
             background: linear-gradient(180deg, var(--gold), transparent);
             opacity: 0;
             transition: opacity 0.3s;
         }
-        .result-card:hover {
-            transform: translateX(6px);
+
+        .result-card.clickable {
+            cursor: pointer;
+        }
+
+        .result-card.clickable:hover {
+            transform: translateX(4px);
             border-color: var(--border-strong);
             background: rgba(201,168,76,0.04);
             box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         }
-        .result-card:hover::before { opacity: 1; }
+
+        .result-card.clickable:hover::before,
+        .result-card.clickable:focus-within::before {
+            opacity: 1;
+        }
+
+        .result-card.clickable:focus-visible {
+            outline: 2px solid var(--gold-light);
+            outline-offset: 3px;
+        }
 
         .result-title {
             font-family: 'Cormorant Garamond', serif;
@@ -390,36 +620,58 @@
             font-weight: 600;
             color: var(--gold-light);
             margin-bottom: 6px;
-            line-height: 1.3;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
         }
+
         .result-url {
             font-size: 12px;
             color: var(--muted);
             margin-bottom: 10px;
-            word-break: break-all;
-            opacity: 0.7;
+            overflow-wrap: anywhere;
         }
+
+        .result-url a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .result-url a:hover {
+            color: var(--gold-light);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
         .result-snippet {
             font-size: 14px;
             font-weight: 300;
             color: var(--silver-dim);
-            line-height: 1.65;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .result-snippet a {
+            color: var(--gold-light);
         }
 
         /* Loading */
+
         .loading-spinner {
             text-align: center;
             padding: 80px 20px;
         }
+
         .spinner-ring {
-            width: 48px; height: 48px;
+            width: 48px;
+            height: 48px;
             border: 2px solid rgba(201,168,76,0.15);
             border-top-color: var(--gold);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
         .loading-text {
             font-family: 'Cormorant Garamond', serif;
             font-size: 18px;
@@ -428,17 +680,20 @@
             color: var(--muted);
         }
 
-        /* No results */
+        /* Empty/error state */
+
         .no-results {
             text-align: center;
             padding: 80px 20px;
         }
+
         .no-results-icon {
             font-size: 56px;
             margin-bottom: 20px;
             opacity: 0.4;
             display: block;
         }
+
         .no-results h3 {
             font-family: 'Cormorant Garamond', serif;
             font-size: 26px;
@@ -446,28 +701,65 @@
             color: var(--silver-dim);
             margin-bottom: 10px;
         }
-        .no-results p { font-size: 14px; font-weight: 300; color: var(--muted); margin-bottom: 24px; }
-        .fallback-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+        .no-results p {
+            font-size: 14px;
+            font-weight: 300;
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .fallback-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
         .fallback-btn {
             border: none;
             border-radius: 100px;
             padding: 10px 22px;
-            font-family: 'DM Sans', sans-serif;
             font-size: 13px;
             font-weight: 500;
             color: white;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s, transform 0.2s;
         }
-        .fallback-btn:hover { opacity: 0.82; }
-        .fallback-google { background: #4285f4; }
-        .fallback-ddg    { background: #de5833; }
 
-        /* Error toast */
+        .fallback-btn:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+
+        .fallback-google { background: #4285f4; }
+        .fallback-ddg { background: #de5833; }
+
+        .inline-action {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 10px 20px;
+            border: 1px solid var(--border-strong);
+            border-radius: 100px;
+            color: var(--gold-light);
+            background: var(--gold-dim);
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .inline-action:hover {
+            background: rgba(201,168,76,0.18);
+        }
+
+        /* Toast */
+
         .toast {
             position: fixed;
             bottom: 32px;
             left: 50%;
+            max-width: min(90vw, 500px);
             transform: translateX(-50%) translateY(20px);
             padding: 12px 24px;
             border-radius: 100px;
@@ -476,20 +768,37 @@
             color: var(--ink);
             z-index: 10000;
             opacity: 0;
-            transition: opacity 0.3s, transform 0.3s;
+            visibility: hidden;
+            transition: opacity 0.3s, transform 0.3s, visibility 0.3s;
             pointer-events: none;
+            text-align: center;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.35);
         }
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        .toast.success { background: linear-gradient(135deg, var(--gold), #a8751e); }
-        .toast.error   { background: #c0444a; color: white; }
 
-        /* ── Footer ── */
+        .toast.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, var(--gold), #a8751e);
+        }
+
+        .toast.error {
+            background: #c0444a;
+            color: white;
+        }
+
+        /* Footer */
+
         footer {
             text-align: center;
             border-top: 1px solid rgba(255,255,255,0.05);
             padding-top: 30px;
             margin-top: 60px;
         }
+
         .footer-brand {
             font-family: 'Cormorant Garamond', serif;
             font-size: 17px;
@@ -497,67 +806,126 @@
             color: rgba(212,208,232,0.3);
             margin-bottom: 6px;
         }
-        .footer-meta { font-size: 12px; color: var(--muted); }
-        .footer-meta a { color: var(--gold); text-decoration: none; opacity: 0.7; }
-        .footer-meta a:hover { opacity: 1; }
 
-        /* ── Auth Modal ── */
+        .footer-meta {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.9;
+        }
+
+        .footer-meta a {
+            color: var(--gold);
+            text-decoration: none;
+            opacity: 0.7;
+        }
+
+        .footer-meta a:hover {
+            opacity: 1;
+        }
+
+        /* Authentication modal */
+
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
+            padding: 20px;
             background: rgba(5,3,14,0.93);
             backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             z-index: 9999;
             align-items: center;
             justify-content: center;
+            overflow-y: auto;
         }
-        .modal-overlay.show { display: flex; }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
         .modal-box {
             background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
             border: 1px solid var(--border);
             border-radius: 28px;
-            padding: 48px 44px;
-            width: 400px;
-            max-width: 92vw;
+            padding: 42px 38px;
+            width: 420px;
+            max-width: 100%;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
             text-align: center;
             box-shadow: 0 40px 100px rgba(0,0,0,0.6);
             animation: modal-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
         }
+
         @keyframes modal-in {
-            from { opacity: 0; transform: scale(0.9) translateY(16px); }
-            to   { opacity: 1; transform: scale(1) translateY(0); }
+            from { opacity: 0; transform: scale(0.94) translateY(12px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
-        .modal-glyph { font-size: 48px; margin-bottom: 16px; display: block; }
+
+        .modal-glyph {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+
         .modal-title {
             font-family: 'Cormorant Garamond', serif;
             font-size: 28px;
             font-weight: 400;
             color: var(--silver);
-            margin-bottom: 26px;
+            margin-bottom: 10px;
         }
+
+        .modal-description {
+            font-size: 13px;
+            font-weight: 300;
+            line-height: 1.7;
+            color: var(--muted);
+            margin-bottom: 22px;
+        }
+
         .field {
+            display: block;
             width: 100%;
             background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
             padding: 13px 16px;
             color: var(--silver);
-            font-family: 'DM Sans', sans-serif;
             font-size: 14px;
             margin-bottom: 12px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .field:focus { border-color: rgba(201,168,76,0.5); }
-        .field::placeholder { color: var(--muted); }
+
+        .field:focus {
+            border-color: rgba(201,168,76,0.6);
+            box-shadow: 0 0 0 3px rgba(201,168,76,0.06);
+        }
+
+        .field::placeholder {
+            color: var(--muted);
+        }
+
+        .field:disabled {
+            opacity: 0.6;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .field-row .field {
+            min-width: 0;
+        }
+
         .btn-primary {
             width: 100%;
             background: linear-gradient(135deg, var(--gold), #a8751e);
             border: none;
             border-radius: 14px;
             padding: 13px;
-            font-family: 'DM Sans', sans-serif;
             font-size: 14px;
             font-weight: 500;
             color: var(--ink);
@@ -565,58 +933,249 @@
             transition: opacity 0.2s, box-shadow 0.2s;
             margin-top: 4px;
         }
-        .btn-primary:hover { opacity: 0.88; box-shadow: 0 6px 24px rgba(201,168,76,0.3); }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            box-shadow: 0 6px 24px rgba(201,168,76,0.3);
+        }
+
         .btn-ghost {
-            background: none; border: none;
+            display: block;
+            background: none;
+            border: none;
             color: var(--gold);
-            font-family: 'DM Sans', sans-serif;
             font-size: 13px;
             cursor: pointer;
             margin-top: 14px;
             opacity: 0.8;
             transition: opacity 0.2s;
             width: 100%;
+            line-height: 1.6;
         }
-        .btn-ghost:hover { opacity: 1; }
-        .field-error { color: #e07070; font-size: 12px; margin-bottom: 10px; }
 
-        /* ── Responsive ── */
+        .btn-ghost:hover {
+            opacity: 1;
+        }
+
+        .field-error {
+            color: var(--danger);
+            font-size: 12px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+            overflow-wrap: anywhere;
+        }
+
+        .field-error:empty {
+            display: none;
+        }
+
+        .modal-close {
+            display: block;
+            margin: 14px auto 0;
+            padding: 5px;
+            color: var(--muted);
+            background: none;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: var(--silver);
+        }
+
+        .verification-code {
+            text-align: center;
+            font-size: 24px;
+            letter-spacing: 0.35em;
+            padding-left: 0.35em;
+        }
+
+        /* Responsive */
+
+        @media (max-width: 900px) {
+            .topnav {
+                gap: 12px;
+            }
+
+            .app-nav {
+                order: 3;
+                width: 100%;
+            }
+
+            .nav-right {
+                margin-left: auto;
+            }
+        }
+
         @media (max-width: 700px) {
-            .topnav { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .app-nav { flex-wrap: wrap; }
-            .search-field { flex-wrap: wrap; padding: 8px 12px; border-radius: 16px; }
-            .search-go { width: 100%; border-radius: 12px; margin-top: 8px; text-align: center; }
-            .result-title { font-size: 17px; }
+            .shell {
+                padding: 14px 15px 32px;
+            }
+
+            .topnav {
+                margin-bottom: 26px;
+                padding: 13px;
+                border-radius: 17px;
+            }
+
+            .logo-name {
+                font-size: 19px;
+            }
+
+            .app-nav {
+                gap: 5px;
+            }
+
+            .nav-pill {
+                padding: 7px 10px;
+                font-size: 12px;
+            }
+
+            .nav-pill-icon {
+                font-size: 14px;
+            }
+
+            .user-email-txt {
+                max-width: 130px;
+            }
+
+            .search-hero {
+                padding: 30px 0 28px;
+            }
+
+            .hero-glyph {
+                font-size: 60px;
+                margin-bottom: 14px;
+            }
+
+            .hero-sub {
+                font-size: 14px;
+                max-width: 330px;
+                margin: 0 auto;
+            }
+
+            .search-wrap {
+                margin-bottom: 35px;
+            }
+
+            .search-field {
+                flex-wrap: wrap;
+                padding: 8px 10px;
+                border-radius: 17px;
+            }
+
+            .search-ico {
+                margin-left: 4px;
+            }
+
+            .search-field input {
+                padding: 12px 0;
+            }
+
+            .search-go {
+                width: 100%;
+                border-radius: 12px;
+                margin-top: 7px;
+                padding: 12px;
+            }
+
+            .suggestions {
+                left: 0;
+                right: 0;
+            }
+
+            .ai-summary {
+                padding: 21px 19px;
+                border-radius: 17px;
+            }
+
+            .result-card {
+                padding: 19px 18px;
+                border-radius: 16px;
+            }
+
+            .result-title {
+                font-size: 18px;
+            }
+
+            .result-snippet {
+                font-size: 13.5px;
+            }
+
+            .loading-spinner,
+            .no-results {
+                padding: 58px 12px;
+            }
+
+            footer {
+                margin-top: 42px;
+                padding-top: 24px;
+            }
+
+            .modal-box {
+                padding: 34px 23px;
+                border-radius: 23px;
+            }
+        }
+
+        @media (max-width: 390px) {
+            .nav-pill {
+                gap: 4px;
+                padding: 7px 8px;
+            }
+
+            .nav-pill-icon {
+                display: none;
+            }
+
+            .user-email-txt {
+                max-width: 105px;
+            }
+
+            .field-row {
+                display: block;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
+
 <body>
     <canvas id="starfield" aria-hidden="true"></canvas>
     <div class="amb amb-1" aria-hidden="true"></div>
     <div class="amb amb-2" aria-hidden="true"></div>
 
     <div class="shell">
-        <!-- Top Nav -->
+        <!-- Top Navigation -->
         <nav class="topnav" aria-label="Wizard Ecosystem navigation">
             <a class="logo" href="https://wizardecosystem.dev" aria-label="Wizard Ecosystem home">
                 <span class="logo-glyph" aria-hidden="true">🧙</span>
                 <span class="logo-name">Wizard Ecosystem</span>
             </a>
 
-            <div class="app-nav" role="list">
-                <a class="nav-pill" href="https://wizardecosystem.dev/ai" role="listitem">
+            <div class="app-nav">
+                <a class="nav-pill" href="https://wizardecosystem.dev/ai">
                     <span class="nav-pill-icon" aria-hidden="true">🧠</span> AI
                 </a>
-                <a class="nav-pill active" href="https://wizardecosystem.dev/search" role="listitem" aria-current="page">
+                <a class="nav-pill active" href="https://wizardecosystem.dev/search" aria-current="page">
                     <span class="nav-pill-icon" aria-hidden="true">🔍</span> Search
                 </a>
-                <a class="nav-pill" href="https://wizardecosystem.dev/mail" role="listitem">
+                <a class="nav-pill" href="https://wizardecosystem.dev/mail">
                     <span class="nav-pill-icon" aria-hidden="true">📧</span> Mail
                 </a>
-                <a class="nav-pill" href="https://wizardecosystem.dev/calendar" role="listitem">
+                <a class="nav-pill" href="https://wizardecosystem.dev/calendar">
                     <span class="nav-pill-icon" aria-hidden="true">📅</span> Calendar
                 </a>
-                <a class="nav-pill" href="https://wizardecosystem.dev/chat" role="listitem">
+                <a class="nav-pill" href="https://wizardecosystem.dev/chat">
                     <span class="nav-pill-icon" aria-hidden="true">💬</span> Chat
                 </a>
             </div>
@@ -625,20 +1184,22 @@
                 <div class="user-pill" id="user-pill" style="display:none;" role="status">
                     <div class="user-avatar" aria-hidden="true">🧙</div>
                     <span id="user-email-txt" class="user-email-txt"></span>
-                    <button id="logout-btn" class="logout-btn" aria-label="Sign out" title="Sign out">✕</button>
+                    <button id="logout-btn" class="logout-btn" type="button"
+                            aria-label="Sign out" title="Sign out">✕</button>
                 </div>
-                <button id="signin-btn" class="signin-btn" style="display:none;" aria-label="Sign in">Sign In</button>
+                <button id="signin-btn" class="signin-btn" type="button"
+                        style="display:none;" aria-label="Sign in">Sign In</button>
             </div>
         </nav>
 
         <!-- Hero -->
-        <header class="search-hero" role="banner">
+        <header class="search-hero">
             <span class="hero-glyph" aria-hidden="true">🔍</span>
             <h1 class="hero-title">Wizard <em>Search</em></h1>
             <p class="hero-sub">AI-powered results — real, clickable, and intelligent</p>
         </header>
 
-        <!-- Search Bar -->
+        <!-- Search -->
         <div class="search-wrap" role="search">
             <div class="search-field">
                 <span class="search-ico" aria-hidden="true">✦</span>
@@ -647,18 +1208,26 @@
                     id="search-input"
                     placeholder="Search the web…"
                     aria-label="Search the web"
+                    aria-autocomplete="list"
+                    aria-controls="search-suggestions"
+                    aria-expanded="false"
                     autocomplete="off"
                     spellcheck="false"
+                    maxlength="500"
                 >
-                <button class="search-go" id="search-btn" aria-label="Submit search">Search</button>
+                <button class="search-go" id="search-btn" type="button"
+                        aria-label="Submit search">Search</button>
             </div>
+            <div id="search-suggestions" class="suggestions"
+                 role="listbox" aria-label="Search suggestions"></div>
         </div>
 
         <!-- Results -->
-        <main id="results" class="results-area" aria-live="polite" aria-label="Search results"></main>
+        <main id="results" class="results-area" aria-live="polite"
+              aria-label="Search results" aria-busy="false"></main>
 
         <!-- Footer -->
-        <footer role="contentinfo">
+        <footer>
             <p class="footer-brand">🧙 Wizard Search</p>
             <p class="footer-meta">
                 Results via DDG · Brave · Startpage &nbsp;·&nbsp;
@@ -671,50 +1240,108 @@
     <!-- Toast -->
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <!-- Auth Modal -->
-    <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <!-- Authentication Modal -->
+    <div id="modal-overlay" class="modal-overlay" role="dialog"
+         aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
         <div class="modal-box">
             <span class="modal-glyph" aria-hidden="true">🧙</span>
             <h2 class="modal-title" id="modal-title">Sign In</h2>
-            <input class="field" type="email" id="login-email" placeholder="Email address" autocomplete="email">
-            <input class="field" type="password" id="login-password" placeholder="Password" autocomplete="current-password">
-            <div id="login-error" class="field-error" role="alert"></div>
-            <button class="btn-primary" id="login-submit">Enter the Realm</button>
-            <button class="btn-ghost" id="show-signup">Create an account →</button>
+            <p class="modal-description" id="modal-description"></p>
+
+            <form id="auth-form" novalidate>
+                <!-- Login fields -->
+                <div id="login-fields">
+                    <input class="field" type="email" id="login-email"
+                           placeholder="Email address" autocomplete="email"
+                           aria-label="Email address" maxlength="254">
+                    <input class="field" type="password" id="login-password"
+                           placeholder="Password" autocomplete="current-password"
+                           aria-label="Password" maxlength="128">
+                </div>
+
+                <!-- Registration fields -->
+                <div id="signup-fields" hidden>
+                    <div class="field-row">
+                        <input class="field" type="text" id="signup-first-name"
+                               placeholder="First name" autocomplete="given-name"
+                               aria-label="First name" maxlength="80">
+                        <input class="field" type="text" id="signup-last-name"
+                               placeholder="Last name" autocomplete="family-name"
+                               aria-label="Last name" maxlength="80">
+                    </div>
+                    <input class="field" type="email" id="signup-email"
+                           placeholder="Email address" autocomplete="email"
+                           aria-label="Email address" maxlength="254">
+                    <input class="field" type="password" id="signup-password"
+                           placeholder="Create a password (6+ characters)"
+                           autocomplete="new-password" aria-label="Create a password"
+                           minlength="6" maxlength="128">
+                </div>
+
+                <!-- Email verification fields -->
+                <div id="verify-fields" hidden>
+                    <input class="field" type="text" id="verify-email"
+                           placeholder="Email address" autocomplete="email"
+                           aria-label="Email address for verification"
+                           readonly>
+                    <input class="field verification-code" type="text" id="verify-code"
+                           placeholder="000000" autocomplete="one-time-code"
+                           aria-label="Email verification code"
+                           inputmode="numeric" maxlength="12">
+                </div>
+
+                <div id="auth-error" class="field-error" role="alert"></div>
+                <button class="btn-primary" id="auth-submit" type="submit">
+                    Enter the Realm
+                </button>
+            </form>
+
+            <button class="btn-ghost" id="auth-switch" type="button">
+                Create an account →
+            </button>
+            <button class="btn-ghost" id="resend-code" type="button" hidden>
+                Resend verification code
+            </button>
+            <button class="modal-close" id="modal-close" type="button">
+                Close
+            </button>
         </div>
     </div>
 
-   
 <script>
 (() => {
     "use strict";
 
-    /* =========================================================
-       CONFIGURATION
-    ========================================================= */
     const API = "https://arnav0928.pythonanywhere.com";
-
-    let currentUser = null;
-    let searchTimeout = null;
-    let toastTimer = null;
-    let activeSearchController = null;
-    let searchRequestId = 0;
-
     const $ = (id) => document.getElementById(id);
 
-    /* =========================================================
+    let currentUser = null;
+    let toastTimer = null;
+    let suggestionTimer = null;
+    let suggestionController = null;
+    let activeSearchController = null;
+    let searchRequestId = 0;
+    let suggestions = [];
+    let selectedSuggestion = -1;
+    let authMode = "login";
+    let pendingRegistrationId = null;
+    let pendingEmail = "";
+    let lastFocusedElement = null;
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* ---------------------------------------------------------
        STARFIELD
-    ========================================================= */
+    --------------------------------------------------------- */
+
     (() => {
         const canvas = $("starfield");
-        if (!canvas) return;
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
+        const ctx = canvas?.getContext("2d");
+        if (!canvas || !ctx) return;
 
         let width = 0;
         let height = 0;
-        let animationFrame = null;
+        let frame = null;
 
         const stars = Array.from({ length: 200 }, () => ({
             x: Math.random(),
@@ -726,7 +1353,6 @@
 
         function resize() {
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
-
             width = window.innerWidth;
             height = window.innerHeight;
 
@@ -739,69 +1365,52 @@
         }
 
         function draw() {
-            ctx.clearRect(0, 0, width, height);
+            if (document.hidden) {
+                frame = null;
+                return;
+            }
 
-            const time = Date.now() / 1000;
+            ctx.clearRect(0, 0, width, height);
+            const time = reducedMotion ? 0 : Date.now() / 1000;
 
             for (const star of stars) {
-                const alpha =
-                    0.25 +
-                    0.5 *
-                    (Math.sin(time * star.speed + star.phase) * 0.5 + 0.5);
+                const alpha = reducedMotion
+                    ? 0.55
+                    : 0.25 + 0.5 * (Math.sin(time * star.speed + star.phase) * 0.5 + 0.5);
 
                 ctx.beginPath();
-                ctx.arc(
-                    star.x * width,
-                    star.y * height,
-                    star.r,
-                    0,
-                    Math.PI * 2
-                );
-
+                ctx.arc(star.x * width, star.y * height, star.r, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(212,208,232,${alpha})`;
                 ctx.fill();
             }
 
-            animationFrame = requestAnimationFrame(draw);
+            if (!reducedMotion) frame = requestAnimationFrame(draw);
+        }
+
+        function start() {
+            if (frame !== null) return;
+            draw();
+        }
+
+        function stop() {
+            if (frame !== null) cancelAnimationFrame(frame);
+            frame = null;
         }
 
         resize();
-        window.addEventListener("resize", resize);
-        draw();
+        start();
+
+        window.addEventListener("resize", resize, { passive: true });
 
         document.addEventListener("visibilitychange", () => {
-            if (document.hidden) {
-                cancelAnimationFrame(animationFrame);
-                animationFrame = null;
-            } else if (animationFrame === null) {
-                draw();
-            }
+            if (document.hidden) stop();
+            else start();
         });
     })();
 
-    /* =========================================================
+    /* ---------------------------------------------------------
        UTILITIES
-    ========================================================= */
-
-    function esc(value) {
-        const div = document.createElement("div");
-        div.textContent = String(value ?? "");
-        return div.innerHTML;
-    }
-
-    function showToast(message, type = "success") {
-        const toast = $("toast");
-        if (!toast) return;
-
-        toast.textContent = message;
-        toast.className = `toast ${type} show`;
-
-        clearTimeout(toastTimer);
-
-        toastTimer = setTimeout(() => {
-            toast.classList.remove("show");
-        }, 3000);
-    }
+    --------------------------------------------------------- */
 
     function setText(id, value) {
         const element = $(id);
@@ -813,100 +1422,106 @@
         if (element) element.style.display = display;
     }
 
-    function getSearchUrl(engine, query) {
-        const encoded = encodeURIComponent(query);
+    function showToast(message, type = "success") {
+        const toast = $("toast");
+        if (!toast) return;
 
-        if (engine === "google") {
-            return `https://www.google.com/search?q=${encoded}`;
-        }
+        toast.textContent = message;
+        toast.className = `toast ${type} show`;
 
-        return `https://duckduckgo.com/?q=${encoded}`;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 3200);
     }
 
-    function openExternalUrl(url) {
+    function safeHttpUrl(value) {
         try {
-            const parsed = new URL(url);
-
-            if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
-                return;
+            const url = new URL(String(value || ""));
+            if (url.protocol === "https:" || url.protocol === "http:") {
+                return url.href;
             }
-
-            window.open(parsed.href, "_blank", "noopener,noreferrer");
         } catch {
-            // Ignore malformed or unsafe URLs.
+            // Ignore malformed URLs.
         }
+        return "";
+    }
+
+    function getSearchUrl(engine, query) {
+        const encoded = encodeURIComponent(query);
+        return engine === "google"
+            ? `https://www.google.com/search?q=${encoded}`
+            : `https://duckduckgo.com/?q=${encoded}`;
+    }
+
+    function openExternalUrl(value) {
+        const url = safeHttpUrl(value);
+        if (url) window.open(url, "_blank", "noopener,noreferrer");
     }
 
     async function apiRequest(path, options = {}) {
+        const headers = new Headers(options.headers || {});
+
+        if (options.body && !headers.has("Content-Type")) {
+            headers.set("Content-Type", "application/json");
+        }
+
         const response = await fetch(`${API}${path}`, {
             ...options,
-            credentials: "include",
-            headers: {
-                ...(options.body ? { "Content-Type": "application/json" } : {}),
-                ...(options.headers || {})
-            }
+            headers,
+            credentials: "include"
         });
 
         const contentType = response.headers.get("content-type") || "";
-
         let data = {};
 
         if (contentType.includes("application/json")) {
             data = await response.json();
         } else {
-            const text = await response.text();
-
-            if (text) {
-                data = { error: text.slice(0, 300) };
-            }
+            const responseText = await response.text();
+            if (responseText) data = { error: responseText.slice(0, 300) };
         }
 
         if (!response.ok) {
             const error = new Error(
-                data.error || `Request failed (${response.status})`
+                data.error || data.message || `Request failed (${response.status})`
             );
-
             error.status = response.status;
             error.data = data;
-
             throw error;
         }
 
         return data;
     }
 
-    /* =========================================================
-       AUTHENTICATION
-    ========================================================= */
+    function responseMessage(error, fallback) {
+        return error?.data?.message || error?.data?.error || error?.message || fallback;
+    }
+
+    /* ---------------------------------------------------------
+       AUTHENTICATION UI
+    --------------------------------------------------------- */
 
     function updateAuthUI() {
         if (currentUser) {
             setDisplay("user-pill", "flex");
             setDisplay("signin-btn", "none");
-
             setText(
                 "user-email-txt",
                 currentUser.email || currentUser.username || "Signed in"
             );
         } else {
             setDisplay("user-pill", "none");
-            setDisplay("signin-btn", "block");
+            setDisplay("signin-btn", "inline-block");
         }
     }
 
     async function checkAuth() {
         try {
             const data = await apiRequest("/api/check-auth");
-
-            if (data.authenticated && data.user) {
-                currentUser = data.user;
-            } else {
-                currentUser = null;
-            }
+            currentUser = data.authenticated && data.user ? data.user : null;
         } catch (error) {
             currentUser = null;
 
-            if (error.status && error.status !== 401) {
+            if (error.status !== 401) {
                 console.warn("Authentication check failed:", error.message);
             }
         }
@@ -914,20 +1529,91 @@
         updateAuthUI();
     }
 
-    async function handleLogin() {
+    function setAuthMode(mode) {
+        authMode = mode;
+        $("auth-error").textContent = "";
+        $("login-fields").hidden = mode !== "login";
+        $("signup-fields").hidden = mode !== "signup";
+        $("verify-fields").hidden = mode !== "verify";
+        $("resend-code").hidden = mode !== "verify";
+
+        const titles = {
+            login: "Sign In",
+            signup: "Create an Account",
+            verify: "Verify Your Email"
+        };
+
+        const descriptions = {
+            login: "",
+            signup: "Create your Wizard account to enter the realm.",
+            verify: `Enter the verification code sent to ${pendingEmail}.`
+        };
+
+        const buttons = {
+            login: "Enter the Realm",
+            signup: "Create Account",
+            verify: "Verify Email"
+        };
+
+        setText("modal-title", titles[mode]);
+        setText("modal-description", descriptions[mode]);
+        setText("auth-submit", buttons[mode]);
+
+        $("auth-switch").hidden = mode === "verify";
+        setText(
+            "auth-switch",
+            mode === "signup" ? "Already have an account? Sign in →" : "Create an account →"
+        );
+
+        if (mode === "verify") {
+            $("verify-email").value = pendingEmail;
+        }
+
+        const focusTarget = {
+            login: "login-email",
+            signup: "signup-first-name",
+            verify: "verify-code"
+        }[mode];
+
+        setTimeout(() => $(focusTarget)?.focus(), 60);
+    }
+
+    function openModal(mode = "login") {
+        lastFocusedElement = document.activeElement;
+        $("modal-overlay").classList.add("show");
+        $("modal-overlay").setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+        setAuthMode(mode);
+    }
+
+    function closeModal() {
+        $("modal-overlay").classList.remove("show");
+        $("modal-overlay").setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+        $("auth-error").textContent = "";
+        lastFocusedElement?.focus?.();
+    }
+
+    function setAuthBusy(busy, label) {
+        $("auth-submit").disabled = busy;
+        $("auth-switch").disabled = busy;
+        $("resend-code").disabled = busy;
+        setText("auth-submit", label);
+    }
+
+    async function handleLogin(event) {
+        event?.preventDefault();
+
         const email = $("login-email").value.trim();
         const password = $("login-password").value;
-        const errorElement = $("login-error");
-        const submitButton = $("login-submit");
 
         if (!email || !password) {
-            errorElement.textContent = "Email and password required";
+            setText("auth-error", "Email and password required");
             return;
         }
 
-        errorElement.textContent = "";
-        submitButton.disabled = true;
-        submitButton.textContent = "Signing in…";
+        setText("auth-error", "");
+        setAuthBusy(true, "Signing in…");
 
         try {
             const data = await apiRequest("/api/login", {
@@ -936,96 +1622,276 @@
             });
 
             if (!data.user) {
-                throw new Error(
-                    "Login response did not include a user. Check your backend."
-                );
+                throw new Error("The server did not return a user. Please try again.");
             }
 
             currentUser = data.user;
-
-            closeModal();
             updateAuthUI();
-
             $("login-password").value = "";
-
+            closeModal();
             showToast("Welcome back!");
 
+            // If a search was waiting on authentication, let the user retry it.
         } catch (error) {
-            errorElement.textContent =
+            setText(
+                "auth-error",
                 error.status === 401
                     ? "Invalid email or password"
-                    : error.message || "Login failed";
-
+                    : responseMessage(error, "Login failed")
+            );
         } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = "Enter the Realm";
+            setAuthBusy(false, "Enter the Realm");
+        }
+    }
+
+    async function handleSignup(event) {
+        event?.preventDefault();
+
+        const firstName = $("signup-first-name").value.trim();
+        const lastName = $("signup-last-name").value.trim();
+        const email = $("signup-email").value.trim();
+        const password = $("signup-password").value;
+
+        if (!firstName || !lastName || !email || !password) {
+            setText("auth-error", "Please complete every field.");
+            return;
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setText("auth-error", "Enter a valid email address.");
+            return;
+        }
+
+        if (password.length < 6) {
+            setText("auth-error", "Password must be at least 6 characters.");
+            return;
+        }
+
+        setText("auth-error", "");
+        setAuthBusy(true, "Sending verification code…");
+
+        try {
+            const data = await apiRequest("/api/register/init", {
+                method: "POST",
+                body: JSON.stringify({ email, firstName, lastName, password })
+            });
+
+            pendingEmail = email;
+            pendingRegistrationId = data.pending_id || null;
+
+            // Do not display development verification codes on the public page.
+            setAuthMode("verify");
+            showToast(data.message || "Verification code sent.");
+        } catch (error) {
+            setText("auth-error", responseMessage(error, "Could not start registration."));
+        } finally {
+            setAuthBusy(false, authMode === "verify" ? "Verify Email" : "Create Account");
+        }
+    }
+
+    async function handleVerify(event) {
+        event?.preventDefault();
+
+        const code = $("verify-code").value.trim();
+
+        if (!code) {
+            setText("auth-error", "Enter the verification code from your email.");
+            return;
+        }
+
+        setText("auth-error", "");
+        setAuthBusy(true, "Verifying…");
+
+        const payload = {
+            email: pendingEmail,
+            code
+        };
+
+        if (pendingRegistrationId) {
+            payload.pending_id = pendingRegistrationId;
+        }
+
+        try {
+            const data = await apiRequest("/api/register/verify", {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+
+            if (!data.user) {
+                throw new Error("Verification succeeded, but no user was returned.");
+            }
+
+            currentUser = data.user;
+            pendingRegistrationId = null;
+            pendingEmail = "";
+            updateAuthUI();
+            closeModal();
+
+            $("signup-password").value = "";
+            $("verify-code").value = "";
+
+            showToast("Your account is ready!");
+        } catch (error) {
+            setText("auth-error", responseMessage(error, "Verification failed."));
+        } finally {
+            setAuthBusy(false, "Verify Email");
+        }
+    }
+
+    async function handleResendCode() {
+        setText("auth-error", "");
+        $("resend-code").disabled = true;
+        setText("resend-code", "Sending…");
+
+        try {
+            const payload = {};
+            if (pendingRegistrationId) payload.pending_id = pendingRegistrationId;
+
+            const data = await apiRequest("/api/resend-code", {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+
+            showToast(data.message || "A new verification code has been sent.");
+        } catch (error) {
+            setText("auth-error", responseMessage(error, "Could not resend the code."));
+        } finally {
+            $("resend-code").disabled = false;
+            setText("resend-code", "Resend verification code");
         }
     }
 
     async function handleLogout() {
-        const logoutButton = $("logout-btn");
-
-        if (logoutButton) logoutButton.disabled = true;
+        $("logout-btn").disabled = true;
 
         try {
             await apiRequest("/api/logout", { method: "POST" });
-
             currentUser = null;
             updateAuthUI();
-
             showToast("Signed out");
-
         } catch (error) {
-            showToast(
-                error.status === 401
-                    ? "You are already signed out"
-                    : "Could not sign out. Check your connection.",
-                error.status === 401 ? "success" : "error"
-            );
-
             if (error.status === 401) {
                 currentUser = null;
                 updateAuthUI();
+                showToast("Signed out");
+            } else {
+                showToast("Could not sign out. Check your connection.", "error");
             }
         } finally {
-            if (logoutButton) logoutButton.disabled = false;
+            $("logout-btn").disabled = false;
         }
     }
 
-    function openModal() {
-        $("modal-overlay").classList.add("show");
-        $("login-error").textContent = "";
-
-        setTimeout(() => $("login-email").focus(), 50);
-    }
-
-    function closeModal() {
-        $("modal-overlay").classList.remove("show");
-    }
-
-    /* =========================================================
+    /* ---------------------------------------------------------
        SEARCH SUGGESTIONS
-       Requires an optional /api/search/suggest endpoint.
-    ========================================================= */
+    --------------------------------------------------------- */
+
+    function normalizeSuggestions(data) {
+        const raw = Array.isArray(data)
+            ? data
+            : data?.suggestions ??
+              data?.results ??
+              data?.queries ??
+              data?.data ??
+              [];
+
+        if (!Array.isArray(raw)) return [];
+
+        return raw
+            .map(item => {
+                if (typeof item === "string") return item.trim();
+
+                if (item && typeof item === "object") {
+                    return String(
+                        item.query ?? item.text ?? item.value ?? item.title ?? ""
+                    ).trim();
+                }
+
+                return "";
+            })
+            .filter(Boolean)
+            .filter((value, index, all) => all.indexOf(value) === index)
+            .slice(0, 7);
+    }
+
+    function hideSuggestions() {
+        $("search-suggestions").classList.remove("show");
+        $("search-input").setAttribute("aria-expanded", "false");
+        $("search-input").removeAttribute("aria-activedescendant");
+        suggestions = [];
+        selectedSuggestion = -1;
+    }
+
+    function chooseSuggestion(value) {
+        $("search-input").value = value;
+        hideSuggestions();
+        performSearch();
+    }
+
+    function renderSuggestions(items) {
+        const list = $("search-suggestions");
+        list.replaceChildren();
+
+        suggestions = items;
+        selectedSuggestion = -1;
+
+        if (!items.length) {
+            hideSuggestions();
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        items.forEach((item, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.id = `search-suggestion-${index}`;
+            button.className = "suggestion-item";
+            button.setAttribute("role", "option");
+            button.setAttribute("aria-selected", "false");
+
+            const icon = document.createElement("span");
+            icon.className = "suggestion-icon";
+            icon.setAttribute("aria-hidden", "true");
+            icon.textContent = "✦";
+
+            const label = document.createElement("span");
+            label.textContent = item;
+
+            button.append(icon, label);
+            button.addEventListener("click", () => chooseSuggestion(item));
+            fragment.appendChild(button);
+        });
+
+        list.appendChild(fragment);
+        list.classList.add("show");
+        $("search-input").setAttribute("aria-expanded", "true");
+    }
 
     async function getSuggestions(query) {
-        if (!query || query.length < 2) return;
+        if (suggestionController) suggestionController.abort();
+
+        if (!query || query.length < 2) {
+            hideSuggestions();
+            return;
+        }
+
+        const controller = new AbortController();
+        suggestionController = controller;
 
         try {
             const data = await apiRequest(
-                `/api/search/suggest?q=${encodeURIComponent(query)}`
+                `/api/search/suggest?q=${encodeURIComponent(query)}`,
+                { signal: controller.signal }
             );
 
-            if (Array.isArray(data.suggestions) && data.suggestions.length) {
-                console.log(
-                    `Received ${data.suggestions.length} search suggestions.`
-                );
-            }
+            if ($("search-input").value.trim() !== query) return;
+            renderSuggestions(normalizeSuggestions(data));
         } catch (error) {
-            // Suggestions are optional; don't interrupt searching.
-            if (error.status !== 404) {
+            if (error.name !== "AbortError" && error.status !== 404) {
                 console.debug("Suggestions unavailable:", error.message);
             }
+            hideSuggestions();
         }
     }
 
@@ -1033,19 +1899,70 @@
         const input = $("search-input");
 
         input.addEventListener("input", () => {
-            clearTimeout(searchTimeout);
+            clearTimeout(suggestionTimer);
+
+            if (suggestionController) suggestionController.abort();
 
             const query = input.value.trim();
 
-            searchTimeout = setTimeout(() => {
-                getSuggestions(query);
-            }, 350);
+            if (query.length < 2) {
+                hideSuggestions();
+                return;
+            }
+
+            suggestionTimer = setTimeout(() => getSuggestions(query), 280);
+        });
+
+        input.addEventListener("keydown", event => {
+            if (event.key === "ArrowDown" && suggestions.length) {
+                event.preventDefault();
+                selectedSuggestion = (selectedSuggestion + 1) % suggestions.length;
+                updateSuggestionSelection();
+            } else if (event.key === "ArrowUp" && suggestions.length) {
+                event.preventDefault();
+                selectedSuggestion =
+                    (selectedSuggestion - 1 + suggestions.length) % suggestions.length;
+                updateSuggestionSelection();
+            } else if (event.key === "Escape") {
+                hideSuggestions();
+            } else if (
+                event.key === "Enter" &&
+                selectedSuggestion >= 0 &&
+                suggestions[selectedSuggestion]
+            ) {
+                event.preventDefault();
+                chooseSuggestion(suggestions[selectedSuggestion]);
+            } else if (event.key === "Enter") {
+                event.preventDefault();
+                hideSuggestions();
+                performSearch();
+            }
+        });
+
+        document.addEventListener("click", event => {
+            if (!$("search-wrap").contains(event.target)) hideSuggestions();
         });
     }
 
-    /* =========================================================
-       SEARCH UI
-    ========================================================= */
+    function updateSuggestionSelection() {
+        const buttons = $("search-suggestions").querySelectorAll(".suggestion-item");
+
+        buttons.forEach((button, index) => {
+            const selected = index === selectedSuggestion;
+            button.setAttribute("aria-selected", String(selected));
+        });
+
+        if (selectedSuggestion >= 0) {
+            $("search-input").setAttribute(
+                "aria-activedescendant",
+                `search-suggestion-${selectedSuggestion}`
+            );
+        }
+    }
+
+    /* ---------------------------------------------------------
+       SEARCH STATES
+    --------------------------------------------------------- */
 
     function showLoading() {
         const area = $("results");
@@ -1064,17 +1981,20 @@
 
         container.append(spinner, message);
         area.appendChild(container);
+        area.setAttribute("aria-busy", "true");
     }
 
-    function showMessage(icon, title, message, query, error = false) {
+    function showMessage(icon, title, message, query, options = {}) {
         const area = $("results");
         area.replaceChildren();
+        area.setAttribute("aria-busy", "false");
 
         const container = document.createElement("div");
         container.className = "no-results";
 
         const glyph = document.createElement("span");
         glyph.className = "no-results-icon";
+        glyph.setAttribute("aria-hidden", "true");
         glyph.textContent = icon;
 
         const heading = document.createElement("h3");
@@ -1083,60 +2003,67 @@
         const paragraph = document.createElement("p");
         paragraph.textContent = message;
 
-        const buttons = document.createElement("div");
-        buttons.className = "fallback-btns";
+        container.append(glyph, heading, paragraph);
 
-        const google = document.createElement("button");
-        google.className = "fallback-btn fallback-google";
-        google.textContent = "🔍 Google";
-        google.addEventListener("click", () => {
-            openExternalUrl(getSearchUrl("google", query));
-        });
+        if (options.signIn) {
+            const signIn = document.createElement("button");
+            signIn.type = "button";
+            signIn.className = "inline-action";
+            signIn.textContent = "Sign In";
+            signIn.addEventListener("click", () => openModal("login"));
+            container.appendChild(signIn);
+        } else {
+            const buttons = document.createElement("div");
+            buttons.className = "fallback-btns";
 
-        const duckduckgo = document.createElement("button");
-        duckduckgo.className = "fallback-btn fallback-ddg";
-        duckduckgo.textContent = "🦆 DuckDuckGo";
-        duckduckgo.addEventListener("click", () => {
-            openExternalUrl(getSearchUrl("duckduckgo", query));
-        });
+            const google = document.createElement("button");
+            google.type = "button";
+            google.className = "fallback-btn fallback-google";
+            google.textContent = "🔍 Google";
+            google.addEventListener("click", () => {
+                openExternalUrl(getSearchUrl("google", query));
+            });
 
-        buttons.append(google, duckduckgo);
-        container.append(glyph, heading, paragraph, buttons);
+            const duckduckgo = document.createElement("button");
+            duckduckgo.type = "button";
+            duckduckgo.className = "fallback-btn fallback-ddg";
+            duckduckgo.textContent = "🦆 DuckDuckGo";
+            duckduckgo.addEventListener("click", () => {
+                openExternalUrl(getSearchUrl("duckduckgo", query));
+            });
+
+            buttons.append(google, duckduckgo);
+            container.appendChild(buttons);
+        }
+
         area.appendChild(container);
 
-        if (error) {
+        if (options.error) {
             console.error("Search failed:", message);
         }
     }
 
+    /* ---------------------------------------------------------
+       RESULT CARDS
+    --------------------------------------------------------- */
+
     function createResultCard(result) {
         const card = document.createElement("article");
         card.className = "result-card";
-        card.setAttribute("role", "article");
 
-        const title = document.createElement("div");
+        const title = document.createElement("h2");
         title.className = "result-title";
         title.textContent = result.title || "Untitled result";
 
-        const url = document.createElement("div");
-        url.className = "result-url";
+        const urlContainer = document.createElement("div");
+        urlContainer.className = "result-url";
 
         const snippet = document.createElement("p");
         snippet.className = "result-snippet";
         snippet.textContent =
             result.content || result.snippet || result.description || "";
 
-        let safeUrl = "";
-
-        try {
-            const parsed = new URL(result.url || "");
-
-            if (parsed.protocol === "https:" || parsed.protocol === "http:") {
-                safeUrl = parsed.href;
-            }
-        } catch {
-            // Summary entries and malformed URLs aren't clickable.
-        }
+        const safeUrl = safeHttpUrl(result.url);
 
         if (safeUrl) {
             const link = document.createElement("a");
@@ -1144,51 +2071,42 @@
             link.target = "_blank";
             link.rel = "noopener noreferrer";
             link.textContent = result.url;
+            link.setAttribute("aria-label", `Open ${result.title || result.url}`);
 
-            // Keep the URL visible and accessible.
-            link.style.color = "inherit";
-            link.style.textDecoration = "none";
-
-            url.appendChild(link);
-
+            urlContainer.appendChild(link);
+            card.classList.add("clickable");
             card.tabIndex = 0;
             card.setAttribute("aria-label", result.title || "Open search result");
 
-            const openResult = (event) => {
+            card.addEventListener("click", event => {
                 if (event.target.closest("a")) return;
                 openExternalUrl(safeUrl);
-            };
+            });
 
-            card.addEventListener("click", openResult);
+            card.addEventListener("keydown", event => {
+                if (event.target !== card) return;
 
-            card.addEventListener("keydown", (event) => {
-                if (
-                    event.target === card &&
-                    (event.key === "Enter" || event.key === " ")
-                ) {
+                if (event.key === "Enter") {
                     event.preventDefault();
                     openExternalUrl(safeUrl);
                 }
             });
-
-            card.style.cursor = "pointer";
         } else {
-            url.textContent = result.is_answer ? "AI-generated summary" : "";
-            card.style.cursor = "default";
+            urlContainer.textContent = result.is_answer
+                ? "AI-generated summary"
+                : "";
         }
 
-        card.append(title, url, snippet);
-
+        card.append(title, urlContainer, snippet);
         return card;
     }
 
     function renderResults(data) {
         const area = $("results");
         area.replaceChildren();
+        area.setAttribute("aria-busy", "false");
 
         const results = Array.isArray(data.results) ? data.results : [];
-
-        // Accept either backend response format.
         const answerResult = results.find(
             result => result && result.is_answer === true
         );
@@ -1196,18 +2114,17 @@
         const summary =
             data.summary ||
             data.answer ||
-            (answerResult ? answerResult.content : "");
+            (answerResult ? answerResult.content || answerResult.snippet : "");
 
         const webResults = results.filter(result => {
             if (!result || result.is_answer === true) return false;
 
             return Boolean(
-                result.url &&
-                (result.content || result.snippet || result.title)
+                safeHttpUrl(result.url) &&
+                (result.content || result.snippet || result.description || result.title)
             );
         });
 
-        // AI summary
         if (summary) {
             const summaryCard = document.createElement("section");
             summaryCard.className = "ai-summary";
@@ -1221,7 +2138,7 @@
             icon.setAttribute("aria-hidden", "true");
             icon.textContent = "🧙";
 
-            const label = document.createElement("span");
+            const label = document.createElement("h2");
             label.className = "summary-label";
             label.textContent = `About "${data.query || ""}"`;
 
@@ -1234,8 +2151,7 @@
             area.appendChild(summaryCard);
         }
 
-        // No usable results
-        if (webResults.length === 0) {
+        if (!webResults.length) {
             if (!summary) {
                 showMessage(
                     "🔍",
@@ -1248,14 +2164,11 @@
                 note.className = "result-snippet";
                 note.textContent =
                     "No individual web links were returned for this query.";
-
                 area.appendChild(note);
             }
-
             return;
         }
 
-        // Source badge
         const badge = document.createElement("div");
         badge.className = "source-badge";
 
@@ -1265,15 +2178,12 @@
             fallback: "Web Search"
         };
 
-        const source =
-            sourceNames[String(data.source || "").toLowerCase()] ||
-            data.source ||
-            "Web Search";
+        const rawSource = String(data.source || "").toLowerCase();
+        const source = sourceNames[rawSource] || data.source || "Web Search";
 
         badge.textContent = `✦ ${webResults.length} results · ${source}`;
         area.appendChild(badge);
 
-        // Result cards
         const fragment = document.createDocumentFragment();
 
         for (const result of webResults) {
@@ -1283,11 +2193,11 @@
         area.appendChild(fragment);
     }
 
-    /* =========================================================
+    /* ---------------------------------------------------------
        PERFORM SEARCH
-    ========================================================= */
+    --------------------------------------------------------- */
 
-    async function performSearch() {
+    async function performSearch(options = {}) {
         const input = $("search-input");
         const button = $("search-btn");
         const query = input.value.trim();
@@ -1303,24 +2213,21 @@
             return;
         }
 
-        // Abort the previous request when a newer search starts.
-        if (activeSearchController) {
-            activeSearchController.abort();
-        }
+        hideSuggestions();
 
-        activeSearchController = new AbortController();
+        if (activeSearchController) activeSearchController.abort();
 
-        const controller = activeSearchController;
+        const controller = new AbortController();
+        activeSearchController = controller;
         const requestId = ++searchRequestId;
 
-        // Update the address bar without double-encoding the query.
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.set("q", query);
-
-        window.history.pushState({ query }, "", newUrl);
+        if (options.updateHistory !== false) {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set("q", query);
+            window.history.pushState({ query }, "", newUrl);
+        }
 
         showLoading();
-
         button.disabled = true;
         button.textContent = "Searching…";
         input.setAttribute("aria-busy", "true");
@@ -1332,7 +2239,6 @@
                 body: JSON.stringify({ query })
             });
 
-            // Ignore stale responses.
             if (requestId !== searchRequestId) return;
 
             if (data.success !== true) {
@@ -1343,11 +2249,8 @@
                 ...data,
                 query: data.query || query
             });
-
         } catch (error) {
-            if (error.name === "AbortError") return;
-
-            if (requestId !== searchRequestId) return;
+            if (error.name === "AbortError" || requestId !== searchRequestId) return;
 
             if (error.status === 401) {
                 showMessage(
@@ -1355,9 +2258,8 @@
                     "Sign in required",
                     "Please sign in to use Wizard Search.",
                     query,
-                    true
+                    { signIn: true }
                 );
-
                 showToast("Please sign in first", "error");
             } else {
                 showMessage(
@@ -1365,106 +2267,115 @@
                     "Search Interrupted",
                     error.message || "Unable to connect to the search server.",
                     query,
-                    true
+                    { error: true }
                 );
             }
-
         } finally {
             if (requestId === searchRequestId) {
                 activeSearchController = null;
-
                 button.disabled = false;
                 button.textContent = "Search";
-
                 input.removeAttribute("aria-busy");
+                $("results").setAttribute("aria-busy", "false");
             }
         }
     }
 
-    /* =========================================================
-       URL RESTORATION / BROWSER NAVIGATION
-    ========================================================= */
+    /* ---------------------------------------------------------
+       URL RESTORATION
+    --------------------------------------------------------- */
 
     function loadFromURL() {
-        // URLSearchParams.get() already decodes the value.
         const query = new URLSearchParams(window.location.search).get("q");
 
         if (query) {
             $("search-input").value = query;
-            performSearch();
+            performSearch({ updateHistory: false });
         }
     }
 
     window.addEventListener("popstate", () => {
         const query = new URLSearchParams(window.location.search).get("q") || "";
-
         $("search-input").value = query;
 
         if (query.trim()) {
-            performSearch();
+            performSearch({ updateHistory: false });
         } else {
-            if (activeSearchController) {
-                activeSearchController.abort();
-                activeSearchController = null;
-            }
-
+            if (activeSearchController) activeSearchController.abort();
+            activeSearchController = null;
             searchRequestId++;
             $("results").replaceChildren();
+            $("results").setAttribute("aria-busy", "false");
         }
     });
 
-    /* =========================================================
+    /* ---------------------------------------------------------
        EVENT LISTENERS
-    ========================================================= */
+    --------------------------------------------------------- */
 
-    $("search-btn").addEventListener("click", performSearch);
+    $("search-btn").addEventListener("click", () => performSearch());
+    setupSearchInput();
 
-    $("search-input").addEventListener("keydown", event => {
-        if (event.key === "Enter") {
-            event.preventDefault();
-            performSearch();
-        }
-    });
-
-    $("signin-btn").addEventListener("click", openModal);
-
-    $("login-submit").addEventListener("click", handleLogin);
-
+    $("signin-btn").addEventListener("click", () => openModal("login"));
     $("logout-btn").addEventListener("click", handleLogout);
 
-    $("show-signup").addEventListener("click", () => {
-        window.location.href = "https://wizardecosystem.dev";
+    $("auth-form").addEventListener("submit", event => {
+        if (authMode === "login") handleLogin(event);
+        else if (authMode === "signup") handleSignup(event);
+        else if (authMode === "verify") handleVerify(event);
     });
 
-    $("modal-overlay").addEventListener("click", event => {
-        if (event.target === $("modal-overlay")) {
-            closeModal();
+    $("auth-switch").addEventListener("click", () => {
+        if (authMode === "login") {
+            $("signup-email").value = $("login-email").value.trim();
+            setAuthMode("signup");
+        } else if (authMode === "signup") {
+            $("login-email").value = $("signup-email").value.trim();
+            setAuthMode("login");
         }
+    });
+
+    $("resend-code").addEventListener("click", handleResendCode);
+    $("modal-close").addEventListener("click", closeModal);
+
+    $("modal-overlay").addEventListener("click", event => {
+        if (event.target === $("modal-overlay")) closeModal();
     });
 
     document.addEventListener("keydown", event => {
-        if (
-            event.key === "Escape" &&
-            $("modal-overlay").classList.contains("show")
-        ) {
+        if (event.key === "Escape" && $("modal-overlay").classList.contains("show")) {
             closeModal();
+        }
+
+        // Keep keyboard focus inside the open authentication modal.
+        if (event.key === "Tab" && $("modal-overlay").classList.contains("show")) {
+            const modal = $("modal-overlay");
+            const focusable = Array.from(
+                modal.querySelectorAll(
+                    'button:not([disabled]):not([hidden]), input:not([disabled]):not([hidden])'
+                )
+            ).filter(element => element.offsetParent !== null);
+
+            if (!focusable.length) return;
+
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
         }
     });
 
-    $("login-email").addEventListener("keydown", event => {
-        if (event.key === "Enter") handleLogin();
-    });
-
-    $("login-password").addEventListener("keydown", event => {
-        if (event.key === "Enter") handleLogin();
-    });
-
-    setupSearchInput();
-
-    /* =========================================================
+    /* ---------------------------------------------------------
        INITIALIZE
-    ========================================================= */
+    --------------------------------------------------------- */
 
+    updateAuthUI();
     checkAuth();
     loadFromURL();
 
@@ -1472,6 +2383,5 @@
 
 })();
 </script>
-
 </body>
 </html>
