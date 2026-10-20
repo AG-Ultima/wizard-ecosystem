@@ -1252,6 +1252,8 @@
                 document.addEventListener('visibilitychange', () => { cancelAnimationFrame(raf); if (!document.hidden) raf = requestAnimationFrame(loop); });
             }
         })();
+
+        // DOMPurify is loaded with `defer`; wait for it so the first render is sanitized.
         window.addEventListener('DOMContentLoaded', checkAuth);
     })();
     </script>
