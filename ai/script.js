@@ -797,6 +797,7 @@ function messageHTML(m, i, isLast) {
         imgCard(m.image, m.prompt) +
         (m.text ? '<div class="content md">' + md(m.text) + '</div>' : '') +
         toolChips(m.tools) +
+        (m.truncated && isLast ? '<div class="cont-row"><span>This reply hit the length limit.</span><button type="button" class="btn ghost sm" data-act="continue"><i data-icon="play"></i>Continue generating</button></div>' : '') +
         '<div class="actions-row">' + actBtn('copy', 'copy', 'Copy') + (lastAssistant ? actBtn('regen', 'refresh', 'Regenerate') : '') + '</div></div></article>';
 }
 
@@ -1154,26 +1155,7 @@ async function send(text, opt) {
                 if (ev.done) done = ev;
                 if (ev.error) errorText = String(ev.error);
             };
-            let buf = '';
-            const feed = chunk => {
-                buf += chunk;
-                let k;
-                while ((k = buf.indexOf('\n\n')) >= 0) {
-                    const block = buf.slice(0, k); buf = buf.slice(k + 2);
-                    const data = block.split('\n').filter(l => l.startsWith('data:')).map(l => l.slice(5).replace(/^ /, '')).join('\n');
-                    if (!data) continue;
-                    try { handle(JSON.parse(data)); } catch (e) { /* ignore a broken frame */ }
-                }
-            };
-            if (res.body && res.body.getReader) {
-                const reader = res.body.getReader(), dec = new TextDecoder();
-                for (; ;) {
-                    const { value, done: end } = await reader.read();
-                    if (end) break;
-                    feed(dec.decode(value, { stream: true }));
-                }
-                feed(dec.decode() + '\n\n');
-            } else feed((await res.text()) + '\n\n');
+            await readSSE(res, handle);
         }
     } catch (e) {
         if (e && e.name === 'AbortError') { /* handled below */ }
@@ -1217,6 +1199,7 @@ async function send(text, opt) {
     const aMsg = { sender: 'assistant', text: reply, mode: chat.mode, timestamp: new Date().toISOString() };
     if (images[0]) { aMsg.image = images[0].url; aMsg.prompt = images[0].prompt; }
     if (tools.length) aMsg.tools = tools;
+    if (done.truncated) aMsg.truncated = true;
     chat.messages.push(aMsg);
     if (done.chat_name && !DEFAULT_TITLES.includes(done.chat_name)) chat.name = done.chat_name;
     chat.updated_at = new Date().toISOString();
@@ -1231,6 +1214,92 @@ async function send(text, opt) {
     }
     upsertSummary(summaryOf(chat)); cacheList(); cacheChat(chat); renderList();
     if (DEFAULT_TITLES.includes(chat.name) && chat.messages.length <= 2) autoTitle(cid);
+}
+
+// Reads a text/event-stream response and calls handle(obj) for every "data:" frame.
+async function readSSE(res, handle) {
+    let buf = '';
+    const feed = chunk => {
+        buf += chunk;
+        let k;
+        while ((k = buf.indexOf('\n\n')) >= 0) {
+            const block = buf.slice(0, k); buf = buf.slice(k + 2);
+            const data = block.split('\n').filter(l => l.startsWith('data:')).map(l => l.slice(5).replace(/^ /, '')).join('\n');
+            if (!data) continue;
+            let ev = null;
+            try { ev = JSON.parse(data); } catch (e) { /* ignore a broken frame */ }
+            if (ev) handle(ev);
+        }
+    };
+    if (res.body && res.body.getReader) {
+        const reader = res.body.getReader(), dec = new TextDecoder();
+        for (; ;) {
+            const { value, done: end } = await reader.read();
+            if (end) break;
+            feed(dec.decode(value, { stream: true }));
+        }
+        feed(dec.decode() + '\n\n');
+    } else feed((await res.text()) + '\n\n');
+}
+
+// "Continue generating": the reply hit the length limit, ask the server to carry on and
+// append the new text to the SAME message.
+async function continueReply() {
+    if (S.busy || !S.chat || !S.user) return;
+    const chat = S.chat, cid = chat.chat_id, idx = chat.messages.length - 1, m = chat.messages[idx];
+    if (!m || m.sender !== 'assistant' || !m.truncated) return;
+    const el = qs('.msg.assistant[data-i="' + idx + '"]'); if (!el) return;
+    const oldText = m.text;
+    let content = qs('.content', el);
+    if (!content) { content = document.createElement('div'); content.className = 'content md'; qs('.body', el).insertBefore(content, qs('.actions-row', el)); }
+    const row = qs('.cont-row', el); if (row) row.remove();
+    el.classList.add('streaming'); el.setAttribute('aria-busy', 'true');
+    setBusy(true); S.phase = 'net'; S.stick = true;
+    const turn = S.turn = { cid, userIdx: idx - 1, aborted: false, silent: false };
+    twReset(content); TW.full = oldText; TW.shown = oldText.length;
+    const body = { continue: true, mode: chat.mode, chat_id: cid, tz: tzName() };
+    const persona = personaFor(chat); if (persona && persona.id) body.personality_id = persona.id;
+    const ctl = S.ctl = new AbortController();
+    let done = null, errorText = null;
+    progress(true);
+    try {
+        const res = await fetch(API + '/api/compound/stream', { method: 'POST', credentials: 'include', signal: ctl.signal, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        if (!res.ok) {
+            let d = null; try { d = await res.json(); } catch (e) { }
+            if (res.status === 401) { sessionLost(); return; }
+            errorText = (d && d.error) || 'The server hit a problem. Please try again.';
+        } else {
+            await readSSE(res, ev => {
+                if (typeof ev.token === 'string') { TW.full += ev.token; twKick(); }
+                if (ev.done) done = ev;
+                if (ev.error) errorText = String(ev.error);
+            });
+        }
+    } catch (e) {
+        if (!(e && e.name === 'AbortError')) { setConn('off'); errorText = 'The connection dropped before the reply finished.'; }
+    }
+    progress(false);
+    const restore = () => { S.ctl = null; S.phase = 'idle'; twReset(null); setBusy(false); S.turn = null; };
+    if (turn.aborted || errorText || !done) {
+        restore();
+        if (S.chat === chat) {
+            m.text = oldText; renderThread(true);
+            if (errorText) toast(errorText, 'err');
+        }
+        if (turn.aborted || !errorText) resyncLater(cid, idx - 1, null, 3500);
+        return;
+    }
+    S.phase = 'reveal';
+    await twFinish();
+    const full = TW.full; restore();
+    if (S.chat !== chat) return;
+    m.text = full;
+    if (done.truncated) m.truncated = true; else delete m.truncated;
+    chat.updated_at = new Date().toISOString();
+    const cur = qs('.msg.assistant[data-i="' + idx + '"]');
+    if (cur) cur.outerHTML = messageHTML(m, idx, true); else renderThread(true);
+    hydrate($('thread')); scrollToBottom();
+    upsertSummary(summaryOf(chat)); cacheList(); cacheChat(chat); renderList();
 }
 
 async function autoTitle(cid) {
@@ -1342,6 +1411,7 @@ async function onThreadClick(e) {
         send(v, { replaceFrom: i });
     }
     else if (act === 'regen') regenerate();
+    else if (act === 'continue') continueReply();
     else if (act === 'retry') { const l = S.lastSend; if (l) { const em = qs('.msg.error'); if (em) em.remove(); if (S.chat) S.chat.messages = S.chat.messages.slice(0, l.replaceFrom); renderThread(true); send(l.text, { replaceFrom: l.replaceFrom }); } }
     else if (act === 'earlier') showEarlier();
 }
@@ -1518,6 +1588,7 @@ async function enterApp(user) {
     api('/api/profile', { noAuthRedirect: true }).then(r => { S.profile = r.profile; }).catch(() => { });
     const last = store.get(lastIdKey(), null);
     const start = S.chats.find(c => c.chat_id === last) || sortedChats()[0];
+    if (S.lastSend || S.busy) { renderList(); return; } // user already started typing/sending on the cached view
     if (start) await openChat(start.chat_id);
     else await newChat(true);
 }
