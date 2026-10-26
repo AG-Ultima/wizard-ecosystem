@@ -349,3 +349,5 @@ body.calm *, body.calm *::before, body.calm *::after { animation-duration: .001m
     .pop.wide { width: calc(100vw - 24px); }
 }
 @media print { #starfield, .ambient, .sidebar, .topbar, .composer-wrap, .actions-row, .jump { display: none !important; } body { overflow: visible; background: #fff; color: #000; } .shell { position: static; display: block; } .scroller { overflow: visible; } .md, .md * { color: #000 !important; } }
+
+.cont-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 0 2px; font-size: 12.5px; color: var(--muted); } .cont-row .btn { border-color: var(--line-2); color: var(--gold-light); }
