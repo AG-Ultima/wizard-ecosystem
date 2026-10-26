@@ -1,2844 +1,2106 @@
-// ============================================
-// WIZARD.AI PRO v15.3.0 - FULLY REWRITTEN
-// Complete Frontend Controller with Code Blocks & Image Support
-// Created by Arnav Gupta
-// ============================================
+/* ============================================================
+   WIZARD.AI v16 — Grimoire Reforged
+   Frontend controller · Created by Arnav Gupta
+   ============================================================ */
+(() => {
+'use strict';
 
-const API_BASE_URL = 'https://arnav0928.pythonanywhere.com';
-const SITE_URL = 'https://wizardecosystem.dev/ai';
+const API = (typeof window.WIZARD_API_BASE === 'string') ? window.WIZARD_API_BASE : 'https://arnav0928.pythonanywhere.com';
+const SITE = 'https://wizardecosystem.dev/ai';
+const VERSION = '16.0.0';
 
-// ============================================
-// MARKDOWN RENDERING WITH CODE BLOCK SUPPORT
-// ============================================
+// <PURE>
+/* ---------- tiny pure helpers (unit-tested in node) ---------- */
+const ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ESC_MAP[c]); }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+// The server sends naive UTC (datetime.utcnow().isoformat()) with no "Z".
+// Without this fix every timestamp is read as local time and is hours off.
+function parseTs(v) {
+    if (!v) return null;
+    if (v instanceof Date) return isNaN(v) ? null : v;
+    let s = String(v).trim();
+    if (/^\d{4}-\d{2}-\d{2}[T ][\d:.]+$/.test(s)) s = s.replace(' ', 'T') + 'Z';
+    const d = new Date(s);
+    return isNaN(d) ? null : d;
+}
+function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+function groupLabel(d, now) {
+    if (!d) return 'Older';
+    const diff = Math.round((dayStart(now) - dayStart(d)) / 86400000);
+    if (diff <= 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    if (diff <= 7) return 'Previous 7 days';
+    if (diff <= 30) return 'Previous 30 days';
+    return 'Older';
+}
+const GROUP_ORDER = ['Today', 'Yesterday', 'Previous 7 days', 'Previous 30 days', 'Older'];
+
+// subsequence fuzzy match. returns -1 for no match, higher is better
+function fuzzy(q, t) {
+    q = String(q || '').toLowerCase().trim(); t = String(t || '').toLowerCase();
+    if (!q) return 0;
+    const idx = t.indexOf(q);
+    if (idx >= 0) return 1000 - idx - (t.length - q.length) * 0.01;
+    let qi = 0, score = 0, last = -2;
+    for (let i = 0; i < t.length && qi < q.length; i++) {
+        if (t[i] === q[qi]) {
+            score += (last === i - 1) ? 5 : 1;
+            if (i === 0 || /[\s\-_/]/.test(t[i - 1])) score += 3;
+            last = i; qi++;
+        }
+    }
+    return qi === q.length ? score : -1;
 }
 
-function renderMarkdown(text) {
-    if (!text) return '';
+function highlightTerm(text, q) {
+    const t = String(text || '');
+    q = String(q || '').trim();
+    if (!q) return esc(t);
+    const i = t.toLowerCase().indexOf(q.toLowerCase());
+    if (i < 0) return esc(t);
+    return esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length));
+}
 
-    let html = text;
+/* ---------- syntax highlighting (small, dependency-free) ---------- */
+const KW = {
+    py: 'and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield None True False self cls',
+    js: 'async await break case catch class const continue debugger default delete do else export extends finally for from function if import in instanceof let new null of return static super switch this throw try typeof undefined var void while with yield true false interface type enum implements public private protected readonly as',
+    sh: 'if then else elif fi for while do done case esac in function return exit export local echo cd ls rm cp mv cat grep sed awk sudo git npm pip python node true false',
+    sql: 'select from where and or not insert into values update set delete create table drop alter add join left right inner outer on group by order having limit offset as distinct union all null is in like between exists case when then else end primary key foreign references index default unique',
+    clike: 'auto break case char const continue default do double else enum extern float for goto if inline int long register return short signed sizeof static struct switch typedef union unsigned void volatile while class public private protected new delete this namespace using template typename virtual override final import package interface extends implements throws try catch finally throw null true false nil func fn let mut pub impl trait use mod match loop self Self string bool var val fun object when in is as defer go chan select range map type',
+    css: '',
+    json: 'true false null',
+    yaml: 'true false null yes no on off'
+};
+const LANG_ALIAS = {
+    python: 'py', py: 'py', python3: 'py',
+    javascript: 'js', js: 'js', jsx: 'js', ts: 'js', typescript: 'js', tsx: 'js', mjs: 'js', node: 'js',
+    json: 'json', jsonc: 'json',
+    bash: 'sh', sh: 'sh', shell: 'sh', zsh: 'sh', console: 'sh', terminal: 'sh',
+    css: 'css', scss: 'css', less: 'css',
+    html: 'html', xml: 'html', svg: 'html', vue: 'html',
+    sql: 'sql', mysql: 'sql', postgres: 'sql', postgresql: 'sql', sqlite: 'sql',
+    c: 'clike', cpp: 'clike', 'c++': 'clike', h: 'clike', java: 'clike', go: 'clike', golang: 'clike', rust: 'clike', rs: 'clike',
+    cs: 'clike', csharp: 'clike', kotlin: 'clike', swift: 'clike', php: 'clike', scala: 'clike', dart: 'clike',
+    yaml: 'yaml', yml: 'yaml', toml: 'yaml', ini: 'yaml'
+};
+const kwSets = {};
+function kwSet(k) { return kwSets[k] || (kwSets[k] = new Set((KW[k] || '').split(' ').filter(Boolean))); }
+const hl = (cls, s) => '<span class="tk-' + cls + '">' + esc(s) + '</span>';
 
-    // --- CODE BLOCKS (MUST RUN FIRST) ---
-    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, function(match, lang, code) {
-        const language = lang || 'plaintext';
-        const escapedCode = escapeHtml(code);
-        const cleanCode = escapedCode.replace(/\n$/, '');
-        return `
-            <div class="code-block-wrapper">
-                <div class="code-header">
-                    <span class="code-language">${language}</span>
-                    <button class="copy-code-btn" onclick="copyCodeBlock(this)">📋 Copy</button>
-                </div>
-                <pre><code class="language-${language}">${cleanCode}</code></pre>
-            </div>
-        `;
+function lexGeneric(code, kind) {
+    const lineC = kind === 'py' || kind === 'sh' || kind === 'yaml' ? String.raw`#[^\n]*`
+        : kind === 'sql' ? String.raw`--[^\n]*` : String.raw`\/\/[^\n]*`;
+    const blockC = (kind === 'js' || kind === 'clike' || kind === 'sql') ? String.raw`|\/\*[\s\S]*?(?:\*\/|$)` : '';
+    const triple = kind === 'py' ? String.raw`"""[\s\S]*?(?:"""|$)|'''[\s\S]*?(?:'''|$)|` : '';
+    const str = triple + String.raw`"(?:[^"\\\n]|\\.)*"?|'(?:[^'\\\n]|\\.)*'?|\x60(?:[^\x60\\]|\\.)*\x60?`;
+    const re = new RegExp(
+        '(?<c>' + lineC + blockC + ')|(?<s>' + str + ')|(?<n>\\b0x[0-9a-fA-F]+\\b|\\b\\d[\\d_]*(?:\\.\\d+)?(?:[eE][+-]?\\d+)?\\b)|(?<w>[A-Za-z_$][\\w$]*)|(?<o>[=<>!+\\-*/%&|^~?:]+)', 'g');
+    const kws = kwSet(kind);
+    const ci = kind === 'sql';
+    let out = '', last = 0, m;
+    while ((m = re.exec(code))) {
+        if (m.index > last) out += esc(code.slice(last, m.index));
+        const g = m.groups, t = m[0];
+        if (g.c !== undefined) out += hl('c', t);
+        else if (g.s !== undefined) {
+            let key = false;
+            if (kind === 'json' || kind === 'yaml') key = /^\s*:/.test(code.slice(re.lastIndex, re.lastIndex + 12));
+            out += hl(key ? 't' : 's', t);
+        }
+        else if (g.n !== undefined) out += hl('n', t);
+        else if (g.w !== undefined) {
+            if (kws.has(ci ? t.toLowerCase() : t)) out += hl('k', t);
+            else if (code[re.lastIndex] === '(') out += hl('f', t);
+            else if (kind === 'yaml' && code[re.lastIndex] === ':') out += hl('t', t);
+            else out += esc(t);
+        }
+        else out += hl('o', t);
+        last = re.lastIndex;
+        if (m[0].length === 0) re.lastIndex++;
+    }
+    return out + esc(code.slice(last));
+}
+function lexHtml(code) {
+    const re = /(<!--[\s\S]*?(?:-->|$))|(<\/?[A-Za-z][\w:.-]*)|("[^"]*"|'[^']*')|(\/?>)|([\w:-]+)(?==)/g;
+    let out = '', last = 0, m;
+    while ((m = re.exec(code))) {
+        if (m.index > last) out += esc(code.slice(last, m.index));
+        if (m[1]) out += hl('c', m[0]); else if (m[2]) out += hl('t', m[0]); else if (m[3]) out += hl('s', m[0]);
+        else if (m[4]) out += hl('t', m[0]); else out += hl('f', m[0]);
+        last = re.lastIndex;
+    }
+    return out + esc(code.slice(last));
+}
+function lexCss(code) {
+    const re = /(\/\*[\s\S]*?(?:\*\/|$))|("(?:[^"\\\n]|\\.)*"?|'(?:[^'\\\n]|\\.)*'?)|(@[\w-]+)|(#[0-9a-fA-F]{3,8}\b|\b\d+(?:\.\d+)?(?:px|em|rem|%|vh|vw|s|ms|deg|fr)?\b)|([-\w]+)(?=\s*:)/g;
+    let out = '', last = 0, m;
+    while ((m = re.exec(code))) {
+        if (m.index > last) out += esc(code.slice(last, m.index));
+        if (m[1]) out += hl('c', m[0]); else if (m[2]) out += hl('s', m[0]); else if (m[3]) out += hl('k', m[0]);
+        else if (m[4]) out += hl('n', m[0]); else out += hl('t', m[0]);
+        last = re.lastIndex;
+    }
+    return out + esc(code.slice(last));
+}
+function highlight(code, lang) {
+    const kind = LANG_ALIAS[String(lang || '').toLowerCase()];
+    if (!kind || code.length > 40000) return esc(code);
+    try {
+        if (kind === 'html') return lexHtml(code);
+        if (kind === 'css') return lexCss(code);
+        return lexGeneric(code, kind);
+    } catch (e) { return esc(code); }
+}
+
+/* ---------- markdown → safe HTML ----------
+   Everything is escaped BEFORE any markup is added, so model output can
+   never inject HTML. Only http(s)/mailto links are ever produced. */
+function inline(src) {
+    const stash = [];
+    const hold = h => { stash.push(h); return '\u0000' + (stash.length - 1) + '\u0000'; };
+    let s = String(src).replace(/\u0000/g, '');
+
+    s = s.replace(/(`+)(?!`)([\s\S]*?[^`])\1(?!`)/g, (_, __, c) => hold('<code>' + esc(c.trim()) + '</code>'));
+    s = esc(s);
+
+    const emph = t => t
+        .replace(/\*\*(?=\S)([\s\S]*?\S)\*\*/g, '<strong>$1</strong>')
+        .replace(/(^|[^\w])__(?=\S)([\s\S]*?\S)__(?![\w])/g, '$1<strong>$2</strong>')
+        .replace(/\*(?=[^\s*])([^*\n]*?[^\s*])\*/g, '<em>$1</em>')
+        .replace(/(^|[^\w])_(?=[^\s_])([^_\n]*?[^\s_])_(?![\w])/g, '$1<em>$2</em>')
+        .replace(/~~(?=\S)([\s\S]*?\S)~~/g, '<del>$1</del>');
+
+    s = s.replace(/!?\[([^\]\n]+)\]\(\s*([^\s)]+)(?:\s+&quot;[^)]*?&quot;)?\s*\)/g, (all, text, url) => {
+        if (!/^(https?:\/\/|mailto:)/i.test(url)) return text;
+        const label = all.charAt(0) === '!' ? '🖼 ' + text : text;
+        return hold('<a href="' + url + '" target="_blank" rel="noopener noreferrer nofollow">' + emph(label) + '</a>');
     });
-
-    // --- HEADERS ---
-    html = html.replace(/^### (.*$)/gm, '<h3 class="md-h3">$1</h3>');
-    html = html.replace(/^## (.*$)/gm, '<h2 class="md-h2">$1</h2>');
-    html = html.replace(/^# (.*$)/gm, '<h1 class="md-h1">$1</h1>');
-
-    // --- BOLD & ITALIC ---
-    html = html.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-    // --- INLINE CODE ---
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // --- LISTS ---
-    html = html.replace(/^\s*-\s+(.*$)/gm, '<li>$1</li>');
-    html = html.replace(/^\s*\d+\.\s+(.*$)/gm, '<li class="ordered">$1</li>');
-    html = html.replace(/(<li>.*?<\/li>\n?)+/g, '<ul>$&</ul>');
-    html = html.replace(/<ul>(<li class="ordered">.*?<\/li>\n?)+<\/ul>/g, function(match) {
-        return match.replace(/<ul>/, '<ol>').replace(/<\/ul>/, '</ol>').replace(/<li class="ordered">/g, '<li>');
+    s = s.replace(/\bhttps?:\/\/[^\s<>]+/g, u => {
+        let tail = '';
+        const cut = u.search(/&lt;|&gt;|&quot;|&#39;/);
+        if (cut >= 0) { tail = u.slice(cut); u = u.slice(0, cut); }
+        const m = /[.,;:!?)\]]+$/.exec(u);
+        if (m) { tail = m[0] + tail; u = u.slice(0, u.length - m[0].length); }
+        if (u.length < 9) return u + tail;
+        return hold('<a href="' + u + '" target="_blank" rel="noopener noreferrer nofollow">' + u + '</a>') + tail;
     });
+    s = emph(s).replace(/\n/g, '<br>');
+    for (let k = 0; k < 6 && /\u0000\d+\u0000/.test(s); k++) s = s.replace(/\u0000(\d+)\u0000/g, (_, n) => stash[+n] || '');
+    return s;
+}
 
-    // --- BLOCKQUOTES ---
-    html = html.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>');
-    html = html.replace(/<\/blockquote>\n<blockquote>/g, '<br>');
+const RE_FENCE = /^\s{0,12}(`{3,}|~{3,})\s*([\w+#.-]*)[^\n]*$/;
+const RE_HR = /^\s{0,3}([-*_])(\s*\1){2,}\s*$/;
+const RE_LIST = /^(\s*)([-*+]|(\d{1,9})[.)])\s+(.*)$/;
+const RE_TDELIM = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
+const RE_HEAD = /^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/;
 
-    // --- HORIZONTAL RULE ---
-    html = html.replace(/^---$/gm, '<hr>');
+function splitRow(line) {
+    let t = line.trim();
+    if (t.startsWith('|')) t = t.slice(1);
+    if (t.endsWith('|') && !t.endsWith('\\|')) t = t.slice(0, -1);
+    const cells = []; let cur = '';
+    for (let i = 0; i < t.length; i++) {
+        if (t[i] === '\\' && t[i + 1] === '|') { cur += '|'; i++; }
+        else if (t[i] === '|') { cells.push(cur.trim()); cur = ''; }
+        else cur += t[i];
+    }
+    cells.push(cur.trim());
+    return cells;
+}
 
-    // --- LINKS ---
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+function isTable(l, next) {
+    return next !== undefined && l.includes('|') && RE_TDELIM.test(next) && next.includes('-') &&
+        splitRow(l).length === splitRow(next).length;
+}
 
-    // --- LINE BREAKS ---
-    html = html.replace(/\n/g, '<br>');
+function codeBlock(code, lang) {
+    const safe = String(lang || '').replace(/[^\w+#.-]/g, '').slice(0, 20);
+    return '<div class="codeblock"><div class="code-head"><span class="lang">' + esc(safe || 'text') + '</span>' +
+        '<button type="button" data-act="wrap" title="Toggle line wrapping"><i data-icon="wrap"></i></button>' +
+        '<button type="button" data-act="copy-code" title="Copy code"><i data-icon="copy"></i><span>Copy</span></button></div>' +
+        '<pre><code>' + highlight(code, safe) + '</code></pre></div>';
+}
 
-    // --- WRAP IN CONTAINER ---
-    html = '<div class="markdown-body">' + html + '</div>';
-    html = html.replace(/<p><br><\/p>/g, '');
-
+function renderNodes(nodes) {
+    let html = '', k = 0;
+    while (k < nodes.length) {
+        const ord = nodes[k].ordered; let j = k, lis = '';
+        while (j < nodes.length && nodes[j].ordered === ord) {
+            const n = nodes[j];
+            let t = n.text, box = '';
+            const tm = /^\[( |x|X)\]\s+/.exec(t);
+            if (tm) { box = tm[1] === ' ' ? '☐ ' : '☑ '; t = t.slice(tm[0].length); }
+            lis += '<li>' + box + inline(t) + (n.children.length ? renderNodes(n.children) : '') + '</li>';
+            j++;
+        }
+        html += ord ? '<ol' + (nodes[k].start > 1 ? ' start="' + nodes[k].start + '"' : '') + '>' + lis + '</ol>' : '<ul>' + lis + '</ul>';
+        k = j;
+    }
     return html;
 }
 
-// ============================================
-// COPY CODE BLOCK FUNCTION
-// ============================================
+function md(src) {
+    src = String(src == null ? '' : src).replace(/\r\n?/g, '\n').replace(/\u0000/g, '');
+    const lines = src.split('\n');
+    const out = [];
+    let i = 0;
+    const isBlockStart = (l, next) => RE_FENCE.test(l) || RE_HEAD.test(l) || RE_HR.test(l) || /^\s{0,3}>/.test(l) ||
+        (RE_LIST.test(l) && !RE_HR.test(l)) || isTable(l, next);
 
-function copyCodeBlock(button) {
-    const wrapper = button.closest('.code-block-wrapper');
-    if (!wrapper) return;
+    while (i < lines.length) {
+        const line = lines[i];
+        if (line.trim() === '') { i++; continue; }
 
-    const codeElement = wrapper.querySelector('code');
-    if (!codeElement) return;
-
-    const codeText = codeElement.textContent;
-
-    navigator.clipboard.writeText(codeText).then(() => {
-        const originalText = button.textContent;
-        button.textContent = '✅ Copied!';
-        button.style.background = 'rgba(16, 185, 129, 0.3)';
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.style.background = '';
-        }, 1500);
-    }).catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = codeText;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-        button.textContent = '✅ Copied!';
-        setTimeout(() => {
-            button.textContent = '📋 Copy';
-        }, 1500);
-    });
+        let m = RE_FENCE.exec(line);
+        if (m) {
+            const fence = m[1], lang = m[2];
+            const closer = new RegExp('^\\s{0,12}' + (fence[0] === '`' ? '`' : '~') + '{' + fence.length + ',}\\s*$');
+            const indent = /^\s*/.exec(line)[0].length;
+            const buf = []; i++;
+            while (i < lines.length && !closer.test(lines[i])) { buf.push(lines[i].replace(new RegExp('^\\s{0,' + indent + '}'), '')); i++; }
+            i++;
+            out.push(codeBlock(buf.join('\n'), lang));
+            continue;
+        }
+        if ((m = RE_HEAD.exec(line))) {
+            const lvl = Math.min(m[1].length, 4);
+            out.push('<h' + lvl + '>' + inline(m[2]) + '</h' + lvl + '>');
+            i++; continue;
+        }
+        if (RE_HR.test(line)) { out.push('<hr>'); i++; continue; }
+        if (/^\s{0,3}>/.test(line)) {
+            const buf = [];
+            while (i < lines.length && /^\s{0,3}>/.test(lines[i])) { buf.push(lines[i].replace(/^\s{0,3}>\s?/, '')); i++; }
+            out.push('<blockquote>' + md(buf.join('\n')) + '</blockquote>');
+            continue;
+        }
+        if (isTable(line, lines[i + 1])) {
+            const head = splitRow(line);
+            const aligns = splitRow(lines[i + 1]).map(c => /^:-+:$/.test(c) ? 'center' : /-:$/.test(c) ? 'right' : /^:-/.test(c) ? 'left' : '');
+            i += 2;
+            const rows = [];
+            while (i < lines.length && lines[i].trim() !== '' && lines[i].includes('|') && !RE_FENCE.test(lines[i])) { rows.push(splitRow(lines[i])); i++; }
+            const cell = (tag, c, idx) => '<' + tag + (aligns[idx] ? ' style="text-align:' + aligns[idx] + '"' : '') + '>' + inline(c) + '</' + tag + '>';
+            out.push('<div class="tablewrap"><table><thead><tr>' + head.map((c, k) => cell('th', c, k)).join('') + '</tr></thead><tbody>' +
+                rows.map(r => '<tr>' + head.map((_, k) => cell('td', r[k] || '', k)).join('') + '</tr>').join('') + '</tbody></table></div>');
+            continue;
+        }
+        if ((m = RE_LIST.exec(line))) {
+            const items = [];
+            while (i < lines.length) {
+                const l = lines[i];
+                const lm = RE_LIST.exec(l);
+                if (lm && !RE_HR.test(l)) {
+                    items.push({ indent: lm[1].replace(/\t/g, '    ').length, ordered: !!lm[3], start: lm[3] ? +lm[3] : 1, text: lm[4], children: [] });
+                    i++; continue;
+                }
+                if (l.trim() === '') {
+                    let j = i + 1;
+                    while (j < lines.length && lines[j].trim() === '') j++;
+                    if (j < lines.length && !RE_FENCE.test(lines[j]) && ((RE_LIST.test(lines[j]) && !RE_HR.test(lines[j])) || /^\s{2,}\S/.test(lines[j]))) { i = j; continue; }
+                    break;
+                }
+                if (/^\s+\S/.test(l) && !RE_FENCE.test(l) && items.length) { items[items.length - 1].text += '\n' + l.trim(); i++; continue; }
+                break;
+            }
+            const root = { children: [], indent: -1 };
+            const stack = [root];
+            for (const it of items) {
+                while (stack.length > 1 && it.indent <= stack[stack.length - 1].indent) stack.pop();
+                stack[stack.length - 1].children.push(it);
+                stack.push(it);
+            }
+            out.push(renderNodes(root.children));
+            continue;
+        }
+        const buf = [line]; i++;
+        while (i < lines.length && lines[i].trim() !== '' && !isBlockStart(lines[i], lines[i + 1])) { buf.push(lines[i]); i++; }
+        out.push('<p>' + inline(buf.join('\n')) + '</p>');
+    }
+    return out.join('');
 }
 
-// ============================================
-// ECOSYSTEM AI QUICK ACTIONS
-// ============================================
+// Does this message look like it needs live information?
+const FRESH_RE = /\b(today|tonight|right now|latest|breaking|news|headlines?|current(ly)?|this (week|month|year)|score|scores|standings|weather|forecast|temperature|stock|stocks|price of|prices?|exchange rate|who (won|is winning)|release date|trending|just (released|announced))\b/i;
 
-function addEcosystemQuickActions() {
-    const toolbar = document.getElementById('pro-toolbar');
-    if (!toolbar) return;
-    
-    if (document.getElementById('ecosystem-ai-btn')) return;
-    
-    const ecosystemBtn = document.createElement('button');
-    ecosystemBtn.id = 'ecosystem-ai-btn';
-    ecosystemBtn.className = 'pro-btn ecosystem-btn';
-    ecosystemBtn.innerHTML = `<span class="btn-icon" aria-hidden="true">🧠</span><span class="btn-text">Ecosystem AI</span>`;
-    ecosystemBtn.title = 'Ask AI about your emails, notes, and calendar';
-    ecosystemBtn.style.borderColor = 'var(--violet)';
-    ecosystemBtn.style.color = 'var(--violet)';
-    
-    ecosystemBtn.addEventListener('click', () => {
-        const input = chatInput;
-        input.placeholder = 'Ask about your ecosystem: "Prepare me for my 3 PM meeting about Project X"';
-        input.focus();
-        input.style.borderColor = 'var(--violet)';
-        setTimeout(() => {
-            input.style.borderColor = '';
-        }, 3000);
-        
-        showNotification('🧠 Ask about emails, notes, or calendar!', 'info', 3000);
-    });
-    
-    toolbar.appendChild(ecosystemBtn);
+function toMarkdownExport(chat) {
+    const lines = ['# ' + (chat.name || 'Chat'), ''];
+    for (const m of chat.messages || []) {
+        lines.push('**' + (m.sender === 'user' ? 'You' : 'Wizard.AI') + '**', '', String(m.text || ''), '');
+        if (m.image) lines.push('![' + (m.prompt || 'image') + '](' + m.image + ')', '');
+    }
+    return lines.join('\n');
 }
+// </PURE>
 
-// ============================================
-// DOM ELEMENTS
-// ============================================
+/* ---------- DOM + storage helpers ---------- */
+const $ = id => document.getElementById(id);
+const qs = (sel, root) => (root || document).querySelector(sel);
+const qsa = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 
-const chatHistory = document.getElementById('chat-history');
-const chatInput = document.getElementById('chat-input');
-const sendBtn = document.getElementById('send-btn');
-const voiceBtn = document.getElementById('voice-input-btn');
-const statusText = document.getElementById('status-text');
-const statusDot = document.querySelector('.status-dot');
-const dropdown = document.getElementById('mode-dropdown');
-const dropdownBtn = document.getElementById('dropdown-btn');
-const dropdownContent = document.getElementById('dropdown-content');
-const selectedDisplay = document.getElementById('selected-mode-display');
-const chatsList = document.getElementById('chats-list');
-const newChatBtn = document.getElementById('new-chat-btn');
-const currentChatName = document.getElementById('current-chat-name');
-const currentChatEmoji = document.getElementById('current-chat-emoji');
-const renameChatBtn = document.getElementById('rename-chat-btn');
-const deleteChatBtn = document.getElementById('delete-chat-btn');
-const resetCurrentBtn = document.getElementById('reset-current-btn');
-const updateHistoryBtn = document.getElementById('update-history-btn');
-const statMessages = document.getElementById('stat-messages');
-const statFiles = document.getElementById('stat-files');
-const statProfile = document.getElementById('stat-profile-completeness');
-const statImages = document.getElementById('stat-images');
-const statSearches = document.getElementById('stat-searches');
-const statResponse = document.getElementById('stat-response');
-const quickToday = document.getElementById('quick-today');
-const quickTotal = document.getElementById('quick-total');
-const searchBtn = document.getElementById('search-btn');
-const uploadBtn = document.getElementById('upload-btn');
-const codeBtn = document.getElementById('code-btn');
-const imageBtn = document.getElementById('image-btn');
-const profileBtn = document.getElementById('profile-btn');
-const statsBtn = document.getElementById('stats-btn');
-const personalitiesBtn = document.getElementById('personalities-btn');
-const devHubBtn = document.getElementById('devhub-btn');
-const agentStudioBtn = document.getElementById('agent-studio-btn');
-const searchIndicator = document.getElementById('search-indicator');
-const inputSearchIndicator = document.getElementById('input-search-indicator');
-const typingIndicator = document.getElementById('typing-indicator');
-const uploadProgress = document.getElementById('upload-progress');
-const progressBarFill = document.getElementById('progress-bar-fill');
-const progressText = document.getElementById('progress-text');
-const authModal = document.getElementById('auth-modal-overlay');
-const renameModal = document.getElementById('rename-modal-overlay');
-const codeModal = document.getElementById('code-modal-overlay');
-const imageModal = document.getElementById('image-modal-overlay');
-const profileModal = document.getElementById('profile-modal-overlay');
-const statsModal = document.getElementById('stats-modal-overlay');
-const personalitiesModal = document.getElementById('personalities-modal-overlay');
-const updateModal = document.getElementById('update-modal-overlay');
-const closeAuth = document.getElementById('close-auth-modal');
-const closeCode = document.getElementById('close-code-modal');
-const closeImage = document.getElementById('close-image-modal');
-const closeProfile = document.getElementById('close-profile-modal');
-const closeStats = document.getElementById('close-stats-modal');
-const closePersonalities = document.getElementById('close-personalities-modal');
-const closeUpdate = document.getElementById('close-update-modal');
-const authEmail = document.getElementById('auth-email');
-const authPassword = document.getElementById('auth-password');
-const authConfirm = document.getElementById('auth-confirm');
-const authError = document.getElementById('auth-error');
-const authSubmit = document.getElementById('auth-submit');
-const authSwitchBtn = document.getElementById('auth-switch-btn');
-const authSwitchText = document.getElementById('auth-switch-text');
-const authModalTitle = document.getElementById('auth-modal-title');
-const firstNameGroup = document.getElementById('first-name-group');
-const lastNameGroup = document.getElementById('last-name-group');
-const firstNameInput = document.getElementById('first-name');
-const lastNameInput = document.getElementById('last-name');
-const verificationGroup = document.getElementById('verification-group');
-const verificationInput = document.getElementById('verification-code');
-const resendCodeBtn = document.getElementById('resend-code-btn');
-const confirmPasswordGroup = document.getElementById('confirm-password-group');
-const userInfo = document.getElementById('user-info');
-const authButtons = document.getElementById('auth-buttons');
-const userEmail = document.getElementById('user-email');
-const userName = document.getElementById('user-name');
-const userAvatar = document.getElementById('user-avatar');
-const logoutBtn = document.getElementById('logout-btn');
-const toggleCreatorBtn = document.getElementById('toggle-creator-btn');
-const creatorPanel = document.getElementById('creator-panel');
-const customName = document.getElementById('custom-name');
-const customEmoji = document.getElementById('custom-emoji');
-const customPrompt = document.getElementById('custom-prompt');
-const customGreeting = document.getElementById('custom-greeting');
-const customPublic = document.getElementById('custom-public');
-const savePersonality = document.getElementById('save-personality');
-const cancelPersonality = document.getElementById('cancel-personality');
-const closeCreator = document.getElementById('close-creator');
-const personalitiesList = document.getElementById('personalities-list');
-const personalitiesGrid = document.getElementById('personalities-grid');
-const tabBtns = document.querySelectorAll('.tab-btn');
-const fileUpload = document.getElementById('file-upload');
-const codeInput = document.getElementById('code-input');
-const codeOutput = document.getElementById('code-output');
-const runCodeBtn = document.getElementById('run-code');
-const clearCodeBtn = document.getElementById('clear-code');
-const imagePrompt = document.getElementById('image-prompt');
-const imageSize = document.getElementById('image-size');
-const generateImageBtn = document.getElementById('generate-image');
-const imageResult = document.getElementById('image-result');
-const statsCreated = document.getElementById('stats-created');
-const statsLast = document.getElementById('stats-last');
-const statsTotalMsgs = document.getElementById('stats-total-msgs');
-const statsTotalChats = document.getElementById('stats-total-chats');
-const statsFilesDetailed = document.getElementById('stats-files-detailed');
-const statsImagesDetailed = document.getElementById('stats-images-detailed');
-const statsCodeDetailed = document.getElementById('stats-code-detailed');
-const statsSearchesDetailed = document.getElementById('stats-searches-detailed');
-const statsMemories = document.getElementById('stats-memories');
-const statsDocs = document.getElementById('stats-docs');
-const statsAvgResponse = document.getElementById('stats-avg-response');
-const statsFastest = document.getElementById('stats-fastest');
-const statsApiKeysDetailed = document.getElementById('stats-api-keys-detailed');
-const statsProfileCompleteness = document.getElementById('stats-profile-completeness');
-const statsSkillsCount = document.getElementById('stats-skills-count');
-const statsInterestsCount = document.getElementById('stats-interests-count');
-const statsGoalsCount = document.getElementById('stats-goals-count');
-const renameInput = document.getElementById('rename-input');
-const renameSave = document.getElementById('modal-save');
-const renameCancel = document.getElementById('modal-cancel');
-const notificationToast = document.getElementById('notification-toast');
-const turboBtn = document.getElementById('turbo-btn');
-const turboStatus = document.getElementById('turbo-status');
-
-// Profile Modal Elements
-const profileFullName = document.getElementById('profile-full-name');
-const profileDisplayName = document.getElementById('profile-display-name');
-const profileBirthday = document.getElementById('profile-birthday');
-const profileGender = document.getElementById('profile-gender');
-const profileBio = document.getElementById('profile-bio');
-const profilePhone = document.getElementById('profile-phone');
-const profileWebsite = document.getElementById('profile-website');
-const profileGreeting = document.getElementById('profile-greeting');
-const profileOccupation = document.getElementById('profile-occupation');
-const profileCompany = document.getElementById('profile-company');
-const profileExperience = document.getElementById('profile-experience');
-const profileEducation = document.getElementById('profile-education');
-const profileSkills = document.getElementById('profile-skills');
-const profileInterests = document.getElementById('profile-interests');
-const profileFavTopics = document.getElementById('profile-fav-topics');
-const profileLearning = document.getElementById('profile-learning');
-const profileKnown = document.getElementById('profile-known');
-const profilePreferredMode = document.getElementById('profile-preferred-mode');
-const profileResponseStyle = document.getElementById('profile-response-style');
-const profileFormality = document.getElementById('profile-formality');
-const profileEmojis = document.getElementById('profile-emojis');
-const profileInstructions = document.getElementById('profile-instructions');
-const profileGoals = document.getElementById('profile-goals');
-const profileReminders = document.getElementById('profile-reminders');
-const profileCompletenessFill = document.getElementById('profile-completeness-fill');
-const profileCompletenessText = document.getElementById('profile-completeness-text');
-const saveProfileBtn = document.getElementById('save-profile');
-const closeProfileBtn = document.getElementById('close-profile');
-const profileTabBtns = document.querySelectorAll('.profile-tab-btn');
-
-// ============================================
-// STATE MANAGEMENT
-// ============================================
-let messages = [];
-let isThinking = false;
-let currentMode = 'JARVIS';
-let turboMode = false;
-let searchMode = false;
-let currentUser = null;
-let activeChatId = 'default';
-let chats = {};
-let chatIds = ['default'];
-let customPersonalities = [];
-let publicPersonalities = [];
-let isLoginMode = true;
-let signupEmail = '';
-let sessionCheckInterval = null;
-let voiceRecognition = null;
-let isVoiceListening = false;
-let chatToRename = null;
-let userProfile = null;
-let userStats = {
-    messages: 0, files: 0, memories: 0, images: 0, searches: 0,
-    codeExecutions: 0, responseTimes: [], todayMessages: 0
-};
-let pwaDeferredPrompt = null;
-
-// Mobile detection
-const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
-let sidebarOpen = false;
-
-// ============================================
-// MODE DATA
-// ============================================
-const modeData = {
-    'Fast': { emoji: '⚡', name: 'Fast Mode', desc: 'Lightning quick responses.', model: 'Llama 4 Scout', color: '#10b981' },
-    'Normal': { emoji: '✨', name: 'Normal Mode', desc: 'Balanced conversation.', model: 'Llama 4 Scout', color: '#10b981' },
-    'Fun': { emoji: '🎉', name: 'Fun Mode', desc: 'Playful and energetic!', model: 'Llama 4 Scout', color: '#8b5cf6' },
-    'Sarcastic': { emoji: '😏', name: 'Sarcastic Mode', desc: 'Witty and sarcastic.', model: 'Llama 4 Scout', color: '#10b981' },
-    'Nerd': { emoji: '🧠', name: 'Nerd Mode', desc: 'Detailed and academic.', model: 'Llama 4 Scout', color: '#8b5cf6' },
-    'JARVIS': { emoji: '🎩', name: 'JARVIS Mode', desc: 'Sophisticated AI assistant.', model: 'Llama 4 Scout', color: '#00aaff' },
-    'ORACLE': { emoji: '🔮', name: 'ORACLE Mode', desc: 'Mystical and all-knowing.', model: 'Llama 4 Scout', color: '#8b5cf6' }
+const store = {
+    get(k, d) { try { const v = localStorage.getItem('wiz.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('wiz.' + k, JSON.stringify(v)); } catch (e) { /* private mode */ } },
+    del(k) { try { localStorage.removeItem('wiz.' + k); } catch (e) { } },
+    wipe() { try { Object.keys(localStorage).filter(k => k.startsWith('wiz.') && k !== 'wiz.settings').forEach(k => localStorage.removeItem(k)); } catch (e) { } }
 };
 
-// ============================================
-// TIMEZONE DETECTION & SAVING
-// ============================================
-
-async function detectAndSaveTimezone() {
-    if (!currentUser) return;
-    
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (!timezone) return;
-    
-    console.log(`🌐 Detected timezone: ${timezone}`);
-    
-    try {
-        await fetch(`${API_BASE_URL}/api/memory/save`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ 
-                key: 'preferred_timezone', 
-                value: timezone, 
-                category: 'preference' 
-            })
-        });
-        
-        await fetch(`${API_BASE_URL}/api/user/timezone`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ timezone: timezone })
-        });
-        
-        console.log(`✅ Timezone saved: ${timezone}`);
-    } catch (error) {
-        console.error('Failed to save timezone:', error);
-    }
+/* ---------- icons (Feather-style, inline) ---------- */
+const ICONS = {
+    plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+    x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    menu: '<line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>',
+    sidebar: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/>',
+    'chevron-down': '<polyline points="6 9 12 15 18 9"/>',
+    'arrow-down': '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>',
+    download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    paperclip: '<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+    globe: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+    image: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+    terminal: '<polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>',
+    mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+    send: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>',
+    user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    'bar-chart': '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+    key: '<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
+    external: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
+    settings: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
+    keyboard: '<rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="8" y1="12" x2="8.01" y2="12"/><line x1="12" y1="12" x2="12.01" y2="12"/><line x1="16" y1="12" x2="16.01" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/>',
+    book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
+    logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
+    edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+    trash: '<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+    eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    'eye-off': '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',
+    play: '<polygon points="5 3 19 12 5 21 5 3"/>',
+    sparkles: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    check: '<polyline points="20 6 9 17 4 12"/>',
+    refresh: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>',
+    more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+    wrap: '<line x1="3" y1="6" x2="21" y2="6"/><path d="M3 12h15a3 3 0 1 1 0 6h-4"/><polyline points="16 16 14 18 16 20"/><line x1="3" y1="18" x2="10" y2="18"/>',
+    file: '<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>',
+    alert: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+    clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    wand: '<path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5"/>',
+    tool: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'
+};
+function icon(name) {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + (ICONS[name] || '') + '</svg>';
 }
-
-// ============================================
-// PROFILE FUNCTIONS
-// ============================================
-
-async function loadProfile() {
-    if (!currentUser) return;
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/profile`, {
-            credentials: 'include'
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            userProfile = data.profile;
-            updateProfileForm();
-            updateProfileCompleteness();
-            console.log('✅ Profile loaded:', userProfile);
-        }
-    } catch (error) {
-        console.error('Error loading profile:', error);
-    }
-}
-
-function updateProfileForm() {
-    if (!userProfile) return;
-    
-    if (profileFullName) profileFullName.value = userProfile.full_name || '';
-    if (profileDisplayName) profileDisplayName.value = userProfile.display_name || '';
-    if (profileBirthday) profileBirthday.value = userProfile.birthday || '';
-    if (profileGender) profileGender.value = userProfile.gender || '';
-    if (profileBio) profileBio.value = userProfile.bio || '';
-    if (profilePhone) profilePhone.value = userProfile.phone || '';
-    if (profileWebsite) profileWebsite.value = userProfile.website || '';
-    if (profileGreeting) profileGreeting.value = userProfile.custom_greeting || '';
-    if (profileOccupation) profileOccupation.value = userProfile.occupation || '';
-    if (profileCompany) profileCompany.value = userProfile.company || '';
-    if (profileExperience) profileExperience.value = userProfile.experience_years || '';
-    if (profileEducation) profileEducation.value = Array.isArray(userProfile.education) ? userProfile.education.join(', ') : '';
-    if (profileSkills) profileSkills.value = Array.isArray(userProfile.skills) ? userProfile.skills.join(', ') : '';
-    if (profileInterests) profileInterests.value = Array.isArray(userProfile.interests) ? userProfile.interests.join(', ') : '';
-    if (profileFavTopics) profileFavTopics.value = Array.isArray(userProfile.favorite_topics) ? userProfile.favorite_topics.join(', ') : '';
-    if (profileLearning) profileLearning.value = Array.isArray(userProfile.learning_interests) ? userProfile.learning_interests.join(', ') : '';
-    if (profileKnown) profileKnown.value = Array.isArray(userProfile.known_topics) ? userProfile.known_topics.join(', ') : '';
-    if (profilePreferredMode) profilePreferredMode.value = userProfile.preferred_mode || 'JARVIS';
-    if (profileResponseStyle) profileResponseStyle.value = userProfile.response_style || 'balanced';
-    if (profileFormality) profileFormality.value = userProfile.formality_level || 'casual';
-    if (profileEmojis) profileEmojis.value = userProfile.emoji_preference !== false ? 'true' : 'false';
-    if (profileInstructions) profileInstructions.value = userProfile.custom_instructions || '';
-    if (profileGoals) profileGoals.value = Array.isArray(userProfile.goals) ? userProfile.goals.map(g => typeof g === 'object' ? g.text : g).join('\n') : '';
-    if (profileReminders) profileReminders.value = Array.isArray(userProfile.reminders) ? userProfile.reminders.join('\n') : '';
-}
-
-function updateProfileCompleteness() {
-    if (userProfile && userProfile.profile_completeness) {
-        const completeness = userProfile.profile_completeness;
-        if (profileCompletenessFill) profileCompletenessFill.style.width = `${completeness}%`;
-        if (profileCompletenessText) profileCompletenessText.textContent = `${completeness}%`;
-        if (statProfile) statProfile.textContent = `${completeness}%`;
-    }
-}
-
-async function saveProfile() {
-    if (!currentUser) {
-        showNotification('Please login to save profile', 'error');
-        return;
-    }
-    
-    const profileData = {
-        full_name: profileFullName?.value || null,
-        display_name: profileDisplayName?.value || null,
-        birthday: profileBirthday?.value || null,
-        gender: profileGender?.value || null,
-        bio: profileBio?.value || null,
-        phone: profilePhone?.value || null,
-        website: profileWebsite?.value || null,
-        custom_greeting: profileGreeting?.value || null,
-        occupation: profileOccupation?.value || null,
-        company: profileCompany?.value || null,
-        experience_years: profileExperience?.value ? parseInt(profileExperience.value) : null,
-        education: profileEducation?.value ? profileEducation.value.split(',').map(s => s.trim()).filter(s => s) : [],
-        skills: profileSkills?.value ? profileSkills.value.split(',').map(s => s.trim()).filter(s => s) : [],
-        interests: profileInterests?.value ? profileInterests.value.split(',').map(s => s.trim()).filter(s => s) : [],
-        favorite_topics: profileFavTopics?.value ? profileFavTopics.value.split(',').map(s => s.trim()).filter(s => s) : [],
-        learning_interests: profileLearning?.value ? profileLearning.value.split(',').map(s => s.trim()).filter(s => s) : [],
-        known_topics: profileKnown?.value ? profileKnown.value.split(',').map(s => s.trim()).filter(s => s) : [],
-        preferred_mode: profilePreferredMode?.value || 'JARVIS',
-        response_style: profileResponseStyle?.value || 'balanced',
-        formality_level: profileFormality?.value || 'casual',
-        emoji_preference: profileEmojis?.value === 'true',
-        custom_instructions: profileInstructions?.value || null,
-        goals: profileGoals?.value ? profileGoals.value.split('\n').filter(s => s.trim()) : [],
-        reminders: profileReminders?.value ? profileReminders.value.split('\n').filter(s => s.trim()) : []
-    };
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/profile/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(profileData)
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            userProfile = data.profile;
-            updateProfileCompleteness();
-            showNotification('✅ Profile saved successfully!', 'success');
-            closeModal(profileModal);
-        } else {
-            const error = await response.json();
-            showNotification(error.error || 'Failed to save profile', 'error');
-        }
-    } catch (error) {
-        console.error('Save profile error:', error);
-        showNotification('Error saving profile', 'error');
-    }
-}
-
-async function openProfileModal() {
-    if (!currentUser) {
-        showNotification('Please login to view profile', 'error');
-        showAuthModal(true);
-        return;
-    }
-    
-    await loadProfile();
-    openModal(profileModal);
-}
-
-function initProfileTabs() {
-    if (!profileTabBtns.length) return;
-    
-    profileTabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tabId = btn.dataset.tab;
-            
-            profileTabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            document.querySelectorAll('.profile-tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            const activeContent = document.getElementById(`profile-tab-${tabId}`);
-            if (activeContent) activeContent.classList.add('active');
-        });
+function hydrate(root) {
+    qsa('i[data-icon]:not([data-done])', root || document).forEach(el => {
+        el.innerHTML = icon(el.getAttribute('data-icon'));
+        el.setAttribute('data-done', '1');
     });
 }
+function setIcon(el, name) { if (!el) return; const i = qs('i[data-icon]', el); if (i) { i.setAttribute('data-icon', name); i.innerHTML = icon(name); i.setAttribute('data-done', '1'); } }
 
-// ============================================
-// IMAGE FUNCTIONS
-// ============================================
+/* ---------- toasts, snackbar, clipboard ---------- */
+function toast(msg, kind, ms) {
+    const box = $('toasts'); if (!box) return;
+    const el = document.createElement('div');
+    el.className = 'toast ' + (kind || '');
+    el.setAttribute('role', kind === 'err' ? 'alert' : 'status');
+    el.textContent = msg;
+    box.appendChild(el);
+    while (box.children.length > 3) box.firstChild.remove();
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; setTimeout(() => el.remove(), 320); }, ms || (kind === 'err' ? 5200 : 2600));
+}
+let snackTimer = null, snackUndo = null;
+function snack(text, onUndo, ms) {
+    $('snack-text').textContent = text;
+    $('snack').hidden = false;
+    snackUndo = onUndo;
+    $('snack-undo').hidden = !onUndo;
+    clearTimeout(snackTimer);
+    snackTimer = setTimeout(hideSnack, ms || 7000);
+}
+function hideSnack() { $('snack').hidden = true; snackUndo = null; clearTimeout(snackTimer); }
 
-function downloadImage(url) {
+async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch (e) {
+        try {
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+            document.body.appendChild(ta); ta.select();
+            const ok = document.execCommand('copy'); ta.remove(); return ok;
+        } catch (e2) { return false; }
+    }
+}
+function downloadBlob(name, text, type) {
+    const blob = new Blob([text], { type: type || 'text/markdown;charset=utf-8' });
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'wizard-ai-image.png';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function safeFile(name) { return String(name || 'chat').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').slice(0, 50) || 'chat'; }
+function fmtTime(d) { return d ? d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''; }
+function fmtDay(d) {
+    if (!d) return '';
+    const now = new Date();
+    return groupLabel(d, now) === 'Today' ? fmtTime(d) : d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ', ' + fmtTime(d);
+}
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+
+/* ============================================================
+   STATE, API, POPOVERS, MODALS
+   ============================================================ */
+const MODES = [
+    { id: 'JARVIS', emoji: '🎩', name: 'JARVIS', desc: 'Sophisticated, precise, quietly witty.' },
+    { id: 'Normal', emoji: '✨', name: 'Normal', desc: 'Balanced, friendly conversation.' },
+    { id: 'Fast', emoji: '⚡', name: 'Fast', desc: 'Short, quick answers.' },
+    { id: 'Fun', emoji: '🎉', name: 'Fun', desc: 'Playful and energetic.' },
+    { id: 'Sarcastic', emoji: '😏', name: 'Sarcastic', desc: 'Dry wit, still helpful.' },
+    { id: 'Nerd', emoji: '🧠', name: 'Nerd', desc: 'Detailed and academic.' },
+    { id: 'ORACLE', emoji: '🔮', name: 'ORACLE', desc: 'Mystical and all-knowing.' }
+];
+const modeOf = id => MODES.find(m => m.id === id) || MODES[0];
+const DEFAULT_TITLES = ['New Chat', 'Main Chat', 'New chat'];
+const MAX_LEN = 16000;
+
+const S = {
+    user: null, chats: [], chat: null, hits: [],
+    searchSeq: 0, busy: false, phase: 'idle', ctl: null, turn: null,
+    filter: '', openSeq: 0, listLoading: false,
+    webOn: false, attach: [], stick: true,
+    menuChatId: null, renderFrom: 0, lastSend: null,
+    settings: Object.assign({ enterSends: true, autoWeb: true, calm: false, density: 'cozy', collapsed: false }, store.get('settings', {})),
+    personas: store.get('persona', {}),
+    profile: null, deferredInstall: null, tzSent: false
+};
+const mobileMQ = window.matchMedia ? window.matchMedia('(max-width: 900px)') : { matches: false, addEventListener() { } };
+const reduceMotion = () => S.settings.calm || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function applySettings() {
+    document.body.classList.toggle('calm', !!S.settings.calm);
+    document.body.classList.remove('density-cozy', 'density-compact', 'density-roomy');
+    document.body.classList.add('density-' + (S.settings.density || 'cozy'));
+    const sh = $('shell'); if (sh) sh.classList.toggle('collapsed', !!S.settings.collapsed && !mobileMQ.matches);
+    store.set('settings', S.settings);
 }
 
-function addImageMessage(imageData, prompt, source = 'AI') {
-    if (!chatHistory) return;
-    
-    const msgDiv = document.createElement('div');
-    msgDiv.className = 'message assistant';
-    msgDiv.innerHTML = `
-        <div class="message-content">
-            <div class="message-text">
-                <div class="image-container" style="background: rgba(0,0,0,0.2); border-radius: 16px; padding: 16px;">
-                    <img src="${imageData}" alt="${escapeHtml(prompt)}" style="max-width:100%; border-radius:12px; box-shadow:0 0 30px rgba(139,92,246,0.3);">
-                    <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
-                        <button onclick="window.open('${imageData}', '_blank')" class="glass-button">🔍 View Full Size</button>
-                        <button onclick="downloadImage('${imageData}')" class="glass-button">💾 Download</button>
-                    </div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">🎨 Generated by ${escapeHtml(source)}: ${escapeHtml(prompt)}</div>
-                </div>
-            </div>
-            <div class="message-time">${new Date().toLocaleTimeString()}</div>
-        </div>
-    `;
-    chatHistory.appendChild(msgDiv);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-    
-    messages.push({
-        sender: 'assistant',
-        text: `🎨 Generated image: ${prompt}`,
-        mode: currentMode,
-        timestamp: new Date().toISOString(),
-        image: imageData
-    });
-    
-    if (chats[activeChatId]) {
-        chats[activeChatId].messages = [...messages];
-        saveChats();
+/* ---------- connection state ---------- */
+function setConn(state) {
+    const c = $('conn'); if (!c) return;
+    const wasOff = S.offline;
+    S.offline = state === 'off';
+    c.classList.toggle('off', state === 'off');
+    c.classList.toggle('warn', state === 'warn');
+    $('conn-text').textContent = state === 'off' ? 'Offline' : state === 'warn' ? 'Reconnecting' : 'Connected';
+    if (S.offline) showBanner('You appear to be offline — messages can’t be sent until the connection is back.', false);
+    else if (wasOff) hideBanner();
+}
+function showBanner(text, err) { const b = $('banner'); b.textContent = text; b.classList.toggle('err', !!err); b.hidden = false; }
+function hideBanner() { $('banner').hidden = true; }
+
+/* ---------- API ---------- */
+class ApiError extends Error {
+    constructor(status, msg, data) { super(msg); this.status = status; this.data = data || {}; }
+}
+function waitText(sec) {
+    sec = Math.max(1, Math.round(sec));
+    return sec < 90 ? sec + ' seconds' : Math.ceil(sec / 60) + ' minutes';
+}
+async function api(path, o) {
+    o = o || {};
+    const init = { method: o.method || 'GET', credentials: 'include', signal: o.signal, headers: {} };
+    if (o.body !== undefined) { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(o.body); }
+    if (o.form) init.body = o.form;
+    let res;
+    try { res = await fetch(API + path, init); }
+    catch (e) {
+        if (e && e.name === 'AbortError') throw e;
+        setConn('off');
+        throw new ApiError(0, 'Can’t reach the Wizard.AI server. Check your connection and try again.');
     }
-    
-    trackImage();
+    if (S.offline) setConn('ok');
+    let data = null;
+    try { data = await res.json(); } catch (e) { /* not json */ }
+    if (!res.ok) {
+        if (res.status === 401 && !o.noAuthRedirect) sessionLost();
+        let msg = (data && data.error) || (res.status >= 500 ? 'The server hit a problem. Please try again.' : 'Request failed (' + res.status + ')');
+        if (res.status === 429 && data && data.retry_after && !/try again/i.test(msg)) msg += ' Try again in ' + waitText(data.retry_after) + '.';
+        throw new ApiError(res.status, msg, data);
+    }
+    return data || {};
+}
+const errMsg = e => (e && e.message) ? e.message : 'Something went wrong.';
+
+function sessionLost() {
+    if (!S.user) return;
+    S.user = null;
+    wipeUserData();
+    closeAllModals(); closePops();
+    showGate('Your session has ended. Please log in again.');
+}
+function wipeUserData() {
+    store.wipe();
+    S.chats = []; S.chat = null; S.hits = []; S.profile = null; S.attach = []; S.personas = {};
+    pendingDeletes.forEach(p => clearTimeout(p.timer)); pendingDeletes.clear();
 }
 
-function addThinkingMessage() {
-    if (!chatHistory) return;
-    
-    const thinkingId = 'thinking-' + Date.now();
-    const msgDiv = document.createElement('div');
-    msgDiv.id = thinkingId;
-    msgDiv.className = 'message assistant thinking';
-    msgDiv.innerHTML = `
-        <div class="message-content">
-            <div class="message-text">
-                <div class="thinking-container">
-                    <div class="thinking-indicator">
-                        <span class="thinking-dot"></span>
-                        <span class="thinking-dot"></span>
-                        <span class="thinking-dot"></span>
-                        <span class="thinking-text">Thinking</span>
-                    </div>
-                    <div class="thinking-process" style="display:none; margin-top: 8px; font-size: 13px; color: var(--text-muted); padding: 8px 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
-                    </div>
-                    <button class="thinking-toggle" style="background:none; border:none; color: var(--primary-light); cursor:pointer; font-size: 12px; margin-top: 4px; opacity:0.7;">💭 Show thought process</button>
-                </div>
-            </div>
-            <div class="message-time">${new Date().toLocaleTimeString()}</div>
-        </div>
-    `;
-    chatHistory.appendChild(msgDiv);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-    
-    const toggleBtn = msgDiv.querySelector('.thinking-toggle');
-    const processDiv = msgDiv.querySelector('.thinking-process');
-    
-    toggleBtn.addEventListener('click', () => {
-        if (processDiv.style.display === 'none') {
-            processDiv.style.display = 'block';
-            toggleBtn.textContent = '💭 Hide thought process';
+/* ---------- popovers ---------- */
+let openPopEl = null, openPopAnchor = null;
+function closePops() {
+    if (openPopEl) {
+        openPopEl.hidden = true;
+        if (openPopAnchor && openPopAnchor.setAttribute) openPopAnchor.setAttribute('aria-expanded', 'false');
+        qsa('.more[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+    }
+    openPopEl = null; openPopAnchor = null;
+}
+function openPop(pop, anchor, opts) {
+    opts = opts || {};
+    const same = openPopEl === pop && openPopAnchor === anchor;
+    closePops();
+    if (same) return;
+    pop.hidden = false;
+    openPopEl = pop; openPopAnchor = anchor;
+    if (anchor && anchor.setAttribute) anchor.setAttribute('aria-expanded', 'true');
+    const r = anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : anchor;
+    const pw = pop.offsetWidth, ph = pop.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+    let left = opts.alignRight ? r.right - pw : r.left;
+    left = Math.max(8, Math.min(left, vw - pw - 8));
+    let top = r.bottom + 6;
+    if (opts.up || top + ph > vh - 8) top = r.top - ph - 6;
+    if (top < 8) top = Math.max(8, Math.min(r.bottom + 6, vh - ph - 8));
+    pop.style.left = left + 'px'; pop.style.top = top + 'px';
+    const first = qs('button', pop); if (first && opts.focus !== false) first.focus({ preventScroll: true });
+}
+
+/* ---------- modals ---------- */
+const modalStack = [];
+function openModal(id) {
+    const m = $(id); if (!m) return;
+    closePops();
+    if (m.hidden) {
+        m._opener = document.activeElement;
+        m.hidden = false;
+        modalStack.push(id);
+        document.body.style.overflow = 'hidden';
+    }
+    hydrate(m);
+    const f = qs('input:not([type=hidden]):not([hidden]), textarea, select', m);
+    const target = qs('[autofocus]', m) || f;
+    if (target && !m.classList.contains('lightbox')) setTimeout(() => { try { target.focus({ preventScroll: true }); } catch (e) { } }, 30);
+}
+function closeModal(id) {
+    const m = typeof id === 'string' ? $(id) : id; if (!m || m.hidden) return;
+    m.hidden = true;
+    const k = modalStack.indexOf(m.id); if (k >= 0) modalStack.splice(k, 1);
+    if (!modalStack.length) document.body.style.overflow = '';
+    if (m._opener && m._opener.focus && document.contains(m._opener)) { try { m._opener.focus({ preventScroll: true }); } catch (e) { } }
+    if (m.id === 'm-confirm' && confirmResolve) { const r = confirmResolve; confirmResolve = null; r(false); }
+}
+function closeAllModals() { modalStack.slice().forEach(closeModal); }
+function topModal() { return modalStack.length ? $(modalStack[modalStack.length - 1]) : null; }
+
+let confirmResolve = null;
+function confirmBox(o) {
+    return new Promise(resolve => {
+        $('confirm-title').textContent = o.title || 'Are you sure?';
+        $('confirm-body').textContent = o.body || '';
+        const y = $('confirm-yes');
+        y.textContent = o.yes || 'Confirm';
+        y.className = 'btn ' + (o.danger ? 'danger' : 'primary');
+        if (confirmResolve) confirmResolve(false);
+        confirmResolve = resolve;
+        openModal('m-confirm');
+        y.focus();
+    });
+}
+function resolveConfirm(v) {
+    const r = confirmResolve; confirmResolve = null;
+    closeModal('m-confirm');
+    if (r) r(v);
+}
+
+/* ---------- gate / shell ---------- */
+function hideBoot() {
+    const b = $('boot');
+    if (b && !b.classList.contains('gone')) { b.classList.add('gone'); setTimeout(() => b.remove(), 700); }
+}
+function showGate(msg) {
+    $('shell').hidden = true; $('gate').hidden = false;
+    const e = $('gate-error'); e.hidden = !msg; e.textContent = msg || '';
+    document.title = 'Wizard.AI Pro — your magical AI workspace';
+    hideBoot();
+}
+function showShell() { $('gate').hidden = true; $('shell').hidden = false; applySettings(); hideBoot(); }
+let progTimer = null;
+function progress(on) {
+    const p = $('progress'); if (!p) return;
+    clearTimeout(progTimer);
+    if (on) { p.className = ''; void p.offsetWidth; p.className = 'on'; }
+    else { p.className = 'done'; progTimer = setTimeout(() => { p.className = ''; }, 700); }
+}
+
+function renderUser() {
+    const u = S.user; if (!u) return;
+    const full = ((u.first_name || '') + ' ' + (u.last_name || '')).trim() || 'Wizard';
+    $('user-name').textContent = full;
+    $('user-email').textContent = u.email || '';
+    $('user-avatar').textContent = ((u.first_name || '?')[0] + (u.last_name || '')[0] || '').toUpperCase();
+}
+
+/* ============================================================
+   CHATS: list, open, create, rename, delete
+   ============================================================ */
+const sortedChats = () => S.chats.slice().sort((a, b) => ((parseTs(b.updated_at) || 0) - (parseTs(a.updated_at) || 0)));
+function summaryOf(chat) {
+    const msgs = chat.messages || [];
+    const last = msgs.length ? msgs[msgs.length - 1].text : '';
+    return {
+        chat_id: chat.chat_id, name: chat.name, emoji: chat.emoji, mode: chat.mode,
+        updated_at: chat.updated_at || new Date().toISOString(), message_count: msgs.length, preview: String(last || '').slice(0, 90)
+    };
+}
+function upsertSummary(s) {
+    const i = S.chats.findIndex(c => c.chat_id === s.chat_id);
+    if (i >= 0) S.chats[i] = Object.assign({}, S.chats[i], s); else S.chats.unshift(s);
+}
+function cacheList() { store.set('chats', S.chats); }
+function cacheChat(chat) {
+    if (!chat) return;
+    store.set('c.' + chat.chat_id, { chat_id: chat.chat_id, name: chat.name, emoji: chat.emoji, mode: chat.mode, updated_at: chat.updated_at, messages: (chat.messages || []).slice(-80) });
+    let lru = store.get('clru', []).filter(x => x !== chat.chat_id);
+    lru.unshift(chat.chat_id);
+    lru.slice(4).forEach(x => store.del('c.' + x));
+    store.set('clru', lru.slice(0, 4));
+}
+
+function renderList() {
+    const box = $('chat-list'); if (!box) return;
+    const q = S.filter.trim();
+    const now = new Date();
+    let html = '';
+    if (S.listLoading && !S.chats.length) html = '<div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+    else {
+        const item = (c, extra) => {
+            const active = S.chat && S.chat.chat_id === c.chat_id;
+            return '<div class="chat-item' + (active ? ' active' : '') + (extra ? ' ' + extra : '') + '" role="button" tabindex="0" data-id="' + esc(c.chat_id) + '"' + (active ? ' aria-current="true"' : '') + '>' +
+                '<span class="ce">' + esc(c.emoji || '💬') + '</span><span class="ct">' + highlightTerm(c.name || 'New chat', q) + '</span>' +
+                '<button type="button" class="more" data-more aria-label="Chat options" aria-haspopup="menu" aria-expanded="false"><i data-icon="more"></i></button></div>';
+        };
+        if (q) {
+            const scored = S.chats.map(c => ({ c, s: Math.max(fuzzy(q, c.name), fuzzy(q, c.preview) - 5) })).filter(x => x.s >= 0).sort((a, b) => b.s - a.s);
+            if (scored.length) html += '<div class="grp">Chats</div>' + scored.map(x => item(x.c)).join('');
+            if (S.hits.length) {
+                html += '<div class="grp">In messages</div>' + S.hits.filter(h => h.snippet).map(h =>
+                    '<div class="chat-item hit" role="button" tabindex="0" data-id="' + esc(h.chat_id) + '" data-index="' + (h.index == null ? '' : h.index) + '">' +
+                    '<span class="ce">' + esc(h.emoji || '💬') + '</span><span class="ct">' + esc(h.name) + '<span class="snip">' + highlightTerm(h.snippet, q) + '</span></span></div>').join('');
+            }
+            if (!scored.length && !S.hits.length) html = '<div class="list-empty">No chats match “' + esc(q) + '”.</div>';
+        } else if (!S.chats.length) {
+            html = '<div class="list-empty">No conversations yet.<br>Start one — I’ll remember it here.</div>';
         } else {
-            processDiv.style.display = 'none';
-            toggleBtn.textContent = '💭 Show thought process';
+            let last = '';
+            for (const c of sortedChats()) {
+                const g = groupLabel(parseTs(c.updated_at), now);
+                if (g !== last) { html += '<div class="grp">' + g + '</div>'; last = g; }
+                html += item(c);
+            }
         }
+    }
+    box.innerHTML = html;
+    hydrate(box);
+}
+
+async function refreshChats(quiet) {
+    if (!S.user) return;
+    if (!S.chats.length) { S.listLoading = true; renderList(); }
+    try {
+        const r = await api('/api/ai-chats');
+        S.chats = (r.chats || []).filter(c => !pendingDeletes.has(c.chat_id));
+        cacheList();
+    } catch (e) { if (!quiet && e.status !== 401) toast(errMsg(e), 'err'); }
+    S.listLoading = false;
+    renderList();
+}
+
+function chatTitleOf(chat) { return (chat && chat.name && !DEFAULT_TITLES.includes(chat.name)) ? chat.name : 'New chat'; }
+
+function renderHeader() {
+    const c = S.chat; if (!c) return;
+    $('chat-title').textContent = chatTitleOf(c);
+    $('chat-emoji').textContent = c.emoji || '🧙';
+    const p = personaFor(c);
+    const m = modeOf(c.mode);
+    $('mode-emoji').textContent = p ? p.emoji : m.emoji;
+    $('mode-name').textContent = p ? p.name : m.name;
+    document.title = (c.name && !DEFAULT_TITLES.includes(c.name) ? c.name + ' · ' : '') + 'Wizard.AI';
+}
+function personaFor(chat) { return chat ? (S.personas[chat.chat_id] || null) : null; }
+
+const SPARKS = [
+    { e: '🧠', t: 'Explain something', s: 'How do black holes form, in plain words?', q: 'Explain how black holes form, in plain words.' },
+    { e: '✍️', t: 'Draft an email', s: 'Ask a teacher for a deadline extension', q: 'Draft a friendly, short email asking my teacher for a one-day deadline extension.' },
+    { e: '💻', t: 'Write some code', s: 'Find duplicate files in a folder', q: 'Write a Python script that finds duplicate files in a folder by hashing them.' },
+    { e: '🎨', t: 'Imagine an image', s: 'A wizard tower above the clouds', q: 'Generate an image of a wizard tower floating above the clouds at dusk' },
+    { e: '🌐', t: 'Look something up', s: 'What’s happening in the news today?', q: 'What are the top news headlines today?' },
+    { e: '🗺️', t: 'Plan a trip', s: 'Three relaxed days in Sedona', q: 'Plan a relaxed 3-day trip to Sedona, Arizona with hikes and good food.' }
+];
+function renderEmpty() {
+    const u = S.user, p = personaFor(S.chat);
+    const h = new Date().getHours();
+    const part = h < 5 ? 'Still up' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    const first = u && u.first_name ? u.first_name : '';
+    $('empty-title').innerHTML = first ? esc(part) + ', <em>' + esc(first) + '</em>' : 'How can I <em>help</em>?';
+    $('empty-sub').textContent = (p && p.greeting) ? p.greeting : 'Ask anything, or pick a spark below.';
+    const pick = SPARKS.slice().sort(() => Math.random() - .5).slice(0, 4);
+    $('sparks').innerHTML = pick.map((s, i) => '<button type="button" class="spark" data-q="' + esc(s.q) + '"><span class="se">' + s.e + '</span><b>' + esc(s.t) + '</b><span>' + esc(s.s) + '</span></button>').join('');
+}
+
+/* ============================================================
+   THREAD RENDERING
+   ============================================================ */
+const safeImg = u => /^https?:\/\//i.test(String(u || ''));
+function imgCard(url, prompt) {
+    if (!safeImg(url)) return '';
+    return '<figure class="imgcard" data-src="' + esc(url) + '" data-cap="' + esc(prompt || '') + '" tabindex="0" role="button" aria-label="View image full size">' +
+        '<img src="' + esc(url) + '" alt="' + esc(prompt || 'Generated image') + '" loading="lazy" decoding="async">' +
+        (prompt ? '<figcaption class="cap">' + esc(prompt) + '</figcaption>' : '') + '</figure>';
+}
+function toolChips(tools) {
+    if (!Array.isArray(tools) || !tools.length) return '';
+    const names = Array.from(new Set(tools.map(t => String(t).replace(/_/g, ' ')))).slice(0, 5);
+    return '<div class="tools-used">' + names.map(n => '<span class="tool-chip"><i data-icon="tool"></i>' + esc(n) + '</span>').join('') + '</div>';
+}
+function actBtn(act, ic, label) { return '<button type="button" class="act" data-act="' + act + '" aria-label="' + label + '" title="' + label + '"><i data-icon="' + ic + '"></i></button>'; }
+
+function messageHTML(m, i, isLast) {
+    const t = parseTs(m.timestamp);
+    if (m.sender === 'user') {
+        return '<article class="msg user' + (isLast ? ' last' : '') + '" data-i="' + i + '" aria-label="You said">' +
+            '<div class="body"><div class="bubble" title="' + esc(fmtDay(t)) + '">' + esc(m.text) + '</div>' +
+            '<div class="actions-row">' + actBtn('copy', 'copy', 'Copy') + actBtn('edit', 'edit', 'Edit and resend') + '</div></div></article>';
+    }
+    const p = personaFor(S.chat), mode = modeOf(m.mode || (S.chat && S.chat.mode));
+    const lastAssistant = isLast;
+    return '<article class="msg assistant' + (isLast ? ' last' : '') + '" data-i="' + i + '" aria-label="Wizard.AI replied">' +
+        '<div class="ava" aria-hidden="true">' + esc(p ? p.emoji : mode.emoji) + '</div>' +
+        '<div class="body"><div class="meta"><span class="who">' + esc(p ? p.name : 'Wizard.AI') + '</span><span class="mtag">' + esc(mode.name) + '</span><time>' + esc(fmtDay(t)) + '</time></div>' +
+        imgCard(m.image, m.prompt) +
+        (m.text ? '<div class="content md">' + md(m.text) + '</div>' : '') +
+        toolChips(m.tools) +
+        '<div class="actions-row">' + actBtn('copy', 'copy', 'Copy') + (lastAssistant ? actBtn('regen', 'refresh', 'Regenerate') : '') + '</div></div></article>';
+}
+
+function pendingHTML() {
+    const p = personaFor(S.chat), mode = modeOf(S.chat && S.chat.mode);
+    return '<article class="msg assistant streaming" id="pending" aria-label="Wizard.AI is replying" aria-busy="true">' +
+        '<div class="ava" aria-hidden="true">' + esc(p ? p.emoji : mode.emoji) + '</div>' +
+        '<div class="body"><div class="meta"><span class="who">' + esc(p ? p.name : 'Wizard.AI') + '</span><span class="mtag">' + esc(mode.name) + '</span></div>' +
+        '<div class="thinking" id="think"><span class="dots"><i></i><i></i><i></i></span><span id="think-label">Thinking…</span></div>' +
+        '<div class="content md" id="pending-content" hidden></div></div></article>';
+}
+
+function renderThread(keepScroll) {
+    const c = S.chat, th = $('thread'), sc = $('scroller');
+    if (!c) { th.innerHTML = ''; return; }
+    const msgs = c.messages || [];
+    const empty = !msgs.length && !S.busy;
+    $('empty').hidden = !empty;
+    if (empty) renderEmpty();
+    const from = Math.max(0, msgs.length > 120 ? msgs.length - 80 : 0);
+    S.renderFrom = from;
+    let html = '';
+    if (from > 0) html += '<button type="button" class="btn ghost sm" data-act="earlier" style="align-self:center">Show ' + from + ' earlier message' + (from === 1 ? '' : 's') + '</button>';
+    for (let i = from; i < msgs.length; i++) html += messageHTML(msgs[i], i, i === msgs.length - 1 && !S.busy);
+    th.innerHTML = html;
+    hydrate(th);
+    if (!keepScroll) scrollToBottom(true);
+    updateJump();
+}
+function showEarlier() {
+    const c = S.chat; if (!c) return;
+    const sc = $('scroller'), prevH = sc.scrollHeight;
+    const from = 0; S.renderFrom = 0;
+    let html = '';
+    for (let i = 0; i < c.messages.length; i++) html += messageHTML(c.messages[i], i, i === c.messages.length - 1 && !S.busy);
+    $('thread').innerHTML = html; hydrate($('thread'));
+    sc.scrollTop = sc.scrollHeight - prevH;
+}
+
+function nearBottom() { const sc = $('scroller'); return sc.scrollHeight - sc.scrollTop - sc.clientHeight < 90; }
+function scrollToBottom(force) {
+    const sc = $('scroller');
+    if (force || S.stick) { sc.scrollTop = sc.scrollHeight; }
+}
+function updateJump() { $('jump-btn').hidden = nearBottom(); }
+
+/* ============================================================
+   OPEN / CREATE / RENAME / DELETE
+   ============================================================ */
+function lastIdKey() { return 'last'; }
+async function openChat(id, opts) {
+    opts = opts || {};
+    if (!S.user || !id) return;
+    if (S.busy && S.turn && S.turn.cid === id) return; // already showing this chat, mid-reply
+    if (S.busy) abortTurn(true);
+    const token = ++S.openSeq;
+    // draft of the chat we are leaving
+    saveDraft();
+    const cached = store.get('c.' + id, null);
+    const summary = S.chats.find(c => c.chat_id === id);
+    const prior = S.chat && S.chat.chat_id === id ? S.chat : null;
+    S.chat = prior || (cached ? Object.assign({}, summary || {}, cached) : Object.assign({ messages: [] }, summary || { chat_id: id, name: 'New Chat', emoji: '🧙', mode: 'JARVIS' }));
+    store.set(lastIdKey(), id);
+    S.stick = true;
+    renderHeader(); renderThread(); renderList(); restoreDraft();
+    closeDrawer();
+    try {
+        const r = await api('/api/ai-chats/' + encodeURIComponent(id));
+        if (token !== S.openSeq) return;
+        if (S.busy && S.turn && S.turn.cid === id) return; // a reply is streaming into this chat; don't clobber it
+        S.chat = r.chat;
+        upsertSummary(summaryOf(S.chat)); cacheList(); cacheChat(S.chat);
+        renderHeader(); renderThread(!!opts.scrollTo || false); renderList();
+        if (opts.scrollTo != null && opts.scrollTo !== '') flashMessage(+opts.scrollTo);
+    } catch (e) {
+        if (token !== S.openSeq) return;
+        if (e.status === 404) {
+            S.chats = S.chats.filter(c => c.chat_id !== id); cacheList();
+            toast('That chat no longer exists.', 'err');
+            const next = sortedChats()[0];
+            if (next) openChat(next.chat_id); else newChat(true);
+        } else if (e.status !== 401) toast(errMsg(e), 'err');
+    }
+}
+function flashMessage(i) {
+    const el = qs('.msg[data-i="' + i + '"]'); if (!el) return;
+    el.scrollIntoView({ block: 'center' });
+    el.animate([{ background: 'rgba(201,168,76,.22)' }, { background: 'transparent' }], { duration: 1600 });
+}
+
+async function newChat(force) {
+    if (!S.user) { openAuth('login'); return; }
+    const cur = S.chat;
+    if (!force && cur && !(cur.messages || []).length && !S.busy) { focusInput(); closeDrawer(); return; }
+    if (S.busy) abortTurn(true);
+    const mode = (S.chat && S.chat.mode) || (S.profile && S.profile.preferred_mode) || 'JARVIS';
+    try {
+        const r = await api('/api/ai-chats', { method: 'POST', body: { name: 'New Chat', emoji: '🧙', mode } });
+        upsertSummary(r.chat); cacheList();
+        const el = S.chat; S.chat = null; // force fresh open
+        await openChat(r.chat.chat_id);
+        const fresh = qs('.chat-item[data-id="' + CSS.escape(r.chat.chat_id) + '"]'); if (fresh) fresh.classList.add('fresh');
+        focusInput();
+    } catch (e) { toast(errMsg(e), 'err'); }
+}
+
+function renameChat(id) {
+    const c = S.chats.find(x => x.chat_id === id) || (S.chat && S.chat.chat_id === id ? S.chat : null); if (!c) return;
+    S.menuChatId = id;
+    $('rename-input').value = DEFAULT_TITLES.includes(c.name) ? '' : c.name;
+    openModal('m-rename');
+    $('rename-input').select();
+}
+async function doRename(name) {
+    const id = S.menuChatId; name = name.trim().slice(0, 60);
+    if (!id || !name) return;
+    const sum = S.chats.find(c => c.chat_id === id); const old = sum ? sum.name : null;
+    if (sum) sum.name = name;
+    if (S.chat && S.chat.chat_id === id) { S.chat.name = name; renderHeader(); }
+    renderList();
+    try { await api('/api/ai-chats/' + encodeURIComponent(id), { method: 'PATCH', body: { name } }); cacheList(); }
+    catch (e) { if (sum && old != null) sum.name = old; if (S.chat && S.chat.chat_id === id && old != null) S.chat.name = old; renderHeader(); renderList(); toast(errMsg(e), 'err'); }
+}
+
+const pendingDeletes = new Map();
+function commitDelete(id) {
+    const p = pendingDeletes.get(id); if (!p) return;
+    clearTimeout(p.timer); pendingDeletes.delete(id);
+    api('/api/ai-chats/' + encodeURIComponent(id), { method: 'DELETE' }).then(() => { store.del('c.' + id); if (id === 'default') refreshChats(true); })
+        .catch(e => { if (e.status !== 401) { toast('Couldn’t delete that chat: ' + errMsg(e), 'err'); refreshChats(true); } });
+}
+async function deleteChat(id) {
+    const c = S.chats.find(x => x.chat_id === id); if (!c) return;
+    pendingDeletes.forEach((_, k) => commitDelete(k));
+    const idx = S.chats.indexOf(c);
+    S.chats = S.chats.filter(x => x.chat_id !== id); cacheList();
+    const timer = setTimeout(() => { commitDelete(id); hideSnack(); }, 7000);
+    pendingDeletes.set(id, { timer, c, idx });
+    const wasActive = S.chat && S.chat.chat_id === id;
+    if (wasActive) { if (S.busy) abortTurn(true); S.chat = null; const next = sortedChats()[0]; if (next) await openChat(next.chat_id); else await newChat(true); }
+    renderList();
+    snack('Chat “' + (c.name || 'New chat').slice(0, 40) + '” deleted', () => {
+        const p = pendingDeletes.get(id); if (!p) return;
+        clearTimeout(p.timer); pendingDeletes.delete(id);
+        S.chats.splice(Math.min(p.idx, S.chats.length), 0, p.c); cacheList(); renderList();
+        if (wasActive) openChat(id);
+        toast('Chat restored', 'ok');
+    }, 7000);
+}
+window.addEventListener('pagehide', () => {
+    pendingDeletes.forEach((p, id) => {
+        try { fetch(API + '/api/ai-chats/' + encodeURIComponent(id), { method: 'DELETE', credentials: 'include', keepalive: true }); } catch (e) { }
     });
-    
-    return { id: thinkingId, element: msgDiv, processDiv: processDiv };
-}
-
-function updateThinkingMessage(thinkingId, text) {
-    const msgDiv = document.getElementById(thinkingId);
-    if (!msgDiv) return;
-    
-    const processDiv = msgDiv.querySelector('.thinking-process');
-    if (processDiv) {
-        processDiv.innerHTML = text;
-    }
-}
-
-function removeThinkingMessage(thinkingId) {
-    const msgDiv = document.getElementById(thinkingId);
-    if (msgDiv) {
-        msgDiv.remove();
-    }
-}
-
-// ============================================
-// INITIALIZATION
-// ============================================
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Initializing Wizard.AI v15.3.0...');
-    console.log('📱 Mobile device:', isMobile);
-    
-    showNotification('🧙 Summoning the Wizard...', 'info', 2000);
-    registerServiceWorker();
-    setupEventListeners();
-    setupDropdown();
-    setupModals();
-    initVoiceRecognition();
-    initProfileTabs();
-    addEcosystemQuickActions();
-    
-    if (isMobile) {
-        initMobileLayout();
-    }
-    
-    loadGuestData();
-    await checkAuth();
-    if (currentUser) {
-        startSessionCheck();
-        await detectAndSaveTimezone();
-        await loadProfile();
-    }
-    loadCustomPersonalities();
-    loadChats();
-    await loadStats();
-    await loadUserApiKeys();
-    loadPublicPersonalities();
-    setupDevHubButton();
-    setupAgentStudioButton();
-    setupApiKeysButton();
-    setInterval(updateStatsDisplay, 30000);
-    checkBackendStatus();
-    setInterval(checkBackendStatus, 30000);
-    setupPWAInstallPrompt();
-    
-    console.log('✅ Wizard.AI v15.3.0 ready!');
-    console.log('🧠 Code blocks with copy buttons enabled');
-    console.log('🎨 In-chat image generation enabled');
 });
 
-function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(reg => console.log('✅ Service Worker registered'))
-            .catch(err => console.log('❌ Service Worker error:', err));
-    }
-}
-
-// ============================================
-// AGENT STUDIO BUTTON
-// ============================================
-function setupAgentStudioButton() {
-    if (agentStudioBtn) {
-        agentStudioBtn.addEventListener('click', () => {
-            window.open('/ai/agent-studio/', '_blank');
-        });
-    }
-}
-
-// ============================================
-// MOBILE LAYOUT
-// ============================================
-function initMobileLayout() {
-    const leftSidebar = document.querySelector('.sidebar');
-    const rightSidebar = document.querySelector('.chats-sidebar');
-    const appContainer = document.querySelector('.app-container');
-    
-    if (leftSidebar) leftSidebar.style.display = 'none';
-    if (rightSidebar) rightSidebar.style.display = 'none';
-    if (appContainer) appContainer.style.flexDirection = 'column';
-    
-    const hamburgerBtn = document.createElement('button');
-    hamburgerBtn.innerHTML = '☰';
-    hamburgerBtn.className = 'hamburger-menu';
-    hamburgerBtn.style.cssText = `
-        position: fixed;
-        top: 15px;
-        left: 15px;
-        z-index: 10000;
-        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-        border: none;
-        border-radius: 50%;
-        width: 45px;
-        height: 45px;
-        font-size: 24px;
-        color: white;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
-    `;
-    document.body.appendChild(hamburgerBtn);
-    
-    const overlay = document.createElement('div');
-    overlay.className = 'mobile-sidebar-overlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.7);
-        z-index: 10001;
-        display: none;
-        backdrop-filter: blur(5px);
-    `;
-    document.body.appendChild(overlay);
-    
-    const mobilePanel = document.createElement('div');
-    mobilePanel.className = 'mobile-sidebar-panel';
-    mobilePanel.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: -280px;
-        width: 280px;
-        height: 100%;
-        background: linear-gradient(135deg, #0a0f1a, #030614);
-        z-index: 10002;
-        transition: left 0.3s ease;
-        overflow-y: auto;
-        padding: 20px;
-        box-shadow: 2px 0 20px rgba(0,0,0,0.5);
-    `;
-    
-    if (leftSidebar) {
-        const leftSidebarClone = leftSidebar.cloneNode(true);
-        leftSidebarClone.style.display = 'block';
-        leftSidebarClone.style.width = '100%';
-        leftSidebarClone.style.background = 'transparent';
-        leftSidebarClone.style.border = 'none';
-        mobilePanel.appendChild(leftSidebarClone);
-    }
-    
-    const closeBtn = document.createElement('button');
-    closeBtn.innerHTML = '✕';
-    closeBtn.style.cssText = `
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(255,255,255,0.1);
-        border: none;
-        border-radius: 50%;
-        width: 35px;
-        height: 35px;
-        font-size: 18px;
-        color: white;
-        cursor: pointer;
-    `;
-    mobilePanel.appendChild(closeBtn);
-    document.body.appendChild(mobilePanel);
-    
-    function toggleSidebar() {
-        sidebarOpen = !sidebarOpen;
-        if (sidebarOpen) {
-            mobilePanel.style.left = '0';
-            overlay.style.display = 'block';
-            hamburgerBtn.innerHTML = '✕';
-        } else {
-            mobilePanel.style.left = '-280px';
-            overlay.style.display = 'none';
-            hamburgerBtn.innerHTML = '☰';
-        }
-    }
-    
-    hamburgerBtn.addEventListener('click', toggleSidebar);
-    overlay.addEventListener('click', toggleSidebar);
-    closeBtn.addEventListener('click', toggleSidebar);
-    
-    const chatArea = document.querySelector('.chat-area');
-    if (chatArea) {
-        chatArea.style.margin = '0';
-        chatArea.style.borderRadius = '0';
-    }
-    
-    const chatHistoryEl = document.querySelector('.chat-history');
-    if (chatHistoryEl) {
-        chatHistoryEl.style.maxHeight = 'calc(100vh - 160px)';
-        chatHistoryEl.style.padding = '15px';
-    }
-    
-    const style = document.createElement('style');
-    style.textContent = `
-        @media (max-width: 768px) {
-            .message.user .message-content { max-width: 85% !important; }
-            .pro-toolbar { overflow-x: auto; justify-content: flex-start; gap: 8px; padding: 10px; }
-            .pro-btn { flex-shrink: 0; }
-            .input-area { margin: 10px; padding: 10px; }
-            .chat-header { margin: 10px; padding: 12px; }
-            #chat-input { font-size: 16px; }
-            .hamburger-menu { display: flex; align-items: center; justify-content: center; }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// ============================================
-// BACKEND STATUS
-// ============================================
-async function checkBackendStatus() {
-    const statusTextEl = document.getElementById('status-text');
-    const statusDotEl = document.querySelector('.status-dot');
-    
-    if (!statusTextEl || !statusDotEl) return;
-    
+async function clearChat(id) {
+    const ok = await confirmBox({ title: 'Clear this conversation?', body: 'All messages in this chat will be removed. The chat itself stays.', yes: 'Clear messages', danger: true });
+    if (!ok) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/status`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            credentials: 'omit'
+        await api('/api/ai-chats/' + encodeURIComponent(id) + '/clear', { method: 'POST' });
+        if (S.chat && S.chat.chat_id === id) { S.chat.messages = []; renderThread(); }
+        const s = S.chats.find(c => c.chat_id === id); if (s) { s.message_count = 0; s.preview = ''; }
+        cacheList(); cacheChat(S.chat); renderList(); toast('Chat cleared', 'ok');
+    } catch (e) { toast(errMsg(e), 'err'); }
+}
+
+async function exportChat(id, all) {
+    try {
+        let chat = S.chat && S.chat.chat_id === id ? S.chat : null;
+        if (!chat || (chat.messages || []).length === 0) chat = (await api('/api/ai-chats/' + encodeURIComponent(id))).chat;
+        if (!(chat.messages || []).length) { toast('Nothing to export yet.', 'warn'); return; }
+        downloadBlob(safeFile(chat.name) + '.md', toMarkdownExport(chat));
+        toast('Exported', 'ok');
+    } catch (e) { toast(errMsg(e), 'err'); }
+}
+async function exportAll() {
+    try {
+        const parts = [];
+        for (const s of sortedChats()) {
+            const chat = (await api('/api/ai-chats/' + encodeURIComponent(s.chat_id))).chat;
+            if ((chat.messages || []).length) parts.push(toMarkdownExport(chat));
+        }
+        if (!parts.length) { toast('No messages to export yet.', 'warn'); return; }
+        downloadBlob('wizard-ai-chats-' + new Date().toISOString().slice(0, 10) + '.md', parts.join('\n\n---\n\n'));
+        toast('Exported ' + parts.length + ' chats', 'ok');
+    } catch (e) { toast(errMsg(e), 'err'); }
+}
+
+/* ---------- drafts ---------- */
+function saveDraft() {
+    const c = S.chat, inp = $('input'); if (!c || !inp) return;
+    const v = inp.value;
+    if (v.trim()) store.set('d.' + c.chat_id, v.slice(0, MAX_LEN)); else store.del('d.' + c.chat_id);
+}
+function restoreDraft() {
+    const c = S.chat, inp = $('input'); if (!c) return;
+    inp.value = store.get('d.' + c.chat_id, '') || '';
+    autoGrow();
+}
+const saveDraftSoon = debounce(saveDraft, 400);
+
+/* ---------- sidebar ---------- */
+function openDrawer() { $('shell').classList.add('drawer'); }
+function closeDrawer() { $('shell').classList.remove('drawer'); }
+function toggleSidebar() {
+    if (mobileMQ.matches) { $('shell').classList.toggle('drawer'); return; }
+    S.settings.collapsed = !S.settings.collapsed; applySettings();
+}
+
+/* ============================================================
+   SENDING, STREAMING, TYPEWRITER
+   ============================================================ */
+const TW = { full: '', shown: 0, raf: 0, el: null, netDone: false, resolve: null, last: 0 };
+function twReset(el) { cancelAnimationFrame(TW.raf); TW.full = ''; TW.shown = 0; TW.raf = 0; TW.el = el; TW.netDone = false; TW.resolve = null; TW.last = 0; }
+function twPaint() {
+    if (!TW.el) return;
+    let n = TW.shown;
+    const c = TW.full.charCodeAt(n - 1);
+    if (c >= 0xD800 && c <= 0xDBFF) n++;
+    TW.el.hidden = false;
+    TW.el.innerHTML = md(TW.full.slice(0, n));
+    hydrate(TW.el);
+    if (S.stick) scrollToBottom(true);
+}
+function twKick() { if (!TW.raf) TW.raf = requestAnimationFrame(twStep); }
+function twStep(ts) {
+    TW.raf = 0;
+    const back = TW.full.length - TW.shown;
+    if (back > 0) {
+        if (reduceMotion() || document.hidden) TW.shown = TW.full.length;
+        else TW.shown = Math.min(TW.full.length, TW.shown + Math.max(2, Math.ceil(back * 0.06)));
+        if (!TW.last || ts - TW.last > 28 || TW.shown >= TW.full.length) { twPaint(); TW.last = ts; }
+    }
+    if (TW.shown < TW.full.length) TW.raf = requestAnimationFrame(twStep);
+    else if (TW.netDone && TW.resolve) { const r = TW.resolve; TW.resolve = null; r(); }
+}
+function twFinish() { // resolves when everything is revealed
+    TW.netDone = true;
+    return new Promise(res => {
+        if (TW.shown >= TW.full.length) { twPaint(); res(); return; }
+        TW.resolve = res; twKick();
+    });
+}
+function twSkip() { TW.shown = TW.full.length; twPaint(); if (TW.netDone && TW.resolve) { const r = TW.resolve; TW.resolve = null; r(); } }
+
+function setThink(text) { const l = $('think-label'); if (l) l.textContent = text; }
+function setBusy(b) {
+    S.busy = b;
+    const btn = $('send-btn');
+    btn.classList.toggle('stop', b);
+    setIcon(btn, b ? 'stop' : 'send');
+    btn.setAttribute('aria-label', b ? 'Stop generating' : 'Send message');
+    btn.title = b ? 'Stop (Esc)' : 'Send (Enter)';
+    updateSendState();
+    $('composer').classList.toggle('busy', b);
+}
+function updateSendState() {
+    const btn = $('send-btn');
+    btn.disabled = !S.busy && !$('input').value.trim();
+}
+function tzName() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined; } catch (e) { return undefined; } }
+
+function removePending() { const p = $('pending'); if (p) p.remove(); }
+
+function errorBox(msg, canRetry) {
+    const p = $('pending');
+    const html = '<article class="msg assistant error" aria-live="polite"><div class="ava" aria-hidden="true">⚠️</div><div class="body"><div class="err-box"><span>' + esc(msg) + '</span>' +
+        (canRetry ? '<button type="button" class="btn ghost" data-act="retry"><i data-icon="refresh"></i>Try again</button>' : '') + '</div></div></article>';
+    if (p) { p.outerHTML = html; } else $('thread').insertAdjacentHTML('beforeend', html);
+    hydrate($('thread')); scrollToBottom(true);
+}
+
+function abortTurn(silent) {
+    if (!S.busy) return;
+    const t = S.turn;
+    if (S.phase === 'net' && S.ctl) {
+        try { S.ctl.abort(); } catch (e) { }
+        if (t) t.aborted = true; if (t) t.silent = !!silent;
+    } else if (S.phase === 'reveal') {
+        twSkip();
+    }
+}
+
+async function send(text, opt) {
+    opt = opt || {};
+    text = String(text || '').trim();
+    if (!text || S.busy) return;
+    if (!S.user) { openAuth('login'); return; }
+    if (S.offline) { toast('You’re offline.', 'err'); return; }
+    if (text.length > MAX_LEN) { toast('That message is too long (max ' + MAX_LEN.toLocaleString() + ' characters).', 'err'); return; }
+    const chat = S.chat; if (!chat) return;
+    const cid = chat.chat_id;
+    const replaceFrom = opt.replaceFrom != null ? opt.replaceFrom : null;
+
+    if (replaceFrom != null) chat.messages = chat.messages.slice(0, replaceFrom);
+    const userIdx = chat.messages.length;
+    const userMsg = { sender: 'user', text, mode: chat.mode, timestamp: new Date().toISOString() };
+    chat.messages.push(userMsg);
+    S.lastSend = { text, replaceFrom: userIdx };
+    S.stick = true;
+    setBusy(true); S.phase = 'net';
+    const turn = S.turn = { cid, userIdx, aborted: false, silent: false };
+
+    if (replaceFrom != null || $('empty').hidden === false) renderThread();
+    else { qsa('.msg.last').forEach(m => m.classList.remove('last')); }
+    if (replaceFrom == null && !qs('.msg[data-i="' + userIdx + '"]')) {
+        $('thread').insertAdjacentHTML('beforeend', messageHTML(userMsg, userIdx, false));
+    }
+    $('empty').hidden = true;
+    $('thread').insertAdjacentHTML('beforeend', pendingHTML());
+    hydrate($('thread')); scrollToBottom(true);
+    twReset($('pending-content'));
+
+    if (!opt.keepInput) { $('input').value = ''; autoGrow(); store.del('d.' + cid); }
+    S.attach = []; renderChips();
+
+    const auto = S.settings.autoWeb && FRESH_RE.test(text);
+    const body = { message: text, mode: chat.mode, search: !!(S.webOn || auto), chat_id: cid, tz: tzName() };
+    if (replaceFrom != null) body.replace_from = userIdx;
+    const persona = personaFor(chat); if (persona && persona.id) body.personality_id = persona.id;
+
+    const ctl = S.ctl = new AbortController();
+    let done = null, errorText = null, images = [], tools = [], gotAny = false;
+    progress(true);
+    try {
+        const res = await fetch(API + '/api/compound/stream', {
+            method: 'POST', credentials: 'include', signal: ctl.signal,
+            headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
         });
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.maintenance === true) {
-                statusTextEl.textContent = 'Maintenance Mode';
-                statusDotEl.style.background = '#f59e0b';
-                statusDotEl.style.boxShadow = '0 0 15px #f59e0b';
-            } else {
-                statusTextEl.textContent = 'Connected';
-                statusDotEl.style.background = '#10b981';
-                statusDotEl.style.boxShadow = '0 0 15px #10b981';
-            }
-            statusDotEl.classList.remove('offline');
+        if (S.offline) setConn('ok');
+        if (!res.ok) {
+            let d = null; try { d = await res.json(); } catch (e) { }
+            if (res.status === 401) { sessionLost(); return; }
+            errorText = (d && d.error) || 'The server hit a problem. Please try again.';
+            if (res.status === 429 && d && d.retry_after && !/try again/i.test(errorText)) errorText += ' Try again in ' + waitText(d.retry_after) + '.';
         } else {
-            statusTextEl.textContent = 'Maintenance in Progress';
-            statusDotEl.style.background = '#f59e0b';
-            statusDotEl.classList.remove('offline');
-        }
-    } catch (error) {
-        statusTextEl.textContent = 'Offline';
-        statusDotEl.style.background = '#ef4444';
-        statusDotEl.classList.add('offline');
-    }
-}
-
-// ============================================
-// DEV HUB BUTTON
-// ============================================
-function setupDevHubButton() {
-    if (devHubBtn) {
-        devHubBtn.addEventListener('click', () => {
-            window.open('/ai/devhub/', '_blank');
-        });
-    }
-}
-
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-function openModal(modal) {
-    if (modal) modal.classList.add('active');
-}
-
-function closeModal(modal) {
-    if (modal) modal.classList.remove('active');
-}
-
-function showNotification(message, type = 'info', duration = 3000) {
-    if (!notificationToast) return;
-    notificationToast.textContent = message;
-    notificationToast.className = 'notification-toast show';
-    if (type === 'success') notificationToast.classList.add('success');
-    if (type === 'error') notificationToast.classList.add('error');
-    if (type === 'warning') notificationToast.style.borderColor = '#f59e0b';
-    setTimeout(() => notificationToast.classList.remove('show'), duration);
-}
-
-function emergencyReset() {
-    isThinking = false;
-    if (sendBtn) {
-        sendBtn.disabled = false;
-        sendBtn.classList.remove('loading');
-    }
-    if (typingIndicator) typingIndicator.style.display = 'none';
-    if (chatInput) chatInput.disabled = false;
-    if (chatInput) chatInput.focus();
-    if (inputSearchIndicator) inputSearchIndicator.style.display = 'none';
-    showNotification('⚠️ Emergency reset activated', 'warning', 3000);
-}
-
-function setupModals() {
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-overlay.active').forEach(modal => {
-                closeModal(modal);
-            });
-        }
-    });
-}
-
-// ============================================
-// PWA INSTALL PROMPT
-// ============================================
-function setupPWAInstallPrompt() {
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        pwaDeferredPrompt = e;
-        const installPromptDiv = document.getElementById('install-prompt');
-        if (installPromptDiv && !localStorage.getItem('installDismissed')) {
-            installPromptDiv.style.display = 'flex';
-        }
-    });
-    
-    const installBtn = document.getElementById('install-btn');
-    const closeInstallBtn = document.getElementById('close-install');
-    
-    if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-            if (pwaDeferredPrompt) {
-                pwaDeferredPrompt.prompt();
-                const { outcome } = await pwaDeferredPrompt.userChoice;
-                console.log(`User response: ${outcome}`);
-                pwaDeferredPrompt = null;
-                const installPromptDiv = document.getElementById('install-prompt');
-                if (installPromptDiv) installPromptDiv.style.display = 'none';
-                if (outcome === 'accepted') {
-                    showNotification('✅ Wizard.AI added to your home screen!', 'success');
+            const handle = ev => {
+                gotAny = true;
+                if (typeof ev.thinking === 'string') {
+                    setThink(ev.thinking);
+                    const m = /^🔧 Used:\s*(.+)$/.exec(ev.thinking);
+                    if (m) tools = m[1].split(',').map(s => s.trim()).filter(Boolean);
                 }
-            }
-        });
-    }
-    
-    if (closeInstallBtn) {
-        closeInstallBtn.addEventListener('click', () => {
-            const installPromptDiv = document.getElementById('install-prompt');
-            if (installPromptDiv) installPromptDiv.style.display = 'none';
-            localStorage.setItem('installDismissed', 'true');
-            setTimeout(() => {
-                localStorage.removeItem('installDismissed');
-            }, 86400000);
-        });
-    }
-}
-
-// ============================================
-// DROPDOWN SETUP
-// ============================================
-function setupDropdown() {
-    if (!dropdownContent) return;
-    dropdownContent.innerHTML = '';
-    Object.keys(modeData).forEach(mode => {
-        dropdownContent.appendChild(createDropdownItem(mode, modeData[mode].emoji, false));
-    });
-    updateCustomPersonalitiesDropdown();
-    if (dropdownBtn) {
-        dropdownBtn.addEventListener('click', e => {
-            e.stopPropagation();
-            dropdown.classList.toggle('open');
-        });
-    }
-    document.addEventListener('click', e => {
-        if (!dropdown.contains(e.target)) dropdown.classList.remove('open');
-    });
-}
-
-function createDropdownItem(mode, emoji, isCustom = false) {
-    const item = document.createElement('div');
-    item.className = `dropdown-item ${mode === currentMode ? 'selected' : ''} ${isCustom ? 'custom' : ''}`;
-    item.setAttribute('data-mode', mode);
-    item.innerHTML = `<span style="font-size: 18px;">${emoji}</span><span>${mode}</span>`;
-    item.addEventListener('mouseenter', e => showTooltip(mode, e));
-    item.addEventListener('mouseleave', hideTooltip);
-    item.addEventListener('click', () => selectMode(mode));
-    return item;
-}
-
-function selectMode(mode) {
-    currentMode = mode;
-    updateModeDisplay();
-    if (dropdown) dropdown.classList.remove('open');
-    hideTooltip();
-    if (chats[activeChatId]) chats[activeChatId].mode = mode;
-    saveChats();
-    showNotification(`Switched to ${mode} mode`, 'info');
-}
-
-function updateModeDisplay() {
-    const mode = modeData[currentMode] || customPersonalities.find(p => p.name === currentMode) || { emoji: '🎩', name: currentMode };
-    if (selectedDisplay) selectedDisplay.innerHTML = `${mode.emoji || '🤖'} ${currentMode}`;
-    document.querySelectorAll('.dropdown-item').forEach(el => {
-        el.classList.toggle('selected', el.dataset.mode === currentMode);
-    });
-}
-
-// ============================================
-// TOOLTIP SYSTEM
-// ============================================
-let tooltipEl = null;
-
-function createTooltip() {
-    if (tooltipEl) return;
-    tooltipEl = document.createElement('div');
-    tooltipEl.style.cssText = `position:fixed; display:none; z-index:10000; background:linear-gradient(135deg,#1a1035,#0d0a1f); border:2px solid #8b5cf6; border-radius:12px; padding:12px 16px; max-width:280px; box-shadow:0 0 30px rgba(139,92,246,0.5); backdrop-filter:blur(10px); color:white; font-size:13px; pointer-events:none; border-left:4px solid #8b5cf6;`;
-    document.body.appendChild(tooltipEl);
-}
-
-function showTooltip(modeKey, event) {
-    if (!tooltipEl) createTooltip();
-    const mode = modeData[modeKey] || customPersonalities.find(p => p.name === modeKey);
-    if (!mode) return;
-    tooltipEl.innerHTML = `<div style="display:flex; gap:12px;"><div style="font-size:32px;">${mode.emoji || '🤖'}</div><div><div style="font-weight:bold; color:${mode.color || '#8b5cf6'}; font-size:15px;">${mode.name || modeKey}</div><div style="color:#e0e7ff; font-size:12px; margin-top:4px;">${mode.desc || (mode.system_prompt ? mode.system_prompt.substring(0,100)+'...' : 'Custom personality')}</div><div style="color:#9ca3af; font-size:11px; margin-top:8px;">🧠 ${mode.model || 'Custom'}</div></div></div>`;
-    const rect = event.target.getBoundingClientRect();
-    tooltipEl.style.display = 'block';
-    tooltipEl.style.left = `${rect.right + 15}px`;
-    tooltipEl.style.top = `${rect.top}px`;
-    const tooltipRect = tooltipEl.getBoundingClientRect();
-    if (tooltipRect.right > window.innerWidth) tooltipEl.style.left = `${rect.left - tooltipRect.width - 15}px`;
-}
-
-function hideTooltip() {
-    if (tooltipEl) tooltipEl.style.display = 'none';
-}
-
-// ============================================
-// CUSTOM PERSONALITIES
-// ============================================
-function loadCustomPersonalities() {
-    const saved = localStorage.getItem('wizard_custom_personalities');
-    if (saved) {
-        try {
-            customPersonalities = JSON.parse(saved);
-            updateCustomPersonalitiesDropdown();
-        } catch (e) {}
-    }
-}
-
-function saveCustomPersonalitiesToStorage() {
-    localStorage.setItem('wizard_custom_personalities', JSON.stringify(customPersonalities));
-}
-
-function updateCustomPersonalitiesDropdown() {
-    if (!dropdownContent) return;
-    document.querySelectorAll('.dropdown-item.custom, .dropdown-separator').forEach(el => el.remove());
-    if (customPersonalities.length > 0) {
-        const sep = document.createElement('div');
-        sep.className = 'dropdown-separator';
-        sep.style.cssText = 'padding:8px 15px; color:#9ca3af; font-size:11px; text-transform:uppercase; letter-spacing:1px; border-top:1px solid rgba(139,92,246,0.3); border-bottom:1px solid rgba(139,92,246,0.3); background:rgba(0,0,0,0.2);';
-        sep.textContent = '✨ CUSTOM PERSONALITIES';
-        dropdownContent.appendChild(sep);
-        customPersonalities.forEach(p => {
-            dropdownContent.appendChild(createDropdownItem(p.name, p.emoji || '🤖', true));
-        });
-    }
-}
-
-function toggleCreatorPanel() {
-    if (!creatorPanel) return;
-    creatorPanel.style.display = creatorPanel.style.display === 'none' ? 'block' : 'none';
-    if (toggleCreatorBtn) {
-        const span = toggleCreatorBtn.querySelector('.btn-icon');
-        if (span) span.textContent = creatorPanel.style.display === 'block' ? '➖' : '➕';
-    }
-}
-
-function closeCreatorPanel() {
-    if (!creatorPanel) return;
-    creatorPanel.style.display = 'none';
-    if (toggleCreatorBtn) {
-        const span = toggleCreatorBtn.querySelector('.btn-icon');
-        if (span) span.textContent = '➕';
-    }
-    clearCreatorForm();
-}
-
-function clearCreatorForm() {
-    if (customName) customName.value = '';
-    if (customEmoji) customEmoji.value = '';
-    if (customPrompt) customPrompt.value = '';
-    if (customGreeting) customGreeting.value = '';
-    if (customPublic) customPublic.checked = true;
-}
-
-async function saveCustomPersonality() {
-    if (!currentUser) {
-        showNotification('Please login to create personalities', 'error');
-        return;
-    }
-    const name = customName.value.trim();
-    const emoji = customEmoji.value.trim() || '🤖';
-    const prompt = customPrompt.value.trim();
-    const greeting = customGreeting.value.trim() || `Hello! I'm ${name}.`;
-    const isPublic = customPublic.checked;
-    if (!name || !prompt) {
-        showNotification('Name and prompt are required', 'error');
-        return;
-    }
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/personalities`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ name, emoji, prompt, greeting, is_public: isPublic })
-        });
-        if (response.ok) {
-            const personality = await response.json();
-            customPersonalities.push({
-                name: personality.name,
-                emoji: personality.emoji,
-                system_prompt: personality.system_prompt,
-                greeting: personality.greeting,
-                id: personality.id
-            });
-            saveCustomPersonalitiesToStorage();
-            updateCustomPersonalitiesDropdown();
-            showNotification('Personality created!', 'success');
-            closeCreatorPanel();
-        } else {
-            const error = await response.json();
-            showNotification(error.error || 'Failed to create personality', 'error');
-        }
-    } catch (error) {
-        showNotification('Error creating personality', 'error');
-    }
-}
-
-// ============================================
-// VOICE RECOGNITION
-// ============================================
-function initVoiceRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        if (voiceBtn) voiceBtn.style.display = 'none';
-        return;
-    }
-    voiceRecognition = new SpeechRecognition();
-    voiceRecognition.continuous = false;
-    voiceRecognition.interimResults = false;
-    voiceRecognition.lang = 'en-US';
-    voiceRecognition.onstart = () => {
-        isVoiceListening = true;
-        if (voiceBtn) voiceBtn.classList.add('listening');
-        showNotification('🎤 Listening...', 'info');
-    };
-    voiceRecognition.onend = () => {
-        isVoiceListening = false;
-        if (voiceBtn) voiceBtn.classList.remove('listening');
-    };
-    voiceRecognition.onresult = e => {
-        const transcript = e.results[0][0].transcript;
-        if (chatInput) chatInput.value = transcript;
-        showNotification(`🎤 "${transcript}"`, 'success');
-        setTimeout(() => sendMessage(), 500);
-    };
-    voiceRecognition.onerror = e => {
-        isVoiceListening = false;
-        if (voiceBtn) voiceBtn.classList.remove('listening');
-        showNotification(`Voice error: ${e.error}`, 'error');
-    };
-}
-
-function toggleVoiceInput() {
-    if (!voiceRecognition) {
-        initVoiceRecognition();
-        if (!voiceRecognition) return;
-    }
-    if (isVoiceListening) voiceRecognition.stop();
-    else voiceRecognition.start();
-}
-
-// ============================================
-// TURBO & SEARCH MODES
-// ============================================
-function toggleTurboMode() {
-    turboMode = !turboMode;
-    if (turboBtn) turboBtn.classList.toggle('active', turboMode);
-    if (turboStatus) turboStatus.textContent = turboMode ? 'ON' : 'OFF';
-    showNotification(`Turbo mode ${turboMode ? 'activated' : 'deactivated'}`, 'info');
-}
-
-function toggleSearchMode() {
-    searchMode = !searchMode;
-    if (searchBtn) {
-        searchBtn.classList.toggle('active', searchMode);
-        const btnText = searchBtn.querySelector('.btn-text');
-        if (btnText) {
-            btnText.textContent = searchMode ? 'Search ON' : 'Search';
-        }
-    }
-    showNotification(`Web search ${searchMode ? 'enabled' : 'disabled'}`, 'info');
-}
-
-function shouldAutoSearch(text) {
-    const triggers = [
-        'latest', 'news', 'current', 'today', 'now', 
-        '2024', '2025', '2026', 'recent', 'update', 
-        'weather', 'stock', 'price', 'score', 'results', 
-        'who is', 'what is', 'tell me about', 'find', 'search',
-        'ww3', 'war', 'conflict', 'election', 'president',
-        'breaking', 'live', 'trending', 'forecast', 'prediction'
-    ];
-    const lowerText = text.toLowerCase();
-    return triggers.some(t => lowerText.includes(t));
-}
-
-// ============================================
-// API KEYS MANAGEMENT
-// ============================================
-async function loadUserApiKeys() {
-    const apiKeysList = document.getElementById('api-keys-list');
-    if (!apiKeysList) return;
-    
-    if (!currentUser) {
-        apiKeysList.innerHTML = '<div class="no-keys-message">🔐 Login to view your API keys</div>';
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/keys`, {
-            credentials: 'include'
-        });
-        
-        if (response.ok) {
-            const keys = await response.json();
-            
-            if (!keys || keys.length === 0) {
-                apiKeysList.innerHTML = '<div class="no-keys-message">✨ No API keys yet. Visit the <a href="/devhub/">Developer Hub</a> to create one!</div>';
-            } else {
-                let html = '';
-                keys.forEach(key => {
-                    const maskedKey = key.key.substring(0, 15) + '...' + key.key.substring(key.key.length - 8);
-                    html += `
-                        <div class="api-key-item">
-                            <div class="api-key-name">${escapeHtml(key.name)}</div>
-                            <div class="api-key-value">${maskedKey}</div>
-                            <div class="api-key-stats">
-                                📊 ${key.requests || 0} requests
-                                ${key.is_active ? '✅ Active' : '❌ Revoked'}
-                            </div>
-                        </div>
-                    `;
-                });
-                apiKeysList.innerHTML = html;
-            }
-        } else if (response.status === 401) {
-            apiKeysList.innerHTML = '<div class="no-keys-message">🔐 Please login to view your API keys</div>';
-        } else {
-            apiKeysList.innerHTML = '<div class="no-keys-message">⚠️ Failed to load API keys</div>';
-        }
-    } catch (error) {
-        console.error('Error loading API keys:', error);
-        apiKeysList.innerHTML = '<div class="no-keys-message">⚠️ Error loading keys</div>';
-    }
-}
-
-function setupApiKeysButton() {
-    const sidebarKeyBtn = document.getElementById('create-api-key-sidebar');
-    
-    if (sidebarKeyBtn) {
-        sidebarKeyBtn.addEventListener('click', () => {
-            if (!currentUser) {
-                showNotification('Please login to manage API keys', 'error');
-                showAuthModal(true);
-                return;
-            }
-            window.open('/devhub/', '_blank');
-        });
-    }
-}
-
-// ============================================
-// CHAT MANAGEMENT
-// ============================================
-
-function renderMessageContent(sender, text) {
-    if (sender === 'user') {
-        return escapeHtml(text);
-    } else {
-        return renderMarkdown(text);
-    }
-}
-
-function createMessageElement(sender, text, mode = null, isStreaming = false) {
-    const msg = document.createElement('div');
-    msg.className = `message ${sender}`;
-    if (isStreaming) msg.classList.add('streaming');
-    
-    const renderedContent = renderMessageContent(sender, text);
-    
-    if (sender === 'user') {
-        msg.innerHTML = `
-            <div class="message-content">
-                <div class="message-text">${renderedContent}</div>
-                <div class="message-time">${new Date().toLocaleTimeString()}</div>
-            </div>
-        `;
-    } else {
-        msg.innerHTML = `
-            <div class="message-content">
-                <div class="message-text">${renderedContent}</div>
-                <div class="message-time">${new Date().toLocaleTimeString()}</div>
-            </div>
-        `;
-    }
-    return msg;
-}
-
-function addMessage(sender, text, mode = null) {
-    if (!chatHistory) return;
-    const msgElement = createMessageElement(sender, text, mode);
-    chatHistory.appendChild(msgElement);
-    messages.push({
-        sender: sender,
-        text: text,
-        mode: mode,
-        timestamp: new Date().toISOString()
-    });
-    if (chats[activeChatId]) {
-        chats[activeChatId].messages = [...messages];
-        saveChats();
-    }
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-}
-
-function renderMessages() {
-    if (!chatHistory) return;
-    chatHistory.innerHTML = '';
-    if (messages && messages.length > 0) {
-        messages.forEach(msg => {
-            const msgElement = createMessageElement(msg.sender, msg.text, msg.mode);
-            chatHistory.appendChild(msgElement);
-        });
-    }
-    chatHistory.scrollTop = chatHistory.scrollHeight;
-}
-
-async function sendMessage() {
-    if (isThinking) return;
-    const text = chatInput.value.trim();
-    if (!text) return;
-    
-    addMessage('user', text);
-    chatInput.value = '';
-    
-    isThinking = true;
-    sendBtn.disabled = true;
-    sendBtn.classList.add('loading');
-    if (typingIndicator) typingIndicator.style.display = 'flex';
-    
-    const shouldSearch = searchMode || shouldAutoSearch(text);
-    
-    if (shouldSearch && inputSearchIndicator) {
-        inputSearchIndicator.style.display = 'inline';
-        inputSearchIndicator.title = 'Web search will be performed for this query';
-    } else if (inputSearchIndicator) {
-        inputSearchIndicator.style.display = 'none';
-    }
-    
-    // Add thinking message
-    const thinkingMsg = addThinkingMessage();
-    
-    const streamingMsgId = 'streaming-' + Date.now();
-    const msgDiv = document.createElement('div');
-    msgDiv.id = streamingMsgId;
-    msgDiv.className = 'message assistant streaming';
-    msgDiv.innerHTML = `
-        <div class="message-content">
-            <div class="message-text" id="streaming-text-${streamingMsgId}"></div>
-            <div class="message-time">${new Date().toLocaleTimeString()}</div>
-        </div>
-    `;
-    chatHistory.appendChild(msgDiv);
-    
-    const respSpan = document.getElementById(`streaming-text-${streamingMsgId}`);
-    let fullResponse = '';
-    let hasContent = false;
-    let thinkingStep = 0;
-    const thinkingSteps = [
-        '🧠 Analyzing request...',
-        '🤔 Processing your query...',
-        '📊 Finding relevant information...',
-        '✨ Generating response...'
-    ];
-    
-    // Update thinking periodically
-    const thinkingInterval = setInterval(() => {
-        if (isThinking) {
-            thinkingStep = (thinkingStep + 1) % thinkingSteps.length;
-            updateThinkingMessage(thinkingMsg.id, thinkingSteps[thinkingStep]);
-        }
-    }, 2000);
-    
-    try {
-        const start = Date.now();
-        
-        const response = await fetch(`${API_BASE_URL}/api/compound/stream`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-                message: text,
-                mode: currentMode,
-                search: shouldSearch,
-                chat_id: activeChatId
-            })
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-        let done = false;
-        
-        while (!done) {
-            const { done: readerDone, value } = await reader.read();
-            done = readerDone;
-            
-            if (value) {
-                buffer += decoder.decode(value, { stream: true });
-                
-                const lines = buffer.split('\n\n');
-                buffer = lines.pop() || '';
-                
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const data = line.slice(6);
-                        if (data === '[DONE]') continue;
-                        
-                        try {
-                            const parsed = JSON.parse(data);
-                            
-                            // --- HANDLE THINKING ---
-                            if (parsed.thinking) {
-                                updateThinkingMessage(thinkingMsg.id, parsed.thinking);
-                                continue;
-                            }
-                            
-                            // --- HANDLE TOOL CALLS ---
-                            if (parsed.tool_calls) {
-                                const toolNames = parsed.tool_calls.map(t => t.tool_name || t.name).join(', ');
-                                updateThinkingMessage(thinkingMsg.id, `🔧 Using tools: ${toolNames}`);
-                                continue;
-                            }
-                            
-                            // --- HANDLE IMAGE GENERATION ---
-                            if (parsed.image) {
-                                addImageMessage(parsed.image, parsed.prompt || 'Generated image', parsed.source || 'AI');
-                                hasContent = true;
-                                // Don't continue - let the image message be added
-                            }
-                            
-                            // --- HANDLE TEXT TOKENS ---
-                            if (parsed.token) {
-                                fullResponse += parsed.token;
-                                hasContent = true;
-                                if (respSpan) {
-                                    respSpan.innerHTML = renderMarkdown(fullResponse);
-                                }
-                                chatHistory.scrollTop = chatHistory.scrollHeight;
-                            }
-                            
-                            // --- HANDLE DONE ---
-                            if (parsed.done || parsed.type === 'complete') {
-                                if (parsed.content) {
-                                    fullResponse = parsed.content;
-                                    hasContent = true;
-                                    if (respSpan) {
-                                        respSpan.innerHTML = renderMarkdown(fullResponse);
-                                    }
-                                }
-                                done = true;
-                            }
-                            
-                            // --- HANDLE ERROR ---
-                            if (parsed.error) {
-                                fullResponse = '❌ Error: ' + parsed.error;
-                                hasContent = true;
-                                if (respSpan) {
-                                    respSpan.innerHTML = renderMarkdown(fullResponse);
-                                }
-                                showNotification('Error: ' + parsed.error, 'error');
-                                done = true;
-                            }
-                        } catch (e) {
-                            console.warn('Failed to parse SSE data:', data, e);
-                        }
-                    }
+                if (ev.image) {
+                    images.push({ url: ev.image, prompt: ev.prompt });
+                    const pc = $('pending-content');
+                    if (pc && safeImg(ev.image)) pc.insertAdjacentHTML('beforebegin', imgCard(ev.image, ev.prompt));
+                    const t = $('think'); if (t) t.remove();
+                    scrollToBottom(true);
                 }
-            }
-        }
-        
-        // Remove thinking message when done
-        clearInterval(thinkingInterval);
-        removeThinkingMessage(thinkingMsg.id);
-        
-        // If we got no content, show a fallback message
-        if (!hasContent || !fullResponse || fullResponse.trim() === '') {
-            fullResponse = "I received your message but I'm having trouble generating a response. Please try again.";
-            if (respSpan) {
-                respSpan.innerHTML = renderMarkdown(fullResponse);
-            }
-            showNotification('Empty response received. Please try again.', 'warning');
-        }
-        
-        const elapsed = (Date.now() - start) / 1000;
-        msgDiv.classList.remove('streaming');
-        
-        // Save to messages array
-        messages.push({
-            sender: 'assistant',
-            text: fullResponse,
-            mode: currentMode,
-            timestamp: new Date().toISOString()
-        });
-        
-        if (chats[activeChatId]) {
-            chats[activeChatId].messages = [...messages];
-            saveChats();
-        }
-        
-        trackMessage(elapsed);
-        if (shouldSearch) {
-            trackSearch();
-        }
-        
-    } catch (error) {
-        console.error('Stream error:', error);
-        clearInterval(thinkingInterval);
-        removeThinkingMessage(thinkingMsg.id);
-        
-        const errorMsg = error.message || 'Error getting response. Please try again.';
-        if (respSpan) {
-            respSpan.innerHTML = renderMarkdown('❌ ' + errorMsg);
-        }
-        msgDiv.classList.remove('streaming');
-        showNotification(errorMsg, 'error');
-        
-        messages.push({
-            sender: 'assistant',
-            text: 'Error: ' + errorMsg,
-            mode: currentMode,
-            timestamp: new Date().toISOString()
-        });
-        if (chats[activeChatId]) {
-            chats[activeChatId].messages = [...messages];
-            saveChats();
-        }
-    } finally {
-        isThinking = false;
-        sendBtn.disabled = false;
-        sendBtn.classList.remove('loading');
-        if (typingIndicator) typingIndicator.style.display = 'none';
-        if (inputSearchIndicator) {
-            inputSearchIndicator.style.display = 'none';
-        }
-    }
-}
-
-function loadChats() {
-    const saved = localStorage.getItem('wizard_chats');
-    if (saved) {
-        try {
-            const data = JSON.parse(saved);
-            chats = data.chats || {};
-            chatIds = data.chatIds || ['default'];
-            activeChatId = data.activeChatId || 'default';
-            if (chats[activeChatId]) {
-                messages = chats[activeChatId].messages || [];
-            } else {
-                messages = [];
-            }
-            if (!chats['default']) {
-                chats['default'] = {
-                    chat_id: 'default',
-                    name: 'Main Chat',
-                    emoji: '🧙',
-                    mode: 'JARVIS',
-                    messages: []
-                };
-            }
-            renderChatsList();
-            renderMessages();
-        } catch (e) {
-            console.error('Error loading chats:', e);
-            createDefaultChat();
-        }
-    } else {
-        createDefaultChat();
-    }
-}
-
-function createDefaultChat() {
-    chats = {
-        'default': {
-            chat_id: 'default',
-            name: 'Main Chat',
-            emoji: '🧙',
-            mode: 'JARVIS',
-            messages: []
-        }
-    };
-    chatIds = ['default'];
-    activeChatId = 'default';
-    messages = [];
-    renderChatsList();
-    renderMessages();
-}
-
-function renderChatsList() {
-    if (!chatsList) return;
-    let html = '';
-    chatIds.forEach(id => {
-        const chat = chats[id];
-        if (!chat) return;
-        html += `<div class="chat-item ${id === activeChatId ? 'active' : ''}" data-chat-id="${id}">
-            <span class="chat-emoji">${chat.emoji}</span>
-            <span class="chat-name">${escapeHtml(chat.name)}</span>
-            <div class="chat-item-actions">
-                <button class="rename-chat-item" data-chat-id="${id}" title="Rename">✏️</button>
-                ${id !== 'default' ? `<button class="delete-chat-item" data-chat-id="${id}" title="Delete">🗑️</button>` : ''}
-            </div>
-        </div>`;
-    });
-    chatsList.innerHTML = html;
-    
-    document.querySelectorAll('.chat-item').forEach(el => {
-        el.addEventListener('click', e => {
-            if (!e.target.closest('button')) switchChat(el.dataset.chatId);
-        });
-    });
-    document.querySelectorAll('.rename-chat-item').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            openRenameModal(btn.dataset.chatId);
-        });
-    });
-    document.querySelectorAll('.delete-chat-item').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            deleteChat(btn.dataset.chatId);
-        });
-    });
-}
-
-function switchChat(id) {
-    if (chats[activeChatId]) {
-        chats[activeChatId].messages = [...messages];
-    }
-    activeChatId = id;
-    if (chats[id]) {
-        messages = chats[id].messages ? [...chats[id].messages] : [];
-        currentMode = chats[id].mode || 'JARVIS';
-        updateModeDisplay();
-    } else {
-        messages = [];
-        currentMode = 'JARVIS';
-    }
-    renderMessages();
-    renderChatsList();
-    if (currentChatName) currentChatName.textContent = chats[id]?.name || 'Chat';
-    if (currentChatEmoji) currentChatEmoji.textContent = chats[id]?.emoji || '💬';
-    saveChats();
-}
-
-function createNewChat() {
-    const id = 'chat_' + Date.now();
-    const name = `Chat ${chatIds.length + 1}`;
-    const emojis = ['💬', '🤖', '🌟', '⭐', '✨', '🎯', '🎲'];
-    const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-    chats[id] = {
-        chat_id: id,
-        name: name,
-        emoji: emoji,
-        mode: 'JARVIS',
-        messages: []
-    };
-    chatIds.push(id);
-    saveChats();
-    renderChatsList();
-    switchChat(id);
-}
-
-function deleteChat(id) {
-    if (id === 'default') {
-        showNotification('Cannot delete default chat', 'error');
-        return;
-    }
-    if (!confirm('Delete this chat?')) return;
-    delete chats[id];
-    chatIds = chatIds.filter(i => i !== id);
-    if (activeChatId === id) {
-        switchChat('default');
-    }
-    saveChats();
-    renderChatsList();
-    showNotification('Chat deleted', 'success');
-}
-
-function openRenameModal(id) {
-    chatToRename = id;
-    renameInput.value = chats[id]?.name || '';
-    openModal(renameModal);
-}
-
-function saveRename() {
-    const newName = renameInput.value.trim();
-    if (newName && chatToRename && chats[chatToRename]) {
-        chats[chatToRename].name = newName;
-        saveChats();
-        renderChatsList();
-        if (chatToRename === activeChatId && currentChatName) {
-            currentChatName.textContent = newName;
-        }
-        showNotification('Chat renamed', 'success');
-    }
-    closeModal(renameModal);
-}
-
-function resetCurrentChat() {
-    if (confirm('Clear all messages in this chat?')) {
-        messages = [];
-        if (chats[activeChatId]) {
-            chats[activeChatId].messages = [];
-        }
-        renderMessages();
-        saveChats();
-        showNotification('Chat cleared', 'success');
-    }
-}
-
-function saveChats() {
-    localStorage.setItem('wizard_chats', JSON.stringify({
-        chats,
-        chatIds,
-        activeChatId,
-        messages
-    }));
-    if (currentUser) {
-        fetch(`${API_BASE_URL}/api/save-chats`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-                chats: Object.values(chats),
-                chat_order: chatIds
-            })
-        }).catch(e => console.warn('Failed to save chats to server:', e));
-    }
-}
-
-// ============================================
-// STATS FUNCTIONS
-// ============================================
-function trackMessage(rt) {
-    userStats.messages++;
-    userStats.todayMessages++;
-    if (rt) {
-        userStats.responseTimes.push(rt);
-        if (userStats.responseTimes.length > 100) userStats.responseTimes.shift();
-    }
-    updateStatsDisplay();
-    saveStatsToStorage();
-}
-
-function trackFile() {
-    userStats.files++;
-    updateStatsDisplay();
-    saveStatsToStorage();
-}
-
-function trackImage() {
-    userStats.images++;
-    updateStatsDisplay();
-    saveStatsToStorage();
-}
-
-function trackSearch() {
-    userStats.searches++;
-    updateStatsDisplay();
-    saveStatsToStorage();
-}
-
-function trackCode() {
-    userStats.codeExecutions++;
-    updateStatsDisplay();
-    saveStatsToStorage();
-}
-
-function updateStatsDisplay() {
-    if (statMessages) statMessages.textContent = userStats.messages;
-    if (statFiles) statFiles.textContent = userStats.files;
-    if (statImages) statImages.textContent = userStats.images;
-    if (statSearches) statSearches.textContent = userStats.searches;
-    const avg = userStats.responseTimes.length ? (userStats.responseTimes.reduce((a,b)=>a+b,0)/userStats.responseTimes.length).toFixed(1) : '0.4';
-    if (statResponse) statResponse.textContent = avg + 's';
-    if (quickToday) quickToday.textContent = userStats.todayMessages + ' msgs';
-    if (quickTotal) quickTotal.textContent = userStats.messages + ' msgs';
-}
-
-async function loadStats() {
-    if (currentUser) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/stats`, { credentials: 'include' });
-            if (response.ok) {
-                const data = await response.json();
-                userStats.messages = data.messages || 0;
-                userStats.files = data.files || 0;
-                userStats.memories = data.memories || 0;
-                userStats.images = data.images || 0;
-                userStats.searches = data.searches || 0;
-                userStats.codeExecutions = data.code || 0;
-                if (statsCreated) statsCreated.textContent = data.account_created || '-';
-                if (statsLast) statsLast.textContent = data.last_login || '-';
-                if (statsTotalMsgs) statsTotalMsgs.textContent = data.messages || 0;
-                if (statsTotalChats) statsTotalChats.textContent = data.chats || 0;
-                if (statsFilesDetailed) statsFilesDetailed.textContent = data.files || 0;
-                if (statsImagesDetailed) statsImagesDetailed.textContent = data.images || 0;
-                if (statsCodeDetailed) statsCodeDetailed.textContent = data.code || 0;
-                if (statsSearchesDetailed) statsSearchesDetailed.textContent = data.searches || 0;
-                if (statsMemories) statsMemories.textContent = data.memories || 0;
-                if (statsDocs) statsDocs.textContent = data.documents || 0;
-                if (statsAvgResponse) statsAvgResponse.textContent = (data.avg_response_time || 0.4) + 's';
-                if (statsFastest) statsFastest.textContent = (data.fastest_response || 0.2) + 's';
-                if (statsApiKeysDetailed) statsApiKeysDetailed.textContent = data.api_keys || 0;
-                if (statsProfileCompleteness) statsProfileCompleteness.textContent = (userProfile?.profile_completeness || 0) + '%';
-                
-                if (userProfile) {
-                    const skills = Array.isArray(userProfile.skills) ? userProfile.skills : [];
-                    const interests = Array.isArray(userProfile.interests) ? userProfile.interests : [];
-                    const goals = Array.isArray(userProfile.goals) ? userProfile.goals : [];
-                    if (statsSkillsCount) statsSkillsCount.textContent = skills.length;
-                    if (statsInterestsCount) statsInterestsCount.textContent = interests.length;
-                    if (statsGoalsCount) statsGoalsCount.textContent = goals.length;
+                if (typeof ev.token === 'string') {
+                    const t = $('think'); if (t) t.remove();
+                    TW.full += ev.token; twKick();
                 }
-            }
-        } catch (error) {
-            loadStatsFromStorage();
-        }
-    } else {
-        loadStatsFromStorage();
-    }
-    updateStatsDisplay();
-}
-
-function loadStatsFromStorage() {
-    const saved = localStorage.getItem('wizard_stats');
-    if (saved) {
-        try {
-            const data = JSON.parse(saved);
-            userStats = { ...userStats, ...data };
-        } catch (e) {}
-    }
-}
-
-function saveStatsToStorage() {
-    if (!currentUser) {
-        localStorage.setItem('wizard_stats', JSON.stringify({
-            messages: userStats.messages,
-            files: userStats.files,
-            memories: userStats.memories,
-            images: userStats.images,
-            searches: userStats.searches,
-            codeExecutions: userStats.codeExecutions
-        }));
-    }
-}
-
-// ============================================
-// AUTHENTICATION FUNCTIONS
-// ============================================
-async function checkAuth() {
-    try {
-        const url = `${API_BASE_URL}/api/check-auth?_=${Date.now()}`;
-        const response = await fetch(url, { 
-            credentials: 'include',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            currentUser = data.user;
-            updateUIForAuth();
-            if (data.memories) userStats.memories = data.memories.length;
-            loadUserPersonalitiesFromServer();
-            localStorage.setItem('auth_time', Date.now().toString());
-            
-            detectAndSaveTimezone();
-            await loadProfile();
-        } else {
-            updateUIForAuth();
-            const authTime = localStorage.getItem('auth_time');
-            if (authTime && (Date.now() - parseInt(authTime)) > 3600000) {
-                showNotification('Session expired. Please log in again.', 'warning');
-                showAuthModal(true);
-            }
-        }
-    } catch (error) {
-        console.error('Auth check error:', error);
-        updateUIForAuth();
-    }
-}
-
-async function loadUserPersonalitiesFromServer() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/personalities/mine`, { credentials: 'include' });
-        if (response.ok) {
-            const personalities = await response.json();
-            customPersonalities = personalities.map(p => ({
-                name: p.name,
-                emoji: p.emoji,
-                system_prompt: p.system_prompt,
-                greeting: p.greeting,
-                id: p.id,
-                likes: p.likes,
-                uses: p.uses
-            }));
-            saveCustomPersonalitiesToStorage();
-            updateCustomPersonalitiesDropdown();
-        }
-    } catch (error) {}
-}
-
-function updateUIForAuth() {
-    if (currentUser && userInfo && authButtons) {
-        userInfo.style.display = 'flex';
-        authButtons.style.display = 'none';
-        userEmail.textContent = currentUser.email;
-        userName.textContent = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'User';
-        userAvatar.textContent = currentUser.first_name?.[0] || '👤';
-    } else if (userInfo && authButtons) {
-        userInfo.style.display = 'none';
-        authButtons.style.display = 'flex';
-    }
-}
-
-function showAuthModal(login = true) {
-    isLoginMode = login;
-    authModalTitle.textContent = login ? 'Login to Wizard.AI' : 'Create Account';
-    authSubmit.textContent = login ? 'Login' : 'Sign Up';
-    authSwitchText.textContent = login ? "Don't have an account?" : "Already have an account?";
-    authSwitchBtn.textContent = login ? 'Sign Up' : 'Login';
-    firstNameGroup.style.display = login ? 'none' : 'block';
-    lastNameGroup.style.display = login ? 'none' : 'block';
-    confirmPasswordGroup.style.display = login ? 'none' : 'block';
-    verificationGroup.style.display = 'none';
-    authEmail.value = '';
-    authPassword.value = '';
-    authConfirm.value = '';
-    firstNameInput.value = '';
-    lastNameInput.value = '';
-    authError.textContent = '';
-    openModal(authModal);
-}
-
-function toggleAuthMode() {
-    showAuthModal(!isLoginMode);
-}
-
-async function handleAuthSubmit() {
-    if (isLoginMode) {
-        await handleLogin();
-    } else if (verificationGroup.style.display === 'block') {
-        await handleVerify();
-    } else {
-        await handleSignup();
-    }
-}
-
-async function handleLogin() {
-    const email = authEmail.value.trim();
-    const password = authPassword.value.trim();
-    if (!email || !password) {
-        authError.textContent = 'Email and password required';
-        return;
-    }
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ email, password })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            currentUser = data.user;
-            localStorage.setItem('auth_time', Date.now().toString());
-            
-            if (data.chats) {
-                chats = {};
-                data.chats.forEach(c => chats[c.chat_id] = c);
-                chatIds = data.chat_order || ['default'];
-                activeChatId = chatIds[0];
-                messages = chats[activeChatId]?.messages || [];
-            }
-            if (data.memories) userStats.memories = data.memories.length;
-            updateUIForAuth();
-            renderChatsList();
-            renderMessages();
-            updateStatsDisplay();
-            loadUserPersonalitiesFromServer();
-            await loadUserApiKeys();
-            closeModal(authModal);
-            
-            detectAndSaveTimezone();
-            await loadProfile();
-            
-            showNotification(`Welcome back, ${currentUser.first_name || ''}!`, 'success');
-        } else {
-            const error = await response.json();
-            authError.textContent = error.error || 'Login failed';
-        }
-    } catch (error) {
-        authError.textContent = 'Connection error';
-    }
-}
-
-async function handleSignup() {
-    const firstName = firstNameInput.value.trim();
-    const lastName = lastNameInput.value.trim();
-    const email = authEmail.value.trim();
-    const password = authPassword.value.trim();
-    const confirm = authConfirm.value.trim();
-    if (!firstName || !lastName || !email || !password || !confirm) {
-        authError.textContent = 'All fields required';
-        return;
-    }
-    if (password !== confirm) {
-        authError.textContent = 'Passwords do not match';
-        return;
-    }
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/register/init`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ firstName, lastName, email, password })
-        });
-        if (response.ok) {
-            const data = await response.json();
-            signupEmail = email;
-            if (data.pending_id) {
-                localStorage.setItem('wizard_pending_id', data.pending_id);
-                console.log('✅ Stored pending_id in localStorage:', data.pending_id);
-            }
-            firstNameGroup.style.display = 'none';
-            lastNameGroup.style.display = 'none';
-            confirmPasswordGroup.style.display = 'none';
-            verificationGroup.style.display = 'block';
-            authSubmit.textContent = 'Verify Code';
-            authModalTitle.textContent = 'Verify Your Email';
-            if (authError) {
-                if (data.dev_code) {
-                    authError.textContent = `🔐 Development code: ${data.dev_code}`;
-                    authError.style.color = '#10b981';
-                } else {
-                    authError.textContent = `📧 Verification code sent to ${email}`;
-                    authError.style.color = '#10b981';
-                }
-            }
-            showNotification('📧 Verification code sent!', 'success');
-        } else {
-            const error = await response.json();
-            authError.textContent = error.error || 'Signup failed';
-        }
-    } catch (error) {
-        authError.textContent = 'Connection error';
-    }
-}
-
-async function handleVerify() {
-    const code = verificationInput.value.trim();
-    if (!code || code.length !== 6) {
-        authError.textContent = 'Enter 6-digit code';
-        return;
-    }
-    const pendingId = localStorage.getItem('wizard_pending_id');
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/register/verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-                email: signupEmail,
-                code: code,
-                pending_id: pendingId
-            })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            localStorage.removeItem('wizard_pending_id');
-            currentUser = data.user;
-            if (data.chats) {
-                chats = {};
-                data.chats.forEach(c => chats[c.chat_id] = c);
-                chatIds = data.chat_order || ['default'];
-                activeChatId = chatIds[0];
-                messages = chats[activeChatId]?.messages || [];
-            }
-            updateUIForAuth();
-            renderChatsList();
-            renderMessages();
-            closeModal(authModal);
-            
-            detectAndSaveTimezone();
-            await loadProfile();
-            
-            showNotification('Account verified! Welcome!', 'success');
-        } else {
-            if (authError) authError.textContent = data.error || 'Verification failed';
-        }
-    } catch (error) {
-        console.error('Verify error:', error);
-        if (authError) authError.textContent = 'Connection error';
-    }
-}
-
-async function resendVerificationCode() {
-    const pendingId = localStorage.getItem('wizard_pending_id');
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/resend-code`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pending_id: pendingId })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            if (authError) {
-                if (data.dev_code) {
-                    authError.textContent = `🔐 New code: ${data.dev_code}`;
-                } else {
-                    authError.textContent = 'Verification code resent! Check your email.';
-                }
-                authError.style.color = '#10b981';
-            }
-            showNotification('📧 Code resent!', 'success');
-        } else {
-            const error = await response.json();
-            if (authError) authError.textContent = error.error || 'Failed to resend code';
-        }
-    } catch (error) {
-        console.error('Resend error:', error);
-        if (authError) authError.textContent = 'Connection error';
-    }
-}
-
-async function handleLogout() {
-    try {
-        await fetch(`${API_BASE_URL}/api/logout`, { method: 'POST', credentials: 'include' });
-    } catch (error) {}
-    localStorage.removeItem('wizard_pending_id');
-    localStorage.removeItem('auth_time');
-    currentUser = null;
-    userProfile = null;
-    updateUIForAuth();
-    loadGuestData();
-    showNotification('Logged out', 'success');
-}
-
-function loadGuestData() {
-    const saved = localStorage.getItem('wizard_guest_data');
-    if (saved) {
-        try {
-            const data = JSON.parse(saved);
-            userStats = data.stats || userStats;
-            updateStatsDisplay();
-        } catch (e) {}
-    }
-}
-
-function startSessionCheck() {
-    if (sessionCheckInterval) clearInterval(sessionCheckInterval);
-    sessionCheckInterval = setInterval(async () => {
-        if (currentUser) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/check-auth`, { credentials: 'include' });
-                if (response.status === 401) {
-                    currentUser = null;
-                    userProfile = null;
-                    updateUIForAuth();
-                    showNotification('Your session has expired. Please log in again.', 'warning');
-                    setTimeout(() => showAuthModal(true), 1000);
-                }
-            } catch (error) {}
-        }
-    }, 300000);
-}
-
-function stopSessionCheck() {
-    if (sessionCheckInterval) {
-        clearInterval(sessionCheckInterval);
-        sessionCheckInterval = null;
-    }
-}
-
-// ============================================
-// PUBLIC PERSONALITIES
-// ============================================
-async function loadPublicPersonalities() {
-    if (!personalitiesList) return;
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/personalities`);
-        if (response.ok) {
-            const data = await response.json();
-            publicPersonalities = data;
-            if (publicPersonalities.length === 0) {
-                personalitiesList.innerHTML = '<div class="empty-state">No public personalities yet</div>';
-            } else {
-                let html = '';
-                publicPersonalities.slice(0, 5).forEach(p => {
-                    html += `<div class="personality-item" data-id="${p.id}"><span class="personality-emoji">${p.emoji || '🤖'}</span><span class="personality-name">${p.name}</span><span class="personality-likes">❤️ ${p.likes || 0}</span></div>`;
-                });
-                personalitiesList.innerHTML = html;
-                document.querySelectorAll('.personality-item').forEach(el => {
-                    el.addEventListener('click', () => usePersonality(el.dataset.id));
-                    el.addEventListener('mouseenter', e => {
-                        const p = publicPersonalities.find(p => p.id == el.dataset.id);
-                        if (p) showTooltip(p.name, e);
-                    });
-                    el.addEventListener('mouseleave', hideTooltip);
-                });
-            }
-        }
-    } catch (error) {
-        personalitiesList.innerHTML = '<div class="error">Failed to load</div>';
-    }
-}
-
-async function usePersonality(id) {
-    const personality = publicPersonalities.find(p => p.id == id);
-    if (!personality) return;
-    try {
-        await fetch(`${API_BASE_URL}/api/personalities/${id}/use`, { method: 'POST', credentials: 'include' });
-    } catch (e) {}
-    if (!modeData[personality.name]) {
-        modeData[personality.name] = {
-            emoji: personality.emoji || '🤖',
-            name: personality.name,
-            desc: personality.system_prompt ? personality.system_prompt.substring(0, 100) + '...' : 'Custom personality',
-            model: 'Custom',
-            color: '#8b5cf6',
-            likes: personality.likes,
-            uses: personality.uses
-        };
-    }
-    selectMode(personality.name);
-    showNotification(`Switched to ${personality.name}`, 'success');
-}
-
-async function openPersonalitiesBrowser() {
-    openModal(personalitiesModal);
-    await loadPersonalitiesGrid('featured');
-}
-
-async function loadPersonalitiesGrid(tab = 'featured') {
-    if (!personalitiesGrid) return;
-    personalitiesGrid.innerHTML = '<div class="loading">Loading personalities...</div>';
-    try {
-        let url = `${API_BASE_URL}/api/personalities`;
-        if (tab === 'featured') url += '/featured';
-        else if (tab === 'popular') url += '/popular';
-        else if (tab === 'recent') url += '/recent';
-        else if (tab === 'mine' && currentUser) url += '/mine';
-        const response = await fetch(url, { credentials: 'include' });
-        if (response.ok) {
-            const personalities = await response.json();
-            renderPersonalitiesGrid(personalities);
-        } else {
-            personalitiesGrid.innerHTML = '<div class="error">Failed to load</div>';
-        }
-    } catch (error) {
-        personalitiesGrid.innerHTML = '<div class="error">Failed to load</div>';
-    }
-}
-
-function renderPersonalitiesGrid(personalities) {
-    if (!personalitiesGrid) return;
-    if (personalities.length === 0) {
-        personalitiesGrid.innerHTML = '<div class="empty-state">No personalities found</div>';
-        return;
-    }
-    let html = '';
-    personalities.forEach(p => {
-        html += `<div class="personality-card" data-id="${p.id}">
-            <div class="personality-card-header">
-                <span class="personality-card-emoji">${p.emoji || '🤖'}</span>
-                <span class="personality-card-name">${p.name}</span>
-            </div>
-            <div class="personality-card-creator">by ${p.creator || 'Anonymous'}</div>
-            <div class="personality-card-stats">
-                <span class="personality-card-likes">❤️ ${p.likes || 0}</span>
-                <span class="personality-card-uses">🔄 ${p.uses || 0}</span>
-            </div>
-        </div>`;
-    });
-    personalitiesGrid.innerHTML = html;
-    document.querySelectorAll('.personality-card').forEach(el => {
-        el.addEventListener('click', () => usePersonality(el.dataset.id));
-        el.addEventListener('mouseenter', e => {
-            const p = personalities.find(p => p.id == el.dataset.id);
-            if (p) showTooltip(p.name, e);
-        });
-        el.addEventListener('mouseleave', hideTooltip);
-    });
-}
-
-function switchPersonalityTab(tab) {
-    if (tabBtns.length) tabBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
-    loadPersonalitiesGrid(tab);
-}
-
-// ============================================
-// FILE UPLOAD
-// ============================================
-async function handleFileUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!currentUser) {
-        showNotification('Please login to upload files', 'error');
-        return;
-    }
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('chat_id', activeChatId);
-    uploadProgress.style.display = 'block';
-    progressBarFill.style.width = '0%';
-    progressText.textContent = 'Starting upload...';
-    try {
-        const xhr = new XMLHttpRequest();
-        xhr.upload.addEventListener('progress', e => {
-            if (e.lengthComputable) {
-                const pct = (e.loaded / e.total) * 100;
-                progressBarFill.style.width = pct + '%';
-                progressText.textContent = `Uploading: ${Math.round(pct)}%`;
-            }
-        });
-        const promise = new Promise((resolve, reject) => {
-            xhr.onload = () => {
-                if (xhr.status === 200) resolve(JSON.parse(xhr.responseText));
-                else reject(new Error('Upload failed'));
+                if (ev.done) done = ev;
+                if (ev.error) errorText = String(ev.error);
             };
-            xhr.onerror = () => reject(new Error('Upload failed'));
-        });
-        xhr.open('POST', `${API_BASE_URL}/api/upload`);
-        xhr.withCredentials = true;
-        xhr.send(formData);
-        const data = await promise;
-        setTimeout(() => { uploadProgress.style.display = 'none'; }, 1000);
-        if (data.success) {
-            trackFile();
-            if (data.duplicate) {
-                showNotification(`File already exists: ${data.filename}`, 'info');
-            } else {
-                showNotification(`✅ ${file.name} uploaded!`, 'success');
-                addMessage('assistant', `📎 File uploaded: ${data.filename}\n${data.preview || ''}`);
+            let buf = '';
+            const feed = chunk => {
+                buf += chunk;
+                let k;
+                while ((k = buf.indexOf('\n\n')) >= 0) {
+                    const block = buf.slice(0, k); buf = buf.slice(k + 2);
+                    const data = block.split('\n').filter(l => l.startsWith('data:')).map(l => l.slice(5).replace(/^ /, '')).join('\n');
+                    if (!data) continue;
+                    try { handle(JSON.parse(data)); } catch (e) { /* ignore a broken frame */ }
+                }
+            };
+            if (res.body && res.body.getReader) {
+                const reader = res.body.getReader(), dec = new TextDecoder();
+                for (; ;) {
+                    const { value, done: end } = await reader.read();
+                    if (end) break;
+                    feed(dec.decode(value, { stream: true }));
+                }
+                feed(dec.decode() + '\n\n');
+            } else feed((await res.text()) + '\n\n');
+        }
+    } catch (e) {
+        if (e && e.name === 'AbortError') { /* handled below */ }
+        else { setConn('off'); errorText = 'The connection dropped before the reply finished.'; }
+    }
+    progress(false);
+
+    // ---- aborted by the user
+    if (turn.aborted) {
+        S.ctl = null; S.phase = 'idle'; twReset(null);
+        removePending();
+        setBusy(false); S.turn = null;
+        if (S.chat && S.chat.chat_id === cid) {
+            S.chat.messages = S.chat.messages.slice(0, userIdx);
+            if (!turn.silent) {
+                renderThread(true);
+                if (!$('input').value.trim()) { $('input').value = text; autoGrow(); updateSendState(); }
+                toast('Stopped', 'warn', 1800);
             }
-        } else {
-            showNotification(`❌ Upload failed: ${data.error || 'Unknown error'}`, 'error');
         }
-    } catch (error) {
-        uploadProgress.style.display = 'none';
-        showNotification('❌ Upload failed', 'error');
-    }
-}
-
-// ============================================
-// CODE EXECUTION
-// ============================================
-async function executeCode() {
-    const code = codeInput.value.trim();
-    if (!code) return;
-    if (!currentUser) {
-        showNotification('Please login to execute code', 'error');
+        resyncLater(cid, userIdx, text);
         return;
     }
-    codeOutput.innerHTML = '<div class="loading">Running code...</div>';
+    if (S.turn !== turn) return; // chat was switched or deleted underneath us
+
+    // ---- failed
+    if (errorText || !done) {
+        S.ctl = null; S.phase = 'idle'; twReset(null);
+        errorBox(errorText || 'The reply was interrupted. Your message may not have been saved.', true);
+        setBusy(false); S.turn = null;
+        if (!errorText) resyncLater(cid, userIdx, text);
+        return;
+    }
+
+    // ---- success: let the typewriter finish, then commit
+    S.phase = 'reveal';
+    await twFinish();
+    S.ctl = null; S.phase = 'idle';
+    const reply = TW.full; twReset(null);
+    if (S.turn !== turn) return;
+    const aMsg = { sender: 'assistant', text: reply, mode: chat.mode, timestamp: new Date().toISOString() };
+    if (images[0]) { aMsg.image = images[0].url; aMsg.prompt = images[0].prompt; }
+    if (tools.length) aMsg.tools = tools;
+    chat.messages.push(aMsg);
+    if (done.chat_name && !DEFAULT_TITLES.includes(done.chat_name)) chat.name = done.chat_name;
+    chat.updated_at = new Date().toISOString();
+    setBusy(false); S.turn = null;
+    if (S.chat === chat) {
+        renderHeader();
+        const p = $('pending'); if (p) p.outerHTML = messageHTML(aMsg, chat.messages.length - 1, true); else renderThread(true);
+        const um = qs('.msg.user[data-i="' + userIdx + '"]'); if (um) um.classList.remove('last');
+        hydrate($('thread'));
+        scrollToBottom();
+        if (done.user_index !== undefined && done.user_index !== userIdx) resyncLater(cid, userIdx, null, 0);
+    }
+    upsertSummary(summaryOf(chat)); cacheList(); cacheChat(chat); renderList();
+    if (DEFAULT_TITLES.includes(chat.name) && chat.messages.length <= 2) autoTitle(cid);
+}
+
+async function autoTitle(cid) {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/execute`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ code })
-        });
-        const data = await response.json();
-        if (data.error) {
-            codeOutput.innerHTML = `<div class="error-output">❌ Error: ${escapeHtml(data.error)}</div>`;
-        } else {
-            let html = '';
-            if (data.stdout) html += `<pre class="stdout">${escapeHtml(data.stdout)}</pre>`;
-            if (data.stderr) html += `<pre class="stderr">${escapeHtml(data.stderr)}</pre>`;
-            if (!data.stdout && !data.stderr) html = '<div class="no-output">✓ No output (code ran successfully)</div>';
-            codeOutput.innerHTML = html;
-            trackCode();
+        const r = await api('/api/compound/title', { method: 'POST', body: { chat_id: cid }, noAuthRedirect: true });
+        const name = r && (r.name || r.title || r.chat_name);
+        if (name && !DEFAULT_TITLES.includes(name)) {
+            const s = S.chats.find(c => c.chat_id === cid); if (s) s.name = name;
+            if (S.chat && S.chat.chat_id === cid) { S.chat.name = name; renderHeader(); }
+            cacheList(); renderList();
         }
-    } catch (error) {
-        console.error('Code execution error:', error);
-        codeOutput.innerHTML = '<div class="error-output">❌ Execution failed: Connection error</div>';
-    }
+    } catch (e) { /* titles are a nicety */ }
 }
 
-// ============================================
-// IMAGE GENERATION (Manual Modal)
-// ============================================
-async function generateImageManual() {
-    const prompt = imagePrompt.value.trim();
-    if (!prompt) {
-        showNotification('Please enter a prompt', 'error');
-        return;
-    }
-    if (!currentUser) {
-        showNotification('Please login to generate images', 'error');
-        return;
-    }
-    
-    imageResult.innerHTML = '<div class="loading">🎨 Generating image... This may take a moment</div>';
-    generateImageBtn.disabled = true;
-    generateImageBtn.textContent = 'Generating...';
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/generate-image`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ 
-                prompt: prompt, 
-                size: imageSize?.value || '512x512' 
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.url) {
-            imageResult.innerHTML = `
-                <img src="${data.url}" alt="${escapeHtml(prompt)}" style="max-width:100%; border-radius:12px; box-shadow:0 0 30px rgba(139,92,246,0.5);">
-                <div class="image-actions">
-                    <button onclick="window.open('${data.url}', '_blank')" class="glass-button">🔍 View Full Size</button>
-                    <button onclick="downloadImage('${data.url}')" class="glass-button">💾 Download</button>
-                </div>
-            `;
-            trackImage();
-            showNotification('✅ Image generated successfully!', 'success');
-        } else {
-            const errorMsg = data.error || 'Generation failed';
-            imageResult.innerHTML = `<div class="error-output">❌ ${escapeHtml(errorMsg)}<br><small>Please try again with a different prompt</small></div>`;
-            showNotification(`Image generation failed: ${errorMsg}`, 'error');
-        }
-    } catch (error) {
-        console.error('Image generation error:', error);
-        imageResult.innerHTML = '<div class="error-output">❌ Connection error. Please check your internet and try again.</div>';
-        showNotification('Failed to generate image: Connection error', 'error');
-    } finally {
-        generateImageBtn.disabled = false;
-        generateImageBtn.textContent = 'Generate';
-    }
-}
-
-// ============================================
-// DETAILED STATS
-// ============================================
-async function loadDetailedStats() {
-    if (!currentUser) {
-        showNotification('Login to view detailed stats', 'error');
-        return;
-    }
-    openModal(statsModal);
-    await loadStats();
-    
-    if (userProfile) {
-        const skills = Array.isArray(userProfile.skills) ? userProfile.skills : [];
-        const interests = Array.isArray(userProfile.interests) ? userProfile.interests : [];
-        const goals = Array.isArray(userProfile.goals) ? userProfile.goals : [];
-        if (statsSkillsCount) statsSkillsCount.textContent = skills.length;
-        if (statsInterestsCount) statsInterestsCount.textContent = interests.length;
-        if (statsGoalsCount) statsGoalsCount.textContent = goals.length;
-        if (statsProfileCompleteness) statsProfileCompleteness.textContent = (userProfile.profile_completeness || 0) + '%';
-    }
-}
-
-// ============================================
-// UPDATE HISTORY MODAL
-// ============================================
-function showUpdateHistory() {
-    openModal(updateModal);
-}
-
-// ============================================
-// DESKTOP APP MENU INTEGRATION
-// ============================================
-const isElectron = navigator.userAgent.includes('Electron');
-
-if (isElectron && window.electronAPI) {
-    console.log('🖥️ Desktop app detected - setting up menu handlers');
-
-    function safeClick(elementId) {
-        const el = document.getElementById(elementId);
-        if (el) {
-            el.click();
-            return true;
-        }
-        return false;
-    }
-
-    window.electronAPI.onNewChat(() => {
-        console.log('📁 Menu: New Chat');
-        if (!safeClick('new-chat-btn')) {
-            if (typeof createNewChat === 'function') createNewChat();
-        }
-    });
-
-    window.electronAPI.onClearChat(() => {
-        console.log('🗑️ Menu: Clear Chat');
-        if (!safeClick('reset-current-btn')) {
-            if (typeof resetCurrentChat === 'function') resetCurrentChat();
-        }
-    });
-
-    window.electronAPI.onOpenImageGen(() => {
-        console.log('🎨 Menu: Generate Image');
-        if (!safeClick('image-btn')) {
-            const modal = document.getElementById('image-modal-overlay');
-            if (modal && typeof openModal === 'function') openModal(modal);
-        }
-    });
-
-    window.electronAPI.onOpenCode(() => {
-        console.log('💻 Menu: Run Code');
-        if (!safeClick('code-btn')) {
-            const modal = document.getElementById('code-modal-overlay');
-            if (modal && typeof openModal === 'function') openModal(modal);
-        }
-    });
-
-    window.electronAPI.onUploadFile(() => {
-        console.log('📎 Menu: Upload File');
-        if (!safeClick('upload-btn')) {
-            const fileInput = document.getElementById('file-upload');
-            if (fileInput) fileInput.click();
-        }
-    });
-
-    window.electronAPI.onViewProfile(() => {
-        console.log('👤 Menu: View Profile');
-        if (!safeClick('profile-btn')) {
-            if (typeof openProfileModal === 'function') openProfileModal();
-        }
-    });
-
-    window.electronAPI.onViewStats(() => {
-        console.log('📊 Menu: View Stats');
-        if (!safeClick('stats-btn')) {
-            if (typeof loadDetailedStats === 'function') loadDetailedStats();
-        }
-    });
-
-    window.electronAPI.onChangeMode((mode) => {
-        console.log('🎭 Menu: Change Mode to', mode);
-        const items = document.querySelectorAll('.dropdown-item');
-        let found = false;
-        items.forEach(item => {
-            const itemMode = item.getAttribute('data-mode') || item.innerText.trim();
-            if (itemMode === mode) {
-                item.click();
-                found = true;
+// After an abort or interruption the server may or may not have saved the turn. Ask it.
+function resyncLater(cid, userIdx, text, delay) {
+    const run = async () => {
+        if (!S.user || S.busy || !S.chat || S.chat.chat_id !== cid) return;
+        try {
+            const r = await api('/api/ai-chats/' + encodeURIComponent(cid), { noAuthRedirect: true });
+            if (S.busy || !S.chat || S.chat.chat_id !== cid) return;
+            const server = r.chat.messages || [], local = S.chat.messages || [];
+            const changed = server.length !== local.length || (server.length && local.length && server[server.length - 1].text !== local[local.length - 1].text);
+            if (changed) {
+                S.chat = r.chat; renderHeader(); renderThread();
+                if (text && server[userIdx] && server[userIdx].text === text && $('input').value === text) { $('input').value = ''; autoGrow(); updateSendState(); }
+                upsertSummary(summaryOf(S.chat)); cacheList(); cacheChat(S.chat); renderList();
             }
-        });
-        if (!found && typeof selectMode === 'function') {
-            selectMode(mode);
-        }
-    });
-
-    window.electronAPI.onToggleTurbo((enabled) => {
-        console.log('⚡ Menu: Turbo Mode', enabled ? 'ON' : 'OFF');
-        const turboBtn = document.getElementById('turbo-btn');
-        if (turboBtn) {
-            const isActive = turboBtn.classList.contains('active');
-            if (isActive !== enabled) turboBtn.click();
-        } else if (typeof toggleTurboMode === 'function') {
-            if (turboMode !== enabled) toggleTurboMode();
-        }
-    });
-
-    window.electronAPI.onToggleSearch((enabled) => {
-        console.log('🌐 Menu: Web Search', enabled ? 'ON' : 'OFF');
-        const searchBtn = document.getElementById('search-btn');
-        if (searchBtn) {
-            const isActive = searchBtn.classList.contains('active');
-            if (isActive !== enabled) searchBtn.click();
-        } else if (typeof toggleSearchMode === 'function') {
-            if (searchMode !== enabled) toggleSearchMode();
-        }
-    });
-
-    window.electronAPI.onOpenSettings(() => {
-        console.log('⚙️ Menu: Settings');
-        if (typeof showNotification === 'function') {
-            showNotification('⚙️ Settings panel coming soon!', 'info', 2000);
-        }
-    });
-
-    window.electronAPI.onExportChat(() => {
-        console.log('💾 Menu: Export Chat');
-        exportChatToFile();
-    });
-
-    window.electronAPI.onBrowsePersonalities(() => {
-        console.log('🎭 Menu: Browse Personalities');
-        if (!safeClick('personalities-btn')) {
-            if (typeof openPersonalitiesBrowser === 'function') openPersonalitiesBrowser();
-        }
-    });
-
-    window.electronAPI.onOpenAgentStudio(() => {
-        console.log('🤖 Agent Studio clicked - opening...');
-        window.open('/ai/agent-studio/', '_blank');
-    });
-
-    window.electronAPI.onOpenDevHub(() => {
-        console.log('🔑 Developer Hub clicked - opening...');
-        window.open('/ai/devhub/', '_blank');
-    });
-
-    window.electronAPI.onOpenAdmin(() => {
-        console.log('👑 Admin Dashboard clicked - opening...');
-        window.open('/ai/admin/', '_blank');
-    });
-    
-    window.electronAPI.onUpdateStatus((event, data) => {
-        console.log('Update status:', data.status);
-        if (data.status === 'downloading') {
-            showNotification(`⬇️ Downloading update v${data.version}...`, 'info', 5000);
-        } else if (data.status === 'downloaded') {
-            showNotification(`✅ Update ready! Restart to install.`, 'success', 5000);
-        }
-    });
-
-    window.electronAPI.onUpdateProgress((event, data) => {
-        console.log(`Update progress: ${data.percent}%`);
-    });
-
-    console.log('✅ All menu handlers registered');
+        } catch (e) { /* ignore */ }
+    };
+    [delay != null ? delay : 3500, 9000].forEach(ms => setTimeout(run, ms));
 }
 
-function exportChatToFile() {
-    const chatContainer = document.getElementById('chat-history');
-    if (!chatContainer || !chatContainer.children.length) {
-        if (typeof showNotification === 'function') {
-            showNotification('No messages to export', 'error');
+/* ============================================================
+   COMPOSER
+   ============================================================ */
+function focusInput() { const i = $('input'); if (i && !mobileMQ.matches) i.focus({ preventScroll: true }); }
+function autoGrow() {
+    const t = $('input');
+    t.style.height = 'auto';
+    t.style.height = Math.min(t.scrollHeight, 240) + 'px';
+    const n = t.value.length, c = $('char-count');
+    c.hidden = n < MAX_LEN * 0.75;
+    c.textContent = n.toLocaleString() + ' / ' + MAX_LEN.toLocaleString();
+    c.classList.toggle('warn', n > MAX_LEN * 0.94);
+    const wb = $('web-btn');
+    wb.classList.toggle('auto', !S.webOn && S.settings.autoWeb && FRESH_RE.test(t.value));
+}
+function setWeb(on) {
+    S.webOn = !!on;
+    $('web-btn').setAttribute('aria-pressed', S.webOn ? 'true' : 'false');
+    autoGrow();
+}
+function submitComposer() {
+    if (S.busy) { abortTurn(); return; }
+    send($('input').value);
+}
+function editLastUser() {
+    if (S.busy || !S.chat) return;
+    const msgs = S.chat.messages;
+    for (let i = msgs.length - 1; i >= 0; i--) if (msgs[i].sender === 'user') { startEdit(i); return; }
+}
+function startEdit(i) {
+    const el = qs('.msg.user[data-i="' + i + '"]'); if (!el || S.busy) return;
+    const m = S.chat.messages[i];
+    const body = qs('.body', el);
+    body.innerHTML = '<div class="edit-box"><textarea aria-label="Edit message" maxlength="' + MAX_LEN + '">' + esc(m.text) + '</textarea>' +
+        '<div class="row"><button type="button" class="btn ghost sm" data-act="edit-cancel">Cancel</button><button type="button" class="btn primary sm" data-act="edit-save">Save &amp; resend</button></div></div>';
+    const ta = qs('textarea', body); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);
+    ta.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); qs('[data-act=edit-save]', body).click(); }
+        if (e.key === 'Escape') { e.stopPropagation(); renderThread(true); }
+    });
+    scrollToBottom();
+}
+function regenerate() {
+    if (S.busy || !S.chat) return;
+    const msgs = S.chat.messages;
+    let a = msgs.length - 1;
+    if (a < 1 || msgs[a].sender !== 'assistant') return;
+    const u = msgs[a - 1];
+    if (!u || u.sender !== 'user') return;
+    send(u.text, { replaceFrom: a - 1 });
+}
+
+/* thread click delegation */
+async function onThreadClick(e) {
+    const img = e.target.closest('.imgcard');
+    if (img && !img.classList.contains('broken')) { openLightbox(img.dataset.src, img.dataset.cap); return; }
+    const btn = e.target.closest('[data-act]'); if (!btn) return;
+    const act = btn.dataset.act;
+    const msgEl = btn.closest('.msg');
+    const i = msgEl ? +msgEl.dataset.i : -1;
+    const m = i >= 0 && S.chat ? S.chat.messages[i] : null;
+    if (act === 'copy' && m) {
+        const ok = await copyText(m.text);
+        if (ok) { setIcon(btn, 'check'); btn.classList.add('ok'); setTimeout(() => { setIcon(btn, 'copy'); btn.classList.remove('ok'); }, 1400); }
+        else toast('Couldn’t copy — select the text and copy it manually.', 'err');
+    } else if (act === 'copy-code') {
+        const code = qs('pre code', btn.closest('.codeblock'));
+        const ok = await copyText(code ? code.textContent : '');
+        const label = qs('span', btn);
+        if (ok && label) { label.textContent = 'Copied'; setTimeout(() => { label.textContent = 'Copy'; }, 1400); }
+    } else if (act === 'wrap') btn.closest('.codeblock').classList.toggle('wrap');
+    else if (act === 'edit') startEdit(i);
+    else if (act === 'edit-cancel') renderThread(true);
+    else if (act === 'edit-save') {
+        const ta = qs('textarea', msgEl); const v = ta.value.trim(); if (!v) return;
+        send(v, { replaceFrom: i });
+    }
+    else if (act === 'regen') regenerate();
+    else if (act === 'retry') { const l = S.lastSend; if (l) { const em = qs('.msg.error'); if (em) em.remove(); if (S.chat) S.chat.messages = S.chat.messages.slice(0, l.replaceFrom); renderThread(true); send(l.text, { replaceFrom: l.replaceFrom }); } }
+    else if (act === 'earlier') showEarlier();
+}
+function onThreadKey(e) {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('imgcard')) { e.preventDefault(); openLightbox(e.target.dataset.src, e.target.dataset.cap); }
+}
+document.addEventListener('error', e => {
+    const t = e.target;
+    if (t && t.tagName === 'IMG' && t.closest && t.closest('.imgcard')) {
+        const card = t.closest('.imgcard');
+        card.classList.add('broken');
+        card.innerHTML = '<span>🖼️ This image is no longer available.</span>';
+    }
+}, true);
+
+/* ---------- lightbox ---------- */
+function openLightbox(src, cap) {
+    if (!safeImg(src)) return;
+    $('lightbox-img').src = src; $('lightbox-img').alt = cap || 'Image';
+    $('lightbox-cap').textContent = cap || '';
+    $('lightbox-open').href = src;
+    openModal('m-lightbox');
+}
+async function downloadImage(src) {
+    try {
+        const r = await fetch(src); if (!r.ok) throw new Error('x');
+        const b = await r.blob();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'wizard-ai-image.png';
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+    } catch (e) { window.open(src, '_blank', 'noopener'); }
+}
+
+/* ---------- attachments ---------- */
+const MAX_UPLOAD = 16 * 1024 * 1024;
+const OK_EXT = /\.(txt|pdf|docx?|xlsx?|csv|md|json|jpe?g|png)$/i;
+function renderChips() {
+    const box = $('attach-chips');
+    box.innerHTML = S.attach.map((a, i) => '<span class="achip ' + (a.state === 'ok' ? 'ok' : a.state === 'bad' ? 'bad' : '') + '"><i data-icon="' + (a.state === 'bad' ? 'alert' : 'file') + '"></i>' +
+        '<span class="n" title="' + esc(a.name) + '">' + esc(a.name) + '</span><button type="button" data-rm="' + i + '" aria-label="Remove ' + esc(a.name) + '"><i data-icon="x"></i></button>' +
+        (a.state === 'up' ? '<i class="prog" style="width:' + (a.pct || 0) + '%"></i>' : '') + '</span>').join('');
+    hydrate(box);
+}
+function uploadFile(file) {
+    if (!S.user) { openAuth('login'); return; }
+    if (!S.chat) return;
+    if (!OK_EXT.test(file.name)) { toast('That file type isn’t supported (txt, pdf, doc, xls, csv, md, json, jpg, png).', 'err'); return; }
+    if (file.size > MAX_UPLOAD) { toast(file.name + ' is larger than 16 MB.', 'err'); return; }
+    const a = { name: file.name, state: 'up', pct: 0 };
+    S.attach.push(a); renderChips();
+    const fd = new FormData(); fd.append('file', file); fd.append('chat_id', S.chat.chat_id);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', API + '/api/upload'); xhr.withCredentials = true;
+    xhr.upload.onprogress = e => { if (e.lengthComputable) { a.pct = Math.round(e.loaded / e.total * 100); renderChips(); } };
+    xhr.onerror = () => { a.state = 'bad'; renderChips(); toast('Upload failed — check your connection.', 'err'); };
+    xhr.onload = () => {
+        let d = {}; try { d = JSON.parse(xhr.responseText); } catch (e) { }
+        if (xhr.status === 401) { sessionLost(); return; }
+        if (xhr.status === 200 && d.success) { a.state = 'ok'; toast(d.duplicate ? 'That file was already in this chat.' : 'Added to this chat’s knowledge — ask about it.', 'ok'); }
+        else { a.state = 'bad'; toast(d.error || 'Upload failed.', 'err'); }
+        renderChips();
+    };
+    xhr.send(fd);
+}
+
+/* ---------- voice input ---------- */
+let recog = null;
+function toggleMic() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    const btn = $('mic-btn');
+    if (recog) { recog.stop(); return; }
+    recog = new SR(); recog.lang = navigator.language || 'en-US'; recog.interimResults = true; recog.continuous = false;
+    const base = $('input').value; let finalText = '';
+    recog.onresult = ev => {
+        let interim = '';
+        for (let i = ev.resultIndex; i < ev.results.length; i++) { const r = ev.results[i]; if (r.isFinal) finalText += r[0].transcript; else interim += r[0].transcript; }
+        $('input').value = (base ? base + ' ' : '') + (finalText + interim).trim(); autoGrow(); updateSendState();
+    };
+    recog.onend = () => { recog = null; btn.classList.remove('rec'); btn.setAttribute('aria-label', 'Voice input'); };
+    recog.onerror = ev => { if (ev.error === 'not-allowed') toast('Microphone permission was denied.', 'err'); };
+    try { recog.start(); btn.classList.add('rec'); btn.setAttribute('aria-label', 'Stop voice input'); } catch (e) { recog = null; }
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+const A = { mode: 'login', email: '', busy: false };
+function authMsg(text, ok) { const m = $('auth-msg'); m.hidden = !text; m.textContent = text || ''; m.classList.toggle('ok', !!ok); }
+function setAuthMode(mode) {
+    A.mode = mode;
+    const su = mode === 'signup', vf = mode === 'verify';
+    $('f-first').hidden = $('f-last').hidden = $('f-confirm').hidden = !su;
+    $('f-email').hidden = $('f-pass').hidden = vf;
+    $('f-code').hidden = !vf;
+    $('pass-hint').hidden = !su;
+    $('auth-pass').autocomplete = su ? 'new-password' : 'current-password';
+    $('auth-title').textContent = su ? 'Create your account' : vf ? 'Check your email' : 'Welcome back';
+    $('auth-submit').textContent = su ? 'Send verification code' : vf ? 'Verify & enter' : 'Log in';
+    $('auth-switch-text').textContent = su ? 'Already have an account?' : vf ? 'Wrong email?' : 'New here?';
+    $('auth-switch').textContent = su ? 'Log in' : vf ? 'Start over' : 'Create an account';
+    authMsg('');
+}
+function openAuth(mode) {
+    setAuthMode(mode || 'login');
+    $('auth-pass').type = 'password'; setIcon($('pass-eye'), 'eye');
+    openModal('m-auth');
+    setTimeout(() => { const f = mode === 'signup' ? $('auth-first') : $('auth-email'); f.focus(); }, 40);
+}
+function authBusy(b) { A.busy = b; const s = $('auth-submit'); s.disabled = b; s.setAttribute('aria-busy', b ? 'true' : 'false'); }
+async function submitAuth(ev) {
+    ev.preventDefault();
+    if (A.busy) return;
+    const email = $('auth-email').value.trim().toLowerCase(), pass = $('auth-pass').value;
+    authMsg('');
+    try {
+        if (A.mode === 'login') {
+            if (!email || !pass) return authMsg('Enter your email and password.');
+            authBusy(true);
+            const r = await api('/api/login', { method: 'POST', body: { email, password: pass }, noAuthRedirect: true });
+            closeModal('m-auth'); $('auth-pass').value = '';
+            await enterApp(r.user);
+        } else if (A.mode === 'signup') {
+            const first = $('auth-first').value.trim(), last = $('auth-last').value.trim();
+            if (!first || !last) return authMsg('Please enter your first and last name.');
+            if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) return authMsg('That email address doesn’t look right.');
+            if (pass.length < 8) return authMsg('Choose a password with at least 8 characters.');
+            if (pass !== $('auth-confirm').value) return authMsg('The two passwords don’t match.');
+            authBusy(true);
+            const r = await api('/api/register/init', { method: 'POST', body: { email, firstName: first, lastName: last, password: pass }, noAuthRedirect: true });
+            A.email = email;
+            setAuthMode('verify');
+            $('code-hint').textContent = 'We sent a 6-digit code to ' + email + '. It expires in ' + (r.expires_in || 15) + ' minutes.' + (r.dev_code ? '  (dev code: ' + r.dev_code + ')' : '');
+            $('auth-code').value = ''; $('auth-code').focus();
+            startResendCooldown();
+        } else {
+            const code = $('auth-code').value.replace(/\D/g, '');
+            if (code.length !== 6) return authMsg('Enter the 6-digit code from your email.');
+            authBusy(true);
+            const r = await api('/api/register/verify', { method: 'POST', body: { email: A.email, code }, noAuthRedirect: true });
+            closeModal('m-auth'); $('auth-pass').value = ''; $('auth-confirm').value = '';
+            await enterApp(r.user);
+            toast('Welcome to Wizard.AI ✨', 'ok');
         }
+    } catch (e) { authMsg(errMsg(e)); }
+    finally { authBusy(false); }
+}
+let resendTimer = null;
+function startResendCooldown(sec) {
+    const b = $('resend-btn'); let left = sec || 30;
+    clearInterval(resendTimer); b.disabled = true;
+    const tick = () => { if (left <= 0) { clearInterval(resendTimer); b.disabled = false; b.textContent = 'Resend code'; } else { b.textContent = 'Resend code in ' + left + 's'; left--; } };
+    tick(); resendTimer = setInterval(tick, 1000);
+}
+async function resendCode() {
+    try {
+        const r = await api('/api/resend-code', { method: 'POST', body: { email: A.email }, noAuthRedirect: true });
+        authMsg('A new code is on its way.', true);
+        if (r.dev_code) $('code-hint').textContent += '  (dev code: ' + r.dev_code + ')';
+        startResendCooldown();
+    } catch (e) { authMsg(errMsg(e)); if (e.status === 429 && e.data.retry_after) startResendCooldown(Math.min(e.data.retry_after, 3600)); }
+}
+
+async function enterApp(user) {
+    S.user = user; store.set('user', user);
+    renderUser(); showShell();
+    S.listLoading = !S.chats.length; renderList();
+    await refreshChats(true);
+    if (!S.tzSent) { S.tzSent = true; api('/api/user/timezone', { method: 'POST', body: { timezone: tzName() }, noAuthRedirect: true }).catch(() => { }); }
+    api('/api/profile', { noAuthRedirect: true }).then(r => { S.profile = r.profile; }).catch(() => { });
+    const last = store.get(lastIdKey(), null);
+    const start = S.chats.find(c => c.chat_id === last) || sortedChats()[0];
+    if (start) await openChat(start.chat_id);
+    else await newChat(true);
+}
+async function logout() {
+    closePops();
+    const ok = await confirmBox({ title: 'Log out?', body: 'You’ll need to log in again. Your chats stay safe on the server.', yes: 'Log out' });
+    if (!ok) return;
+    try { await api('/api/logout', { method: 'POST', noAuthRedirect: true }); } catch (e) { }
+    S.user = null; wipeUserData(); closeAllModals();
+    $('thread').innerHTML = ''; $('chat-list').innerHTML = '';
+    showGate();
+}
+
+/* ============================================================
+   PROFILE
+   ============================================================ */
+const PF_LISTS = { education: 'pf-edu', skills: 'pf-skills', interests: 'pf-interests', favorite_topics: 'pf-topics', learning_interests: 'pf-learning', known_topics: 'pf-known' };
+const csv = v => String(v || '').split(',').map(s => s.trim()).filter(Boolean);
+function fillProfile(p) {
+    p = p || {};
+    const set = (id, v) => { const el = $(id); if (el) el.value = v == null ? '' : v; };
+    set('pf-full', p.full_name); set('pf-display', p.display_name); set('pf-birthday', p.birthday); set('pf-gender', p.gender);
+    set('pf-bio', p.bio); set('pf-phone', p.phone); set('pf-website', p.website); set('pf-greeting', p.custom_greeting);
+    set('pf-occupation', p.occupation); set('pf-company', p.company); set('pf-exp', p.experience_years);
+    for (const k in PF_LISTS) set(PF_LISTS[k], Array.isArray(p[k]) ? p[k].join(', ') : '');
+    $('pf-mode').innerHTML = MODES.map(m => '<option value="' + m.id + '">' + m.emoji + ' ' + m.name + '</option>').join('');
+    set('pf-mode', p.preferred_mode || 'JARVIS'); set('pf-style', p.response_style || 'balanced'); set('pf-formal', p.formality_level || 'casual');
+    set('pf-emoji', p.emoji_preference === false ? 'false' : 'true'); set('pf-instr', p.custom_instructions);
+    set('pf-goals', Array.isArray(p.goals) ? p.goals.map(g => typeof g === 'object' && g ? g.text : g).join('\n') : '');
+    set('pf-reminders', Array.isArray(p.reminders) ? p.reminders.join('\n') : '');
+    const pct = Math.max(0, Math.min(100, p.profile_completeness || 0));
+    $('pf-bar').style.width = pct + '%'; $('pf-pct').textContent = pct + '%';
+}
+async function openProfile() {
+    if (!S.user) return openAuth('login');
+    openModal('m-profile'); fillProfile(S.profile);
+    try { const r = await api('/api/profile'); S.profile = r.profile; fillProfile(S.profile); } catch (e) { toast(errMsg(e), 'err'); }
+}
+async function saveProfile() {
+    const v = id => $(id).value.trim();
+    const lines = id => $(id).value.split('\n').map(s => s.trim()).filter(Boolean);
+    const body = {
+        full_name: v('pf-full') || null, display_name: v('pf-display') || null, birthday: v('pf-birthday') || null, gender: v('pf-gender') || null,
+        bio: v('pf-bio') || null, phone: v('pf-phone') || null, website: v('pf-website') || null, custom_greeting: v('pf-greeting') || null,
+        occupation: v('pf-occupation') || null, company: v('pf-company') || null, experience_years: v('pf-exp') ? parseInt(v('pf-exp'), 10) : null,
+        preferred_mode: $('pf-mode').value || 'JARVIS', response_style: $('pf-style').value, formality_level: $('pf-formal').value,
+        emoji_preference: $('pf-emoji').value === 'true', custom_instructions: v('pf-instr') || null, goals: lines('pf-goals'), reminders: lines('pf-reminders')
+    };
+    for (const k in PF_LISTS) body[k] = csv($(PF_LISTS[k]).value);
+    const b = $('pf-save'); b.setAttribute('aria-busy', 'true'); b.disabled = true;
+    try {
+        const r = await api('/api/profile/update', { method: 'POST', body });
+        S.profile = r.profile; fillProfile(S.profile);
+        toast('Profile saved', 'ok'); closeModal('m-profile');
+    } catch (e) { toast(errMsg(e), 'err'); }
+    finally { b.removeAttribute('aria-busy'); b.disabled = false; }
+}
+
+/* ============================================================
+   STATS & KEYS
+   ============================================================ */
+async function openStats() {
+    if (!S.user) return openAuth('login');
+    openModal('m-stats');
+    $('stat-grid').innerHTML = '<div class="skel" style="grid-column:1/-1"></div>'; $('stat-kv').innerHTML = '';
+    try {
+        const d = await api('/api/stats');
+        const big = [['Messages', d.messages], ['Chats', d.chats], ['Images', d.images], ['Searches', d.searches], ['Code runs', d.code], ['Files', d.files]];
+        $('stat-grid').innerHTML = big.map(([l, n]) => '<div class="stat"><b>' + esc(Number(n || 0).toLocaleString()) + '</b><span>' + l + '</span></div>').join('');
+        const kv = [['Memories', d.memories], ['Documents', d.documents], ['API keys', d.api_keys],
+        ['Average reply time', d.avg_response_time != null ? d.avg_response_time + 's' : '—'], ['Fastest reply', d.fastest_response != null ? d.fastest_response + 's' : '—'],
+        ['Account created', d.account_created || '—'], ['Last login', d.last_login || '—']];
+        $('stat-kv').innerHTML = kv.map(([l, n]) => '<div><span>' + l + '</span><span>' + esc(n == null ? 0 : n) + '</span></div>').join('');
+    } catch (e) { $('stat-grid').innerHTML = '<div class="list-empty" style="grid-column:1/-1">' + esc(errMsg(e)) + '</div>'; }
+}
+async function openKeys() {
+    if (!S.user) return openAuth('login');
+    openModal('m-keys');
+    const box = $('keys-list'); box.innerHTML = '<div class="skel"></div>';
+    try {
+        const keys = await api('/api/keys');
+        const list = Array.isArray(keys) ? keys : (keys.keys || []);
+        box.innerHTML = list.length ? list.map(k => {
+            const key = String(k.key || '');
+            const masked = key.length > 14 ? key.slice(0, 7) + '••••••••' + key.slice(-4) : '••••••••';
+            return '<div class="krow"><div style="flex:1;min-width:0"><b>' + esc(k.name || 'Key') + '</b><br><code>' + esc(masked) + '</code></div>' +
+                '<span class="muted small">' + (k.requests || 0) + ' requests</span><span class="badge" style="margin:0">' + (k.is_active === false ? 'Revoked' : 'Active') + '</span></div>';
+        }).join('') : '<div class="list-empty">No API keys yet. Create one in the Developer Hub.</div>';
+    } catch (e) { box.innerHTML = '<div class="list-empty">' + esc(errMsg(e)) + '</div>'; }
+}
+
+/* ============================================================
+   PERSONALITIES
+   ============================================================ */
+const PS = { tab: 'featured', editing: null, seq: 0 };
+async function openPersonas(tab) {
+    openModal('m-personas'); setPersonaTab(tab || PS.tab);
+}
+async function setPersonaTab(tab) {
+    PS.tab = tab;
+    qsa('#persona-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    const grid = $('persona-grid'); const seq = ++PS.seq;
+    grid.innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+    try {
+        let list = await api('/api/personalities/' + tab, { noAuthRedirect: tab !== 'mine' });
+        if (seq !== PS.seq) return;
+        list = Array.isArray(list) ? list : [];
+        const cur = personaFor(S.chat);
+        let html = '';
+        if (cur) html += '<button type="button" class="pcard" data-clear><span class="pe">' + esc(modeOf(S.chat.mode).emoji) + '</span><b>Back to ' + esc(modeOf(S.chat.mode).name) + '</b><small>Stop using “' + esc(cur.name) + '”</small></button>';
+        html += list.map(p => '<div class="pcard" data-pid="' + p.id + '"><span class="pe">' + esc(p.emoji || '🤖') + '</span><b>' + esc(p.name) + '</b><small>by ' + esc(p.creator || 'Anonymous') + (p.is_public ? '' : ' · private') + '</small>' +
+            '<p class="pp">' + esc(p.system_prompt || '') + '</p><div class="pm"><span class="grow">' + (p.uses || 0) + ' uses</span>' +
+            (tab === 'mine' ? '<button type="button" class="act" data-edit aria-label="Edit"><i data-icon="edit"></i></button><button type="button" class="act" data-del aria-label="Delete"><i data-icon="trash"></i></button>' : '') +
+            '<button type="button" class="act" data-like aria-label="Like"><i data-icon="heart"></i><span style="font-size:11px;margin-left:3px">' + (p.likes || 0) + '</span></button>' +
+            '<button type="button" class="btn primary sm" data-use>Use</button></div></div>').join('');
+        if (!list.length && !cur) html = '<div class="empty-block">' + (tab === 'mine' ? 'You haven’t created a personality yet.<br>Tap “Create” to craft one.' : 'Nothing here yet — be the first to share one!') + '</div>';
+        grid.innerHTML = html; hydrate(grid);
+        grid._list = list;
+    } catch (e) { if (seq === PS.seq) grid.innerHTML = '<div class="empty-block">' + esc(e.status === 401 ? 'Log in to see your personalities.' : errMsg(e)) + '</div>'; }
+}
+async function usePersona(p) {
+    if (!S.chat) return;
+    S.personas[S.chat.chat_id] = { id: p.id, name: p.name, emoji: p.emoji || '🤖', greeting: p.greeting || '' };
+    store.set('persona', S.personas);
+    renderHeader(); if (!(S.chat.messages || []).length) renderEmpty();
+    closeModal('m-personas'); toast('Now chatting with ' + p.name + ' ' + (p.emoji || ''), 'ok');
+    api('/api/personalities/' + p.id + '/use', { method: 'POST', noAuthRedirect: true }).catch(() => { });
+    focusInput();
+}
+function clearPersona() {
+    if (!S.chat) return;
+    delete S.personas[S.chat.chat_id]; store.set('persona', S.personas);
+    renderHeader(); if (!(S.chat.messages || []).length) renderEmpty();
+    closeModal('m-personas'); toast('Back to ' + modeOf(S.chat.mode).name, 'ok');
+}
+function openPersonaEditor(p) {
+    PS.editing = p || null;
+    $('pe-title').textContent = p ? 'Edit personality' : 'Craft a personality';
+    $('pe-emoji').value = p ? p.emoji || '' : ''; $('pe-name').value = p ? p.name : '';
+    $('pe-prompt').value = p ? p.system_prompt || '' : ''; $('pe-greeting').value = p ? p.greeting || '' : '';
+    $('pe-public').checked = p ? !!p.is_public : true;
+    $('pe-count').textContent = $('pe-prompt').value.length; $('pe-msg').hidden = true;
+    openModal('m-persona-edit');
+}
+async function savePersona(ev) {
+    ev.preventDefault();
+    const body = { emoji: $('pe-emoji').value.trim() || '🤖', name: $('pe-name').value.trim(), prompt: $('pe-prompt').value.trim(), greeting: $('pe-greeting').value.trim(), is_public: $('pe-public').checked };
+    if (!body.name || !body.prompt) { const m = $('pe-msg'); m.hidden = false; m.textContent = 'A name and instructions are required.'; return; }
+    const b = $('pe-save'); b.setAttribute('aria-busy', 'true'); b.disabled = true;
+    try {
+        if (PS.editing) await api('/api/personalities/' + PS.editing.id, { method: 'PATCH', body });
+        else await api('/api/personalities', { method: 'POST', body });
+        closeModal('m-persona-edit'); toast('Personality saved', 'ok');
+        if ($('m-personas').hidden) openModal('m-personas');
+        setPersonaTab('mine');
+    } catch (e) { const m = $('pe-msg'); m.hidden = false; m.textContent = errMsg(e); }
+    finally { b.removeAttribute('aria-busy'); b.disabled = false; }
+}
+async function onPersonaGridClick(e) {
+    if (e.target.closest('[data-clear]')) return clearPersona();
+    const card = e.target.closest('.pcard[data-pid]'); if (!card) return;
+    const id = +card.dataset.pid; const p = ($('persona-grid')._list || []).find(x => x.id === id); if (!p) return;
+    if (e.target.closest('[data-use]')) return usePersona(p);
+    if (e.target.closest('[data-edit]')) return openPersonaEditor(p);
+    if (e.target.closest('[data-del]')) {
+        const ok = await confirmBox({ title: 'Delete “' + p.name + '”?', body: 'This also removes it for anyone using it.', yes: 'Delete', danger: true });
+        if (!ok) return;
+        try { await api('/api/personalities/' + id, { method: 'DELETE' }); toast('Deleted', 'ok'); if (S.chat && personaFor(S.chat) && personaFor(S.chat).id === id) clearPersona(); setPersonaTab('mine'); } catch (er) { toast(errMsg(er), 'err'); }
         return;
     }
-    
-    const messages = document.querySelectorAll('.message');
-    let exportText = '🧙 Wizard.AI Chat Export\n';
-    exportText += '='.repeat(50) + '\n';
-    exportText += `Date: ${new Date().toLocaleString()}\n`;
-    exportText += '='.repeat(50) + '\n\n';
-    
-    messages.forEach(msg => {
-        const isUser = msg.classList.contains('user');
-        const sender = isUser ? '👤 You' : '🧙 Wizard.AI';
-        const textEl = msg.querySelector('.message-text');
-        let text = textEl ? textEl.innerText : '';
-        if (!isUser) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = text;
-            text = tempDiv.textContent;
-        }
-        const timeEl = msg.querySelector('.message-time');
-        const time = timeEl ? timeEl.innerText : '';
-        exportText += `[${time}] ${sender}:\n${text}\n\n`;
-        exportText += '-'.repeat(40) + '\n\n';
-    });
-    
-    const blob = new Blob([exportText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `wizard-chat-${Date.now()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    if (typeof showNotification === 'function') {
-        showNotification('✅ Chat exported!', 'success');
+    if (e.target.closest('[data-like]')) {
+        const btn = e.target.closest('[data-like]');
+        try {
+            const r = await api('/api/personalities/' + id + '/like', { method: 'POST' });
+            btn.classList.toggle('liked', !!r.liked); qs('span', btn).textContent = r.likes;
+        } catch (er) { toast(errMsg(er), 'err'); }
     }
 }
 
-// ============================================
-// EVENT LISTENERS SETUP
-// ============================================
-function setupEventListeners() {
-    if (sendBtn) sendBtn.addEventListener('click', sendMessage);
-    if (chatInput) chatInput.addEventListener('keypress', e => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
+/* ============================================================
+   CODE & IMAGE STUDIOS
+   ============================================================ */
+async function runCode() {
+    if (!S.user) return openAuth('login');
+    const code = $('code-input').value; if (!code.trim()) return;
+    const out = $('code-out'), btn = $('code-run');
+    out.textContent = 'Running…'; btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+    const t0 = performance.now();
+    try {
+        const d = await api('/api/execute', { method: 'POST', body: { code } });
+        out.innerHTML = '';
+        const add = (txt, cls) => { const s = document.createElement('span'); if (cls) s.className = cls; s.textContent = txt; out.appendChild(s); };
+        if (d.error) add('✗ ' + d.error, 'e');
+        else {
+            if (d.stdout) add(d.stdout);
+            if (d.stderr) add((d.stdout ? '\n' : '') + d.stderr, 'e');
+            if (!d.stdout && !d.stderr) add('✓ Finished with no output.', 'ok');
         }
+        $('code-meta').textContent = 'Ran in ' + Math.round(performance.now() - t0) + ' ms';
+    } catch (e) { out.innerHTML = ''; const s = document.createElement('span'); s.className = 'e'; s.textContent = '✗ ' + errMsg(e); out.appendChild(s); }
+    finally { btn.disabled = false; btn.removeAttribute('aria-busy'); }
+}
+async function makeImage(ev) {
+    ev.preventDefault();
+    if (!S.user) return openAuth('login');
+    const prompt = $('image-prompt').value.trim(); if (!prompt) { toast('Describe the image first.', 'warn'); return; }
+    const box = $('image-result'), btn = $('image-go');
+    box.innerHTML = '<div class="shim">Conjuring your image…</div>'; btn.disabled = true; btn.setAttribute('aria-busy', 'true');
+    try {
+        const d = await api('/api/generate-image', { method: 'POST', body: { prompt, size: $('image-size').value } });
+        if (!d.url || !safeImg(d.url)) throw new Error(d.error || 'No image came back. Try a different description.');
+        box.innerHTML = '<img src="' + esc(d.url) + '" alt="' + esc(prompt) + '"><div class="row"><button type="button" class="btn ghost sm" data-dl><i data-icon="download"></i>Download</button><a class="btn ghost sm" href="' + esc(d.url) + '" target="_blank" rel="noopener noreferrer"><i data-icon="external"></i>Open</a></div>';
+        hydrate(box);
+        qs('img', box).onclick = () => openLightbox(d.url, prompt);
+        qs('[data-dl]', box).onclick = () => downloadImage(d.url);
+        qs('img', box).onerror = () => { box.innerHTML = '<div class="list-empty">The image couldn’t be loaded. Try again.</div>'; };
+    } catch (e) { box.innerHTML = '<div class="list-empty">' + esc(errMsg(e)) + '</div>'; }
+    finally { btn.disabled = false; btn.removeAttribute('aria-busy'); }
+}
+
+/* ============================================================
+   MODE MENU
+   ============================================================ */
+function openModeMenu() {
+    const c = S.chat; if (!c) return;
+    const cur = personaFor(c) ? null : c.mode;
+    let html = '<div class="gh">Personality</div>' + MODES.map(m =>
+        '<button type="button" role="option" class="opt' + (m.id === cur ? ' cur' : '') + '" data-mode="' + m.id + '" aria-selected="' + (m.id === cur) + '"><span class="oe">' + m.emoji + '</span><span class="ot"><b>' + m.name + '</b><small>' + esc(m.desc) + '</small></span><i data-icon="check" class="tick"></i></button>').join('');
+    html += '<div class="gh">Community</div><button type="button" class="opt" data-browse><span class="oe">🎭</span><span class="ot"><b>Browse personalities</b><small>Use or craft custom characters</small></span></button>';
+    const m = $('mode-menu'); m.innerHTML = html; hydrate(m);
+    openPop(m, $('mode-btn'), {});
+}
+async function setMode(id) {
+    const c = S.chat; if (!c) return;
+    closePops();
+    if (personaFor(c)) { delete S.personas[c.chat_id]; store.set('persona', S.personas); }
+    c.mode = id; renderHeader();
+    const s = S.chats.find(x => x.chat_id === c.chat_id); if (s) s.mode = id;
+    if (!(c.messages || []).length) renderEmpty();
+    api('/api/ai-chats/' + encodeURIComponent(c.chat_id), { method: 'PATCH', body: { mode: id } }).catch(e => toast(errMsg(e), 'err'));
+}
+
+/* ============================================================
+   COMMAND PALETTE
+   ============================================================ */
+const PAL = { items: [], sel: 0, seq: 0, hits: [] };
+function palActions() {
+    const A_ = [
+        { label: 'New chat', sub: 'Start a fresh conversation', icon: 'plus', kw: 'new chat start', run: () => newChat() },
+        { label: 'Toggle sidebar', icon: 'sidebar', kw: 'sidebar hide show collapse', run: toggleSidebar },
+        { label: 'Rename this chat', icon: 'edit', kw: 'rename title', run: () => S.chat && renameChat(S.chat.chat_id) },
+        { label: 'Export this chat', sub: 'Download as Markdown', icon: 'download', kw: 'export download markdown', run: () => S.chat && exportChat(S.chat.chat_id) },
+        { label: 'Clear this chat', icon: 'trash', kw: 'clear delete messages', run: () => S.chat && clearChat(S.chat.chat_id) },
+        { label: 'Image studio', icon: 'image', kw: 'image generate picture', run: () => openModal('m-image') },
+        { label: 'Python sandbox', icon: 'terminal', kw: 'code python run sandbox', run: () => openModal('m-code') },
+        { label: 'Personalities', icon: 'users', kw: 'personality persona character', run: () => openPersonas() },
+        { label: 'Profile', icon: 'user', kw: 'profile about me', run: openProfile },
+        { label: 'Usage & stats', icon: 'bar-chart', kw: 'stats usage', run: openStats },
+        { label: 'API keys', icon: 'key', kw: 'api keys developer', run: openKeys },
+        { label: 'Settings', icon: 'settings', kw: 'settings preferences', run: () => openSettings() },
+        { label: 'Keyboard shortcuts', icon: 'keyboard', kw: 'help shortcuts keys', run: () => openModal('m-help') },
+        { label: 'What’s new', icon: 'book', kw: 'updates changelog', run: () => openModal('m-updates') },
+        { label: 'Log out', icon: 'logout', kw: 'logout sign out', run: logout }
+    ];
+    MODES.forEach(m => A_.push({ label: 'Switch to ' + m.name, sub: m.desc, emoji: m.emoji, kw: 'mode personality ' + m.name, run: () => setMode(m.id) }));
+    return A_;
+}
+function palBuild() {
+    const q = $('pal-input').value.trim();
+    const items = [];
+    const chats = sortedChats().map(c => ({ group: 'Chats', label: c.name || 'New chat', sub: c.preview || '', emoji: c.emoji || '💬', s: q ? Math.max(fuzzy(q, c.name), fuzzy(q, c.preview) - 6) : 0, run: () => openChat(c.chat_id) })).filter(x => x.s >= 0);
+    const acts = palActions().map(a => Object.assign(a, { group: 'Actions', s: q ? Math.max(fuzzy(q, a.label), fuzzy(q, a.kw) - 4) : 0 })).filter(x => x.s >= 0);
+    if (q) { chats.sort((a, b) => b.s - a.s); acts.sort((a, b) => b.s - a.s); }
+    const hits = PAL.hits.filter(h => h.snippet).map(h => ({ group: 'In messages', label: h.name, sub: h.snippet, emoji: h.emoji || '💬', run: () => openChat(h.chat_id, { scrollTo: h.index }) }));
+    items.push(...(q ? chats.slice(0, 6) : chats.slice(0, 5)), ...acts.slice(0, q ? 8 : 7), ...hits.slice(0, 5));
+    PAL.items = items; PAL.sel = Math.min(PAL.sel, Math.max(0, items.length - 1));
+    let html = '', g = '';
+    items.forEach((it, i) => {
+        if (it.group !== g) { g = it.group; html += '<div class="pal-g">' + g + '</div>'; }
+        html += '<button type="button" class="pal-item' + (i === PAL.sel ? ' on' : '') + '" role="option" data-i="' + i + '">' + (it.emoji ? '<span class="pe">' + esc(it.emoji) + '</span>' : '<i data-icon="' + it.icon + '"></i>') +
+            '<span class="pt"><span>' + highlightTerm(it.label, q) + '</span>' + (it.sub ? '<small>' + (it.group === 'In messages' ? highlightTerm(it.sub, q) : esc(it.sub)) + '</small>' : '') + '</span></button>';
     });
-    if (voiceBtn) voiceBtn.addEventListener('click', toggleVoiceInput);
-    if (turboBtn) turboBtn.addEventListener('click', toggleTurboMode);
-    if (searchBtn) searchBtn.addEventListener('click', toggleSearchMode);
-    if (uploadBtn) uploadBtn.addEventListener('click', () => fileUpload.click());
-    if (codeBtn) codeBtn.addEventListener('click', () => openModal(codeModal));
-    if (imageBtn) imageBtn.addEventListener('click', () => openModal(imageModal));
-    if (profileBtn) profileBtn.addEventListener('click', openProfileModal);
-    if (statsBtn) statsBtn.addEventListener('click', loadDetailedStats);
-    if (personalitiesBtn) personalitiesBtn.addEventListener('click', openPersonalitiesBrowser);
-    if (devHubBtn) devHubBtn.addEventListener('click', () => window.open('/ai/devhub/', '_blank'));
-    if (agentStudioBtn) agentStudioBtn.addEventListener('click', () => window.open('/ai/agent-studio/', '_blank'));
-    if (updateHistoryBtn) updateHistoryBtn.addEventListener('click', showUpdateHistory);
-    if (closeUpdate) closeUpdate.addEventListener('click', () => closeModal(updateModal));
-    if (fileUpload) fileUpload.addEventListener('change', handleFileUpload);
-    if (newChatBtn) newChatBtn.addEventListener('click', createNewChat);
-    if (renameChatBtn) renameChatBtn.addEventListener('click', () => openRenameModal(activeChatId));
-    if (deleteChatBtn) deleteChatBtn.addEventListener('click', () => deleteChat(activeChatId));
-    if (resetCurrentBtn) resetCurrentBtn.addEventListener('click', resetCurrentChat);
-    if (saveProfileBtn) saveProfileBtn.addEventListener('click', saveProfile);
-    if (closeProfileBtn) closeProfileBtn.addEventListener('click', () => closeModal(profileModal));
-    
-    // Image modal
-    if (generateImageBtn) generateImageBtn.addEventListener('click', generateImageManual);
-    if (imagePrompt) imagePrompt.addEventListener('keypress', e => {
-        if (e.key === 'Enter') generateImageManual();
+    if (!items.length) html = '<div class="list-empty">Nothing found for “' + esc(q) + '”.</div>';
+    const list = $('pal-list'); list.innerHTML = html; hydrate(list);
+}
+const palSearch = debounce(async () => {
+    const q = $('pal-input').value.trim(); const seq = ++PAL.seq;
+    if (q.length < 2) { PAL.hits = []; palBuild(); return; }
+    try { const r = await api('/api/ai-chats/search?q=' + encodeURIComponent(q), { noAuthRedirect: true }); if (seq === PAL.seq) { PAL.hits = r.results || []; palBuild(); } } catch (e) { }
+}, 260);
+function openPalette() {
+    if (!S.user) return;
+    $('pal-input').value = ''; PAL.sel = 0; PAL.hits = []; palBuild(); openModal('m-palette'); $('pal-input').focus();
+}
+function palRun(i) { const it = PAL.items[i]; if (!it) return; closeModal('m-palette'); setTimeout(it.run, 30); }
+function palMove(d) {
+    if (!PAL.items.length) return;
+    PAL.sel = (PAL.sel + d + PAL.items.length) % PAL.items.length;
+    qsa('.pal-item').forEach((b, i) => b.classList.toggle('on', i === PAL.sel));
+    const on = qs('.pal-item.on'); if (on) on.scrollIntoView({ block: 'nearest' });
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+function openSettings() {
+    $('set-enter').checked = !!S.settings.enterSends; $('set-autoweb').checked = !!S.settings.autoWeb;
+    $('set-motion').checked = !!S.settings.calm; $('set-density').value = S.settings.density || 'cozy';
+    openModal('m-settings');
+}
+
+/* ============================================================
+   STARFIELD
+   ============================================================ */
+function initStars() {
+    const cv = $('starfield'); if (!cv || !cv.getContext) return;
+    const ctx = cv.getContext('2d'); let W = 0, H = 0, stars = [], raf = 0, running = false;
+    const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+    function size() {
+        W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        const n = Math.min(150, Math.floor(W * H / 9000));
+        stars = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.2 + .25, a: Math.random() * .6 + .2, p: Math.random() * 6.28, s: Math.random() * .6 + .2, g: Math.random() < .18 }));
+    }
+    function frame(t) {
+        ctx.clearRect(0, 0, W, H);
+        for (const s of stars) {
+            const a = s.a * (.55 + .45 * Math.sin(t / 1000 * s.s + s.p));
+            ctx.globalAlpha = a; ctx.fillStyle = s.g ? '#e8c97a' : '#d4d0e8';
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
+            s.y -= s.s * .03; if (s.y < -2) { s.y = H + 2; s.x = Math.random() * W; }
+        }
+        raf = running ? requestAnimationFrame(frame) : 0;
+    }
+    function start() { if (running || reduceMotion() || document.hidden) return; running = true; raf = requestAnimationFrame(frame); }
+    function stop() { running = false; cancelAnimationFrame(raf); raf = 0; }
+    size(); start();
+    addEventListener('resize', debounce(() => { size(); }, 200));
+    document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
+    window.__stars = { start, stop, refresh: () => reduceMotion() ? stop() : start() };
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+function bind() {
+    // gate
+    $('gate-login').onclick = () => openAuth('login');
+    $('gate-signup').onclick = () => openAuth('signup');
+    // auth
+    $('auth-form').addEventListener('submit', submitAuth);
+    $('auth-switch').onclick = () => { const m = A.mode; if (m === 'login') setAuthMode('signup'); else setAuthMode('login'); };
+    $('resend-btn').onclick = resendCode;
+    $('pass-eye').onclick = () => { const p = $('auth-pass'); const show = p.type === 'password'; p.type = show ? 'text' : 'password'; setIcon($('pass-eye'), show ? 'eye-off' : 'eye'); $('pass-eye').setAttribute('aria-label', show ? 'Hide password' : 'Show password'); };
+    $('auth-code').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); if (e.target.value.length === 6 && !A.busy) $('auth-form').requestSubmit(); });
+
+    // sidebar
+    $('new-chat-btn').onclick = () => newChat();
+    $('collapse-btn').onclick = toggleSidebar;
+    $('menu-btn').onclick = toggleSidebar;
+    $('scrim').onclick = closeDrawer;
+    $('chat-filter').addEventListener('input', e => {
+        S.filter = e.target.value; S.hits = []; renderList();
+        const q = S.filter.trim(), seq = ++S.searchSeq;
+        if (q.length >= 2) setTimeout(async () => {
+            if (seq !== S.searchSeq) return;
+            try { const r = await api('/api/ai-chats/search?q=' + encodeURIComponent(q), { noAuthRedirect: true }); if (seq === S.searchSeq) { S.hits = r.results || []; renderList(); } } catch (er) { }
+        }, 280);
     });
-    
-    const loginBtn = document.getElementById('show-login-btn');
-    const signupBtn = document.getElementById('show-signup-btn');
-    if (loginBtn) loginBtn.addEventListener('click', () => showAuthModal(true));
-    if (signupBtn) signupBtn.addEventListener('click', () => showAuthModal(false));
-    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-    if (authSwitchBtn) authSwitchBtn.addEventListener('click', toggleAuthMode);
-    if (authSubmit) authSubmit.addEventListener('click', handleAuthSubmit);
-    if (closeAuth) closeAuth.addEventListener('click', () => closeModal(authModal));
-    if (resendCodeBtn) resendCodeBtn.addEventListener('click', resendVerificationCode);
-    
-    // Code modal
-    if (runCodeBtn) runCodeBtn.addEventListener('click', executeCode);
-    if (clearCodeBtn) clearCodeBtn.addEventListener('click', () => {
-        if (codeInput) codeInput.value = '';
-        if (codeOutput) codeOutput.textContent = '';
+    $('chat-filter').addEventListener('keydown', e => { if (e.key === 'Escape') { e.target.value = ''; S.filter = ''; S.hits = []; renderList(); e.target.blur(); e.stopPropagation(); } });
+    $('chat-list').addEventListener('click', e => {
+        const more = e.target.closest('[data-more]'), item = e.target.closest('.chat-item'); if (!item) return;
+        if (more) { e.stopPropagation(); S.menuChatId = item.dataset.id; openPop($('item-menu'), more, { alignRight: true }); return; }
+        openChat(item.dataset.id, { scrollTo: item.dataset.index });
     });
-    
-    // Personality creator
-    if (toggleCreatorBtn) toggleCreatorBtn.addEventListener('click', toggleCreatorPanel);
-    if (savePersonality) savePersonality.addEventListener('click', saveCustomPersonality);
-    if (cancelPersonality) cancelPersonality.addEventListener('click', closeCreatorPanel);
-    if (closeCreator) closeCreator.addEventListener('click', closeCreatorPanel);
-    
-    // Rename modal
-    if (renameSave) renameSave.addEventListener('click', saveRename);
-    if (renameCancel) renameCancel.addEventListener('click', () => closeModal(renameModal));
-    if (renameInput) renameInput.addEventListener('keypress', e => {
-        if (e.key === 'Enter') saveRename();
+    $('chat-list').addEventListener('keydown', e => {
+        const item = e.target.closest('.chat-item'); if (!item || e.target !== item) return;
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openChat(item.dataset.id, { scrollTo: item.dataset.index }); }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const all = qsa('.chat-item'); const k = all.indexOf(item) + (e.key === 'ArrowDown' ? 1 : -1); if (all[k]) all[k].focus(); }
+        if (e.key === 'F2') { renameChat(item.dataset.id); }
+        if (e.key === 'Delete') { deleteChat(item.dataset.id); }
     });
-    
-    // Personality tabs
-    if (tabBtns.length) tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => switchPersonalityTab(btn.dataset.tab));
+    $('chat-list').addEventListener('contextmenu', e => { const item = e.target.closest('.chat-item:not(.hit)'); if (!item) return; e.preventDefault(); S.menuChatId = item.dataset.id; openPop($('item-menu'), { left: e.clientX, right: e.clientX, top: e.clientY, bottom: e.clientY }, {}); });
+    $('item-menu').addEventListener('click', e => {
+        const b = e.target.closest('[data-act]'); if (!b) return; const id = S.menuChatId; closePops();
+        if (b.dataset.act === 'rename') renameChat(id); else if (b.dataset.act === 'export') exportChat(id); else if (b.dataset.act === 'delete') deleteChat(id);
     });
-    
-    // Close modals when clicking overlay
-    window.addEventListener('click', e => {
-        if (e.target.classList.contains('modal-overlay')) closeModal(e.target);
+    $('user-btn').onclick = () => openPop($('user-menu'), $('user-btn'), { up: true });
+    $('user-menu').addEventListener('click', e => {
+        const b = e.target.closest('[data-act]'); if (!b) return; closePops();
+        ({
+            profile: openProfile, stats: openStats, personalities: () => openPersonas(), keys: openKeys,
+            devhub: () => window.open('/ai/devhub/', '_blank', 'noopener'), agents: () => window.open('/ai/agent-studio/', '_blank', 'noopener'),
+            settings: openSettings, help: () => openModal('m-help'), updates: () => openModal('m-updates'), logout,
+            install: async () => { if (S.deferredInstall) { S.deferredInstall.prompt(); S.deferredInstall = null; $('install-item').hidden = true; } }
+        })[b.dataset.act]();
     });
-    
-    // Emergency reset
+
+    // top bar
+    $('title-btn').onclick = () => S.chat && renameChat(S.chat.chat_id);
+    $('mode-btn').onclick = openModeMenu;
+    $('mode-menu').addEventListener('click', e => {
+        if (e.target.closest('[data-browse]')) { closePops(); openPersonas(); return; }
+        const b = e.target.closest('[data-mode]'); if (b) setMode(b.dataset.mode);
+    });
+    $('palette-btn').onclick = openPalette;
+    $('export-btn').onclick = () => S.chat && exportChat(S.chat.chat_id);
+    $('conn').onclick = () => { setConn('warn'); fetch(API + '/status', { credentials: 'include' }).then(r => setConn(r.ok ? 'ok' : 'off')).catch(() => setConn('off')); };
+
+    // thread
+    $('thread').addEventListener('click', onThreadClick);
+    $('thread').addEventListener('keydown', onThreadKey);
+    $('sparks').addEventListener('click', e => { const b = e.target.closest('.spark'); if (b) send(b.dataset.q); });
+    $('scroller').addEventListener('scroll', () => { S.stick = nearBottom(); updateJump(); }, { passive: true });
+    $('jump-btn').onclick = () => { S.stick = true; $('scroller').scrollTo({ top: $('scroller').scrollHeight, behavior: reduceMotion() ? 'auto' : 'smooth' }); };
+
+    // composer
+    const inp = $('input');
+    inp.addEventListener('input', () => { autoGrow(); updateSendState(); saveDraftSoon(); });
+    inp.addEventListener('keydown', e => {
+        if (e.isComposing || e.keyCode === 229) return;
+        if (e.key === 'Enter') {
+            const mod = e.ctrlKey || e.metaKey;
+            if ((S.settings.enterSends && !e.shiftKey) || mod) { e.preventDefault(); if (!S.busy) submitComposer(); }
+        } else if (e.key === 'ArrowUp' && !inp.value) { e.preventDefault(); editLastUser(); }
+    });
+    inp.addEventListener('paste', e => {
+        const files = Array.from((e.clipboardData && e.clipboardData.files) || []);
+        if (files.length) { e.preventDefault(); files.forEach(uploadFile); }
+    });
+    $('composer').addEventListener('submit', e => { e.preventDefault(); submitComposer(); });
+    $('send-btn').addEventListener('click', e => { if (S.busy) { e.preventDefault(); abortTurn(); } });
+    $('attach-btn').onclick = () => $('file-input').click();
+    $('file-input').onchange = e => { Array.from(e.target.files).forEach(uploadFile); e.target.value = ''; };
+    $('attach-chips').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) { S.attach.splice(+b.dataset.rm, 1); renderChips(); } });
+    $('web-btn').onclick = () => setWeb(!S.webOn);
+    $('image-btn').onclick = () => openModal('m-image');
+    $('code-btn').onclick = () => openModal('m-code');
+    if (window.SpeechRecognition || window.webkitSpeechRecognition) $('mic-btn').onclick = toggleMic; else $('mic-btn').hidden = true;
+    let dragN = 0;
+    const main = qs('.main');
+    main.addEventListener('dragenter', e => { if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) { dragN++; $('drop-hint').hidden = false; $('composer').classList.add('drag'); } });
+    main.addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; $('drop-hint').hidden = true; $('composer').classList.remove('drag'); } });
+    main.addEventListener('dragover', e => { if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) e.preventDefault(); });
+    main.addEventListener('drop', e => { e.preventDefault(); dragN = 0; $('drop-hint').hidden = true; $('composer').classList.remove('drag'); Array.from(e.dataTransfer.files || []).forEach(uploadFile); });
+
+    // modals
+    document.addEventListener('click', e => {
+        const c = e.target.closest('[data-close]'); if (c) { const m = c.closest('.modal'); if (m) closeModal(m); return; }
+        if (e.target.classList && e.target.classList.contains('modal') && e.target.id !== 'm-confirm') { if (e.target._down) closeModal(e.target); }
+        if (openPopEl && !openPopEl.contains(e.target) && !(openPopAnchor && openPopAnchor.contains && openPopAnchor.contains(e.target))) closePops();
+    });
+    document.addEventListener('mousedown', e => { if (e.target.classList && e.target.classList.contains('modal')) e.target._down = true; }, true);
+    document.addEventListener('mouseup', () => setTimeout(() => qsa('.modal').forEach(m => { m._down = false; }), 0), true);
+    $('confirm-yes').onclick = () => resolveConfirm(true);
+    $('confirm-no').onclick = () => resolveConfirm(false);
+    $('rename-form').addEventListener('submit', e => { e.preventDefault(); doRename($('rename-input').value); closeModal('m-rename'); });
+    $('snack-undo').onclick = () => { const f = snackUndo; hideSnack(); if (f) f(); };
+
+    // profile
+    qsa('#profile-tabs .tab').forEach(t => t.onclick = () => {
+        qsa('#profile-tabs .tab').forEach(x => x.classList.toggle('active', x === t));
+        qsa('#m-profile .pane').forEach(p => p.classList.toggle('active', p.dataset.pane === t.dataset.tab));
+    });
+    $('pf-save').onclick = saveProfile;
+    // personalities
+    qsa('#persona-tabs .tab').forEach(t => t.onclick = () => setPersonaTab(t.dataset.tab));
+    $('persona-grid').addEventListener('click', onPersonaGridClick);
+    $('persona-new').onclick = () => { if (!S.user) return openAuth('login'); openPersonaEditor(null); };
+    $('pe-form').addEventListener('submit', savePersona);
+    $('pe-prompt').addEventListener('input', e => { $('pe-count').textContent = e.target.value.length; });
+    // code & image
+    $('code-run').onclick = runCode;
+    $('code-clear').onclick = () => { $('code-input').value = ''; $('code-out').textContent = ''; $('code-meta').textContent = ''; $('code-input').focus(); };
+    $('code-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); runCode(); }
+        if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); const t = e.target, s = t.selectionStart; t.value = t.value.slice(0, s) + '    ' + t.value.slice(t.selectionEnd); t.selectionStart = t.selectionEnd = s + 4; }
+    });
+    $('image-form').addEventListener('submit', makeImage);
+    $('lightbox-dl').onclick = () => downloadImage($('lightbox-img').src);
+    // settings
+    $('set-enter').onchange = e => { S.settings.enterSends = e.target.checked; applySettings(); };
+    $('set-autoweb').onchange = e => { S.settings.autoWeb = e.target.checked; applySettings(); autoGrow(); };
+    $('set-motion').onchange = e => { S.settings.calm = e.target.checked; applySettings(); if (window.__stars) window.__stars.refresh(); };
+    $('set-density').onchange = e => { S.settings.density = e.target.value; applySettings(); };
+    $('set-export-all').onclick = exportAll;
+    $('set-clear-cache').onclick = () => {
+        const keep = { user: S.user, settings: S.settings, persona: S.personas };
+        store.wipe(); store.set('settings', keep.settings); store.set('persona', keep.persona); store.set('user', keep.user); store.set('chats', S.chats);
+        toast('Local cache cleared', 'ok');
+    };
+    // palette
+    $('pal-input').addEventListener('input', () => { PAL.sel = 0; palBuild(); palSearch(); });
+    $('pal-input').addEventListener('keydown', e => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); palMove(1); } else if (e.key === 'ArrowUp') { e.preventDefault(); palMove(-1); }
+        else if (e.key === 'Enter') { e.preventDefault(); palRun(PAL.sel); }
+    });
+    $('pal-list').addEventListener('click', e => { const b = e.target.closest('.pal-item'); if (b) palRun(+b.dataset.i); });
+    $('pal-list').addEventListener('mousemove', e => { const b = e.target.closest('.pal-item'); if (b && +b.dataset.i !== PAL.sel) { PAL.sel = +b.dataset.i; qsa('.pal-item').forEach((x, i) => x.classList.toggle('on', i === PAL.sel)); } });
+
+    // keyboard
     document.addEventListener('keydown', e => {
-        if (e.key === 'F2') {
-            e.preventDefault();
-            emergencyReset();
+        const mod = e.ctrlKey || e.metaKey;
+        const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable);
+        if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); if ($('m-palette').hidden) openPalette(); else closeModal('m-palette'); return; }
+        if (mod && e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); newChat(); return; }
+        if (mod && !e.shiftKey && e.key.toLowerCase() === 'b') { e.preventDefault(); toggleSidebar(); return; }
+        if (e.key === 'Escape') {
+            if (openPopEl) { closePops(); return; }
+            const m = topModal(); if (m) { if (m.id === 'm-confirm') resolveConfirm(false); else closeModal(m); return; }
+            if (S.busy) { abortTurn(); return; }
+            if ($('shell').classList.contains('drawer')) closeDrawer();
+            return;
         }
+        if (typing || mod || e.altKey || modalStack.length || !S.user) return;
+        if (e.key === '/') { e.preventDefault(); $('input').focus(); }
+        else if (e.key === '?') { e.preventDefault(); openModal('m-help'); }
     });
-}
-
-// Detect if running as PWA
-if (window.matchMedia('(display-mode: standalone)').matches) {
-    console.log('🏠 Running as installed PWA');
-    document.body.classList.add('pwa-installed');
-}
-
-// Add haptic feedback on send (if supported)
-if (sendBtn && 'vibrate' in navigator) {
-    sendBtn.addEventListener('click', () => {
-        navigator.vibrate(10);
+    // focus trap inside modals
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Tab') return;
+        const m = topModal(); if (!m) return;
+        const f = qsa('button:not([disabled]):not([hidden]), input:not([hidden]):not([disabled]), textarea, select, a[href], [tabindex]:not([tabindex="-1"])', m).filter(x => x.offsetParent !== null);
+        if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
+    // misc
+    addEventListener('resize', closePops);
+    $('scroller').addEventListener('scroll', closePops, { passive: true });
+    $('chat-list').addEventListener('scroll', closePops, { passive: true });
+    addEventListener('online', () => { setConn('ok'); if (S.user) refreshChats(true); });
+    addEventListener('offline', () => setConn('off'));
+    mobileMQ.addEventListener && mobileMQ.addEventListener('change', () => { closeDrawer(); applySettings(); });
+    addEventListener('beforeinstallprompt', e => { e.preventDefault(); S.deferredInstall = e; const i = $('install-item'); if (i) i.hidden = false; });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && S.user && !S.busy) { refreshChats(true); } });
+    setInterval(() => { if (document.hidden || !S.user || $('shell').hidden) return; fetch(API + '/status', { credentials: 'include' }).then(r => { if (r.ok) { if (S.offline) setConn('ok'); } else setConn('warn'); }).catch(() => setConn('off')); }, 60000);
+    addEventListener('beforeunload', e => { if (S.busy && S.phase === 'net') { e.preventDefault(); e.returnValue = ''; } });
 }
 
-console.log('✅ Wizard.AI v15.3.0 - Fully loaded!');
-console.log('🧠 Features: Code blocks with copy, in-chat images, thinking process');
-console.log('🎨 Type "Generate an image of..." to create images in chat!');
-console.log('📋 Code blocks now have copy buttons!');
+/* ---------- desktop (Electron) menu hooks ---------- */
+function bindElectron() {
+    const E = window.electronAPI; if (!E) return;
+    const on = (name, fn) => { try { if (typeof E[name] === 'function') E[name](fn); } catch (e) { } };
+    on('onNewChat', () => newChat());
+    on('onClearChat', () => S.chat && clearChat(S.chat.chat_id));
+    on('onOpenImageGen', () => openModal('m-image'));
+    on('onOpenCode', () => openModal('m-code'));
+    on('onUploadFile', () => $('file-input').click());
+    on('onViewProfile', openProfile);
+    on('onViewStats', openStats);
+    on('onChangeMode', mode => { const id = typeof mode === 'string' ? mode.replace(/ Mode$/i, '').trim() : ''; const m = MODES.find(x => x.id.toLowerCase() === id.toLowerCase()); if (m) setMode(m.id); });
+    on('onToggleSearch', en => setWeb(!!en));
+    on('onOpenSettings', () => openSettings());
+    on('onExportChat', () => S.chat && exportChat(S.chat.chat_id));
+    on('onBrowsePersonalities', () => openPersonas());
+    on('onOpenAgentStudio', () => window.open('/ai/agent-studio/', '_blank'));
+    on('onOpenDevHub', () => window.open('/ai/devhub/', '_blank'));
+    on('onOpenAdmin', () => window.open('/ai/admin/', '_blank'));
+    on('onUpdateStatus', (ev, d) => { const x = d || ev; if (!x) return; if (x.status === 'downloading') toast('Downloading update v' + x.version + '…', 'ok'); else if (x.status === 'downloaded') toast('Update ready — restart to install.', 'ok', 6000); });
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+async function boot() {
+    hydrate(document); applySettings(); initStars(); bind(); bindElectron();
+    autoGrow(); updateSendState();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(() => { });
+
+    const cachedUser = store.get('user', null), cachedChats = store.get('chats', null);
+    if (cachedUser && Array.isArray(cachedChats)) {
+        // stale-while-revalidate: show what we had instantly
+        S.user = cachedUser; S.chats = cachedChats; renderUser(); showShell(); renderList();
+        const last = store.get(lastIdKey(), null);
+        const lc = last && store.get('c.' + last, null);
+        if (lc) { S.chat = lc; renderHeader(); renderThread(); restoreDraft(); }
+    }
+    try {
+        const r = await api('/api/check-auth', { noAuthRedirect: true });
+        await enterApp(r.user);
+    } catch (e) {
+        if (e.status === 401 || e.status === 403) { S.user = null; wipeUserData(); showGate(); }
+        else if (!cachedUser) showGate('We couldn’t reach the Wizard.AI server. Check your connection, then try again.');
+        else showBanner('Can’t reach the server right now — showing your saved chats.', true);
+    }
+    hideBoot();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+window.__wizard = { S, md, send, openChat };
+})();
