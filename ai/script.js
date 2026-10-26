@@ -767,11 +767,12 @@ function renderEmpty() {
 /* ============================================================
    THREAD RENDERING
    ============================================================ */
-const safeImg = u => /^https?:\/\//i.test(String(u || ''));
+const safeImg = u => /^(https?:\/\/|data:image\/(png|jpe?g|webp);base64,|\/api\/images\/[a-f0-9]{32}\.(png|jpg|webp)$)/i.test(String(u || ''));
+const imgSrc = u => String(u).charAt(0) === '/' ? API + u : String(u);
 function imgCard(url, prompt) {
     if (!safeImg(url)) return '';
-    return '<figure class="imgcard" data-src="' + esc(url) + '" data-cap="' + esc(prompt || '') + '" tabindex="0" role="button" aria-label="View image full size">' +
-        '<img src="' + esc(url) + '" alt="' + esc(prompt || 'Generated image') + '" loading="lazy" decoding="async">' +
+    return '<figure class="imgcard" data-src="' + esc(imgSrc(url)) + '" data-cap="' + esc(prompt || '') + '" tabindex="0" role="button" aria-label="View image full size">' +
+        '<img src="' + esc(imgSrc(url)) + '" alt="' + esc(prompt || 'Generated image') + '" loading="lazy" decoding="async">' +
         (prompt ? '<figcaption class="cap">' + esc(prompt) + '</figcaption>' : '') + '</figure>';
 }
 function toolChips(tools) {
@@ -1361,7 +1362,12 @@ function openLightbox(src, cap) {
     if (!safeImg(src)) return;
     $('lightbox-img').src = src; $('lightbox-img').alt = cap || 'Image';
     $('lightbox-cap').textContent = cap || '';
-    $('lightbox-open').href = src;
+    const open = $('lightbox-open');
+    open.href = src;
+    if (src.startsWith('data:')) { // browsers block top-level data: links, so open via a blob URL
+        open.removeAttribute('href');
+        open.onclick = async ev => { ev.preventDefault(); try { const b = await (await fetch(src)).blob(); window.open(URL.createObjectURL(b), '_blank', 'noopener'); } catch (e) { } };
+    } else open.onclick = null;
     openModal('m-lightbox');
 }
 async function downloadImage(src) {
@@ -1723,10 +1729,12 @@ async function makeImage(ev) {
     try {
         const d = await api('/api/generate-image', { method: 'POST', body: { prompt, size: $('image-size').value } });
         if (!d.url || !safeImg(d.url)) throw new Error(d.error || 'No image came back. Try a different description.');
-        box.innerHTML = '<img src="' + esc(d.url) + '" alt="' + esc(prompt) + '"><div class="row"><button type="button" class="btn ghost sm" data-dl><i data-icon="download"></i>Download</button><a class="btn ghost sm" href="' + esc(d.url) + '" target="_blank" rel="noopener noreferrer"><i data-icon="external"></i>Open</a></div>';
+        const src = imgSrc(d.url);
+        box.innerHTML = '<img src="' + esc(src) + '" alt="' + esc(prompt) + '"><div class="row"><button type="button" class="btn ghost sm" data-dl><i data-icon="download"></i>Download</button><button type="button" class="btn ghost sm" data-open><i data-icon="external"></i>View full size</button></div>';
         hydrate(box);
-        qs('img', box).onclick = () => openLightbox(d.url, prompt);
-        qs('[data-dl]', box).onclick = () => downloadImage(d.url);
+        qs('img', box).onclick = () => openLightbox(src, prompt);
+        qs('[data-open]', box).onclick = () => openLightbox(src, prompt);
+        qs('[data-dl]', box).onclick = () => downloadImage(src);
         qs('img', box).onerror = () => { box.innerHTML = '<div class="list-empty">The image couldn’t be loaded. Try again.</div>'; };
     } catch (e) { box.innerHTML = '<div class="list-empty">' + esc(errMsg(e)) + '</div>'; }
     finally { btn.disabled = false; btn.removeAttribute('aria-busy'); }
