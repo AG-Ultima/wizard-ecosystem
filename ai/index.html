@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-    <title>Wizard.AI Pro — Multi-Agent AI Assistant with 7 Personalities</title>
+    <title>Wizard.AI Pro — Your Magical AI Workspace</title>
     <meta name="title" content="Wizard.AI Pro — Multi-Agent AI Assistant | Your Magical AI Workspace">
     <meta name="description" content="Wizard.AI is a complete AI platform with multi-agent orchestration, RAG, persistent memory, web search, code execution, image generation, admin dashboard, developer hub, and 7 distinct personalities.">
     <meta name="keywords" content="Wizard.AI, AI assistant, multi-agent, RAG, machine learning, Flask, Groq, Llama, AI chatbot, code execution, image generation, web search, Wizard Ecosystem, Arnav Gupta">
@@ -44,539 +44,388 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
-    <canvas id="starfield" aria-hidden="true"></canvas>
-    <div class="ambient ambient-1" aria-hidden="true"></div>
-    <div class="ambient ambient-2" aria-hidden="true"></div>
-    <div class="ambient ambient-3" aria-hidden="true"></div>
+<canvas id="starfield" aria-hidden="true"></canvas>
+<div class="ambient a1" aria-hidden="true"></div>
+<div class="ambient a2" aria-hidden="true"></div>
+<div class="ambient a3" aria-hidden="true"></div>
+<div id="progress" aria-hidden="true"></div>
 
-    <div class="app-shell">
+<!-- ───────── Boot splash ───────── -->
+<div id="boot" class="boot" role="status" aria-label="Loading Wizard.AI">
+    <div class="boot-glyph">🧙‍♂️</div>
+    <div class="boot-word">Wizard<em>.AI</em></div>
+</div>
 
-        <!-- ═══════════════════════════════════
-             LEFT SIDEBAR
-        ═══════════════════════════════════ -->
-        <aside class="sidebar" id="sidebar" role="complementary" aria-label="Wizard settings">
-
-            <!-- Profile Block -->
-            <div class="wizard-profile">
-                <div class="rune-ring" aria-hidden="true"></div>
-                <div class="wizard-avatar">
-                    <span class="floating-glyph">🧙‍♂️</span>
-                </div>
-                <h1 class="hero-wordmark">Wizard<em>.AI</em></h1>
-                <p class="tagline">Your magical AI companion</p>
-                <div class="status-badge" id="status-badge" role="status">
-                    <span class="status-dot"></span>
-                    <span id="status-text">Connecting…</span>
-                </div>
-            </div>
-
-            <div class="rune-divider" aria-hidden="true"><span>✦</span></div>
-
-            <!-- User Account -->
-            <div class="grimoire-panel user-section" id="user-section">
-                <div class="user-info" id="user-info" style="display:none;">
-                    <div class="user-avatar-chip" id="user-avatar">🧙</div>
-                    <div class="user-details">
-                        <span class="user-name" id="user-name"></span>
-                        <span class="user-email" id="user-email"></span>
-                    </div>
-                    <button class="icon-btn danger-hover" id="logout-btn" title="Logout" aria-label="Logout">🚪</button>
-                </div>
-                <div class="auth-buttons" id="auth-buttons">
-                    <button class="auth-btn primary-btn" id="show-login-btn">🔐 Login</button>
-                    <button class="auth-btn ghost-btn" id="show-signup-btn">✨ Sign Up</button>
-                </div>
-            </div>
-
-            <!-- Personality Mode -->
-            <div class="grimoire-panel mode-section">
-                <div class="panel-label"><span>🧠</span> Personality Mode</div>
-                <div class="custom-dropdown" id="mode-dropdown">
-                    <div class="dropdown-trigger" id="dropdown-btn" role="button" tabindex="0" aria-haspopup="listbox">
-                        <span id="selected-mode-display">🎩 JARVIS</span>
-                        <span class="dropdown-chevron" aria-hidden="true">▾</span>
-                    </div>
-                    <div class="dropdown-menu" id="dropdown-content" role="listbox"></div>
-                </div>
-                <button class="ghost-pill-btn" id="toggle-creator-btn">
-                    <span id="creator-toggle-icon">➕</span> Create New Personality
-                </button>
-                <div class="creator-panel" id="creator-panel" style="display:none;">
-                    <div class="creator-header">
-                        <h3>Craft a Personality</h3>
-                        <button class="close-x" id="close-creator" aria-label="Close">✕</button>
-                    </div>
-                    <input type="text" class="field-sm" id="custom-name" placeholder="Name (e.g. 'Pirate')" maxlength="30">
-                    <input type="text" class="field-sm" id="custom-emoji" placeholder="Emoji (e.g. 🏴‍☠️)" maxlength="2">
-                    <textarea class="field-sm" id="custom-prompt" placeholder="System prompt…" rows="3"></textarea>
-                    <input type="text" class="field-sm" id="custom-greeting" placeholder="Greeting (optional)">
-                    <label class="checkbox-row">
-                        <input type="checkbox" id="custom-public" checked> Make public
-                    </label>
-                    <div class="creator-actions">
-                        <button class="primary-btn sm-btn" id="save-personality">Save</button>
-                        <button class="ghost-btn sm-btn" id="cancel-personality">Cancel</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Active Model & Turbo -->
-            <div class="grimoire-panel model-panel">
-                <div class="panel-label"><span>📦</span> Active Model</div>
-                <div class="model-chip" id="current-model">
-                    <span>🧙‍♂️</span>
-                    <span class="model-name">Llama 4 Scout</span>
-                </div>
-                <button id="turbo-btn" class="turbo-btn" aria-pressed="false">
-                    <span>⚡</span>
-                    <span>TURBO MODE</span>
-                    <span class="turbo-badge" id="turbo-status">OFF</span>
-                </button>
-                <p class="helper-text">2× faster · more tokens</p>
-            </div>
-
-            <!-- Stats -->
-            <div class="grimoire-panel stats-panel">
-                <div class="panel-label"><span>📊</span> Your Stats</div>
-                <div class="stats-grid">
-                    <div class="stat-tile"><span class="stat-icon">💬</span><span class="stat-val" id="stat-messages">0</span><span class="stat-lbl">Messages</span></div>
-                    <div class="stat-tile"><span class="stat-icon">📎</span><span class="stat-val" id="stat-files">0</span><span class="stat-lbl">Files</span></div>
-                    <div class="stat-tile"><span class="stat-icon">👤</span><span class="stat-val" id="stat-profile-completeness">0%</span><span class="stat-lbl">Profile</span></div>
-                    <div class="stat-tile"><span class="stat-icon">🎨</span><span class="stat-val" id="stat-images">0</span><span class="stat-lbl">Images</span></div>
-                    <div class="stat-tile"><span class="stat-icon">🌐</span><span class="stat-val" id="stat-searches">0</span><span class="stat-lbl">Searches</span></div>
-                    <div class="stat-tile"><span class="stat-icon">⚡</span><span class="stat-val" id="stat-response">0.4s</span><span class="stat-lbl">Avg Speed</span></div>
-                </div>
-            </div>
-
-            <!-- API Keys -->
-            <div class="grimoire-panel api-panel">
-                <div class="panel-label"><span>🔑</span> API Keys</div>
-                <div class="api-keys-list" id="api-keys-list">
-                    <div class="empty-state-sm">🔐 Login to view your API keys</div>
-                </div>
-                <button class="ghost-pill-btn" id="create-api-key-sidebar">
-                    <span>👨‍💻</span> Developer Hub
-                </button>
-            </div>
-
-            <!-- Footer -->
-            <div class="sidebar-footer">
-                <button id="reset-current-btn" class="footer-btn reset-btn">🧹 Clear Chat</button>
-                <button id="update-history-btn" class="footer-btn version-btn">📜 v15.1.0 · What's New?</button>
-                <div class="footer-brand">
-                    <p>Crafted with ✦ by <a href="https://wizardecosystem.dev" rel="author">Arnav Gupta</a></p>
-                    <p class="version-tag">v15.1.0 — WizProfile Update</p>
-                </div>
-            </div>
-        </aside>
-
-        <!-- ═══════════════════════════════════
-             MAIN CHAT AREA
-        ═══════════════════════════════════ -->
-        <main class="chat-area" role="main">
-
-            <!-- Chat Header -->
-            <div class="chat-header grimoire-panel">
-                <button class="hamburger" id="hamburger-btn" aria-label="Toggle sidebar">☰</button>
-                <div class="chat-title">
-                    <span id="current-chat-emoji" class="chat-emoji-lg" aria-hidden="true">🧙</span>
-                    <h2 id="current-chat-name">Main Chat</h2>
-                </div>
-                <div class="chat-actions">
-                    <button id="rename-chat-btn" class="icon-btn" title="Rename" aria-label="Rename chat">✏️</button>
-                    <button id="delete-chat-btn" class="icon-btn danger-hover" title="Delete" aria-label="Delete chat">🗑️</button>
-                </div>
-            </div>
-
-            <!-- Toolbar -->
-            <div class="pro-toolbar" id="pro-toolbar" role="toolbar" aria-label="Chat tools">
-                <button class="tool-btn" id="search-btn" title="Web Search">🌐 <span>Search</span></button>
-                <button class="tool-btn" id="upload-btn" title="Upload File">📎 <span>Upload</span></button>
-                <button class="tool-btn" id="code-btn" title="Run Python">💻 <span>Code</span></button>
-                <button class="tool-btn" id="image-btn" title="Generate Image">🎨 <span>Generate</span></button>
-                <button class="tool-btn" id="profile-btn" title="My Profile">👤 <span>Profile</span></button>
-                <button class="tool-btn" id="stats-btn" title="Stats">📊 <span>Stats</span></button>
-                <button class="tool-btn" id="personalities-btn" title="Personalities">🎭 <span>Personalities</span></button>
-                <button class="tool-btn" id="devhub-btn" title="Dev Hub">👨‍💻 <span>Dev Hub</span></button>
-                <button class="tool-btn" id="agent-studio-btn" title="Agent Studio">🤖 <span>Agents</span></button>
-            </div>
-
-            <!-- Messages -->
-            <div id="chat-history" class="chat-history" role="log" aria-live="polite" aria-label="Chat messages"></div>
-
-            <!-- Typing -->
-            <div id="typing-indicator" class="typing-indicator" style="display:none;" aria-live="polite">
-                <span></span><span></span><span></span>
-                <span class="typing-label">Wizard is weaving a reply…</span>
-            </div>
-
-            <!-- Upload Progress -->
-            <div id="upload-progress" class="upload-progress" style="display:none;" role="progressbar">
-                <div class="progress-track"><div class="progress-fill" id="progress-bar-fill"></div></div>
-                <span id="progress-text">Uploading…</span>
-            </div>
-
-            <!-- Input -->
-            <div class="input-zone grimoire-panel">
-                <div class="input-wrap">
-                    <input type="text" id="chat-input" placeholder="Speak your incantation… or click 🎤 to conjure" autocomplete="off" aria-label="Your message">
-                    <span class="search-pulse" id="input-search-indicator" style="display:none;" aria-hidden="true">🌐</span>
-                </div>
-                <button id="voice-input-btn" class="voice-btn" title="Voice input" aria-label="Voice input">🎤</button>
-                <button id="send-btn" class="send-btn" aria-label="Send message">
-                    Send
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                </button>
-            </div>
-        </main>
-
-        <!-- ═══════════════════════════════════
-             RIGHT SIDEBAR — CHATS
-        ═══════════════════════════════════ -->
-        <aside class="chats-sidebar" id="chats-sidebar" role="complementary" aria-label="Chat list">
-            <div class="grimoire-panel chats-header">
-                <div class="panel-label" style="margin-bottom:0"><span>💬</span> Your Chats</div>
-                <button id="new-chat-btn" class="new-chat-btn" title="New Chat" aria-label="New chat">➕</button>
-            </div>
-
-            <div class="chats-list" id="chats-list" role="list"></div>
-
-            <div class="grimoire-panel personalities-sidebar">
-                <div class="panel-label"><span>🎭</span> Community Personalities</div>
-                <div id="personalities-list">
-                    <div class="shimmer-row"></div>
-                    <div class="shimmer-row"></div>
-                    <div class="shimmer-row"></div>
-                </div>
-            </div>
-
-            <div class="grimoire-panel quick-stats">
-                <div class="quick-row"><span>⚡</span><span>Today</span><span id="quick-today">0 msgs</span></div>
-                <div class="quick-row"><span>📊</span><span>Total</span><span id="quick-total">0 msgs</span></div>
-            </div>
-
-            <div class="grimoire-panel ecosystem-panel">
-                <a href="https://wizardecosystem.dev" class="ecosystem-link" rel="noopener">
-                    <span>🧙</span> Back to Ecosystem <span class="arrow">→</span>
-                </a>
-            </div>
-        </aside>
+<!-- ───────── Signed-out gate ───────── -->
+<section id="gate" class="gate" hidden>
+    <div class="gate-card">
+        <div class="gate-glyph">🧙‍♂️</div>
+        <h1 class="gate-title">Wizard<em>.AI</em></h1>
+        <p class="gate-tag">Your magical AI companion — seven personalities, web search, memory, images and a Python sandbox, all in one place.</p>
+        <div class="gate-actions">
+            <button class="btn primary lg" id="gate-login">Log in</button>
+            <button class="btn ghost lg" id="gate-signup">Create account</button>
+        </div>
+        <ul class="gate-points">
+            <li><i data-icon="lock"></i> One account across the whole Wizard Ecosystem</li>
+            <li><i data-icon="globe"></i> Live web search, file understanding, image generation</li>
+            <li><i data-icon="terminal"></i> Run Python right inside the chat</li>
+        </ul>
+        <p class="gate-error" id="gate-error" role="alert" hidden></p>
+        <p class="gate-foot">Crafted with ✦ by <a href="https://wizardecosystem.dev" rel="author">Arnav Gupta</a></p>
     </div>
+</section>
 
-    <!-- ═══════════════════════════════════
-         MODALS
-    ═══════════════════════════════════ -->
+<!-- ───────── App shell ───────── -->
+<div id="shell" class="shell" hidden>
 
-    <!-- Auth Modal -->
-    <div class="modal-overlay" id="auth-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3 id="auth-modal-title" class="modal-title">Login to Wizard.AI</h3>
-                <button class="close-x modal-close" id="close-auth-modal" aria-label="Close">✕</button>
+    <aside id="sidebar" class="sidebar" aria-label="Conversations">
+        <div class="side-head">
+            <a class="brand" href="https://wizardecosystem.dev" title="Back to the Wizard Ecosystem">
+                <span class="brand-glyph">🧙</span><span class="brand-word">Wizard<em>.AI</em></span>
+            </a>
+            <button class="icon-btn" id="collapse-btn" aria-label="Collapse sidebar" title="Collapse sidebar (Ctrl+B)"><i data-icon="sidebar"></i></button>
+        </div>
+
+        <button class="btn-new" id="new-chat-btn"><i data-icon="plus"></i><span>New chat</span><kbd>Ctrl ⇧ O</kbd></button>
+
+        <label class="side-search">
+            <i data-icon="search"></i>
+            <input id="chat-filter" type="search" placeholder="Search chats" autocomplete="off" spellcheck="false" aria-label="Search chats">
+        </label>
+
+        <nav id="chat-list" class="chat-list" aria-label="Chat list"></nav>
+
+        <div class="side-foot">
+            <button class="user-chip" id="user-btn" aria-haspopup="menu" aria-expanded="false">
+                <span class="avatar" id="user-avatar">🧙</span>
+                <span class="user-text"><b id="user-name">—</b><small id="user-email"></small></span>
+                <i data-icon="chevron-down"></i>
+            </button>
+        </div>
+    </aside>
+    <div id="scrim" class="scrim"></div>
+
+    <main class="main">
+        <header class="topbar">
+            <button class="icon-btn" id="menu-btn" aria-label="Open sidebar"><i data-icon="menu"></i></button>
+            <button class="title-btn" id="title-btn" title="Rename chat">
+                <span id="chat-emoji" class="chat-emoji">🧙</span>
+                <h1 id="chat-title">New chat</h1>
+            </button>
+            <button class="chip" id="mode-btn" aria-haspopup="listbox" aria-expanded="false">
+                <span id="mode-emoji">🎩</span><span id="mode-name">JARVIS</span><i data-icon="chevron-down"></i>
+            </button>
+            <span class="spacer"></span>
+            <span class="conn" id="conn" title="Connection status"><span class="dot"></span><span id="conn-text">Connected</span></span>
+            <button class="icon-btn" id="palette-btn" aria-label="Command palette" title="Command palette (Ctrl+K)"><i data-icon="search"></i></button>
+            <button class="icon-btn" id="export-btn" aria-label="Export this chat" title="Export this chat as Markdown"><i data-icon="download"></i></button>
+        </header>
+
+        <div id="banner" class="banner" role="status" hidden></div>
+
+        <div id="scroller" class="scroller" tabindex="-1">
+            <div id="empty" class="empty" hidden>
+                <div class="empty-glyph">🧙‍♂️</div>
+                <h2 id="empty-title">How can I help?</h2>
+                <p id="empty-sub">Ask anything, or pick a spark below.</p>
+                <div class="sparks" id="sparks"></div>
             </div>
-            <div class="modal-body">
-                <div class="form-group" id="first-name-group" style="display:none;">
-                    <label>First Name</label>
-                    <input class="field" type="text" id="first-name" placeholder="Enter your first name">
+            <div id="thread" class="thread" role="log" aria-label="Conversation"></div>
+        </div>
+        <button id="jump-btn" class="jump" hidden aria-label="Jump to latest"><i data-icon="arrow-down"></i></button>
+
+        <div class="composer-wrap">
+            <div id="drop-hint" class="drop-hint" hidden>Drop a file to add it to this chat’s knowledge</div>
+            <form id="composer" class="composer" autocomplete="off">
+                <div id="attach-chips" class="attach-chips"></div>
+                <textarea id="input" rows="1" placeholder="Message Wizard.AI…" aria-label="Message" enterkeyhint="send" maxlength="16000"></textarea>
+                <div class="composer-bar">
+                    <button type="button" class="tool" id="attach-btn" aria-label="Attach a file" title="Add a file to this chat’s knowledge"><i data-icon="paperclip"></i></button>
+                    <button type="button" class="tool toggle" id="web-btn" aria-pressed="false" title="Search the web for this message"><i data-icon="globe"></i><span>Web</span></button>
+                    <button type="button" class="tool" id="image-btn" title="Generate an image"><i data-icon="image"></i><span>Image</span></button>
+                    <button type="button" class="tool" id="code-btn" title="Python sandbox"><i data-icon="terminal"></i><span>Code</span></button>
+                    <span class="spacer"></span>
+                    <span class="count" id="char-count" hidden></span>
+                    <button type="button" class="tool round" id="mic-btn" aria-label="Voice input" title="Voice input"><i data-icon="mic"></i></button>
+                    <button type="submit" class="send" id="send-btn" aria-label="Send message" title="Send (Enter)"><i data-icon="send"></i></button>
                 </div>
-                <div class="form-group" id="last-name-group" style="display:none;">
-                    <label>Last Name</label>
-                    <input class="field" type="text" id="last-name" placeholder="Enter your last name">
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input class="field" type="email" id="auth-email" placeholder="Enter your email">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input class="field" type="password" id="auth-password" placeholder="Enter your password">
-                </div>
-                <div class="form-group" id="confirm-password-group" style="display:none;">
-                    <label>Confirm Password</label>
-                    <input class="field" type="password" id="auth-confirm" placeholder="Confirm your password">
-                </div>
-                <div class="form-group" id="verification-group" style="display:none;">
-                    <label>Verification Code</label>
-                    <input class="field" type="text" id="verification-code" placeholder="Enter 6-digit code" maxlength="6">
-                    <button class="ghost-btn sm-btn" id="resend-code-btn" style="margin-top:8px;">📧 Resend Code</button>
-                </div>
-                <div class="auth-error" id="auth-error" role="alert"></div>
-                <button class="primary-btn full-btn" id="auth-submit">Login</button>
-                <div class="auth-switch">
-                    <span id="auth-switch-text">Don't have an account?</span>
-                    <button id="auth-switch-btn">Sign Up</button>
-                </div>
+            </form>
+            <p class="foot-note">Wizard.AI can make mistakes — double-check anything important.</p>
+        </div>
+    </main>
+</div>
+
+<!-- ───────── Popovers ───────── -->
+<div id="user-menu" class="pop" role="menu" hidden>
+    <button role="menuitem" data-act="profile"><i data-icon="user"></i>Profile</button>
+    <button role="menuitem" data-act="stats"><i data-icon="bar-chart"></i>Usage &amp; stats</button>
+    <button role="menuitem" data-act="personalities"><i data-icon="users"></i>Personalities</button>
+    <button role="menuitem" data-act="keys"><i data-icon="key"></i>API keys</button>
+    <button role="menuitem" data-act="devhub"><i data-icon="external"></i>Developer Hub</button>
+    <button role="menuitem" data-act="agents"><i data-icon="external"></i>Agent Studio</button>
+    <hr>
+    <button role="menuitem" data-act="settings"><i data-icon="settings"></i>Settings</button>
+    <button role="menuitem" data-act="help"><i data-icon="keyboard"></i>Keyboard shortcuts</button>
+    <button role="menuitem" data-act="updates"><i data-icon="book"></i>What’s new</button>
+    <button role="menuitem" data-act="install" id="install-item" hidden><i data-icon="download"></i>Install app</button>
+    <hr>
+    <button role="menuitem" data-act="logout" class="danger"><i data-icon="logout"></i>Log out</button>
+</div>
+
+<div id="mode-menu" class="pop wide" role="listbox" hidden></div>
+<div id="item-menu" class="pop" role="menu" hidden>
+    <button role="menuitem" data-act="rename"><i data-icon="edit"></i>Rename</button>
+    <button role="menuitem" data-act="export"><i data-icon="download"></i>Export</button>
+    <button role="menuitem" data-act="delete" class="danger"><i data-icon="trash"></i>Delete</button>
+</div>
+
+<!-- ───────── Modals ───────── -->
+
+<!-- Auth -->
+<div class="modal" id="m-auth" hidden role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <div class="card sm">
+        <div class="card-head"><h2 id="auth-title">Log in</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <form id="auth-form" novalidate>
+            <div class="field" id="f-first" hidden><label for="auth-first">First name</label><input id="auth-first" autocomplete="given-name" maxlength="50"></div>
+            <div class="field" id="f-last" hidden><label for="auth-last">Last name</label><input id="auth-last" autocomplete="family-name" maxlength="50"></div>
+            <div class="field" id="f-email"><label for="auth-email">Email</label><input id="auth-email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false"></div>
+            <div class="field" id="f-pass"><label for="auth-pass">Password</label>
+                <div class="pass"><input id="auth-pass" type="password" autocomplete="current-password" maxlength="128"><button type="button" class="icon-btn sm" id="pass-eye" aria-label="Show password"><i data-icon="eye"></i></button></div>
+                <small class="hint" id="pass-hint" hidden>At least 8 characters.</small>
+            </div>
+            <div class="field" id="f-confirm" hidden><label for="auth-confirm">Confirm password</label><input id="auth-confirm" type="password" autocomplete="new-password" maxlength="128"></div>
+            <div class="field" id="f-code" hidden>
+                <label for="auth-code">Verification code</label>
+                <input id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" class="code-input">
+                <small class="hint" id="code-hint"></small>
+                <button type="button" class="link" id="resend-btn">Resend code</button>
+            </div>
+            <p class="form-msg" id="auth-msg" role="alert" hidden></p>
+            <button class="btn primary block" type="submit" id="auth-submit">Log in</button>
+        </form>
+        <p class="switch"><span id="auth-switch-text">New here?</span> <button class="link" id="auth-switch">Create an account</button></p>
+    </div>
+</div>
+
+<!-- Rename -->
+<div class="modal" id="m-rename" hidden role="dialog" aria-modal="true" aria-labelledby="rename-title">
+    <div class="card xs">
+        <div class="card-head"><h2 id="rename-title">Rename chat</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <form id="rename-form"><div class="field"><input id="rename-input" maxlength="60" aria-label="Chat name"></div>
+            <div class="actions"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn primary" type="submit">Save</button></div></form>
+    </div>
+</div>
+
+<!-- Confirm -->
+<div class="modal" id="m-confirm" hidden role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-body">
+    <div class="card xs">
+        <div class="card-head"><h2 id="confirm-title">Are you sure?</h2></div>
+        <p id="confirm-body" class="muted"></p>
+        <div class="actions"><button class="btn ghost" id="confirm-no">Cancel</button><button class="btn primary" id="confirm-yes">Confirm</button></div>
+    </div>
+</div>
+
+<!-- Profile -->
+<div class="modal" id="m-profile" hidden role="dialog" aria-modal="true" aria-labelledby="profile-title">
+    <div class="card lg">
+        <div class="card-head"><h2 id="profile-title">Your profile</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <p class="muted small">Everything here is optional. Whatever you fill in is shared with the AI so it can personalize its answers — leave out anything you’d rather not share.</p>
+        <div class="tabs" role="tablist" id="profile-tabs">
+            <button class="tab active" role="tab" data-tab="basic">Basic</button>
+            <button class="tab" role="tab" data-tab="professional">Professional</button>
+            <button class="tab" role="tab" data-tab="interests">Interests</button>
+            <button class="tab" role="tab" data-tab="ai">AI preferences</button>
+            <button class="tab" role="tab" data-tab="goals">Goals</button>
+        </div>
+        <div class="tab-body">
+            <div class="pane active" data-pane="basic">
+                <div class="row2"><div class="field"><label for="pf-full">Full name</label><input id="pf-full"></div><div class="field"><label for="pf-display">What should I call you?</label><input id="pf-display"></div></div>
+                <div class="row2"><div class="field"><label for="pf-birthday">Birthday</label><input id="pf-birthday" type="date"></div>
+                    <div class="field"><label for="pf-gender">Gender</label><select id="pf-gender"><option value="">Prefer not to say</option><option value="male">Male</option><option value="female">Female</option><option value="non-binary">Non-binary</option><option value="other">Other</option></select></div></div>
+                <div class="field"><label for="pf-bio">About you</label><textarea id="pf-bio" rows="3" placeholder="A few lines about yourself…"></textarea></div>
+                <div class="row2"><div class="field"><label for="pf-phone">Phone</label><input id="pf-phone" type="tel"></div><div class="field"><label for="pf-website">Website</label><input id="pf-website" type="url" placeholder="https://"></div></div>
+                <div class="field"><label for="pf-greeting">Custom greeting</label><input id="pf-greeting" placeholder="How should I greet you?"></div>
+            </div>
+            <div class="pane" data-pane="professional">
+                <div class="row2"><div class="field"><label for="pf-occupation">Occupation</label><input id="pf-occupation"></div><div class="field"><label for="pf-company">Company</label><input id="pf-company"></div></div>
+                <div class="row2"><div class="field"><label for="pf-exp">Years of experience</label><input id="pf-exp" type="number" min="0" max="80"></div><div class="field"><label for="pf-edu">Education</label><input id="pf-edu" placeholder="Comma separated"></div></div>
+                <div class="field"><label for="pf-skills">Skills</label><input id="pf-skills" placeholder="Python, Design, Writing…"></div>
+            </div>
+            <div class="pane" data-pane="interests">
+                <div class="field"><label for="pf-interests">Interests</label><input id="pf-interests" placeholder="Comma separated"></div>
+                <div class="field"><label for="pf-topics">Favorite topics</label><input id="pf-topics" placeholder="AI, history, space…"></div>
+                <div class="field"><label for="pf-learning">Want to learn</label><input id="pf-learning"></div>
+                <div class="field"><label for="pf-known">Already know well</label><input id="pf-known"></div>
+            </div>
+            <div class="pane" data-pane="ai">
+                <div class="row2"><div class="field"><label for="pf-mode">Preferred personality</label><select id="pf-mode"></select></div>
+                    <div class="field"><label for="pf-style">Answer length</label><select id="pf-style"><option value="balanced">Balanced</option><option value="concise">Concise</option><option value="detailed">Detailed</option></select></div></div>
+                <div class="row2"><div class="field"><label for="pf-formal">Tone</label><select id="pf-formal"><option value="casual">Casual</option><option value="friendly">Friendly</option><option value="professional">Professional</option></select></div>
+                    <div class="field"><label for="pf-emoji">Emojis</label><select id="pf-emoji"><option value="true">Use emojis</option><option value="false">Plain text</option></select></div></div>
+                <div class="field"><label for="pf-instr">Custom instructions</label><textarea id="pf-instr" rows="4" placeholder="Anything the AI should always keep in mind…"></textarea></div>
+            </div>
+            <div class="pane" data-pane="goals">
+                <div class="field"><label for="pf-goals">Goals (one per line)</label><textarea id="pf-goals" rows="4"></textarea></div>
+                <div class="field"><label for="pf-reminders">Reminders (one per line)</label><textarea id="pf-reminders" rows="3"></textarea></div>
             </div>
         </div>
+        <div class="meter"><span>Profile completeness</span><div class="bar"><i id="pf-bar"></i></div><b id="pf-pct">0%</b></div>
+        <div class="actions"><button class="btn ghost" data-close>Close</button><button class="btn primary" id="pf-save">Save profile</button></div>
     </div>
+</div>
 
-    <!-- Rename Modal -->
-    <div class="modal-overlay" id="rename-modal-overlay" role="dialog" aria-modal="true" aria-label="Rename chat">
-        <div class="modal-box modal-sm">
-            <div class="modal-header">
-                <h3 class="modal-title">Rename Chat</h3>
-                <button class="close-x modal-close" id="close-rename-modal" aria-label="Close">✕</button>
-            </div>
-            <input class="field" type="text" id="rename-input" placeholder="Enter new name…" maxlength="30">
-            <div class="modal-actions">
-                <button class="primary-btn" id="modal-save">Save</button>
-                <button class="ghost-btn" id="modal-cancel">Cancel</button>
-            </div>
+<!-- Stats -->
+<div class="modal" id="m-stats" hidden role="dialog" aria-modal="true" aria-labelledby="stats-title">
+    <div class="card lg">
+        <div class="card-head"><h2 id="stats-title">Usage &amp; stats</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <div class="stat-grid" id="stat-grid"></div>
+        <div class="kv" id="stat-kv"></div>
+    </div>
+</div>
+
+<!-- Personalities browser -->
+<div class="modal" id="m-personas" hidden role="dialog" aria-modal="true" aria-labelledby="personas-title">
+    <div class="card lg">
+        <div class="card-head"><h2 id="personas-title">Personalities</h2>
+            <span class="head-actions"><button class="btn ghost sm" id="persona-new"><i data-icon="plus"></i>Create</button><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></span></div>
+        <div class="tabs" role="tablist" id="persona-tabs">
+            <button class="tab active" role="tab" data-tab="featured">Featured</button>
+            <button class="tab" role="tab" data-tab="popular">Popular</button>
+            <button class="tab" role="tab" data-tab="recent">Recent</button>
+            <button class="tab" role="tab" data-tab="mine">Mine</button>
+        </div>
+        <div id="persona-grid" class="persona-grid"></div>
+    </div>
+</div>
+
+<!-- Persona editor -->
+<div class="modal" id="m-persona-edit" hidden role="dialog" aria-modal="true" aria-labelledby="pe-title">
+    <div class="card sm">
+        <div class="card-head"><h2 id="pe-title">Craft a personality</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <form id="pe-form">
+            <div class="row2 emoji-row"><div class="field"><label for="pe-emoji">Emoji</label><input id="pe-emoji" maxlength="8" placeholder="🏴‍☠️"></div><div class="field"><label for="pe-name">Name</label><input id="pe-name" maxlength="40" placeholder="Pirate" required></div></div>
+            <div class="field"><label for="pe-prompt">How should it behave?</label><textarea id="pe-prompt" rows="5" maxlength="4000" placeholder="You are a swashbuckling pirate who explains everything with sea metaphors…" required></textarea><small class="hint"><span id="pe-count">0</span>/4000</small></div>
+            <div class="field"><label for="pe-greeting">Greeting <span class="muted">(optional)</span></label><input id="pe-greeting" maxlength="200"></div>
+            <label class="switch-row"><input type="checkbox" id="pe-public" checked><span class="sw"></span><span>Share with the community<small class="muted"> — anyone can use it, and your first name is shown as the creator</small></span></label>
+            <p class="form-msg" id="pe-msg" role="alert" hidden></p>
+            <div class="actions"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn primary" type="submit" id="pe-save">Save</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- API keys -->
+<div class="modal" id="m-keys" hidden role="dialog" aria-modal="true" aria-labelledby="keys-title">
+    <div class="card sm">
+        <div class="card-head"><h2 id="keys-title">API keys</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <p class="muted small">Keys are shown masked. Create, copy and revoke them in the Developer Hub.</p>
+        <div id="keys-list" class="keys-list"></div>
+        <div class="actions"><button class="btn ghost" data-close>Close</button><a class="btn primary" href="/ai/devhub/" target="_blank" rel="noopener">Open Developer Hub</a></div>
+    </div>
+</div>
+
+<!-- Code -->
+<div class="modal" id="m-code" hidden role="dialog" aria-modal="true" aria-labelledby="code-title">
+    <div class="card lg">
+        <div class="card-head"><h2 id="code-title">Python sandbox</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <textarea id="code-input" class="editor" rows="11" spellcheck="false" autocapitalize="off" aria-label="Python code" placeholder="# Write Python here — Ctrl+Enter to run&#10;print('Hello, wizard!')"></textarea>
+        <div class="actions"><span class="muted small" id="code-meta"></span><span class="spacer"></span>
+            <button class="btn ghost" id="code-clear">Clear</button><button class="btn primary" id="code-run"><i data-icon="play"></i>Run</button></div>
+        <pre id="code-out" class="out" aria-live="polite"></pre>
+    </div>
+</div>
+
+<!-- Image -->
+<div class="modal" id="m-image" hidden role="dialog" aria-modal="true" aria-labelledby="image-title">
+    <div class="card sm">
+        <div class="card-head"><h2 id="image-title">Image studio</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <form id="image-form">
+            <div class="field"><label for="image-prompt">Describe your image</label><textarea id="image-prompt" rows="3" maxlength="800" placeholder="A wizard casting spells under a starry sky, painterly…"></textarea></div>
+            <div class="field"><label for="image-size">Shape</label><select id="image-size"><option value="512x512">Square</option><option value="768x512">Landscape</option><option value="512x768">Portrait</option></select></div>
+            <div class="actions"><button class="btn primary block" type="submit" id="image-go"><i data-icon="sparkles"></i>Generate</button></div>
+        </form>
+        <div id="image-result" class="image-result" aria-live="polite"></div>
+    </div>
+</div>
+
+<!-- Settings -->
+<div class="modal" id="m-settings" hidden role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="card sm">
+        <div class="card-head"><h2 id="settings-title">Settings</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <label class="switch-row"><input type="checkbox" id="set-enter"><span class="sw"></span><span>Enter sends the message<small class="muted"> — otherwise Ctrl/⌘+Enter sends</small></span></label>
+        <label class="switch-row"><input type="checkbox" id="set-autoweb"><span class="sw"></span><span>Search the web automatically<small class="muted"> — when a question is about news, prices, weather or scores</small></span></label>
+        <label class="switch-row"><input type="checkbox" id="set-motion"><span class="sw"></span><span>Calmer visuals<small class="muted"> — stops the starfield and animations</small></span></label>
+        <div class="field"><label for="set-density">Message spacing</label><select id="set-density"><option value="cozy">Cozy</option><option value="compact">Compact</option><option value="roomy">Roomy</option></select></div>
+        <hr>
+        <h3 class="sub">Your data</h3>
+        <p class="muted small">Chats are stored on the Wizard.AI server under your account. A copy of the open chat and your chat list is kept in this browser for speed and is removed when you log out.</p>
+        <div class="actions wrap"><button class="btn ghost" id="set-export-all"><i data-icon="download"></i>Export all chats</button><button class="btn ghost" id="set-clear-cache">Clear local cache</button></div>
+    </div>
+</div>
+
+<!-- Help -->
+<div class="modal" id="m-help" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="card sm">
+        <div class="card-head"><h2 id="help-title">Keyboard shortcuts</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <dl class="keys">
+            <div><dt><kbd>Ctrl</kbd><kbd>K</kbd></dt><dd>Command palette &amp; search</dd></div>
+            <div><dt><kbd>Ctrl</kbd><kbd>⇧</kbd><kbd>O</kbd></dt><dd>New chat</dd></div>
+            <div><dt><kbd>Ctrl</kbd><kbd>B</kbd></dt><dd>Show / hide sidebar</dd></div>
+            <div><dt><kbd>/</kbd></dt><dd>Focus the message box</dd></div>
+            <div><dt><kbd>Enter</kbd></dt><dd>Send (⇧ Enter for a new line)</dd></div>
+            <div><dt><kbd>↑</kbd></dt><dd>Edit your last message (empty box)</dd></div>
+            <div><dt><kbd>Esc</kbd></dt><dd>Stop generating / close dialogs</dd></div>
+            <div><dt><kbd>?</kbd></dt><dd>This list</dd></div>
+        </dl>
+        <p class="muted small">On a Mac, use ⌘ instead of Ctrl.</p>
+    </div>
+</div>
+
+<!-- Updates -->
+<div class="modal" id="m-updates" hidden role="dialog" aria-modal="true" aria-labelledby="updates-title">
+    <div class="card lg">
+        <div class="card-head"><h2 id="updates-title">What’s new</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <div class="timeline">
+            <div class="entry current"><b>v16.0.0 — Grimoire Reforged</b> <span class="badge">Current</span>
+                <ul>
+                    <li>Brand-new interface: roomy reading column, sidebar with date-grouped chats, command palette (Ctrl+K)</li>
+                    <li>Stop, regenerate, edit-and-resend and copy on every message</li>
+                    <li>Chats now live on the server — open them from any device, and they can no longer be overwritten by a stale tab</li>
+                    <li>Automatic chat titles, search across every conversation, export to Markdown</li>
+                    <li>Safer rendering of AI output (tables, code highlighting, no raw HTML)</li>
+                    <li>Stronger sign-up: longer passwords, attempt limits, no code leaks</li>
+                </ul></div>
+            <div class="entry"><b>v15.1.0 — WizProfile Update</b><ul><li>Rich profiles that personalize the AI</li><li>Goals and reminders</li></ul></div>
+            <div class="entry"><b>v13.0.0 — Multi-Agent Update</b><ul><li>Agent Studio, Chain Studio and the Agent Marketplace</li></ul></div>
+            <div class="entry"><b>v9.0.0 — PRO Update</b><ul><li>Web search, file understanding, code execution, image generation, community personalities</li></ul></div>
         </div>
     </div>
+</div>
 
-    <!-- Code Modal -->
-    <div class="modal-overlay" id="code-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="code-modal-title">
-        <div class="modal-box modal-lg">
-            <div class="modal-header">
-                <h3 id="code-modal-title" class="modal-title">🐍 Python Code Interpreter</h3>
-                <button class="close-x modal-close" id="close-code-modal" aria-label="Close">✕</button>
-            </div>
-            <textarea id="code-input" class="code-editor" placeholder="# Write your Python code here&#10;print('Hello Wizard!')" rows="10" aria-label="Python code editor"></textarea>
-            <div class="modal-actions">
-                <button class="primary-btn" id="run-code">▶ Run Code</button>
-                <button class="ghost-btn" id="clear-code">Clear</button>
-            </div>
-            <div id="code-output" class="code-output" role="region" aria-label="Code output"></div>
-        </div>
+<!-- Command palette -->
+<div class="modal palette-modal" id="m-palette" hidden role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="palette">
+        <div class="pal-top"><i data-icon="search"></i><input id="pal-input" placeholder="Search chats, messages and actions…" autocomplete="off" spellcheck="false" aria-label="Search"><kbd>Esc</kbd></div>
+        <div id="pal-list" class="pal-list" role="listbox"></div>
     </div>
+</div>
 
-    <!-- Image Modal -->
-    <div class="modal-overlay" id="image-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="image-modal-title">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3 id="image-modal-title" class="modal-title">🎨 AI Image Generator</h3>
-                <button class="close-x modal-close" id="close-image-modal" aria-label="Close">✕</button>
-            </div>
-            <div class="form-group">
-                <label>Describe your image</label>
-                <input class="field" type="text" id="image-prompt" placeholder="A wizard casting spells under a starry sky…">
-            </div>
-            <div class="form-group">
-                <label>Size</label>
-                <select class="field" id="image-size">
-                    <option value="512x512">Square (512×512)</option>
-                    <option value="768x512">Landscape (768×512)</option>
-                    <option value="512x768">Portrait (512×768)</option>
-                </select>
-            </div>
-            <div class="modal-actions">
-                <button class="primary-btn" id="generate-image">✦ Generate</button>
-            </div>
-            <div id="image-result" class="image-result" role="region"></div>
-        </div>
-    </div>
+<!-- Lightbox -->
+<div class="modal lightbox" id="m-lightbox" hidden role="dialog" aria-modal="true" aria-label="Image preview">
+    <button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button>
+    <img id="lightbox-img" alt="">
+    <div class="lb-bar"><span id="lightbox-cap"></span><button class="btn ghost sm" id="lightbox-dl"><i data-icon="download"></i>Download</button><a class="btn ghost sm" id="lightbox-open" target="_blank" rel="noopener noreferrer"><i data-icon="external"></i>Open</a></div>
+</div>
 
-    <!-- Profile Modal -->
-    <div class="modal-overlay" id="profile-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
-        <div class="modal-box modal-lg">
-            <div class="modal-header">
-                <h3 id="profile-modal-title" class="modal-title">👤 Wizard Profile</h3>
-                <button class="close-x modal-close" id="close-profile-modal" aria-label="Close">✕</button>
-            </div>
-            <div class="profile-tabs" role="tablist">
-                <button class="tab-btn active" data-tab="basic" role="tab">Basic Info</button>
-                <button class="tab-btn" data-tab="professional" role="tab">Professional</button>
-                <button class="tab-btn" data-tab="interests" role="tab">Interests</button>
-                <button class="tab-btn" data-tab="ai-preferences" role="tab">AI Prefs</button>
-                <button class="tab-btn" data-tab="goals" role="tab">Goals</button>
-            </div>
-            <div class="profile-body">
-                <div id="profile-tab-basic" class="tab-pane active">
-                    <div class="form-row">
-                        <div class="form-group"><label>Full Name</label><input class="field" type="text" id="profile-full-name" placeholder="Your full name"></div>
-                        <div class="form-group"><label>Display Name</label><input class="field" type="text" id="profile-display-name" placeholder="How to address you"></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Birthday</label><input class="field" type="date" id="profile-birthday"></div>
-                        <div class="form-group"><label>Gender</label><select class="field" id="profile-gender"><option value="">Prefer not to say</option><option value="male">Male</option><option value="female">Female</option><option value="non-binary">Non-binary</option><option value="other">Other</option></select></div>
-                    </div>
-                    <div class="form-group"><label>Bio</label><textarea class="field" id="profile-bio" rows="3" placeholder="Tell me about yourself…"></textarea></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Phone</label><input class="field" type="tel" id="profile-phone" placeholder="Your phone number"></div>
-                        <div class="form-group"><label>Website</label><input class="field" type="url" id="profile-website" placeholder="Your website"></div>
-                    </div>
-                    <div class="form-group"><label>Custom Greeting</label><input class="field" type="text" id="profile-greeting" placeholder="How I should greet you"></div>
-                </div>
-                <div id="profile-tab-professional" class="tab-pane">
-                    <div class="form-row">
-                        <div class="form-group"><label>Occupation</label><input class="field" type="text" id="profile-occupation" placeholder="Your job title"></div>
-                        <div class="form-group"><label>Company</label><input class="field" type="text" id="profile-company" placeholder="Where you work"></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Experience Years</label><input class="field" type="number" id="profile-experience" placeholder="Years of experience"></div>
-                        <div class="form-group"><label>Education</label><input class="field" type="text" id="profile-education" placeholder="Your degree/school"></div>
-                    </div>
-                    <div class="form-group"><label>Skills (comma separated)</label><input class="field" type="text" id="profile-skills" placeholder="Python, JavaScript, Design…"></div>
-                </div>
-                <div id="profile-tab-interests" class="tab-pane">
-                    <div class="form-group"><label>Interests (comma separated)</label><input class="field" type="text" id="profile-interests" placeholder="Reading, Gaming, Music…"></div>
-                    <div class="form-group"><label>Favorite Topics</label><input class="field" type="text" id="profile-fav-topics" placeholder="AI, History, Science, Art…"></div>
-                    <div class="form-group"><label>Learning Interests</label><input class="field" type="text" id="profile-learning" placeholder="Topics you want to learn…"></div>
-                    <div class="form-group"><label>Known Topics</label><input class="field" type="text" id="profile-known" placeholder="Topics you already master…"></div>
-                </div>
-                <div id="profile-tab-ai-preferences" class="tab-pane">
-                    <div class="form-row">
-                        <div class="form-group"><label>Preferred Mode</label><select class="field" id="profile-preferred-mode"><option value="JARVIS">JARVIS</option><option value="ORACLE">ORACLE</option><option value="Nerd">Nerd</option><option value="Fun">Fun</option><option value="Sarcastic">Sarcastic</option><option value="Fast">Fast</option><option value="Normal">Normal</option></select></div>
-                        <div class="form-group"><label>Response Style</label><select class="field" id="profile-response-style"><option value="balanced">Balanced</option><option value="concise">Concise</option><option value="detailed">Detailed</option></select></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Formality</label><select class="field" id="profile-formality"><option value="casual">Casual</option><option value="friendly">Friendly</option><option value="professional">Professional</option></select></div>
-                        <div class="form-group"><label>Use Emojis</label><select class="field" id="profile-emojis"><option value="true">Yes, use emojis</option><option value="false">No, plain text</option></select></div>
-                    </div>
-                    <div class="form-group"><label>Custom AI Instructions</label><textarea class="field" id="profile-instructions" rows="3" placeholder="How you'd like me to respond…"></textarea></div>
-                </div>
-                <div id="profile-tab-goals" class="tab-pane">
-                    <div class="form-group"><label>Current Goals (one per line)</label><textarea class="field" id="profile-goals" rows="4" placeholder="Learn Python&#10;Write a book&#10;Run a marathon"></textarea></div>
-                    <div class="form-group"><label>Reminders (one per line)</label><textarea class="field" id="profile-reminders" rows="3" placeholder="Call mom on Sunday&#10;Submit project by Friday"></textarea></div>
-                </div>
-            </div>
-            <div class="profile-completeness-bar-wrap">
-                <span>Profile Completeness</span>
-                <div class="progress-track"><div class="progress-fill" id="profile-completeness-fill"></div></div>
-                <span id="profile-completeness-text">0%</span>
-            </div>
-            <div class="modal-actions">
-                <button class="primary-btn" id="save-profile">💾 Save Profile</button>
-                <button class="ghost-btn" id="close-profile">Close</button>
-            </div>
-        </div>
-    </div>
+<input type="file" id="file-input" hidden accept=".txt,.pdf,.doc,.docx,.xls,.xlsx,.csv,.md,.json,.jpg,.jpeg,.png">
 
-    <!-- Stats Modal -->
-    <div class="modal-overlay" id="stats-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title">
-        <div class="modal-box modal-lg">
-            <div class="modal-header">
-                <h3 id="stats-modal-title" class="modal-title">📊 Detailed Statistics</h3>
-                <button class="close-x modal-close" id="close-stats-modal" aria-label="Close">✕</button>
-            </div>
-            <div class="stats-detail">
-                <div class="stats-section">
-                    <h4>📈 Usage Overview</h4>
-                    <div class="stats-row"><span>Account Created</span><span id="stats-created">—</span></div>
-                    <div class="stats-row"><span>Last Active</span><span id="stats-last">—</span></div>
-                    <div class="stats-row"><span>Total Messages</span><span id="stats-total-msgs">0</span></div>
-                    <div class="stats-row"><span>Total Chats</span><span id="stats-total-chats">0</span></div>
-                </div>
-                <div class="stats-section">
-                    <h4>📁 Content Stats</h4>
-                    <div class="stats-row"><span>Files Uploaded</span><span id="stats-files-detailed">0</span></div>
-                    <div class="stats-row"><span>Images Generated</span><span id="stats-images-detailed">0</span></div>
-                    <div class="stats-row"><span>Code Executions</span><span id="stats-code-detailed">0</span></div>
-                    <div class="stats-row"><span>Web Searches</span><span id="stats-searches-detailed">0</span></div>
-                </div>
-                <div class="stats-section">
-                    <h4>👤 Profile Stats</h4>
-                    <div class="stats-row"><span>Profile Completeness</span><span id="stats-profile-completeness">0%</span></div>
-                    <div class="stats-row"><span>Skills Tracked</span><span id="stats-skills-count">0</span></div>
-                    <div class="stats-row"><span>Interests Tracked</span><span id="stats-interests-count">0</span></div>
-                    <div class="stats-row"><span>Goals Set</span><span id="stats-goals-count">0</span></div>
-                </div>
-                <div class="stats-section">
-                    <h4>⚡ Performance</h4>
-                    <div class="stats-row"><span>Avg Response Time</span><span id="stats-avg-response">0.4s</span></div>
-                    <div class="stats-row"><span>Fastest Response</span><span id="stats-fastest">0.2s</span></div>
-                    <div class="stats-row"><span>API Keys</span><span id="stats-api-keys-detailed">0</span></div>
-                </div>
-            </div>
-        </div>
-    </div>
+<!-- Toasts & undo snackbar -->
+<div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
+<div id="snack" class="snack" role="status" hidden><span id="snack-text"></span><button id="snack-undo">Undo</button></div>
 
-    <!-- Personalities Browser Modal -->
-    <div class="modal-overlay" id="personalities-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="personalities-modal-title">
-        <div class="modal-box modal-lg">
-            <div class="modal-header">
-                <h3 id="personalities-modal-title" class="modal-title">🎭 Community Personalities</h3>
-                <button class="close-x modal-close" id="close-personalities-modal" aria-label="Close">✕</button>
-            </div>
-            <div class="persona-tabs" role="tablist">
-                <button class="tab-btn active" data-tab="featured" role="tab">Featured</button>
-                <button class="tab-btn" data-tab="popular" role="tab">Popular</button>
-                <button class="tab-btn" data-tab="recent" role="tab">Recent</button>
-                <button class="tab-btn" data-tab="mine" role="tab">Mine</button>
-            </div>
-            <div id="personalities-grid" class="personalities-grid" role="list"></div>
-        </div>
-    </div>
-
-    <!-- Update History Modal -->
-    <div class="modal-overlay" id="update-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="update-modal-title">
-        <div class="modal-box modal-lg">
-            <div class="modal-header">
-                <h3 id="update-modal-title" class="modal-title">📜 Update History</h3>
-                <button class="close-x modal-close" id="close-update-modal" aria-label="Close">✕</button>
-            </div>
-            <div class="update-timeline">
-                <div class="update-entry current">
-                    <div class="update-tag">v15.1.0 — WizProfile Update <span class="current-badge">Current</span></div>
-                    <div class="update-date">June 2026</div>
-                    <ul>
-                        <li>👤 Complete WizProfile system — rich user profiles with 50+ data points</li>
-                        <li>🧠 AI learns from your profile to personalize responses</li>
-                        <li>📊 Profile completeness meter and stats</li>
-                        <li>⚙️ Custom AI instructions per user</li>
-                        <li>🎯 Goal tracking and reminders</li>
-                    </ul>
-                </div>
-                <div class="update-entry">
-                    <div class="update-tag">v15.0.0 — UI Update</div>
-                    <div class="update-date">May 2026</div>
-                    <ul>
-                        <li>🎨 Complete UI overhaul — unified Wizard Ecosystem visual language</li>
-                        <li>✦ Cormorant Garamond display font, grimoire-panel aesthetic</li>
-                        <li>🌟 New ambient depth system: atmospheric blobs + starfield</li>
-                    </ul>
-                </div>
-                <div class="update-entry">
-                    <div class="update-tag">v14.0.0 — Ecosystem Update</div>
-                    <div class="update-date">April 2026</div>
-                    <ul>
-                        <li>🌐 Wizard Ecosystem homepage at wizardecosystem.dpdns.org</li>
-                        <li>📧 Wizard Mail, 💬 Wizard Chat, 📅 Calendar, 🌍 Browser</li>
-                        <li>🔐 Unified authentication across all Ecosystem apps</li>
-                    </ul>
-                </div>
-                <div class="update-entry">
-                    <div class="update-tag">v13.0.0 — Multi-Agent Update</div>
-                    <div class="update-date">April 3, 2026</div>
-                    <ul>
-                        <li>🤖 Multi-Agent Orchestration — chain specialized AI agents</li>
-                        <li>🔗 Chain Studio — pre-built multi-agent workflows</li>
-                        <li>🛒 Agent Marketplace — share and install community agents</li>
-                    </ul>
-                </div>
-                <div class="update-entry">
-                    <div class="update-tag">v12.0.0 — Developer Hub</div>
-                    <div class="update-date">April 2026</div>
-                    <ul>
-                        <li>👨‍💻 Developer Hub at /devhub with API key management</li>
-                        <li>📚 Full API documentation with code examples</li>
-                    </ul>
-                </div>
-                <div class="update-entry">
-                    <div class="update-tag">v9.0.0 — PRO Update</div>
-                    <div class="update-date">March 2026</div>
-                    <ul>
-                        <li>🌐 Web search · 📎 File upload RAG · 💻 Code execution</li>
-                        <li>🎨 AI image generation · 🎭 Community personalities</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Hidden file input -->
-    <input type="file" id="file-upload" style="display:none;" accept=".txt,.pdf,.doc,.docx,.xls,.xlsx,.csv,.jpg,.png" aria-hidden="true">
-
-    <!-- Notification Toast -->
-    <div id="notification-toast" class="notification-toast" role="status" aria-live="polite"></div>
-
-    <!-- Mobile Overlay -->
-    <div class="mobile-overlay" id="mobile-overlay"></div>
-
-    <script src="script.js"></script>
+<script src="script.js?v=16"></script>
 </body>
 </html>
