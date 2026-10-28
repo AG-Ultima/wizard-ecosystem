@@ -1037,7 +1037,8 @@ function twStep(ts) {
     if (back > 0) {
         if (reduceMotion() || document.hidden) TW.shown = TW.full.length;
         else TW.shown = Math.min(TW.full.length, TW.shown + Math.max(2, Math.ceil(back * 0.06)));
-        if (!TW.last || ts - TW.last > 28 || TW.shown >= TW.full.length) { twPaint(); TW.last = ts; }
+        const gap = TW.full.length > 14000 ? 140 : TW.full.length > 6000 ? 80 : 28; // big pages re-render slower so the browser stays smooth
+        if (!TW.last || ts - TW.last > gap || TW.shown >= TW.full.length) { twPaint(); TW.last = ts; }
     }
     if (TW.shown < TW.full.length) TW.raf = requestAnimationFrame(twStep);
     else if (TW.netDone && TW.resolve) { const r = TW.resolve; TW.resolve = null; r(); }
