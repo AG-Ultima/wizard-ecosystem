@@ -251,6 +251,8 @@ body.calm *, body.calm *::before, body.calm *::after { animation-duration: .001m
 .attach-chips { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 14px 0; } .attach-chips:empty { display: none; }
 .achip { display: inline-flex; align-items: center; gap: 8px; max-width: 280px; padding: 5px 8px 5px 12px; border-radius: 12px; border: 1px solid var(--line-2); background: rgba(0,0,0,.35); font-size: 12.5px; position: relative; overflow: hidden; }
 .achip span.n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .achip.ok { border-color: rgba(92,184,122,.5); } .achip.bad { border-color: rgba(224,85,85,.55); color: #ffb0b0; }
+.achip.img { padding-left: 5px; } .achip .thumb { width: 34px; height: 34px; object-fit: cover; border-radius: 8px; flex: none; }
+.uimgs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; margin-bottom: 6px; } .uimgs .imgcard { margin: 0; max-width: 220px; width: 100%; }
 .achip .prog { position: absolute; left: 0; bottom: 0; height: 2px; background: linear-gradient(90deg, var(--violet), var(--gold-light)); transition: width .2s; } .achip button { color: var(--muted); } .achip button:hover { color: var(--danger); } .achip i { width: 14px; height: 14px; }
 .drop-hint { position: absolute; left: 16px; right: 16px; bottom: calc(100% - 4px); text-align: center; padding: 10px; border-radius: 14px; border: 1px dashed var(--gold-light); background: rgba(8,6,18,.9); color: var(--gold-light); font-size: 13px; z-index: 5; }
 .foot-note { text-align: center; font-size: 11px; color: var(--muted); margin-top: 8px; opacity: .8; }
