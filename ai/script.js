@@ -779,6 +779,10 @@ function imgCard(url, prompt) {
         '<img src="' + esc(imgSrc(url)) + '" alt="' + esc(prompt || 'Generated image') + '" loading="lazy" decoding="async">' +
         (prompt ? '<figcaption class="cap">' + esc(prompt) + '</figcaption>' : '') + '</figure>';
 }
+function userImgs(list) {
+    if (!Array.isArray(list) || !list.length) return '';
+    return '<div class="uimgs">' + list.slice(0, 3).map(u => imgCard(u, '')).join('') + '</div>';
+}
 function toolChips(tools) {
     if (!Array.isArray(tools) || !tools.length) return '';
     const names = Array.from(new Set(tools.map(t => String(t).replace(/_/g, ' ')))).slice(0, 5);
@@ -790,7 +794,7 @@ function messageHTML(m, i, isLast) {
     const t = parseTs(m.timestamp);
     if (m.sender === 'user') {
         return '<article class="msg user' + (isLast ? ' last' : '') + '" data-i="' + i + '" aria-label="You said">' +
-            '<div class="body"><div class="bubble" title="' + esc(fmtDay(t)) + '">' + esc(m.text) + '</div>' +
+            '<div class="body">' + userImgs(m.images) + '<div class="bubble" title="' + esc(fmtDay(t)) + '">' + esc(m.text) + '</div>' +
             '<div class="actions-row">' + actBtn('copy', 'copy', 'Copy') + actBtn('edit', 'edit', 'Edit and resend') + '</div></div></article>';
     }
     const p = personaFor(S.chat), mode = modeOf(m.mode || (S.chat && S.chat.mode));
@@ -1060,7 +1064,7 @@ function setBusy(b) {
 }
 function updateSendState() {
     const btn = $('send-btn');
-    btn.disabled = !S.busy && !$('input').value.trim();
+    btn.disabled = !S.busy && !$('input').value.trim() && !S.attach.some(a => a.dataUrl);
 }
 function tzName() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || undefined; } catch (e) { return undefined; } }
 
@@ -1088,6 +1092,9 @@ function abortTurn(silent) {
 async function send(text, opt) {
     opt = opt || {};
     text = String(text || '').trim();
+    const pics = S.attach.filter(a => a.dataUrl).map(a => a.dataUrl);
+    if (S.attach.some(a => a.state === 'up')) { toast('Wait for the attachment to finish loading.', 'err'); return; }
+    if (!text && pics.length) text = 'Please look at the attached image.';
     if (!text || S.busy) return;
     if (!S.user) { openAuth('login'); return; }
     if (S.offline) { toast('You’re offline.', 'err'); return; }
@@ -1096,9 +1103,11 @@ async function send(text, opt) {
     const cid = chat.chat_id;
     const replaceFrom = opt.replaceFrom != null ? opt.replaceFrom : null;
 
+    const keepImgs = replaceFrom != null && chat.messages[replaceFrom] ? (chat.messages[replaceFrom].images || []) : [];
     if (replaceFrom != null) chat.messages = chat.messages.slice(0, replaceFrom);
     const userIdx = chat.messages.length;
     const userMsg = { sender: 'user', text, mode: chat.mode, timestamp: new Date().toISOString() };
+    if (pics.length || keepImgs.length) userMsg.images = pics.length ? pics : keepImgs;
     chat.messages.push(userMsg);
     S.lastSend = { text, replaceFrom: userIdx };
     S.stick = true;
@@ -1121,6 +1130,7 @@ async function send(text, opt) {
     const auto = S.settings.autoWeb && FRESH_RE.test(text);
     const body = { message: text, mode: chat.mode, search: !!(S.webOn || auto), chat_id: cid, tz: tzName() };
     if (replaceFrom != null) body.replace_from = userIdx;
+    if (pics.length) body.images = pics;
     if (S.model && S.model !== 'auto') body.model = S.model;
     const persona = personaFor(chat); if (persona && persona.id) body.personality_id = persona.id;
 
@@ -1476,18 +1486,44 @@ async function downloadImage(src) {
 
 /* ---------- attachments ---------- */
 const MAX_UPLOAD = 16 * 1024 * 1024;
-const OK_EXT = /\.(txt|pdf|docx?|xlsx?|csv|md|json|jpe?g|png)$/i;
+const OK_EXT = /\.(txt|pdf|docx?|xlsx?|csv|md|json|jpe?g|png|webp)$/i;
+const IMG_EXT = /\.(jpe?g|png|webp)$/i, MAX_IMGS = 3, MAX_IMG_CHARS = 2400000;
 function renderChips() {
     const box = $('attach-chips');
-    box.innerHTML = S.attach.map((a, i) => '<span class="achip ' + (a.state === 'ok' ? 'ok' : a.state === 'bad' ? 'bad' : '') + '"><i data-icon="' + (a.state === 'bad' ? 'alert' : 'file') + '"></i>' +
+    box.innerHTML = S.attach.map((a, i) => '<span class="achip ' + (a.dataUrl ? 'img ' : '') + (a.state === 'ok' ? 'ok' : a.state === 'bad' ? 'bad' : '') + '">' + (a.dataUrl ? '<img class="thumb" src="' + esc(a.dataUrl) + '" alt="">' : '<i data-icon="' + (a.state === 'bad' ? 'alert' : 'file') + '"></i>') +
         '<span class="n" title="' + esc(a.name) + '">' + esc(a.name) + '</span><button type="button" data-rm="' + i + '" aria-label="Remove ' + esc(a.name) + '"><i data-icon="x"></i></button>' +
         (a.state === 'up' ? '<i class="prog" style="width:' + (a.pct || 0) + '%"></i>' : '') + '</span>').join('');
     hydrate(box);
 }
+/* Pictures are shrunk in the browser (max 1568px, JPEG) and sent with the next message,
+   so the AI can actually see them. Other files go to the knowledge upload below. */
+function attachImage(file) {
+    if (S.attach.filter(a => a.dataUrl).length >= MAX_IMGS) { toast('You can attach up to ' + MAX_IMGS + ' pictures per message.', 'err'); return; }
+    const a = { name: file.name || 'image', state: 'up', pct: 50 };
+    S.attach.push(a); renderChips();
+    const fail = msg => { const k = S.attach.indexOf(a); if (k >= 0) S.attach.splice(k, 1); renderChips(); toast(msg, 'err'); };
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+        try {
+            const scale = Math.min(1, 1568 / Math.max(img.naturalWidth, img.naturalHeight));
+            const w = Math.max(1, Math.round(img.naturalWidth * scale)), h = Math.max(1, Math.round(img.naturalHeight * scale));
+            const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+            const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(img, 0, 0, w, h);
+            let q = 0.85, d = cv.toDataURL('image/jpeg', q);
+            while (d.length > MAX_IMG_CHARS && q > 0.4) { q -= 0.15; d = cv.toDataURL('image/jpeg', q); }
+            if (d.length > MAX_IMG_CHARS) return fail('That picture is too large. Try a smaller one.');
+            a.dataUrl = d; a.state = 'ok'; delete a.pct; renderChips(); updateSendState();
+        } catch (e) { fail('Couldn’t read that picture.'); }
+        finally { URL.revokeObjectURL(url); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); fail('Couldn’t read that picture.'); };
+    img.src = url;
+}
 function uploadFile(file) {
     if (!S.user) { openAuth('login'); return; }
     if (!S.chat) return;
-    if (!OK_EXT.test(file.name)) { toast('That file type isn’t supported (txt, pdf, doc, xls, csv, md, json, jpg, png).', 'err'); return; }
+    if (IMG_EXT.test(file.name || '') || /^image\/(png|jpeg|webp)$/.test(file.type || '')) { attachImage(file); return; }
+    if (!OK_EXT.test(file.name)) { toast('That file type isn’t supported (txt, pdf, doc, xls, csv, md, json, jpg, png, webp).', 'err'); return; }
     if (file.size > MAX_UPLOAD) { toast(file.name + ' is larger than 16 MB.', 'err'); return; }
     const a = { name: file.name, state: 'up', pct: 0 };
     S.attach.push(a); renderChips();
@@ -2072,7 +2108,7 @@ function bind() {
     $('send-btn').addEventListener('click', e => { if (S.busy) { e.preventDefault(); abortTurn(); } });
     $('attach-btn').onclick = () => $('file-input').click();
     $('file-input').onchange = e => { Array.from(e.target.files).forEach(uploadFile); e.target.value = ''; };
-    $('attach-chips').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) { S.attach.splice(+b.dataset.rm, 1); renderChips(); } });
+    $('attach-chips').addEventListener('click', e => { const b = e.target.closest('[data-rm]'); if (b) { S.attach.splice(+b.dataset.rm, 1); renderChips(); updateSendState(); } });
     $('web-btn').onclick = () => setWeb(!S.webOn);
     $('image-btn').onclick = () => openModal('m-image');
     $('code-btn').onclick = () => openModal('m-code');
