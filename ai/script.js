@@ -218,7 +218,10 @@ function isTable(l, next) {
 
 function codeBlock(code, lang) {
     const safe = String(lang || '').replace(/[^\w+#.-]/g, '').slice(0, 20);
+    const canPreview = /^(html?|svg)$/i.test(safe) || (!safe && /^\s*(<!doctype html|<html[\s>])/i.test(code));
     return '<div class="codeblock"><div class="code-head"><span class="lang">' + esc(safe || 'text') + '</span>' +
+        (canPreview ? '<button type="button" data-act="preview" title="Run this page in a safe preview"><i data-icon="play"></i><span>Preview</span></button>' : '') +
+        '<button type="button" data-act="dl-code" title="Download as a file"><i data-icon="download"></i></button>' +
         '<button type="button" data-act="wrap" title="Toggle line wrapping"><i data-icon="wrap"></i></button>' +
         '<button type="button" data-act="copy-code" title="Copy code"><i data-icon="copy"></i><span>Copy</span></button></div>' +
         '<pre><code>' + highlight(code, safe) + '</code></pre></div>';
@@ -475,7 +478,7 @@ const S = {
     user: null, chats: [], chat: null, hits: [],
     searchSeq: 0, busy: false, phase: 'idle', ctl: null, turn: null,
     filter: '', openSeq: 0, listLoading: false,
-    webOn: false, attach: [], stick: true,
+    webOn: false, attach: [], stick: true, model: store.get('model', 'auto'), tiers: [],
     menuChatId: null, renderFrom: 0, lastSend: null,
     settings: Object.assign({ enterSends: true, autoWeb: true, calm: false, density: 'cozy', collapsed: false }, store.get('settings', {})),
     personas: store.get('persona', {}),
@@ -600,6 +603,7 @@ function openModal(id) {
 function closeModal(id) {
     const m = typeof id === 'string' ? $(id) : id; if (!m || m.hidden) return;
     m.hidden = true;
+    if (m.id === 'm-preview') { const f = $('preview-frame'); if (f) f.srcdoc = ''; }
     const k = modalStack.indexOf(m.id); if (k >= 0) modalStack.splice(k, 1);
     if (!modalStack.length) document.body.style.overflow = '';
     if (m._opener && m._opener.focus && document.contains(m._opener)) { try { m._opener.focus({ preventScroll: true }); } catch (e) { } }
@@ -793,7 +797,7 @@ function messageHTML(m, i, isLast) {
     const lastAssistant = isLast;
     return '<article class="msg assistant' + (isLast ? ' last' : '') + '" data-i="' + i + '" aria-label="Wizard.AI replied">' +
         '<div class="ava" aria-hidden="true">' + esc(p ? p.emoji : mode.emoji) + '</div>' +
-        '<div class="body"><div class="meta"><span class="who">' + esc(p ? p.name : 'Wizard.AI') + '</span><span class="mtag">' + esc(mode.name) + '</span><time>' + esc(fmtDay(t)) + '</time></div>' +
+        '<div class="body"><div class="meta"><span class="who">' + esc(p ? p.name : 'Wizard.AI') + '</span><span class="mtag">' + esc(mode.name) + '</span>' + (m.model ? '<span class="mtag mmodel" title="Model that wrote this">' + esc(String(m.model).slice(0, 30)) + '</span>' : '') + '<time>' + esc(fmtDay(t)) + '</time></div>' +
         imgCard(m.image, m.prompt) +
         (m.text ? '<div class="content md">' + md(m.text) + '</div>' : '') +
         toolChips(m.tools) +
@@ -1117,6 +1121,7 @@ async function send(text, opt) {
     const auto = S.settings.autoWeb && FRESH_RE.test(text);
     const body = { message: text, mode: chat.mode, search: !!(S.webOn || auto), chat_id: cid, tz: tzName() };
     if (replaceFrom != null) body.replace_from = userIdx;
+    if (S.model && S.model !== 'auto') body.model = S.model;
     const persona = personaFor(chat); if (persona && persona.id) body.personality_id = persona.id;
 
     const ctl = S.ctl = new AbortController();
@@ -1258,6 +1263,7 @@ async function continueReply() {
     const turn = S.turn = { cid, userIdx: idx - 1, aborted: false, silent: false };
     twReset(content); TW.full = oldText; TW.shown = oldText.length;
     const body = { continue: true, mode: chat.mode, chat_id: cid, tz: tzName() };
+    if (S.model && S.model !== 'auto') body.model = S.model;
     const persona = personaFor(chat); if (persona && persona.id) body.personality_id = persona.id;
     const ctl = S.ctl = new AbortController();
     let done = null, errorText = null;
@@ -1403,6 +1409,14 @@ async function onThreadClick(e) {
         const ok = await copyText(code ? code.textContent : '');
         const label = qs('span', btn);
         if (ok && label) { label.textContent = 'Copied'; setTimeout(() => { label.textContent = 'Copy'; }, 1400); }
+    } else if (act === 'preview') {
+        const code = qs('pre code', btn.closest('.codeblock'));
+        openPreview(code ? code.textContent : '', (qs('.lang', btn.closest('.codeblock')) || {}).textContent);
+    } else if (act === 'dl-code') {
+        const cb = btn.closest('.codeblock'), code = qs('pre code', cb);
+        const lang = ((qs('.lang', cb) || {}).textContent || 'text').toLowerCase();
+        const ext = { html: 'html', htm: 'html', svg: 'svg', css: 'css', javascript: 'js', js: 'js', typescript: 'ts', ts: 'ts', python: 'py', py: 'py', json: 'json', bash: 'sh', sh: 'sh', sql: 'sql', java: 'java', c: 'c', cpp: 'cpp', go: 'go', rust: 'rs', php: 'php', ruby: 'rb', yaml: 'yml', yml: 'yml', xml: 'xml', markdown: 'md', md: 'md' }[lang] || 'txt';
+        downloadBlob('wizard-ai-code.' + ext, code ? code.textContent : '', 'text/plain;charset=utf-8');
     } else if (act === 'wrap') btn.closest('.codeblock').classList.toggle('wrap');
     else if (act === 'edit') startEdit(i);
     else if (act === 'edit-cancel') renderThread(true);
@@ -1428,6 +1442,17 @@ document.addEventListener('error', e => {
 }, true);
 
 /* ---------- lightbox ---------- */
+/* Live preview: the code runs in a sandboxed iframe with NO same-origin access,
+   so generated pages can't touch the app, its cookies or the user's account. */
+function openPreview(code, lang) {
+    const isSvg = /^svg$/i.test(lang || '') || /^\s*<svg[\s>]/i.test(code);
+    const doc = isSvg ? '<!doctype html><meta charset="utf-8"><body style="margin:0;display:grid;place-items:center;min-height:100vh;background:#fff">' + code : code;
+    S.previewCode = code; S.previewExt = isSvg ? 'svg' : 'html';
+    const f = $('preview-frame');
+    f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups');
+    f.srcdoc = doc;
+    openModal('m-preview');
+}
 function openLightbox(src, cap) {
     if (!safeImg(src)) return;
     $('lightbox-img').src = src; $('lightbox-img').alt = cap || 'Image';
@@ -1585,6 +1610,7 @@ async function enterApp(user) {
     S.listLoading = !S.chats.length; renderList();
     await refreshChats(true);
     if (!S.tzSent) { S.tzSent = true; api('/api/user/timezone', { method: 'POST', body: { timezone: tzName() }, noAuthRedirect: true }).catch(() => { }); }
+    loadModels();
     api('/api/profile', { noAuthRedirect: true }).then(r => { S.profile = r.profile; }).catch(() => { });
     const last = store.get(lastIdKey(), null);
     const start = S.chats.find(c => c.chat_id === last) || sortedChats()[0];
@@ -1823,6 +1849,23 @@ function openModeMenu() {
     const m = $('mode-menu'); m.innerHTML = html; hydrate(m);
     openPop(m, $('mode-btn'), {});
 }
+function renderModelBtn() {
+    const t = S.tiers.find(x => x.id === S.model);
+    if (!t) S.model = 'auto';
+    $('model-emoji').textContent = t ? t.emoji : '✨';
+    $('model-name').textContent = t ? t.label : 'Auto';
+}
+function openModelMenu() {
+    const opts = [{ id: 'auto', emoji: '✨', label: 'Auto', desc: 'Picks the best model for each message' }].concat(S.tiers);
+    $('model-menu').innerHTML = '<div class="gh">Model</div>' + opts.map(t =>
+        '<button type="button" role="option" class="opt' + (t.id === S.model ? ' cur' : '') + '" data-model="' + esc(t.id) + '" aria-selected="' + (t.id === S.model) + '"><span class="oe">' + t.emoji + '</span><span class="ot"><b>' + esc(t.label) + '</b><small>' + esc(t.desc) + '</small></span><i data-icon="check" class="tick"></i></button>').join('');
+    hydrate($('model-menu'));
+    openPop($('model-menu'), $('model-btn'), {});
+}
+function setModel(id) { S.model = id; store.set('model', id); closePops(); renderModelBtn(); toast(id === 'auto' ? 'Model: Auto' : 'Model: ' + (S.tiers.find(x => x.id === id) || {}).label); }
+function loadModels() {
+    api('/api/compound/models', { noAuthRedirect: true }).then(r => { S.tiers = (r && r.tiers) || []; renderModelBtn(); }).catch(() => { });
+}
 async function setMode(id) {
     const c = S.chat; if (!c) return;
     closePops();
@@ -1992,6 +2035,10 @@ function bind() {
     // top bar
     $('title-btn').onclick = () => S.chat && renameChat(S.chat.chat_id);
     $('mode-btn').onclick = openModeMenu;
+    $('model-btn').onclick = openModelMenu;
+    $('preview-dl').onclick = () => downloadBlob('wizard-ai-page.' + (S.previewExt || 'html'), S.previewCode || '', 'text/html;charset=utf-8');
+    $('preview-reload').onclick = () => { const f = $('preview-frame'), d = f.srcdoc; f.srcdoc = ''; setTimeout(() => { f.srcdoc = d || S.previewCode || ''; }, 30); };
+    $('model-menu').addEventListener('click', e => { const b = e.target.closest('[data-model]'); if (b) setModel(b.dataset.model); });
     $('mode-menu').addEventListener('click', e => {
         if (e.target.closest('[data-browse]')) { closePops(); openPersonas(); return; }
         const b = e.target.closest('[data-mode]'); if (b) setMode(b.dataset.mode);
