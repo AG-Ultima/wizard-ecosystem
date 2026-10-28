@@ -44,7 +44,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=16">
+    <link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 <canvas id="starfield" aria-hidden="true"></canvas>
@@ -119,6 +119,9 @@
             <button class="chip" id="mode-btn" aria-haspopup="listbox" aria-expanded="false">
                 <span id="mode-emoji">🎩</span><span id="mode-name">JARVIS</span><i data-icon="chevron-down"></i>
             </button>
+            <button class="chip" id="model-btn" aria-haspopup="listbox" aria-expanded="false" title="Choose the AI model">
+                <span id="model-emoji">✨</span><span id="model-name">Auto</span><i data-icon="chevron-down"></i>
+            </button>
             <span class="spacer"></span>
             <span class="conn" id="conn" title="Connection status"><span class="dot"></span><span id="conn-text">Connected</span></span>
             <button class="icon-btn" id="palette-btn" aria-label="Command palette" title="Command palette (Ctrl+K)"><i data-icon="search"></i></button>
@@ -177,6 +180,7 @@
 </div>
 
 <div id="mode-menu" class="pop wide" role="listbox" hidden></div>
+<div id="model-menu" class="pop wide" role="listbox" hidden></div>
 <div id="item-menu" class="pop" role="menu" hidden>
     <button role="menuitem" data-act="rename"><i data-icon="edit"></i>Rename</button>
     <button role="menuitem" data-act="export"><i data-icon="download"></i>Export</button>
@@ -413,6 +417,18 @@
     </div>
 </div>
 
+<!-- Live preview -->
+<div class="modal" id="m-preview" hidden role="dialog" aria-modal="true" aria-labelledby="preview-title">
+    <div class="card preview-card">
+        <div class="card-head"><h2 id="preview-title">Live preview</h2><span class="spacer"></span>
+            <button class="btn ghost sm" id="preview-dl"><i data-icon="download"></i>Download</button>
+            <button class="btn ghost sm" id="preview-reload"><i data-icon="play"></i>Reload</button>
+            <button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <iframe id="preview-frame" title="Preview of the generated page" referrerpolicy="no-referrer"></iframe>
+        <p class="muted small">Runs in an isolated sandbox: it can’t see your chats or account.</p>
+    </div>
+</div>
+
 <!-- Lightbox -->
 <div class="modal lightbox" id="m-lightbox" hidden role="dialog" aria-modal="true" aria-label="Image preview">
     <button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button>
@@ -426,6 +442,6 @@
 <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
 <div id="snack" class="snack" role="status" hidden><span id="snack-text"></span><button id="snack-undo">Undo</button></div>
 
-<script src="script.js?v=16"></script>
+<script src="script.js?v=17"></script>
 </body>
 </html>
