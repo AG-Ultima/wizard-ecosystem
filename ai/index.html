@@ -160,6 +160,29 @@
             <p class="foot-note">Wizard.AI can make mistakes — double-check anything important.</p>
         </div>
     </main>
+
+    <aside id="canvas" class="canvas" hidden aria-label="Page canvas">
+        <header class="cv-head">
+            <div class="cv-tabs" role="tablist">
+                <button type="button" role="tab" class="on" data-cv-tab="preview" aria-selected="true">Preview</button>
+                <button type="button" role="tab" data-cv-tab="code" aria-selected="false">Code</button>
+            </div>
+            <span id="cv-title" class="cv-title">Web page</span>
+            <select id="cv-ver" class="cv-ver" aria-label="Version" hidden></select>
+            <span class="spacer"></span>
+            <button type="button" class="icon-btn sm" id="cv-reload" title="Reload preview" aria-label="Reload preview"><i data-icon="refresh"></i></button>
+            <button type="button" class="icon-btn sm" id="cv-copy" title="Copy code" aria-label="Copy code"><i data-icon="copy"></i></button>
+            <button type="button" class="icon-btn sm" id="cv-dl" title="Download as a file" aria-label="Download"><i data-icon="download"></i></button>
+            <button type="button" class="icon-btn sm" id="cv-full" title="Full screen" aria-label="Full screen"><i data-icon="expand"></i></button>
+            <button type="button" class="icon-btn sm" id="cv-close" title="Close" aria-label="Close canvas"><i data-icon="x"></i></button>
+        </header>
+        <div class="cv-body">
+            <iframe id="cv-frame" title="Preview of the generated page" referrerpolicy="no-referrer"></iframe>
+            <pre id="cv-code" class="cv-code" hidden><code></code></pre>
+            <div id="cv-status" class="cv-status" hidden><i></i>Writing the page…</div>
+        </div>
+        <p class="cv-note">Runs in an isolated sandbox: it can’t see your chats or account. Ask for changes in the chat.</p>
+    </aside>
 </div>
 
 <!-- ───────── Popovers ───────── -->
