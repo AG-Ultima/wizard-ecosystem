@@ -5,7 +5,7 @@
 (() => {
 'use strict';
 
-const API = (typeof window.WIZARD_API_BASE === 'string') ? window.WIZARD_API_BASE : 'https://arnav0928.pythonanywhere.com';
+const API = (typeof window.WIZARD_API_BASE === 'string') ? window.WIZARD_API_BASE : 'https://www.wizardecosystem.dev/ai-api';
 const SITE = 'https://wizardecosystem.dev/ai';
 const VERSION = '16.0.0';
 
