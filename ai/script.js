@@ -245,7 +245,24 @@ function renderNodes(nodes) {
     return html;
 }
 
+/* ---- full web pages in a reply become a compact "artifact" card that opens in the canvas ---- */
+let _pages = [];
+function mdPages() { return _pages; }               // pages found by the most recent md() call
+const RE_PAGE = /<!doctype html|<html[\s>]|<body[\s>]/i;
+function isPage(code, lang) {
+    if (!/^html?$/i.test(lang || '')) return false;
+    return RE_PAGE.test(code) || (code.split('\n').length >= 60 && /<(div|section|main|header)\b/i.test(code));
+}
+function pageTitle(code) { const m = /<title[^>]*>([^<]{1,80})/i.exec(code); return m ? m[1].trim() : ''; }
+function artifactCard(pi, page) {
+    const n = page.code.split('\n').length;
+    return '<div class="artifact-card' + (page.closed ? '' : ' unfinished') + '" data-act="open-canvas" data-pi="' + pi + '" role="button" tabindex="0" aria-label="Open the page in the canvas">' +
+        '<span class="ac-ico" aria-hidden="true">🪄</span><span class="ac-t"><b>' + esc(page.title || 'Web page') + '</b>' +
+        '<small>' + n + ' lines' + (page.closed ? ' · HTML page' : ' · unfinished') + '</small></span><span class="ac-open">Open</span></div>';
+}
+
 function md(src) {
+    _pages = [];
     src = String(src == null ? '' : src).replace(/\r\n?/g, '\n').replace(/\u0000/g, '');
     const lines = src.split('\n');
     const out = [];
@@ -264,8 +281,14 @@ function md(src) {
             const indent = /^\s*/.exec(line)[0].length;
             const buf = []; i++;
             while (i < lines.length && !closer.test(lines[i])) { buf.push(lines[i].replace(new RegExp('^\\s{0,' + indent + '}'), '')); i++; }
+            const closed = i < lines.length;
             i++;
-            out.push(codeBlock(buf.join('\n'), lang));
+            const code = buf.join('\n');
+            if (isPage(code, lang)) {
+                const page = { code, lang, closed, title: pageTitle(code) };
+                _pages.push(page);
+                out.push(artifactCard(_pages.length - 1, page));
+            } else out.push(codeBlock(code, lang));
             continue;
         }
         if ((m = RE_HEAD.exec(line))) {
@@ -372,6 +395,7 @@ const ICONS = {
     users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     'bar-chart': '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
     key: '<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>',
+    expand: '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>',
     external: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
     settings: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>',
     keyboard: '<rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="8" y1="12" x2="8.01" y2="12"/><line x1="12" y1="12" x2="12.01" y2="12"/><line x1="16" y1="12" x2="16.01" y2="12"/><line x1="7" y1="16" x2="17" y2="16"/>',
@@ -861,6 +885,7 @@ async function openChat(id, opts) {
     if (!S.user || !id) return;
     if (S.busy && S.turn && S.turn.cid === id) return; // already showing this chat, mid-reply
     if (S.busy) abortTurn(true);
+    if (CV.open && !(S.chat && S.chat.chat_id === id)) closeCanvas();
     const token = ++S.openSeq;
     // draft of the chat we are leaving
     saveDraft();
@@ -1029,6 +1054,7 @@ function twPaint() {
     TW.el.innerHTML = md(TW.full.slice(0, n));
     hydrate(TW.el);
     if (S.stick) scrollToBottom(true);
+    if (S.busy) canvasLive(mdPages());
 }
 function twKick() { if (!TW.raf) TW.raf = requestAnimationFrame(twStep); }
 function twStep(ts) {
@@ -1055,6 +1081,7 @@ function twSkip() { TW.shown = TW.full.length; twPaint(); if (TW.netDone && TW.r
 function setThink(text) { const l = $('think-label'); if (l) l.textContent = text; }
 function setBusy(b) {
     S.busy = b;
+    if (b) CV.dismissed = false;
     const btn = $('send-btn');
     btn.classList.toggle('stop', b);
     setIcon(btn, b ? 'stop' : 'send');
@@ -1225,7 +1252,7 @@ async function send(text, opt) {
         const p = $('pending'); if (p) p.outerHTML = messageHTML(aMsg, chat.messages.length - 1, true); else renderThread(true);
         const um = qs('.msg.user[data-i="' + userIdx + '"]'); if (um) um.classList.remove('last');
         hydrate($('thread'));
-        scrollToBottom();
+        scrollToBottom(); canvasAfterTurn();
         if (done.user_index !== undefined && done.user_index !== userIdx) resyncLater(cid, userIdx, null, 0);
     }
     upsertSummary(summaryOf(chat)); cacheList(); cacheChat(chat); renderList();
@@ -1315,7 +1342,7 @@ async function continueReply() {
     chat.updated_at = new Date().toISOString();
     const cur = qs('.msg.assistant[data-i="' + idx + '"]');
     if (cur) cur.outerHTML = messageHTML(m, idx, true); else renderThread(true);
-    hydrate($('thread')); scrollToBottom();
+    hydrate($('thread')); scrollToBottom(); canvasAfterTurn();
     upsertSummary(summaryOf(chat)); cacheList(); cacheChat(chat); renderList();
 }
 
@@ -1437,10 +1464,12 @@ async function onThreadClick(e) {
     }
     else if (act === 'regen') regenerate();
     else if (act === 'continue') continueReply();
+    else if (act === 'open-canvas') { if (btn.closest('#pending')) { CV.versions = cvVersions(); if (!CV.open) { cvOpenPanel(); } canvasLive(mdPages()); } else if (i >= 0) openCanvas(i, +btn.dataset.pi); }
     else if (act === 'retry') { const l = S.lastSend; if (l) { const em = qs('.msg.error'); if (em) em.remove(); if (S.chat) S.chat.messages = S.chat.messages.slice(0, l.replaceFrom); renderThread(true); send(l.text, { replaceFrom: l.replaceFrom }); } }
     else if (act === 'earlier') showEarlier();
 }
 function onThreadKey(e) {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('artifact-card')) { e.preventDefault(); e.target.click(); return; }
     if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('imgcard')) { e.preventDefault(); openLightbox(e.target.dataset.src, e.target.dataset.cap); }
 }
 document.addEventListener('error', e => {
@@ -1560,6 +1589,107 @@ function toggleMic() {
     recog.onend = () => { recog = null; btn.classList.remove('rec'); btn.setAttribute('aria-label', 'Voice input'); };
     recog.onerror = ev => { if (ev.error === 'not-allowed') toast('Microphone permission was denied.', 'err'); };
     try { recog.start(); btn.classList.add('rec'); btn.setAttribute('aria-label', 'Stop voice input'); } catch (e) { recog = null; }
+}
+
+/* ============================================================
+   CANVAS: full web pages from the AI open in a side panel
+   (Preview / Code tabs, versions, download). The preview runs in a
+   sandboxed iframe with NO same-origin access, like the code preview.
+   ============================================================ */
+const CV = { dismissed: false, open: false, versions: [], cur: -1, tab: 'preview', live: false, full: false, liveShown: 0 };
+const CV_WIDE = () => window.matchMedia('(min-width: 1181px)').matches;
+
+function cvVersions() { // every full page in this chat, oldest first
+    const out = [], msgs = S.chat ? S.chat.messages : [];
+    msgs.forEach((m, i) => {
+        if (m.sender !== 'assistant' || !m.text || !/```\s*html?/i.test(m.text)) return;
+        md(m.text);
+        mdPages().forEach((p, pi) => out.push({ msg: i, pi, code: p.code, title: p.title, closed: p.closed }));
+    });
+    return out;
+}
+function cvShell() { const s = $('shell'); if (s) s.classList.toggle('cv-open', CV.open); }
+function cvRenderVersions() {
+    const sel = $('cv-ver'); if (!sel) return;
+    sel.innerHTML = CV.versions.map((v, i) => '<option value="' + i + '">Version ' + (i + 1) + (i === CV.versions.length - 1 ? ' (latest)' : '') + '</option>').join('');
+    sel.value = String(Math.max(0, CV.cur));
+    sel.hidden = CV.versions.length < 2;
+}
+function cvSetTab(tab) {
+    CV.tab = tab;
+    qsa('[data-cv-tab]').forEach(b => { const on = b.dataset.cvTab === tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+    $('cv-frame').hidden = tab !== 'preview';
+    $('cv-code').hidden = tab !== 'code';
+    if (tab === 'preview') cvLoadPreview();
+}
+function cvLoadPreview() {
+    const v = CV.versions[CV.cur], f = $('cv-frame'); if (!f) return;
+    f.setAttribute('sandbox', 'allow-scripts allow-forms allow-modals allow-popups');
+    const code = v ? v.code : '';
+    if (f._code !== code) { f._code = code; f.srcdoc = code; }
+}
+function cvShowCode(code, plain) {
+    const el = qs('code', $('cv-code')); if (!el) return;
+    if (plain) el.textContent = code; else el.innerHTML = highlight(code, 'html');
+    if (CV.live && S.stick !== false) { const pre = $('cv-code'); pre.scrollTop = pre.scrollHeight; }
+}
+function cvShowVersion(i) {
+    if (!CV.versions.length) return;
+    CV.cur = Math.min(Math.max(0, i), CV.versions.length - 1);
+    const v = CV.versions[CV.cur];
+    $('cv-title').textContent = v.title || 'Web page';
+    cvShowCode(v.code, false);
+    cvRenderVersions();
+    if (CV.tab === 'preview') cvLoadPreview();
+}
+function cvOpenPanel() {
+    CV.open = true; $('canvas').hidden = false; cvShell(); hydrate($('canvas'));
+}
+function openCanvas(msgIdx, pi) {
+    CV.versions = cvVersions();
+    const i = CV.versions.findIndex(v => v.msg === msgIdx && v.pi === pi);
+    if (i < 0) return;
+    CV.live = false;
+    cvOpenPanel(); cvShowVersion(i); cvSetTab(CV.versions[i].closed ? 'preview' : 'code');
+}
+function closeCanvas() {
+    CV.open = false; CV.live = false; CV.full = false; CV.dismissed = !!S.busy;
+    $('canvas').hidden = true; $('canvas').classList.remove('full'); cvShell();
+    const f = $('cv-frame'); if (f) { f._code = null; f.srcdoc = ''; }
+}
+/* While a page is being written: open the panel (wide screens), show the code growing. */
+function canvasLive(pages) {
+    if (!pages || !pages.length) return;
+    const p = pages[pages.length - 1];
+    if (p.closed) return;
+    if (!CV.open) { if (!CV_WIDE() || CV.dismissed) return; CV.versions = cvVersions(); cvOpenPanel(); }
+    if (!CV.live) {
+        CV.live = true; CV.tab = 'code';
+        $('cv-title').textContent = p.title || 'Writing the page…';
+        $('cv-status').hidden = false; cvSetTab('code'); $('cv-ver').hidden = true;
+    }
+    if (p.code.length !== CV.liveShown) { CV.liveShown = p.code.length; cvShowCode(p.code, true); if (p.title) $('cv-title').textContent = p.title; }
+}
+/* After a turn finishes: switch to the newest page (this is how "make the header bigger" shows up). */
+function canvasAfterTurn() {
+    const wasLive = CV.live; CV.live = false; CV.liveShown = 0;
+    $('cv-status') && ($('cv-status').hidden = true);
+    if (!CV.open) return;
+    CV.versions = cvVersions();
+    if (!CV.versions.length) { if (wasLive) closeCanvas(); return; }
+    const last = CV.versions.length - 1;
+    if (wasLive || CV.cur !== last) { cvShowVersion(last); cvSetTab(CV.versions[last].closed ? 'preview' : 'code'); }
+    else cvRenderVersions();
+}
+function bindCanvas() {
+    $('cv-close').onclick = closeCanvas;
+    $('cv-ver').onchange = e => { cvShowVersion(+e.target.value); };
+    qsa('[data-cv-tab]').forEach(b => { b.onclick = () => cvSetTab(b.dataset.cvTab); });
+    $('cv-copy').onclick = async () => { const v = CV.versions[CV.cur]; if (!v) return; const ok = await copyText(v.code); toast(ok ? 'Code copied.' : 'Couldn’t copy.', ok ? 'ok' : 'err'); };
+    $('cv-dl').onclick = () => { const v = CV.versions[CV.cur]; if (v) downloadBlob(safeFile(v.title || 'wizard-ai-page') + '.html', v.code, 'text/html;charset=utf-8'); };
+    $('cv-reload').onclick = () => { const f = $('cv-frame'); f._code = null; f.srcdoc = ''; setTimeout(cvLoadPreview, 30); };
+    $('cv-full').onclick = () => { CV.full = !CV.full; $('canvas').classList.toggle('full', CV.full); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && CV.open && CV.full) { CV.full = false; $('canvas').classList.remove('full'); e.stopPropagation(); } }, true);
 }
 
 /* ============================================================
@@ -2073,6 +2203,7 @@ function bind() {
     $('title-btn').onclick = () => S.chat && renameChat(S.chat.chat_id);
     $('mode-btn').onclick = openModeMenu;
     $('model-btn').onclick = openModelMenu;
+    bindCanvas();
     $('preview-dl').onclick = () => downloadBlob('wizard-ai-page.' + (S.previewExt || 'html'), S.previewCode || '', 'text/html;charset=utf-8');
     $('preview-reload').onclick = () => { const f = $('preview-frame'), d = f.srcdoc; f.srcdoc = ''; setTimeout(() => { f.srcdoc = d || S.previewCode || ''; }, 30); };
     $('model-menu').addEventListener('click', e => { const b = e.target.closest('[data-model]'); if (b) setModel(b.dataset.model); });
