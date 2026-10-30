@@ -391,3 +391,22 @@ body.calm *, body.calm *::before, body.calm *::after { animation-duration: .001m
 @media print { #starfield, .ambient, .sidebar, .topbar, .composer-wrap, .actions-row, .jump { display: none !important; } body { overflow: visible; background: #fff; color: #000; } .shell { position: static; display: block; } .scroller { overflow: visible; } .md, .md * { color: #000 !important; } }
 
 .cont-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 4px 0 2px; font-size: 12.5px; color: var(--muted); } .cont-row .btn { border-color: var(--line-2); color: var(--gold-light); }
+
+/* memory */
+.mem-add { display: flex; gap: 8px; margin: 12px 0 8px; } .mem-add input, .mem-filter { flex: 1; min-width: 0; }
+.mem-filter { width: 100%; margin-bottom: 8px; }
+.mem-list { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.mem-item { display: flex; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.02); }
+.mem-item.pinned { border-color: var(--line-3); background: rgba(201,168,76,.07); }
+.mem-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; } .mem-text { font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.mem-meta { font-size: 11px; color: var(--muted); } .mem-src.ai { color: var(--violet-light); font-weight: 600; } .mem-src.user { color: var(--gold-light); font-weight: 600; }
+.mem-btns { display: flex; gap: 2px; flex: none; } .mem-btns .icon-btn { width: 30px; height: 30px; } .mem-btns .icon-btn.on { color: var(--gold-light); }
+.mem-edit { width: 100%; font-size: 14px; } .mem-empty { text-align: center; padding: 22px 8px; color: var(--muted); font-size: 13px; }
+.mem-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 6px; } .btn.danger { color: #ff8f8f; }
+.mem-chips { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; align-items: flex-start; }
+.mem-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; font-size: 12px; padding: 4px 6px 4px 10px; border-radius: 14px; background: rgba(201,168,76,.1); border: 1px solid var(--line-2); color: var(--silver-dim); }
+.mem-chip i { width: 13px; height: 13px; flex: none; color: var(--gold-light); } .mem-chip b { color: var(--gold-light); font-weight: 600; }
+.mem-chip button { flex: none; font-size: 11.5px; padding: 2px 9px; border-radius: 10px; border: 1px solid var(--line-2); color: var(--gold-light); } .mem-chip button:hover { background: rgba(201,168,76,.18); }
+
+.mem-add input, .mem-filter, .mem-edit { padding: 10px 14px; border-radius: 13px; border: 1px solid var(--line); background: rgba(0,0,0,.36); outline: 0; font-size: 14px; color: inherit; transition: border-color .2s, box-shadow .2s; }
+.mem-add input:focus, .mem-filter:focus, .mem-edit:focus { border-color: var(--line-3); box-shadow: 0 0 0 3px rgba(201,168,76,.08); }
