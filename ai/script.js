@@ -418,6 +418,8 @@ const ICONS = {
     alert: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
     clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
     wand: '<path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5"/>',
+    brain: '<path d="M9.5 2A2.5 2.5 0 0 0 7 4.5v0A2.5 2.5 0 0 0 4.5 7a3 3 0 0 0-.6 5.2A3 3 0 0 0 7 17a2.5 2.5 0 0 0 2.5 3 2.5 2.5 0 0 0 2.5-2.5v-14A2.5 2.5 0 0 0 9.5 2z"/><path d="M14.5 2A2.5 2.5 0 0 1 17 4.5 2.5 2.5 0 0 1 19.5 7a3 3 0 0 1 .6 5.2A3 3 0 0 1 17 17a2.5 2.5 0 0 1-2.5 3 2.5 2.5 0 0 1-2.5-2.5"/>',
+    pin: '<path d="M12 17v5"/><path d="M9 3h6l-1 7 3 3v2H7v-2l3-3z"/>',
     tool: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'
 };
 function icon(name) {
@@ -812,6 +814,15 @@ function toolChips(tools) {
     const names = Array.from(new Set(tools.map(t => String(t).replace(/_/g, ' ')))).slice(0, 5);
     return '<div class="tools-used">' + names.map(n => '<span class="tool-chip"><i data-icon="tool"></i>' + esc(n) + '</span>').join('') + '</div>';
 }
+function memChips(m, i) {
+    if (!Array.isArray(m) || !m.length) return '';
+    return '<div class="mem-chips">' + m.map((c, k) => {
+        if (!c || c.undone) return '';
+        const label = c.op === 'delete' ? 'Forgot' : c.op === 'update' ? 'Updated memory' : c.op === 'profile' || c.op === 'profile_add' ? 'Updated profile' : 'Remembered';
+        return '<span class="mem-chip"><i data-icon="check"></i><span><b>' + label + ':</b> ' + esc(String(c.text || '').slice(0, 90)) + '</span>' +
+            '<button type="button" data-act="mem-undo" data-k="' + k + '">Undo</button></span>';
+    }).join('') + '</div>';
+}
 function actBtn(act, ic, label) { return '<button type="button" class="act" data-act="' + act + '" aria-label="' + label + '" title="' + label + '"><i data-icon="' + ic + '"></i></button>'; }
 
 function messageHTML(m, i, isLast) {
@@ -828,7 +839,7 @@ function messageHTML(m, i, isLast) {
         '<div class="body"><div class="meta"><span class="who">' + esc(p ? p.name : 'Wizard.AI') + '</span><span class="mtag">' + esc(mode.name) + '</span>' + (m.model ? '<span class="mtag mmodel" title="Model that wrote this">' + esc(String(m.model).slice(0, 30)) + '</span>' : '') + '<time>' + esc(fmtDay(t)) + '</time></div>' +
         imgCard(m.image, m.prompt) +
         (m.text ? '<div class="content md">' + md(m.text) + '</div>' : '') +
-        toolChips(m.tools) +
+        toolChips(m.tools) + memChips(m.memory, i) +
         (m.truncated && isLast ? '<div class="cont-row"><span>This reply hit the length limit.</span><button type="button" class="btn ghost sm" data-act="continue"><i data-icon="play"></i>Continue generating</button></div>' : '') +
         '<div class="actions-row">' + actBtn('copy', 'copy', 'Copy') + (lastAssistant ? actBtn('regen', 'refresh', 'Regenerate') : '') + '</div></div></article>';
 }
@@ -1243,6 +1254,7 @@ async function send(text, opt) {
     if (images[0]) { aMsg.image = images[0].url; aMsg.prompt = images[0].prompt; }
     if (tools.length) aMsg.tools = tools;
     if (done.truncated) aMsg.truncated = true;
+    if (Array.isArray(done.memory) && done.memory.length) aMsg.memory = done.memory;
     chat.messages.push(aMsg);
     if (done.chat_name && !DEFAULT_TITLES.includes(done.chat_name)) chat.name = done.chat_name;
     chat.updated_at = new Date().toISOString();
@@ -1457,6 +1469,12 @@ async function onThreadClick(e) {
         downloadBlob('wizard-ai-code.' + ext, code ? code.textContent : '', 'text/plain;charset=utf-8');
     } else if (act === 'wrap') btn.closest('.codeblock').classList.toggle('wrap');
     else if (act === 'edit') startEdit(i);
+    else if (act === 'mem-undo' && m && Array.isArray(m.memory)) {
+        const k = +btn.dataset.k, ch = m.memory[k]; btn.disabled = true;
+        try { await api('/api/wizmem/undo', { method: 'POST', body: { change: ch } }); toast('Undone', 'ok', 1600); }
+        catch (err) { toast('That was already changed', 'warn', 2200); }
+        ch.undone = true; btn.closest('.mem-chip').remove(); MEM.loaded = false;
+    }
     else if (act === 'edit-cancel') renderThread(true);
     else if (act === 'edit-save') {
         const ta = qs('textarea', msgEl); const v = ta.value.trim(); if (!v) return;
@@ -1817,8 +1835,89 @@ function fillProfile(p) {
 }
 async function openProfile() {
     if (!S.user) return openAuth('login');
-    openModal('m-profile'); fillProfile(S.profile);
+    openModal('m-profile'); fillProfile(S.profile); showProfileTab('memory'); loadMemory();
     try { const r = await api('/api/profile'); S.profile = r.profile; fillProfile(S.profile); } catch (e) { toast(errMsg(e), 'err'); }
+}
+/* ---- memory (facts you and the AI keep about you) ---- */
+const MEM = { list: [], max: 200, loaded: false };
+function memAgo(iso) {
+    const t = Date.parse(iso); if (!t) return '';
+    const d = Math.max(0, (Date.now() - t) / 1000);
+    if (d < 90) return 'just now'; if (d < 3600) return Math.round(d / 60) + ' min ago';
+    if (d < 86400) return Math.round(d / 3600) + ' h ago'; if (d < 86400 * 30) return Math.round(d / 86400) + ' d ago';
+    return new Date(t).toLocaleDateString();
+}
+function renderMemory() {
+    const q = ($('mem-filter').value || '').toLowerCase().trim();
+    const rows = MEM.list.filter(m => !q || m.text.toLowerCase().includes(q));
+    $('mem-filter').hidden = MEM.list.length < 8;
+    $('mem-list').innerHTML = rows.length ? rows.map(m =>
+        '<li class="mem-item' + (m.pinned ? ' pinned' : '') + '" data-id="' + m.id + '">' +
+        '<div class="mem-main"><span class="mem-text">' + esc(m.text) + '</span>' +
+        '<span class="mem-meta"><b class="mem-src ' + m.source + '">' + (m.source === 'ai' ? 'Learned by AI' : 'Added by you') + '</b> · ' + esc(memAgo(m.updated_at)) + '</span></div>' +
+        '<div class="mem-btns"><button type="button" class="icon-btn' + (m.pinned ? ' on' : '') + '" data-mem="pin" aria-label="' + (m.pinned ? 'Unpin' : 'Pin to top') + '" title="' + (m.pinned ? 'Unpin' : 'Pin to top') + '"><i data-icon="pin"></i></button>' +
+        '<button type="button" class="icon-btn" data-mem="edit" aria-label="Edit" title="Edit"><i data-icon="edit"></i></button>' +
+        '<button type="button" class="icon-btn" data-mem="del" aria-label="Delete" title="Delete"><i data-icon="trash"></i></button></div></li>').join('')
+        : '<li class="mem-empty">' + (MEM.list.length ? 'No memories match.' : 'Nothing yet. Tell the AI about yourself in a chat, or add something above.') + '</li>';
+    $('mem-count').textContent = MEM.list.length + ' / ' + MEM.max;
+    $('mem-clear').hidden = !MEM.list.length;
+    hydrate($('mem-list'));
+}
+async function loadMemory() {
+    try {
+        const r = await api('/api/wizmem');
+        MEM.list = r.memories || []; MEM.max = r.max || 200; MEM.loaded = true;
+        $('mem-ai').checked = r.ai_can_save !== false; renderMemory();
+    } catch (e) { toast(errMsg(e), 'err'); }
+}
+function memEdit(li) {
+    const m = MEM.list.find(x => x.id === +li.dataset.id); if (!m) return;
+    const span = qs('.mem-text', li);
+    const inp = document.createElement('input'); inp.className = 'mem-edit'; inp.value = m.text; inp.maxLength = 300; inp.setAttribute('aria-label', 'Edit memory');
+    span.replaceWith(inp); inp.focus(); inp.select();
+    let done = false;
+    const finish = async save => {
+        if (done) return; done = true;
+        const v = inp.value.trim();
+        if (save && v && v !== m.text) {
+            try { const r = await api('/api/wizmem/update', { method: 'POST', body: { id: m.id, text: v } }); Object.assign(m, r.memory); }
+            catch (e) { toast(errMsg(e), 'err'); }
+        }
+        renderMemory();
+    };
+    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.stopPropagation(); finish(false); } };
+    inp.onblur = () => finish(true);
+}
+async function memClick(e) {
+    const b = e.target.closest('[data-mem]'); if (!b) return;
+    const li = b.closest('.mem-item'); const m = MEM.list.find(x => x.id === +li.dataset.id); if (!m) return;
+    try {
+        if (b.dataset.mem === 'edit') return memEdit(li);
+        if (b.dataset.mem === 'pin') { const r = await api('/api/wizmem/update', { method: 'POST', body: { id: m.id, pinned: !m.pinned } }); Object.assign(m, r.memory); MEM.list.sort((a, c) => (c.pinned - a.pinned) || (Date.parse(c.updated_at) - Date.parse(a.updated_at))); }
+        if (b.dataset.mem === 'del') { await api('/api/wizmem/delete', { method: 'POST', body: { id: m.id } }); MEM.list = MEM.list.filter(x => x !== m); }
+        renderMemory();
+    } catch (err) { toast(errMsg(err), 'err'); loadMemory(); }
+}
+async function memAdd(e) {
+    e.preventDefault();
+    const v = $('mem-new').value.trim(); if (!v) return;
+    try { await api('/api/wizmem/add', { method: 'POST', body: { text: v } }); $('mem-new').value = ''; await loadMemory(); }
+    catch (err) { toast(errMsg(err), 'err'); }
+}
+async function memClear() {
+    if (!window.confirm('Forget everything the AI remembers about you? This can’t be undone.')) return;
+    try { await api('/api/wizmem/clear', { method: 'POST', body: { confirm: true } }); MEM.list = []; renderMemory(); toast('Memory cleared', 'ok'); }
+    catch (err) { toast(errMsg(err), 'err'); }
+}
+async function memToggle() {
+    const on = $('mem-ai').checked;
+    try { await api('/api/wizmem/settings', { method: 'POST', body: { ai_can_save: on } }); toast(on ? 'The AI can remember things' : 'The AI will not save new memories', 'ok', 2200); }
+    catch (err) { $('mem-ai').checked = !on; toast(errMsg(err), 'err'); }
+}
+function showProfileTab(name) {
+    qsa('#profile-tabs .tab').forEach(x => x.classList.toggle('active', x.dataset.tab === name));
+    qsa('#m-profile .pane').forEach(p => p.classList.toggle('active', p.dataset.pane === name));
+    $('pf-save').hidden = name === 'memory';
 }
 async function saveProfile() {
     const v = id => $(id).value.trim();
@@ -2266,10 +2365,9 @@ function bind() {
     $('snack-undo').onclick = () => { const f = snackUndo; hideSnack(); if (f) f(); };
 
     // profile
-    qsa('#profile-tabs .tab').forEach(t => t.onclick = () => {
-        qsa('#profile-tabs .tab').forEach(x => x.classList.toggle('active', x === t));
-        qsa('#m-profile .pane').forEach(p => p.classList.toggle('active', p.dataset.pane === t.dataset.tab));
-    });
+    qsa('#profile-tabs .tab').forEach(t => t.onclick = () => showProfileTab(t.dataset.tab));
+    $('mem-list').addEventListener('click', memClick); $('mem-form').addEventListener('submit', memAdd);
+    $('mem-clear').onclick = memClear; $('mem-ai').onchange = memToggle; $('mem-filter').oninput = renderMemory;
     $('pf-save').onclick = saveProfile;
     // personalities
     qsa('#persona-tabs .tab').forEach(t => t.onclick = () => setPersonaTab(t.dataset.tab));
