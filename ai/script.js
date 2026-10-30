@@ -818,7 +818,7 @@ function memChips(m, i) {
     if (!Array.isArray(m) || !m.length) return '';
     return '<div class="mem-chips">' + m.map((c, k) => {
         if (!c || c.undone) return '';
-        const label = c.op === 'delete' ? 'Forgot' : c.op === 'update' ? 'Updated memory' : c.op === 'profile' || c.op === 'profile_add' ? 'Updated profile' : 'Remembered';
+        const label = c.label || (c.op === 'delete' ? 'Forgot' : c.op === 'update' ? 'Updated memory' : c.op === 'profile' || c.op === 'profile_add' ? 'Updated profile' : 'Remembered');
         return '<span class="mem-chip"><i data-icon="check"></i><span><b>' + label + ':</b> ' + esc(String(c.text || '').slice(0, 90)) + '</span>' +
             '<button type="button" data-act="mem-undo" data-k="' + k + '">Undo</button></span>';
     }).join('') + '</div>';
@@ -1471,7 +1471,7 @@ async function onThreadClick(e) {
     else if (act === 'edit') startEdit(i);
     else if (act === 'mem-undo' && m && Array.isArray(m.memory)) {
         const k = +btn.dataset.k, ch = m.memory[k]; btn.disabled = true;
-        try { await api('/api/wizmem/undo', { method: 'POST', body: { change: ch } }); toast('Undone', 'ok', 1600); }
+        try { await api(ch && ch.kind === 'eco' ? '/api/wizeco/undo' : '/api/wizmem/undo', { method: 'POST', body: { change: ch } }); toast('Undone', 'ok', 1600); }
         catch (err) { toast('That was already changed', 'warn', 2200); }
         ch.undone = true; btn.closest('.mem-chip').remove(); MEM.loaded = false;
     }
@@ -2156,6 +2156,7 @@ function palActions() {
         { label: 'Image studio', icon: 'image', kw: 'image generate picture', run: () => openModal('m-image') },
         { label: 'Python sandbox', icon: 'terminal', kw: 'code python run sandbox', run: () => openModal('m-code') },
         { label: 'Personalities', icon: 'users', kw: 'personality persona character', run: () => openPersonas() },
+        { label: 'Morning brief', icon: 'clock', kw: 'brief today my day calendar mail weather', run: () => { if (!S.user) return openAuth('login'); send('Give me my morning brief'); } },
         { label: 'Profile', icon: 'user', kw: 'profile about me', run: openProfile },
         { label: 'Usage & stats', icon: 'bar-chart', kw: 'stats usage', run: openStats },
         { label: 'API keys', icon: 'key', kw: 'api keys developer', run: openKeys },
