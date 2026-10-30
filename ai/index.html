@@ -44,7 +44,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
 <canvas id="starfield" aria-hidden="true"></canvas>
@@ -259,17 +259,25 @@
 <!-- Profile -->
 <div class="modal" id="m-profile" hidden role="dialog" aria-modal="true" aria-labelledby="profile-title">
     <div class="card lg">
-        <div class="card-head"><h2 id="profile-title">Your profile</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
+        <div class="card-head"><h2 id="profile-title">Profile &amp; memory</h2><button class="icon-btn close" data-close aria-label="Close"><i data-icon="x"></i></button></div>
         <p class="muted small">Everything here is optional. Whatever you fill in is shared with the AI so it can personalize its answers — leave out anything you’d rather not share.</p>
         <div class="tabs" role="tablist" id="profile-tabs">
-            <button class="tab active" role="tab" data-tab="basic">Basic</button>
+            <button class="tab active" role="tab" data-tab="memory">Memory</button>
+            <button class="tab" role="tab" data-tab="basic">Basic</button>
             <button class="tab" role="tab" data-tab="professional">Professional</button>
             <button class="tab" role="tab" data-tab="interests">Interests</button>
             <button class="tab" role="tab" data-tab="ai">AI preferences</button>
             <button class="tab" role="tab" data-tab="goals">Goals</button>
         </div>
         <div class="tab-body">
-            <div class="pane active" data-pane="basic">
+            <div class="pane active" data-pane="memory">
+                <label class="switch-row"><input type="checkbox" id="mem-ai"><span class="sw"></span><span>Let the AI remember things as we chat<small class="muted">It saves short facts you share (and tells you each time, with Undo). You can edit or delete anything below.</small></span></label>
+                <form class="mem-add" id="mem-form" autocomplete="off"><input id="mem-new" maxlength="300" placeholder="Add something you want me to remember…" aria-label="New memory"><button class="btn primary sm" type="submit">Add</button></form>
+                <input id="mem-filter" class="mem-filter" placeholder="Search memories…" aria-label="Search memories" hidden>
+                <ul class="mem-list" id="mem-list" aria-live="polite"></ul>
+                <div class="mem-foot"><span class="muted small" id="mem-count"></span><button type="button" class="btn ghost sm danger" id="mem-clear">Forget everything</button></div>
+            </div>
+            <div class="pane" data-pane="basic">
                 <div class="row2"><div class="field"><label for="pf-full">Full name</label><input id="pf-full"></div><div class="field"><label for="pf-display">What should I call you?</label><input id="pf-display"></div></div>
                 <div class="row2"><div class="field"><label for="pf-birthday">Birthday</label><input id="pf-birthday" type="date"></div>
                     <div class="field"><label for="pf-gender">Gender</label><select id="pf-gender"><option value="">Prefer not to say</option><option value="male">Male</option><option value="female">Female</option><option value="non-binary">Non-binary</option><option value="other">Other</option></select></div></div>
@@ -465,6 +473,6 @@
 <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
 <div id="snack" class="snack" role="status" hidden><span id="snack-text"></span><button id="snack-undo">Undo</button></div>
 
-<script src="script.js?v=17"></script>
+<script src="script.js?v=21"></script>
 </body>
 </html>
