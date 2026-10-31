@@ -22,13 +22,14 @@
             --ink-4:        #1a1635;
             --gold:         #c9a84c;
             --gold-light:   #e8c97a;
-            --gold-dim:     rgba(201,168,76,0.15);
+            --gold-dim:     rgba(201,168,76,0.12);
             --gold-glow:    rgba(201,168,76,0.2);
             --violet:       #7c5cbf;
+            --violet-dim:   rgba(124,92,191,0.18);
             --silver:       #d4d0e8;
-            --silver-dim:   rgba(212,208,232,0.6);
-            --muted:        rgba(212,208,232,0.35);
-            --border:       rgba(201,168,76,0.18);
+            --silver-dim:   rgba(212,208,232,0.62);
+            --muted:        rgba(212,208,232,0.38);
+            --border:       rgba(201,168,76,0.16);
             --border-strong:rgba(201,168,76,0.45);
             --success:      #4ade80;
             --danger:       #f87171;
@@ -36,438 +37,271 @@
         }
 
         html, body { height: 100%; overflow: hidden; }
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--ink);
-            color: var(--silver);
-        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--ink); color: var(--silver); }
+        button { font-family: inherit; color: inherit; }
+        :focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+        kbd { font-family: inherit; font-size: 10px; padding: 1px 6px; border-radius: 5px; border: 1px solid var(--border-strong); color: var(--gold-light); background: var(--gold-dim); }
 
         #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-        .amb {
-            position: fixed; border-radius: 50%;
-            filter: blur(130px); pointer-events: none; z-index: 0;
-            opacity: 0.28; animation: drift 20s ease-in-out infinite alternate;
-        }
+        .amb { position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; opacity: 0.28; animation: drift 20s ease-in-out infinite alternate; }
         .amb-1 { width: 600px; height: 600px; top: -180px; left: -180px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
         .amb-2 { width: 450px; height: 450px; bottom: -100px; right: -100px; background: radial-gradient(circle, #5c3a1e, transparent 70%); animation-delay: -10s; }
         @keyframes drift { from { transform: translate(0,0); } to { transform: translate(35px,25px); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pop-in { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-        .notes-shell { position: relative; z-index: 10; display: flex; height: 100vh; }
+        .shell { position: relative; z-index: 10; display: flex; height: 100vh; height: 100dvh; }
 
-        /* Sidebar */
-        .sidebar {
-            width: 320px; flex-shrink: 0;
-            background: rgba(13,10,26,0.94);
-            border-right: 1px solid var(--border);
-            display: flex; flex-direction: column;
-            backdrop-filter: blur(20px);
-            overflow-y: auto;
+        /* ── nav (left) ── */
+        .nav {
+            width: 236px; flex-shrink: 0; display: flex; flex-direction: column; overflow-y: auto;
+            background: rgba(13,10,26,0.94); border-right: 1px solid var(--border); backdrop-filter: blur(20px);
+            padding: 20px 14px 14px;
         }
-
-        .sidebar-head { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
-        .logo {
-            display: flex; align-items: center; gap: 12px;
-            text-decoration: none; margin-bottom: 24px;
-        }
-        .logo-glyph { font-size: 32px; filter: drop-shadow(0 0 10px rgba(201,168,76,0.4)); animation: lev 5s ease-in-out infinite; }
-        @keyframes lev { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        .logo-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 22px; font-weight: 600;
-            background: linear-gradient(135deg, var(--gold-light), var(--gold));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .user-card {
-            background: var(--gold-dim);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 12px 14px;
-            margin-bottom: 20px;
-        }
-        .user-email { font-size: 12px; color: var(--silver-dim); word-break: break-all; }
-
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin: 2px 6px 18px; }
+        .logo-glyph { font-size: 28px; filter: drop-shadow(0 0 10px rgba(201,168,76,0.4)); }
+        .logo-name { font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 600; background: linear-gradient(135deg, var(--gold-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .user-email { font-size: 11px; color: var(--muted); word-break: break-all; margin: 0 8px 14px; }
         .new-note-btn {
-            width: 100%;
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            border: none; border-radius: 100px;
-            padding: 12px;
-            font-size: 14px; font-weight: 600;
-            color: var(--ink);
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            margin-bottom: 24px;
-            transition: all 0.2s;
+            width: 100%; background: linear-gradient(135deg, var(--gold), #a8751e); border: none; border-radius: 100px; padding: 11px;
+            font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer; margin-bottom: 18px; transition: all 0.2s;
         }
-        .new-note-btn:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 4px 18px rgba(201,168,76,0.3); }
-
-        .folder-section { padding: 0 16px 16px; }
-        .folder-label {
-            font-size: 10px; font-weight: 500; letter-spacing: 0.2em;
-            text-transform: uppercase; color: var(--muted);
-            padding: 10px 8px 6px;
-        }
+        .new-note-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 18px rgba(201,168,76,0.3); }
+        .nav-label { font-size: 10px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); padding: 10px 10px 6px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-label button { background: none; border: none; font-size: 10px; color: var(--gold); cursor: pointer; letter-spacing: 0.05em; text-transform: none; }
         .folder-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 12px; border-radius: 12px;
-            cursor: pointer; margin-bottom: 2px;
-            border: 1px solid transparent;
-            transition: all 0.2s;
+            display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: 1px solid transparent;
+            padding: 9px 10px; border-radius: 12px; cursor: pointer; margin-bottom: 2px; font-size: 13px; transition: all 0.15s;
         }
         .folder-item:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
-        .folder-item.active {
-            background: var(--gold-dim); border-color: var(--border-strong);
-        }
-        .folder-icon { font-size: 16px; width: 24px; }
-        .folder-name { flex: 1; font-size: 13px; }
-        .folder-count {
-            font-size: 10px;
-            background: var(--gold-dim);
-            border: 1px solid rgba(201,168,76,0.2);
-            padding: 2px 8px; border-radius: 100px;
-        }
+        .folder-item.active { background: var(--gold-dim); border-color: var(--border-strong); }
+        .folder-icon { width: 20px; text-align: center; }
+        .folder-name { flex: 1; }
+        .folder-count { font-size: 10px; color: var(--silver-dim); background: rgba(255,255,255,0.06); padding: 1px 8px; border-radius: 100px; }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 6px 6px; }
+        .tag { background: rgba(201,168,76,0.08); border: 1px solid var(--border); border-radius: 100px; padding: 4px 10px; font-size: 11px; cursor: pointer; color: var(--silver-dim); transition: all 0.15s; }
+        .tag:hover { background: rgba(201,168,76,0.18); }
+        .tag.active { background: linear-gradient(135deg, var(--gold), #a8751e); color: var(--ink); border-color: transparent; font-weight: 600; }
+        .tag small { opacity: 0.6; margin-left: 3px; }
+        .nav-empty { color: var(--muted); font-size: 11px; padding: 2px 10px; }
+        .nav-foot { margin-top: auto; padding-top: 14px; display: flex; flex-direction: column; gap: 2px; }
+        .side-link { background: none; border: none; text-align: left; padding: 7px 10px; border-radius: 8px; color: var(--silver-dim); font-size: 12px; cursor: pointer; }
+        .side-link:hover { color: var(--gold); background: var(--gold-dim); }
+        .back-link { color: var(--muted); text-decoration: none; font-size: 12px; padding: 7px 10px; }
+        .back-link:hover { color: var(--gold); }
 
-        .notes-list {
-            flex: 1; overflow-y: auto;
-            padding: 8px 12px;
-            max-height: calc(100vh - 350px);
-        }
-        .note-item {
-            padding: 14px;
-            border-radius: 14px;
-            cursor: pointer;
-            margin-bottom: 6px;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-        }
+        /* ── list pane ── */
+        .listpane { width: 330px; flex-shrink: 0; display: flex; flex-direction: column; background: rgba(10,8,22,0.8); border-right: 1px solid var(--border); min-width: 0; }
+        .list-head { padding: 16px 14px 10px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border); }
+        .list-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; display: flex; align-items: baseline; justify-content: space-between; }
+        .list-title small { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 400; color: var(--muted); }
+        .search-box { position: relative; }
+        .search-box input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 100px; padding: 9px 34px 9px 16px; font-size: 13px; color: var(--silver); outline: none; font-family: inherit; }
+        .search-box input:focus { border-color: var(--border-strong); }
+        .search-box input::placeholder { color: var(--muted); }
+        .search-box button { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px 6px; display: none; }
+        .search-box.has-text button { display: block; }
+        .sort-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); }
+        .sort-row select { background: transparent; border: none; color: var(--silver-dim); font-size: 11px; font-family: inherit; cursor: pointer; outline: none; }
+        .sort-row select option { background: #13102a; }
+        .notes-list { flex: 1; overflow-y: auto; padding: 8px 10px 20px; }
+        .note-item { padding: 12px 12px 10px; border-radius: 14px; cursor: pointer; margin-bottom: 4px; border: 1px solid transparent; transition: all 0.15s; position: relative; }
         .note-item:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
-        .note-item.active {
-            background: var(--gold-dim);
-            border-color: var(--border-strong);
-        }
-        .shared-badge {
-            font-size: 10px;
-            color: var(--violet);
-            margin-left: 8px;
-        }
-        .note-title {
-            font-size: 14px; font-weight: 600;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .note-preview {
-            font-size: 11px; color: var(--silver-dim);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .note-date {
-            font-size: 10px; color: var(--muted);
-            margin-top: 6px;
-        }
-        .note-tags {
-            display: flex; gap: 4px; flex-wrap: wrap;
-            margin-top: 6px;
-        }
-        .note-tag {
-            background: rgba(201,168,76,0.1);
-            border-radius: 100px;
-            padding: 2px 8px;
-            font-size: 9px;
-            color: var(--gold-light);
-        }
+        .note-item.active { background: var(--gold-dim); border-color: var(--border-strong); }
+        .note-item.dirty::after { content: ''; position: absolute; right: 12px; bottom: 12px; width: 6px; height: 6px; border-radius: 50%; background: var(--warning); }
+        .note-top { display: flex; align-items: center; gap: 6px; }
+        .note-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+        .note-title.untitled { color: var(--muted); font-weight: 400; font-style: italic; }
+        .star-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--muted); padding: 0 2px; opacity: 0; transition: opacity 0.15s; }
+        .note-item:hover .star-btn, .star-btn.on { opacity: 1; }
+        .star-btn.on { color: var(--gold); }
+        .note-preview { font-size: 12px; color: var(--silver-dim); margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; line-height: 1.4; }
+        .note-meta { display: flex; align-items: center; gap: 8px; margin-top: 7px; font-size: 10px; color: var(--muted); flex-wrap: wrap; }
+        .note-tag { background: rgba(201,168,76,0.1); border-radius: 100px; padding: 1px 7px; font-size: 10px; color: var(--gold-light); }
+        .badge { display: inline-block; font-size: 10px; padding: 1px 8px; border-radius: 100px; }
+        .badge.edit { background: rgba(74,222,128,0.14); color: var(--success); }
+        .badge.view { background: rgba(201,168,76,0.14); color: var(--gold); }
+        .badge.shared { background: var(--violet-dim); color: #b9a4ee; }
+        mark { background: rgba(232,201,122,0.3); color: var(--gold-light); border-radius: 3px; padding: 0 1px; }
+        .list-empty { text-align: center; padding: 50px 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .list-empty .glyph { font-size: 34px; display: block; margin-bottom: 8px; }
+        .skeleton { height: 78px; border-radius: 14px; margin: 0 2px 6px; background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.07), rgba(255,255,255,0.03)); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
+        @keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 
-        .tags-section {
-            padding: 16px;
-            border-top: 1px solid var(--border);
-            margin-top: auto;
-        }
-        .tag-list {
-            display: flex; flex-wrap: wrap; gap: 8px;
-            margin-top: 10px;
-        }
-        .tag {
-            background: rgba(201,168,76,0.1);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 5px 12px;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .tag:hover { background: rgba(201,168,76,0.2); }
-        .tag.active {
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            color: var(--ink);
-            border-color: transparent;
-        }
+        /* ── editor pane ── */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; position: relative; }
+        .empty-state { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; color: var(--muted); padding: 30px; }
+        .empty-state .glyph { font-size: 56px; filter: drop-shadow(0 0 16px rgba(201,168,76,0.3)); }
+        .empty-state h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; color: var(--silver); font-weight: 400; }
+        .editor { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        body.no-note .editor { display: none; }
+        body.no-note .empty-state { display: flex; }
 
-        /* Main Editor */
-        .main {
-            flex: 1; display: flex; flex-direction: column;
-            overflow: hidden; min-width: 0;
-        }
-        .editor-toolbar {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex; gap: 16px;
-            align-items: center;
-            flex-wrap: wrap;
-            background: rgba(13,10,26,0.7);
-            backdrop-filter: blur(12px);
-        }
-        .editor-title-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 28px;
-            font-weight: 600;
-            color: var(--silver);
-            outline: none;
-            padding: 8px 0;
-        }
-        .editor-title-input::placeholder { color: var(--muted); }
-        .editor-actions {
-            display: flex; gap: 10px;
-        }
-        .icon-btn {
-            background: rgba(255,255,255,0.06);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 8px 14px;
-            cursor: pointer;
-            font-size: 14px;
-            color: var(--silver-dim);
-            transition: all 0.2s;
-        }
+        .editor-top { padding: 12px 22px 0; display: flex; align-items: center; gap: 10px; }
+        .back-btn, .menu-btn { display: none; }
+        .icon-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 7px 12px; cursor: pointer; font-size: 14px; color: var(--silver-dim); transition: all 0.15s; line-height: 1; min-width: 36px; }
         .icon-btn:hover { background: var(--gold-dim); border-color: var(--border-strong); color: var(--gold); }
-        .delete-btn:hover { background: rgba(248,113,113,0.15); color: var(--danger); border-color: var(--danger); }
-        .favorite-btn.active { color: var(--gold); }
-        .shared-indicator {
-            background: var(--violet-dim);
-            border-radius: 100px;
-            padding: 4px 12px;
-            font-size: 11px;
-            color: var(--violet);
-        }
+        .icon-btn.active { color: var(--gold); border-color: var(--border-strong); background: var(--gold-dim); }
+        .icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .title-input { flex: 1; min-width: 0; background: transparent; border: none; font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 600; color: var(--silver); outline: none; padding: 6px 0; }
+        .title-input::placeholder { color: var(--muted); }
+        .editor-actions { display: flex; gap: 8px; align-items: center; }
+        .menu-wrap { position: relative; }
+        .dropdown { display: none; position: absolute; right: 0; top: calc(100% + 6px); min-width: 210px; background: linear-gradient(160deg, var(--ink-3), var(--ink-2)); border: 1px solid var(--border-strong); border-radius: 14px; padding: 6px; z-index: 50; box-shadow: 0 24px 60px rgba(0,0,0,0.6); animation: pop-in 0.15s ease; }
+        .dropdown.show { display: block; }
+        .dropdown button { display: flex; gap: 10px; width: 100%; text-align: left; background: none; border: none; padding: 9px 12px; border-radius: 9px; cursor: pointer; font-size: 13px; color: var(--silver); }
+        .dropdown button:hover { background: var(--gold-dim); }
+        .dropdown button.danger { color: var(--danger); }
+        .dropdown hr { border: none; border-top: 1px solid var(--border); margin: 4px 0; }
 
-        .editor-body {
-            flex: 1;
-            padding: 28px 32px;
-            overflow-y: auto;
-        }
-        .editor-content {
-            width: 100%;
-            min-height: 100%;
-            background: transparent;
-            border: none;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 15px;
-            line-height: 1.75;
-            color: var(--silver-dim);
-            resize: none;
-            outline: none;
-        }
-        .editor-content::placeholder { color: var(--muted); }
-        .editor-content:read-only {
-            opacity: 0.7;
-            cursor: default;
-        }
+        .banner { margin: 8px 22px 0; padding: 8px 14px; background: var(--violet-dim); border-radius: 12px; font-size: 12px; color: #c9b8f5; display: none; }
+        .banner b { color: var(--silver); font-weight: 500; }
 
-        /* AI Panel */
-        .ai-panel {
-            border-top: 1px solid var(--border);
-            padding: 16px 24px;
-            background: rgba(13,10,26,0.7);
-            backdrop-filter: blur(12px);
-        }
-        .ai-panel-header {
-            display: flex; align-items: center; gap: 8px;
-            margin-bottom: 12px;
-        }
-        .ai-panel-header span { font-size: 12px; color: var(--gold); }
-        .ai-input-group {
-            display: flex; gap: 12px;
-        }
-        .ai-prompt {
-            flex: 1;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 10px 18px;
-            color: var(--silver);
-            font-size: 13px;
-            outline: none;
-        }
-        .ai-prompt:focus { border-color: var(--border-strong); }
-        .ai-action-btn {
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            border: none;
-            border-radius: 100px;
-            padding: 10px 24px;
-            font-size: 13px; font-weight: 600;
-            color: var(--ink);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .ai-action-btn:hover { opacity: 0.88; transform: translateY(-1px); }
-        .tag-input-group {
-            display: flex; gap: 10px; margin-top: 14px;
-        }
-        .tag-input {
-            flex: 1;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 8px 16px;
-            font-size: 12px;
-            color: var(--silver);
-            outline: none;
-        }
-        .add-tag-btn {
-            background: var(--gold-dim);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 8px 18px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .add-tag-btn:hover { background: rgba(201,168,76,0.25); }
-        .ai-response {
-            margin-top: 14px;
-            padding: 14px;
-            background: rgba(201,168,76,0.05);
-            border-radius: 14px;
-            font-size: 13px;
-            color: var(--silver-dim);
-            display: none;
-        }
-        .apply-suggestion-btn {
-            background: var(--gold-dim);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 6px 14px;
-            font-size: 11px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.2s;
-        }
-        .apply-suggestion-btn:hover { background: rgba(201,168,76,0.25); }
+        .tags-row { padding: 4px 22px 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 34px; }
+        .chip { display: inline-flex; align-items: center; gap: 4px; background: rgba(201,168,76,0.1); border: 1px solid var(--border); border-radius: 100px; padding: 3px 4px 3px 10px; font-size: 12px; color: var(--gold-light); }
+        .chip button { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0 6px; border-radius: 50%; }
+        .chip button:hover { color: var(--danger); }
+        .tag-input { background: transparent; border: 1px dashed var(--border); border-radius: 100px; padding: 3px 12px; font-size: 12px; color: var(--silver); outline: none; width: 110px; font-family: inherit; }
+        .tag-input:focus { border-color: var(--border-strong); width: 150px; }
+        .tag-input::placeholder { color: var(--muted); }
 
-        /* Modals */
-        .modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(5,3,14,0.96);
-            backdrop-filter: blur(20px);
-            z-index: 10000;
-            align-items: center; justify-content: center;
-        }
-        .modal-overlay.show { display: flex; }
-        .modal-box {
-            background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
-            border: 1px solid var(--border-strong);
-            border-radius: 28px;
-            padding: 32px;
-            width: 420px;
-            max-width: 90vw;
-            animation: modal-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        @keyframes modal-in {
-            from { opacity: 0; transform: scale(0.9) translateY(16px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .modal-box h3 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 24px;
-            color: var(--gold);
-            margin-bottom: 20px;
-        }
-        .modal-box input, .modal-box textarea, .modal-box select {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: var(--silver);
-            margin-bottom: 16px;
-            font-family: inherit;
-            font-size: 14px;
-            outline: none;
-        }
-        .modal-box input:focus, .modal-box textarea:focus, .modal-box select:focus {
-            border-color: var(--border-strong);
-        }
-        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
-        .modal-buttons button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 100px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-        .modal-confirm {
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            border: none;
-            color: var(--ink);
-        }
-        .modal-cancel {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            color: var(--silver-dim);
-        }
-        .modal-cancel:hover { background: rgba(255,255,255,0.1); }
+        .format-bar { padding: 6px 22px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; background: rgba(13,10,26,0.55); }
+        .fmt { background: none; border: 1px solid transparent; border-radius: 8px; padding: 5px 9px; cursor: pointer; font-size: 13px; color: var(--silver-dim); min-width: 30px; }
+        .fmt:hover { background: var(--gold-dim); border-color: var(--border); color: var(--gold); }
+        .fmt:disabled { opacity: 0.3; cursor: not-allowed; }
+        .fmt-sep { width: 1px; height: 18px; background: var(--border); margin: 0 6px; }
+        .mode-toggle { margin-left: auto; display: flex; border: 1px solid var(--border); border-radius: 100px; overflow: hidden; }
+        .mode-toggle button { background: none; border: none; padding: 4px 14px; font-size: 12px; cursor: pointer; color: var(--silver-dim); }
+        .mode-toggle button.active { background: linear-gradient(135deg, var(--gold), #a8751e); color: var(--ink); font-weight: 600; }
 
-        .shared-item {
-            background: rgba(255,255,255,0.03);
-            border-radius: 16px;
-            padding: 16px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .shared-item:hover { background: rgba(255,255,255,0.06); transform: translateX(4px); }
-        .permission-badge {
-            display: inline-block;
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 100px;
-            margin-left: 8px;
-        }
-        .permission-edit { background: rgba(74,222,128,0.15); color: var(--success); }
-        .permission-view { background: rgba(201,168,76,0.15); color: var(--gold); }
+        .panes { flex: 1; display: flex; min-height: 0; }
+        .pane { flex: 1; min-width: 0; overflow-y: auto; padding: 24px 28px; }
+        .pane + .pane { border-left: 1px solid var(--border); }
+        body[data-mode="edit"] #preview-pane, body[data-mode="preview"] #edit-pane { display: none; }
+        #note-content { width: 100%; min-height: 100%; height: 100%; display: block; background: transparent; border: none; font-family: 'DM Sans', sans-serif; font-size: 15px; line-height: 1.75; color: var(--silver); resize: none; outline: none; }
+        #note-content::placeholder { color: var(--muted); }
+        #note-content:read-only { opacity: 0.75; cursor: default; }
+        #edit-pane { padding: 0; }
+        #note-content { padding: 24px 28px; }
 
-        .toast {
-            position: fixed; bottom: 30px; left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            color: var(--ink);
-            padding: 12px 28px;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
-            z-index: 10001;
-            transition: transform 0.3s;
-            white-space: nowrap;
-        }
-        .toast.show { transform: translateX(-50%) translateY(0); }
-        .toast.error { background: linear-gradient(135deg, var(--danger), #b44); color: white; }
+        /* rendered markdown */
+        .md { font-size: 15px; line-height: 1.75; color: var(--silver); word-wrap: break-word; }
+        .md > :first-child { margin-top: 0; }
+        .md h1, .md h2, .md h3, .md h4, .md h5, .md h6 { font-family: 'Cormorant Garamond', serif; font-weight: 600; margin: 1.3em 0 0.4em; line-height: 1.2; color: var(--gold-light); }
+        .md h1 { font-size: 2em; } .md h2 { font-size: 1.6em; } .md h3 { font-size: 1.3em; } .md h4, .md h5, .md h6 { font-size: 1.1em; }
+        .md p { margin: 0.7em 0; }
+        .md ul, .md ol { margin: 0.6em 0 0.6em 1.4em; }
+        .md li { margin: 0.2em 0; }
+        .md li.task { list-style: none; margin-left: -1.2em; }
+        .md li.task input { margin-right: 8px; accent-color: var(--gold); width: 15px; height: 15px; vertical-align: -2px; cursor: pointer; }
+        .md li.task.done > span { color: var(--muted); text-decoration: line-through; }
+        .md blockquote { border-left: 3px solid var(--gold); padding: 2px 16px; margin: 0.8em 0; color: var(--silver-dim); background: rgba(201,168,76,0.05); border-radius: 0 10px 10px 0; }
+        .md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.88em; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px; }
+        .md pre { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; overflow-x: auto; margin: 0.9em 0; }
+        .md pre code { background: none; padding: 0; font-size: 13px; line-height: 1.55; }
+        .md a { color: var(--gold-light); text-underline-offset: 3px; }
+        .md hr { border: none; border-top: 1px solid var(--border-strong); margin: 1.4em 0; }
+        .md del { color: var(--muted); }
+        .md .empty { color: var(--muted); font-style: italic; }
 
-        ::-webkit-scrollbar { width: 5px; }
+        /* AI panel */
+        .ai-panel { border-top: 1px solid var(--border); background: rgba(13,10,26,0.78); backdrop-filter: blur(12px); }
+        .ai-head { display: flex; align-items: center; gap: 8px; padding: 8px 22px; cursor: pointer; font-size: 12px; color: var(--gold); user-select: none; }
+        .ai-head .scope { color: var(--muted); margin-left: auto; font-size: 11px; }
+        .ai-head .caret { transition: transform 0.2s; color: var(--muted); }
+        .ai-panel.open .ai-head .caret { transform: rotate(180deg); }
+        .ai-body { display: none; padding: 0 22px 14px; }
+        .ai-panel.open .ai-body { display: block; }
+        .ai-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .ai-chip { background: var(--gold-dim); border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; font-size: 12px; cursor: pointer; color: var(--silver); transition: all 0.15s; }
+        .ai-chip:hover:not(:disabled) { border-color: var(--border-strong); color: var(--gold-light); }
+        .ai-chip:disabled { opacity: 0.45; cursor: wait; }
+        .ai-row { display: flex; gap: 10px; }
+        .ai-row input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 100px; padding: 9px 16px; color: var(--silver); font-size: 13px; outline: none; font-family: inherit; }
+        .ai-row input:focus { border-color: var(--border-strong); }
+        .ai-go { background: linear-gradient(135deg, var(--gold), #a8751e); border: none; border-radius: 100px; padding: 9px 22px; font-size: 13px; font-weight: 600; color: var(--ink); cursor: pointer; }
+        .ai-go:disabled { opacity: 0.5; cursor: wait; }
+        .ai-result { display: none; margin-top: 12px; border: 1px solid var(--border-strong); border-radius: 16px; background: rgba(201,168,76,0.05); overflow: hidden; animation: pop-in 0.2s ease; }
+        .ai-result.show { display: block; }
+        .ai-result-head { padding: 8px 14px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+        .ai-result-body { padding: 12px 14px; max-height: 190px; overflow-y: auto; font-size: 13px; }
+        .ai-result-actions { display: flex; gap: 8px; padding: 8px 12px 12px; flex-wrap: wrap; }
+        .ai-result-actions button { background: var(--gold-dim); border: 1px solid var(--border); border-radius: 100px; padding: 6px 14px; font-size: 12px; cursor: pointer; color: var(--silver); }
+        .ai-result-actions button.primary { background: linear-gradient(135deg, var(--gold), #a8751e); color: var(--ink); font-weight: 600; border-color: transparent; }
+        .ai-result-actions button:hover { border-color: var(--border-strong); }
+        .spinner { width: 16px; height: 16px; border: 2px solid rgba(201,168,76,0.25); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: -3px; margin-right: 8px; }
+
+        .status-bar { display: flex; gap: 14px; align-items: center; padding: 5px 22px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); background: rgba(8,6,18,0.7); flex-wrap: wrap; }
+        .status-bar .save { margin-left: auto; }
+        .save.saving { color: var(--gold); } .save.saved { color: var(--success); } .save.error { color: var(--danger); } .save.dirty { color: var(--warning); }
+
+        /* modals */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(5,3,14,0.9); backdrop-filter: blur(16px); z-index: 10000; align-items: center; justify-content: center; padding: 16px; }
+        .modal-overlay.show { display: flex; animation: fade-in 0.15s ease; }
+        .modal-box { background: linear-gradient(160deg, var(--ink-3), var(--ink-2)); border: 1px solid var(--border-strong); border-radius: 26px; padding: 30px; width: 440px; max-width: 100%; max-height: 92vh; overflow-y: auto; animation: pop-in 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+        .modal-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 26px; color: var(--gold); margin-bottom: 6px; font-weight: 600; }
+        .modal-box p.sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+        .modal-box input[type=email], .modal-box input[type=text], .modal-box select { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px; padding: 11px 15px; color: var(--silver); margin-bottom: 12px; font-family: inherit; font-size: 14px; outline: none; }
+        .modal-box select option { background: #13102a; }
+        .modal-box input:focus, .modal-box select:focus { border-color: var(--border-strong); }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 14px; }
+        .modal-buttons button { flex: 1; padding: 11px; border-radius: 100px; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .modal-confirm { background: linear-gradient(135deg, var(--gold), #a8751e); border: none; color: var(--ink) !important; }
+        .modal-confirm:disabled { opacity: 0.5; }
+        .modal-cancel { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--silver-dim); }
+        .error-msg { color: var(--danger); font-size: 12px; margin: -4px 0 10px; display: none; }
+        .people { margin: 18px 0 4px; border-top: 1px solid var(--border); padding-top: 12px; }
+        .people h4 { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 8px; }
+        .person { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
+        .person span { flex: 1; word-break: break-all; }
+        .person select { width: auto; margin: 0; padding: 5px 8px; font-size: 12px; border-radius: 8px; }
+        .person button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 2px 8px; border-radius: 6px; }
+        .person button:hover { color: var(--danger); background: rgba(248,113,113,0.1); }
+        .help-grid { display: grid; grid-template-columns: auto 1fr; gap: 9px 18px; font-size: 13px; color: var(--silver-dim); margin-top: 8px; }
+
+        #toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(120px); background: #1d1838; border: 1px solid var(--border-strong); color: var(--silver); padding: 10px 20px; border-radius: 100px; font-size: 13px; z-index: 10001; transition: transform 0.3s; display: flex; gap: 14px; align-items: center; max-width: 92vw; }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+        #toast.err { border-color: var(--danger); color: #ffb3b3; }
+        #toast button { display: none; background: none; border: none; color: var(--gold-light); font-weight: 600; cursor: pointer; font-size: 13px; }
+        #toast.has-undo button { display: inline; }
+        .drop-veil { display: none; position: fixed; inset: 0; z-index: 9000; background: rgba(8,6,18,0.85); border: 3px dashed var(--gold); align-items: center; justify-content: center; font-size: 22px; color: var(--gold-light); font-family: 'Cormorant Garamond', serif; }
+        .drop-veil.show { display: flex; }
+        .scrim { display: none; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--gold), #a8751e); border-radius: 100px; }
+        ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.25); border-radius: 100px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.45); }
 
-        @media (max-width: 700px) {
-            .sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.3s; }
-            .sidebar.open { transform: translateX(0); }
-            .editor-title-input { font-size: 20px; }
-            .editor-toolbar { padding: 12px 16px; }
-            .editor-body { padding: 20px; }
+        body.focus .nav, body.focus .listpane { display: none; }
+        body.focus .pane { max-width: 860px; margin: 0 auto; }
+
+        @media (max-width: 1100px) {
+            .nav { width: 210px; }
+            .listpane { width: 290px; }
         }
+        @media (max-width: 900px) {
+            .nav { position: fixed; z-index: 500; top: 0; bottom: 0; left: 0; width: 280px; transform: translateX(-102%); transition: transform 0.28s ease; box-shadow: 20px 0 60px rgba(0,0,0,0.5); }
+            body.nav-open .nav { transform: none; }
+            body.nav-open .scrim { display: block; position: fixed; inset: 0; z-index: 400; background: rgba(5,3,14,0.7); }
+            .menu-btn, .back-btn { display: inline-block; }
+            .listpane { width: 100%; border-right: none; }
+            .main { position: absolute; inset: 0; z-index: 20; background: var(--ink); transform: translateX(100%); transition: transform 0.28s ease; }
+            body.show-editor .main { transform: none; }
+            body.focus .nav, body.focus .listpane { display: flex; }
+            .title-input { font-size: 24px; }
+            .editor-top { padding: 10px 12px 0; }
+            .tags-row, .format-bar, .status-bar, .ai-head { padding-left: 14px; padding-right: 14px; }
+            .ai-body { padding: 0 14px 12px; }
+            .pane { padding: 16px; } #note-content { padding: 16px; }
+            body[data-mode="split"] .panes { flex-direction: column; }
+            body[data-mode="split"] .pane + .pane { border-left: none; border-top: 1px solid var(--border); }
+            .fmt { padding: 6px 8px; }
+            .listpane .list-head { padding-top: 12px; }
+            body.no-note .main { transform: translateX(100%); }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; } }
     </style>
 </head>
 <body>
@@ -475,706 +309,1087 @@
     <div class="amb amb-1" aria-hidden="true"></div>
     <div class="amb amb-2" aria-hidden="true"></div>
 
-    <div class="notes-shell">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-head">
-                <a class="logo" href="https://wizardecosystem.dev">
-                    <span class="logo-glyph">📝</span>
-                    <span class="logo-name">Wizard Notes</span>
-                </a>
-                <div class="user-card">
-                    <div class="user-email" id="user-email">Loading…</div>
-                </div>
-                <button class="new-note-btn" id="new-note-btn">✨ New Note</button>
-            </div>
+    <div class="shell">
+        <!-- Nav -->
+        <aside class="nav" id="nav" aria-label="Folders and tags">
+            <a class="logo" href="https://wizardecosystem.dev" aria-label="Wizard Ecosystem home">
+                <span class="logo-glyph" aria-hidden="true">📝</span>
+                <span class="logo-name">Wizard Notes</span>
+            </a>
+            <div class="user-email" id="user-email">Loading…</div>
+            <button class="new-note-btn" id="new-note-btn">✨ New Note</button>
 
-            <div class="folder-section">
-                <div class="folder-label">Folders</div>
-                <div class="folder-item active" data-folder="all">
-                    <span class="folder-icon">📓</span>
-                    <span class="folder-name">All Notes</span>
-                    <span class="folder-count" id="all-count">0</span>
-                </div>
-                <div class="folder-item" data-folder="favorites">
-                    <span class="folder-icon">⭐</span>
-                    <span class="folder-name">Favorites</span>
-                    <span class="folder-count" id="fav-count">0</span>
-                </div>
-                <div class="folder-item" data-folder="recent">
-                    <span class="folder-icon">🕐</span>
-                    <span class="folder-name">Recent</span>
-                </div>
-                <div class="folder-item" data-folder="shared">
-                    <span class="folder-icon">📬</span>
-                    <span class="folder-name">Shared With Me</span>
-                </div>
-            </div>
+            <div class="nav-label">Folders</div>
+            <button class="folder-item active" data-folder="all"><span class="folder-icon">📓</span><span class="folder-name">All Notes</span><span class="folder-count" id="c-all">0</span></button>
+            <button class="folder-item" data-folder="favorites"><span class="folder-icon">⭐</span><span class="folder-name">Favorites</span><span class="folder-count" id="c-favorites">0</span></button>
+            <button class="folder-item" data-folder="recent"><span class="folder-icon">🕐</span><span class="folder-name">Last 7 days</span><span class="folder-count" id="c-recent">0</span></button>
+            <button class="folder-item" data-folder="mine-shared"><span class="folder-icon">📤</span><span class="folder-name">Shared by me</span><span class="folder-count" id="c-mine-shared">0</span></button>
+            <button class="folder-item" data-folder="shared"><span class="folder-icon">📬</span><span class="folder-name">Shared with me</span><span class="folder-count" id="c-shared">0</span></button>
 
-            <div class="notes-list" id="notes-list">
-                <div style="text-align:center; padding:40px; color:var(--muted);">Loading notes…</div>
-            </div>
+            <div class="nav-label"><span>Tags</span><button id="clear-tag" style="display:none;">Clear</button></div>
+            <div class="tag-list" id="tag-list"></div>
 
-            <div class="tags-section">
-                <div class="folder-label">Tags</div>
-                <div class="tag-list" id="tag-list"></div>
+            <div class="nav-foot">
+                <button class="side-link" id="import-btn">⬆ Import .md / .txt</button>
+                <button class="side-link" id="export-all-btn">⬇ Export all notes</button>
+                <button class="side-link" id="help-btn">⌨ Shortcuts <kbd>?</kbd></button>
+                <a class="back-link" href="https://wizardecosystem.dev">← Back to Ecosystem</a>
             </div>
+            <input type="file" id="import-file" accept=".md,.markdown,.txt,text/plain,text/markdown" multiple hidden>
         </aside>
+        <div class="scrim" id="scrim"></div>
 
-        <!-- Main Editor -->
-        <main class="main">
-            <div class="editor-toolbar">
-                <input type="text" id="note-title" class="editor-title-input" placeholder="Untitled Note">
-                <div class="editor-actions">
-                    <button class="icon-btn" id="favorite-btn" title="Favorite">☆</button>
-                    <button class="icon-btn" id="rename-btn" title="Rename">✏️</button>
-                    <button class="icon-btn" id="share-btn" title="Share">🔗</button>
-                    <button class="icon-btn" id="shared-btn" title="Shared with me">📬</button>
-                    <button class="icon-btn delete-btn" id="delete-note-btn" title="Delete">🗑</button>
+        <!-- List -->
+        <section class="listpane" aria-label="Notes">
+            <div class="list-head">
+                <div class="list-title"><span><button class="icon-btn menu-btn" id="menu-btn" aria-label="Open menu" style="margin-right:8px;">☰</button><span id="list-title">All Notes</span></span><small id="list-count"></small></div>
+                <div class="search-box" id="search-box">
+                    <input type="search" id="search-input" placeholder="Search notes   ( / )" autocomplete="off" aria-label="Search notes">
+                    <button id="search-clear" aria-label="Clear search">✕</button>
+                </div>
+                <div class="sort-row">
+                    <span id="sort-hint"></span>
+                    <label>Sort: <select id="sort-select">
+                        <option value="updated">Last edited</option>
+                        <option value="created">Date created</option>
+                        <option value="title">Title A–Z</option>
+                    </select></label>
                 </div>
             </div>
-            <div id="shared-note-banner" class="shared-indicator" style="display:none; margin: 0 24px; padding: 8px 16px; background: rgba(124,92,191,0.15); border-radius: 12px;">
-                📬 This note was shared with you by <span id="shared-owner-name"></span> · <span id="shared-permission-text"></span>
-            </div>
-            <div class="editor-body">
-                <textarea id="note-content" class="editor-content" placeholder="Start writing your note here..."></textarea>
+            <div class="notes-list" id="notes-list" aria-live="polite"></div>
+        </section>
+
+        <!-- Editor -->
+        <main class="main" role="main">
+            <div class="empty-state" id="empty-state">
+                <div class="glyph">📝</div>
+                <h2 id="empty-title">Your notes live here</h2>
+                <div id="empty-sub">Capture an idea, a plan, anything. The wizard helps you polish it.</div>
+                <button class="new-note-btn" style="width:auto;padding:11px 30px;margin:8px 0 0;" id="empty-new">✨ Write your first note</button>
             </div>
 
-            <!-- AI Panel -->
-            <div class="ai-panel">
-                <div class="ai-panel-header">
-                    <span>🧙</span>
-                    <span>Wizard AI Assistant</span>
+            <div class="editor" id="editor">
+                <div class="editor-top">
+                    <button class="icon-btn back-btn" id="back-btn" aria-label="Back to notes">←</button>
+                    <input type="text" id="note-title" class="title-input" placeholder="Untitled note" maxlength="200" aria-label="Note title">
+                    <div class="editor-actions">
+                        <button class="icon-btn" id="favorite-btn" title="Favorite" aria-label="Toggle favorite">☆</button>
+                        <button class="icon-btn" id="share-btn" title="Share" aria-label="Share note">🔗</button>
+                        <button class="icon-btn" id="focus-btn" title="Focus mode (Alt+F)" aria-label="Focus mode">⤢</button>
+                        <div class="menu-wrap">
+                            <button class="icon-btn" id="more-btn" title="More" aria-label="More actions" aria-haspopup="true">⋯</button>
+                            <div class="dropdown" id="more-menu" role="menu">
+                                <button data-act="duplicate" role="menuitem">⧉ Duplicate</button>
+                                <button data-act="copy" role="menuitem">📋 Copy to clipboard</button>
+                                <button data-act="md" role="menuitem">⬇ Download .md</button>
+                                <button data-act="txt" role="menuitem">⬇ Download .txt</button>
+                                <hr>
+                                <button data-act="delete" class="danger" role="menuitem">🗑 Delete note</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="ai-input-group">
-                    <input type="text" id="ai-prompt" class="ai-prompt" placeholder="e.g., Make this more professional, Fix grammar, Add bullet points">
-                    <button id="ai-action-btn" class="ai-action-btn">✨ Apply</button>
+                <div class="banner" id="shared-banner"></div>
+                <div class="tags-row" id="tags-row"></div>
+
+                <div class="format-bar" id="format-bar" role="toolbar" aria-label="Formatting">
+                    <button class="fmt" data-fmt="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+                    <button class="fmt" data-fmt="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+                    <button class="fmt" data-fmt="strike" title="Strikethrough"><s>S</s></button>
+                    <span class="fmt-sep"></span>
+                    <button class="fmt" data-fmt="h1" title="Heading 1">H1</button>
+                    <button class="fmt" data-fmt="h2" title="Heading 2">H2</button>
+                    <span class="fmt-sep"></span>
+                    <button class="fmt" data-fmt="ul" title="Bulleted list">•</button>
+                    <button class="fmt" data-fmt="ol" title="Numbered list">1.</button>
+                    <button class="fmt" data-fmt="task" title="Checklist">☑</button>
+                    <button class="fmt" data-fmt="quote" title="Quote">❝</button>
+                    <span class="fmt-sep"></span>
+                    <button class="fmt" data-fmt="code" title="Code">&lt;/&gt;</button>
+                    <button class="fmt" data-fmt="link" title="Link (Ctrl+K)">🔗</button>
+                    <button class="fmt" data-fmt="hr" title="Divider">―</button>
+                    <div class="mode-toggle" id="mode-toggle" role="group" aria-label="View mode">
+                        <button data-mode="edit" class="active">Write</button>
+                        <button data-mode="split">Split</button>
+                        <button data-mode="preview">Preview</button>
+                    </div>
                 </div>
-                <div class="tag-input-group">
-                    <input type="text" id="tag-input" class="tag-input" placeholder="Add tag...">
-                    <button id="add-tag-btn" class="add-tag-btn">+ Add Tag</button>
+
+                <div class="panes">
+                    <div class="pane" id="edit-pane"><textarea id="note-content" placeholder="Start writing…  Markdown works: # heading, **bold**, - [ ] checklist" spellcheck="true" aria-label="Note content"></textarea></div>
+                    <div class="pane" id="preview-pane"><div class="md" id="preview"></div></div>
                 </div>
-                <div id="ai-response" class="ai-response"></div>
+
+                <div class="ai-panel" id="ai-panel">
+                    <div class="ai-head" id="ai-head" role="button" tabindex="0" aria-expanded="false">
+                        <span>🧙</span><span>Wizard AI</span><span class="scope" id="ai-scope"></span><span class="caret">▴</span>
+                    </div>
+                    <div class="ai-body">
+                        <div class="ai-chips" id="ai-chips">
+                            <button class="ai-chip" data-ai="summarize">Summarize</button>
+                            <button class="ai-chip" data-ai="fix">Fix grammar</button>
+                            <button class="ai-chip" data-ai="shorten">Shorten</button>
+                            <button class="ai-chip" data-ai="expand">Expand</button>
+                            <button class="ai-chip" data-ai="professional">Professional</button>
+                            <button class="ai-chip" data-ai="friendly">Friendly</button>
+                            <button class="ai-chip" data-ai="bullets">Bullet points</button>
+                            <button class="ai-chip" data-ai="actions">Action items</button>
+                            <button class="ai-chip" data-ai="outline">Outline</button>
+                            <button class="ai-chip" data-ai="continue">Continue writing</button>
+                            <button class="ai-chip" data-ai="title">Suggest title</button>
+                            <button class="ai-chip" data-ai="tags">Suggest tags</button>
+                        </div>
+                        <div class="ai-row">
+                            <input type="text" id="ai-prompt" placeholder="Or tell it what to do: “turn this into an email”" maxlength="400" aria-label="Custom AI instruction">
+                            <button class="ai-go" id="ai-go">✨ Go</button>
+                        </div>
+                        <div class="ai-result" id="ai-result"></div>
+                    </div>
+                </div>
+
+                <div class="status-bar">
+                    <span id="stat-words">0 words</span><span id="stat-chars">0 characters</span><span id="stat-read"></span><span id="stat-edited"></span>
+                    <span class="save" id="save-state"></span>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- New Note Modal -->
-    <div id="new-note-modal" class="modal-overlay">
+    <!-- Share modal -->
+    <div id="share-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="share-h">
         <div class="modal-box">
-            <h3>✨ Create New Note</h3>
-            <input type="text" id="new-note-title" placeholder="Note title" autofocus>
-            <textarea id="new-note-content" rows="4" placeholder="Start writing..."></textarea>
-            <div class="modal-buttons">
-                <button id="confirm-new-note" class="modal-confirm">Create</button>
-                <button id="cancel-new-note" class="modal-cancel">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Rename Modal -->
-    <div id="rename-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h3>✏️ Rename Note</h3>
-            <input type="text" id="rename-title" placeholder="New title">
-            <div class="modal-buttons">
-                <button id="confirm-rename" class="modal-confirm">Save</button>
-                <button id="cancel-rename" class="modal-cancel">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Share Modal -->
-    <div id="share-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h3>🔗 Share Note</h3>
-            <p style="font-size:12px; color:var(--muted); margin-bottom:16px;">Share with another Wizard user</p>
-            <input type="email" id="share-email" placeholder="user@example.com">
+            <h3 id="share-h">🔗 Share note</h3>
+            <p class="sub">Share with another Wizard user by email.</p>
+            <input type="email" id="share-email" placeholder="friend@example.com" autocomplete="off">
             <select id="share-permission">
-                <option value="view">👁️ Can view</option>
+                <option value="view">👁 Can view</option>
                 <option value="edit">✏️ Can edit</option>
             </select>
-            <div id="share-error" class="error-msg" style="color:var(--danger); font-size:12px; display:none;"></div>
+            <div id="share-error" class="error-msg" role="alert"></div>
             <div class="modal-buttons">
                 <button id="confirm-share" class="modal-confirm">Share</button>
-                <button id="cancel-share" class="modal-cancel">Cancel</button>
+                <button id="cancel-share" class="modal-cancel">Close</button>
             </div>
+            <div class="people" id="people" style="display:none;"><h4>People with access</h4><div id="people-list"></div></div>
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <!-- Help -->
+    <div id="help-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+        <div class="modal-box">
+            <h3>Shortcuts</h3>
+            <div class="help-grid">
+                <span><kbd>N</kbd></span><span>New note</span>
+                <span><kbd>/</kbd> or <kbd>Ctrl</kbd>+<kbd>K</kbd></span><span>Search (Ctrl+K = link while writing)</span>
+                <span><kbd>Ctrl</kbd>+<kbd>B</kbd> <kbd>I</kbd></span><span>Bold / italic</span>
+                <span><kbd>Ctrl</kbd>+<kbd>S</kbd></span><span>Save now</span>
+                <span><kbd>Alt</kbd>+<kbd>P</kbd></span><span>Cycle Write / Split / Preview</span>
+                <span><kbd>Alt</kbd>+<kbd>F</kbd></span><span>Focus mode</span>
+                <span><kbd>Enter</kbd></span><span>Continues bullet, number and checklist lines</span>
+                <span><kbd>Ctrl</kbd>+<kbd>Z</kbd></span><span>Undo delete / AI change (when the toast shows)</span>
+                <span><kbd>Esc</kbd></span><span>Close menus and dialogs</span>
+            </div>
+            <div class="modal-buttons"><button class="modal-cancel" id="close-help">Close</button></div>
+        </div>
+    </div>
+
+    <div class="drop-veil" id="drop-veil">Drop .md or .txt files to import them</div>
+    <div id="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button id="toast-undo" type="button">Undo</button></div>
 
     <script>
-        const API = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null;
-        let notes = [];
-        let sharedNotes = [];
-        let currentNoteId = null;
-        let currentSharedNoteData = null;
-        let isSharedNote = false;
-        let sharedPermission = null;
-        let currentFolder = 'all';
-        let currentTag = null;
-        let saveTimeout = null;
+        /* ── Starfield ── */
+        (function() {
+            const canvas = document.getElementById('starfield');
+            const ctx = canvas.getContext('2d');
+            const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const stars = [];
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            resize();
+            window.addEventListener('resize', resize);
+            for (let i = 0; i < 140; i++) stars.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.2 + 0.2, a: Math.random(), speed: Math.random() * 0.0005 + 0.0002 });
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const t = Date.now() / 1000;
+                stars.forEach(s => {
+                    const alpha = still ? 0.5 : 0.3 + 0.5 * Math.sin(t * s.speed * 6000 + s.a * 100);
+                    ctx.beginPath(); ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(212,208,232,${alpha})`; ctx.fill();
+                });
+                if (!still && !document.hidden) requestAnimationFrame(draw);
+            }
+            draw();
+            document.addEventListener('visibilitychange', () => { if (!document.hidden && !still) requestAnimationFrame(draw); });
+        })();
 
-        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        /* ── helpers ── */
+        const API = window.WIZ_API_BASE || 'https://arnav0928.pythonanywhere.com';
+        const $ = id => document.getElementById(id);
+        const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+        const isMobile = () => window.matchMedia('(max-width: 900px)').matches;
+        function esc(t) {
+            return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function lsGet(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+        function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+        function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+        // The server stores UTC without a "Z"; without it the browser would read it as local time.
+        function D(s) {
+            if (!s) return new Date(0);
+            s = String(s);
+            return new Date(/[zZ]$|[+-]\d\d:?\d\d$/.test(s) ? s : s + 'Z');
+        }
+        function ago(d) {
+            const s = (Date.now() - d.getTime()) / 1000;
+            if (s < 45) return 'just now';
+            if (s < 3600) return Math.round(s / 60) + 'm ago';
+            if (s < 86400) return Math.round(s / 3600) + 'h ago';
+            if (s < 172800) return 'Yesterday';
+            if (s < 7 * 86400) return Math.floor(s / 86400) + ' days ago';
+            return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: d.getFullYear() === new Date().getFullYear() ? undefined : 'numeric' });
+        }
+        function normTag(t) { return String(t || '').trim().replace(/^#+/, '').toLowerCase().replace(/\s+/g, '-').slice(0, 30); }
 
-        function toast(msg, isError = false) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.className = `toast ${isError ? 'error' : ''}`;
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 3000);
+        let toastTimer = null, toastUndo = null;
+        function toast(msg, o) {
+            o = o || {};
+            const t = $('toast');
+            $('toast-msg').textContent = msg;
+            toastUndo = o.undo || null;
+            t.className = 'show' + (o.err ? ' err' : '') + (o.undo ? ' has-undo' : '');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { t.className = ''; toastUndo = null; }, o.err ? 4500 : (o.undo ? 8000 : 2400));
+        }
+        $('toast-undo').onclick = () => { const f = toastUndo; $('toast').className = ''; toastUndo = null; if (f) f(); };
+
+        async function api(path, opts) {
+            try {
+                const res = await fetch(API + path, Object.assign({ credentials: 'include' }, opts || {}));
+                let data = null;
+                try { data = await res.json(); } catch (e) {}
+                return { ok: res.ok, status: res.status, data, error: (data && data.error) || (res.ok ? '' : 'Request failed (' + res.status + ')') };
+            } catch (e) {
+                return { ok: false, status: 0, data: null, error: "Can't reach the server" };
+            }
+        }
+        const J = (method, body, extra) => Object.assign({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, extra || {});
+
+        /* ── markdown (everything is escaped first; only our own tags are emitted) ── */
+        function inlineMd(raw) {
+            let s = esc(raw);
+            const codes = [];
+            s = s.replace(/`([^`\n]+)`/g, (m, c) => { codes.push(c); return '\u0000' + (codes.length - 1) + '\u0000'; });
+            s = s.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/g, (m, t, u) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${t}</a>`);
+            s = s.replace(/(^|\s)(https?:\/\/[^\s<]+[^\s<.,;:!?)])/g, (m, pre, u) => `${pre}<a href="${u}" target="_blank" rel="noopener noreferrer">${u}</a>`);
+            s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>').replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
+            s = s.replace(/(^|[^*\w])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>').replace(/(^|[^_\w])_([^_\n]+)_(?![_\w])/g, '$1<em>$2</em>');
+            s = s.replace(/~~([^~\n]+)~~/g, '<del>$1</del>');
+            return s.replace(/\u0000(\d+)\u0000/g, (m, i) => `<code>${codes[+i]}</code>`);
         }
 
-        async function checkAuth() {
-            try {
-                const res = await fetch(`${API}/api/check-auth`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated && data.user) {
-                        currentUser = data.user;
-                        document.getElementById('user-email').textContent = currentUser.email;
-                        await loadNotes();
-                        await loadSharedNotesList();
-                        return;
-                    }
+        function mdToHtml(src) {
+            const lines = String(src || '').replace(/\r\n?/g, '\n').split('\n');
+            const out = [], stack = [];
+            let para = [], i = 0;
+            const flushPara = () => { if (para.length) { out.push('<p>' + para.map(inlineMd).join('<br>') + '</p>'); para = []; } };
+            const closeLists = () => { while (stack.length) out.push('</li></' + stack.pop() + '>'); };
+            const LIST = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
+            const isList = l => LIST.test(l) && !/^\s*([-*_])(\s*\1){2,}\s*$/.test(l);
+            for (; i < lines.length; i++) {
+                const line = lines[i];
+                let m;
+                if ((m = line.match(/^\s*```/))) {
+                    flushPara(); closeLists();
+                    const buf = [];
+                    for (i++; i < lines.length && !/^\s*```/.test(lines[i]); i++) buf.push(lines[i]);
+                    out.push('<pre><code>' + esc(buf.join('\n')) + '</code></pre>');
+                    continue;
                 }
-            } catch(e) {}
+                if (!line.trim()) {
+                    flushPara();
+                    let j = i + 1; while (j < lines.length && !lines[j].trim()) j++;
+                    if (!(stack.length && j < lines.length && isList(lines[j]))) closeLists();
+                    continue;
+                }
+                if ((m = line.match(/^(#{1,6})\s+(.*?)\s*#*\s*$/))) { flushPara(); closeLists(); out.push(`<h${m[1].length}>${inlineMd(m[2])}</h${m[1].length}>`); continue; }
+                if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(line)) { flushPara(); closeLists(); out.push('<hr>'); continue; }
+                if (/^\s*>/.test(line)) {
+                    flushPara(); closeLists();
+                    const buf = [];
+                    for (; i < lines.length && /^\s*>/.test(lines[i]); i++) buf.push(lines[i].replace(/^\s*>\s?/, ''));
+                    i--;
+                    out.push('<blockquote>' + buf.map(inlineMd).join('<br>') + '</blockquote>');
+                    continue;
+                }
+                if (isList(line)) {
+                    flushPara();
+                    m = line.match(LIST);
+                    const level = Math.min(Math.floor(m[1].replace(/\t/g, '  ').length / 2), 5);
+                    const type = /\d/.test(m[2]) ? 'ol' : 'ul';
+                    while (stack.length > level + 1) out.push('</li></' + stack.pop() + '>');
+                    if (stack.length === level + 1) {
+                        if (stack[level] !== type) { out.push('</li></' + stack.pop() + '>'); out.push('<' + type + '>'); stack.push(type); }
+                        else out.push('</li>');
+                    } else while (stack.length < level + 1) { out.push('<' + type + '>'); stack.push(type); }
+                    const t = m[3].match(/^\[( |x|X)\]\s+(.*)$/);
+                    if (t) {
+                        const done = t[1] !== ' ';
+                        out.push(`<li class="task${done ? ' done' : ''}"><input type="checkbox" data-line="${i}"${done ? ' checked' : ''}><span>${inlineMd(t[2])}</span>`);
+                    } else out.push('<li>' + inlineMd(m[3]));
+                    continue;
+                }
+                closeLists();
+                para.push(line.trim());
+            }
+            flushPara(); closeLists();
+            return out.join('') || '<p class="empty">Nothing to preview yet.</p>';
+        }
+
+        /* ── state ── */
+        let currentUser = null, notes = [], shared = [], curKey = null, folder = 'all', tagFilter = null, query = '';
+        let sortBy = lsGet('wn.sort', 'updated'), mode = lsGet('wn.mode', 'edit'), loaded = false, aiBusy = false;
+        let aiUndo = null, previewTimer = null, listTimer = null;
+        const saveTimers = new Map();
+        const keyOf = n => n.owner_email ? 's:' + String(n.owner_email).toLowerCase() + '|' + n.id : 'n:' + n.id;
+        const allNotes = () => notes.concat(shared);
+        const getNote = key => allNotes().find(n => keyOf(n) === key) || null;
+        const cur = () => curKey ? getNote(curKey) : null;
+        const isShared = n => !!(n && n.owner_email);
+        const canEdit = n => !!n && (!isShared(n) || n.permission === 'edit');
+
+        function hydrate(n, isSharedItem) {
+            n.title = n.title || ''; n.content = n.content || ''; n.tags = Array.isArray(n.tags) ? n.tags : [];
+            n.is_favorite = !!n.is_favorite; n.shares = Array.isArray(n.shares) ? n.shares : [];
+            n._v = n._v || 0; n._dirty = !!n._dirty; n._saving = n._saving || null; n._err = n._err || null; n._fail = n._fail || 0;
+            return n;
+        }
+
+        /* ── data loading ── */
+        async function loadNotes() {
+            const r = await api('/api/notes');
+            if (!r.ok) { if (r.status && r.status !== 401) toast(r.error, { err: true }); return r.ok; }
+            const server = (r.data.notes || []).map(n => hydrate(n));
+            const merged = server.map(sn => {
+                const local = notes.find(n => n.id === sn.id);
+                if (local && (local._dirty || local._saving)) { local.shares = sn.shares; local.is_favorite = local._favPending ? local.is_favorite : sn.is_favorite; return local; }
+                if (local && !isEditingNote(local) ) { Object.assign(local, sn, { _v: local._v }); return local; }
+                if (local) {                                   // note open in the editor: update it only if the server copy is newer and we have nothing unsaved
+                    const changed = sn.content !== local.content || sn.title !== local.title || JSON.stringify(sn.tags) !== JSON.stringify(local.tags);
+                    Object.assign(local, sn, { _v: local._v });
+                    if (changed && keyOf(local) === curKey) fillEditorFromNote(local, true);
+                    return local;
+                }
+                return sn;
+            });
+            notes.filter(n => (n._dirty || n._saving) && !server.some(s => s.id === n.id) && !n._gone).forEach(n => merged.push(n));
+            notes = merged;
+            return true;
+        }
+        const isEditingNote = n => keyOf(n) === curKey;
+
+        async function loadShared() {
+            const r = await api('/api/notes/shared');
+            if (!r.ok) return false;
+            const server = (r.data.shared_notes || []).map(n => hydrate(n, true));
+            shared = server.map(sn => {
+                const local = shared.find(n => keyOf(n) === keyOf(sn));
+                if (local && (local._dirty || local._saving)) return local;
+                if (local) {
+                    const changed = sn.content !== local.content || sn.title !== local.title || sn.permission !== local.permission;
+                    Object.assign(local, sn, { _v: local._v });
+                    if (changed && keyOf(local) === curKey) fillEditorFromNote(local, true);
+                    return local;
+                }
+                return sn;
+            });
+            if (curKey && curKey[0] === 's' && !getNote(curKey)) { curKey = null; showEmpty(); }
+            return true;
+        }
+
+        async function refreshAll() {
+            await Promise.all([loadNotes(), loadShared()]);
+            renderAll();
+        }
+
+        /* ── sorting / filtering / search ── */
+        function inFolder(n) {
+            if (folder === 'shared') return isShared(n);
+            if (isShared(n)) return false;
+            if (folder === 'favorites') return n.is_favorite;
+            if (folder === 'recent') return Date.now() - D(n.updated_at).getTime() < 7 * 86400000;
+            if (folder === 'mine-shared') return (n.shares || []).length > 0;
+            return true;
+        }
+        function listItems() {
+            let list = allNotes().filter(inFolder);
+            if (tagFilter) list = list.filter(n => n.tags.indexOf(tagFilter) >= 0);
+            const q = query.trim().toLowerCase();
+            if (q) {
+                const toks = q.split(/\s+/);
+                list = list.map(n => {
+                    const t = n.title.toLowerCase(), c = n.content.toLowerCase(), g = n.tags.join(' ');
+                    let score = 0;
+                    for (const k of toks) {
+                        const s = (t.indexOf(k) >= 0 ? 3 : 0) + (g.indexOf(k) >= 0 ? 2 : 0) + (c.indexOf(k) >= 0 ? 1 : 0);
+                        if (!s) return null; score += s;
+                    }
+                    return { n, score };
+                }).filter(Boolean).sort((a, b) => b.score - a.score || D(b.n.updated_at) - D(a.n.updated_at)).map(x => x.n);
+                return list;
+            }
+            const by = {
+                updated: (a, b) => (b._editedAt || D(b.updated_at).getTime()) - (a._editedAt || D(a.updated_at).getTime()),
+                created: (a, b) => D(b.created_at) - D(a.created_at),
+                title: (a, b) => (a.title || '~').localeCompare(b.title || '~', undefined, { sensitivity: 'base' })
+            }[sortBy] || (() => 0);
+            return list.sort(by);
+        }
+        function hl(text, q) {
+            const safe = esc(text);
+            if (!q.trim()) return safe;
+            let out = safe;
+            q.trim().split(/\s+/).filter(Boolean).forEach(k => {
+                const re = new RegExp('(' + esc(k).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')(?![^<]*>)', 'gi');
+                out = out.replace(re, '<mark>$1</mark>');
+            });
+            return out;
+        }
+        function plainSnippet(n, q) {
+            const strip = s => s.replace(/```[\s\S]*?```/g, ' ').replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+\.)\s+(\[[ xX]\]\s+)?/gm, '').replace(/[*_`~]|\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\s+/g, ' ').trim();
+            let c = strip(n.content);
+            const k = q.trim().split(/\s+/)[0];
+            if (k) {
+                const at = c.toLowerCase().indexOf(k.toLowerCase());
+                if (at > 60) c = '…' + c.slice(at - 40);
+            }
+            return c.slice(0, 160);
+        }
+
+        /* ── rendering ── */
+        const FOLDER_TITLES = { all: 'All Notes', favorites: 'Favorites', recent: 'Last 7 days', 'mine-shared': 'Shared by me', shared: 'Shared with me' };
+        function renderAll() { renderNav(); renderList(); renderTagsRow(); refreshSaveState(); }
+
+        function renderNav() {
+            const own = notes;
+            $('c-all').textContent = own.length;
+            $('c-favorites').textContent = own.filter(n => n.is_favorite).length;
+            $('c-recent').textContent = own.filter(n => Date.now() - D(n.updated_at).getTime() < 7 * 86400000).length;
+            $('c-mine-shared').textContent = own.filter(n => n.shares.length).length;
+            $('c-shared').textContent = shared.length;
+            document.querySelectorAll('.folder-item').forEach(b => b.classList.toggle('active', b.dataset.folder === folder));
+            const counts = {};
+            own.forEach(n => n.tags.forEach(t => { counts[t] = (counts[t] || 0) + 1; }));
+            const tags = Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
+            $('tag-list').innerHTML = tags.length ? tags.map(t => `<button class="tag${tagFilter === t ? ' active' : ''}" data-tag="${esc(t)}">#${esc(t)}<small>${counts[t]}</small></button>`).join('') : '<div class="nav-empty">No tags yet</div>';
+            $('clear-tag').style.display = tagFilter ? 'inline' : 'none';
+        }
+
+        function renderList() {
+            const items = listItems(), q = query;
+            $('list-title').textContent = (tagFilter ? '#' + tagFilter : FOLDER_TITLES[folder]);
+            $('list-count').textContent = loaded ? items.length + (items.length === 1 ? ' note' : ' notes') : '';
+            $('sort-hint').textContent = q.trim() ? 'Best matches first' : '';
+            $('sort-select').disabled = !!q.trim();
+            const box = $('notes-list');
+            if (!loaded) { box.innerHTML = '<div class="skeleton"></div>'.repeat(5); return; }
+            if (!items.length) {
+                const msg = q.trim() ? `No notes match “${esc(q.trim())}”` : tagFilter ? `No notes tagged #${esc(tagFilter)}`
+                    : folder === 'shared' ? 'Nothing has been shared with you yet' : folder === 'favorites' ? 'Star a note to keep it here'
+                    : folder === 'mine-shared' ? 'Notes you share with others show up here' : folder === 'recent' ? 'No notes edited in the last 7 days' : 'No notes yet<br>Press <kbd>N</kbd> or click New Note';
+                box.innerHTML = `<div class="list-empty"><span class="glyph">${q.trim() ? '🔍' : '📭'}</span>${msg}</div>`;
+                return;
+            }
+            box.innerHTML = items.map(n => {
+                const k = keyOf(n), sh = isShared(n);
+                const title = n.title.trim();
+                const when = ago(n._editedAt ? new Date(n._editedAt) : D(n.updated_at));
+                const meta = sh ? `<span class="badge ${n.permission === 'edit' ? 'edit' : 'view'}">${n.permission === 'edit' ? '✏️ Can edit' : '👁 View only'}</span><span>from ${esc(n.owner_name || n.owner_email)}</span><span>${when}</span>`
+                    : `<span>${when}</span>${n.shares.length ? `<span class="badge shared">👥 ${n.shares.length}</span>` : ''}${n.tags.slice(0, 3).map(t => `<span class="note-tag">#${esc(t)}</span>`).join('')}${n.tags.length > 3 ? `<span>+${n.tags.length - 3}</span>` : ''}`;
+                return `<div class="note-item${k === curKey ? ' active' : ''}${n._dirty ? ' dirty' : ''}" data-key="${esc(k)}" role="button" tabindex="0">
+                    <div class="note-top"><div class="note-title${title ? '' : ' untitled'}">${title ? hl(title, q) : 'Untitled note'}</div>
+                    ${sh ? '' : `<button class="star-btn${n.is_favorite ? ' on' : ''}" data-star="${esc(k)}" aria-label="Toggle favorite">${n.is_favorite ? '★' : '☆'}</button>`}</div>
+                    <div class="note-preview">${hl(plainSnippet(n, q) || '…', q)}</div>
+                    <div class="note-meta">${meta}</div></div>`;
+            }).join('');
+        }
+        function renderListSoon() { clearTimeout(listTimer); listTimer = setTimeout(() => { renderList(); renderNav(); }, 250); }
+
+        function renderTagsRow() {
+            const n = cur(), row = $('tags-row');
+            if (!n) { row.innerHTML = ''; return; }
+            const editable = !isShared(n);
+            row.innerHTML = n.tags.map(t => `<span class="chip">#${esc(t)}${editable ? `<button data-rm-tag="${esc(t)}" aria-label="Remove tag ${esc(t)}">✕</button>` : '<span style="width:8px"></span>'}</span>`).join('')
+                + (editable ? '<input class="tag-input" id="tag-input" list="tag-suggest" placeholder="+ tag" maxlength="30" aria-label="Add tag">' : '')
+                + (isShared(n) && !n.tags.length ? '<span style="font-size:12px;color:var(--muted)">No tags</span>' : '');
+            let dl = $('tag-suggest');
+            if (!dl) { dl = document.createElement('datalist'); dl.id = 'tag-suggest'; document.body.appendChild(dl); }
+            const all = new Set(); notes.forEach(x => x.tags.forEach(t => all.add(t)));
+            dl.innerHTML = [...all].filter(t => n.tags.indexOf(t) < 0).map(t => `<option value="${esc(t)}">`).join('');
+        }
+
+        /* ── editor ── */
+        function showEmpty() {
+            document.body.classList.add('no-note'); document.body.classList.remove('show-editor');
+            const none = !notes.length && !shared.length;
+            $('empty-title').textContent = none ? 'Your notes live here' : 'Pick a note';
+            $('empty-sub').textContent = none ? 'Capture an idea, a plan, anything. The wizard helps you polish it.' : 'Choose a note from the list, or start a new one.';
+        }
+        function setMode(m) {
+            mode = ['edit', 'split', 'preview'].indexOf(m) >= 0 ? m : 'edit';
+            lsSet('wn.mode', mode);
+            document.body.dataset.mode = mode;
+            document.querySelectorAll('#mode-toggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+            if (mode !== 'edit') renderPreview();
+        }
+        function renderPreview() { $('preview').innerHTML = mdToHtml($('note-content').value); }
+        function renderPreviewSoon() { if (mode === 'edit') return; clearTimeout(previewTimer); previewTimer = setTimeout(renderPreview, 120); }
+
+        function fillEditorFromNote(n, keepCaret) {
+            const ta = $('note-content');
+            const pos = keepCaret ? [ta.selectionStart, ta.selectionEnd, ta.scrollTop] : null;
+            $('note-title').value = n.title;
+            ta.value = n.content;
+            if (pos) { ta.setSelectionRange(Math.min(pos[0], ta.value.length), Math.min(pos[1], ta.value.length)); ta.scrollTop = pos[2]; }
+            applyEditability(n);
+            renderPreview(); updateStats(); renderTagsRow(); updateScope();
+        }
+        function applyEditability(n) {
+            const ed = canEdit(n), sh = isShared(n);
+            $('note-title').readOnly = !ed; $('note-content').readOnly = !ed;
+            document.querySelectorAll('.fmt').forEach(b => { b.disabled = !ed; });
+            $('favorite-btn').style.display = sh ? 'none' : ''; $('share-btn').style.display = sh ? 'none' : '';
+            $('favorite-btn').textContent = n.is_favorite ? '⭐' : '☆'; $('favorite-btn').classList.toggle('active', n.is_favorite);
+            document.querySelectorAll('#more-menu [data-act="delete"], #more-menu [data-act="duplicate"]').forEach(b => { b.style.display = sh ? 'none' : ''; });
+            const bn = $('shared-banner');
+            if (sh) { bn.style.display = 'block'; bn.innerHTML = `📬 Shared by <b>${esc(n.owner_name || n.owner_email)}</b> · ${n.permission === 'edit' ? 'you can edit this note' : 'you can only view this note'}`; }
+            else bn.style.display = 'none';
+        }
+
+        function discardIfEmpty(n) {
+            if (!n || isShared(n) || !n._fresh) return;
+            if (n.title.trim() || n.content.trim() || n.tags.length) { n._fresh = false; return; }
+            notes = notes.filter(x => x !== n);
+            api('/api/notes/' + n.id, { method: 'DELETE' });
+            n._gone = true;
+        }
+
+        function openNote(key, opts) {
+            opts = opts || {};
+            const n = getNote(key); if (!n) return;
+            if (curKey && curKey !== key) { const prev = cur(); discardIfEmpty(prev); if (prev && prev._dirty) save(prev); }
+            curKey = key;
+            document.body.classList.remove('no-note');
+            if (isMobile()) document.body.classList.add('show-editor');
+            if (!isShared(n)) lsSet('wn.last', key);
+            fillEditorFromNote(n, false);
+            $('ai-result').className = 'ai-result'; $('ai-result').innerHTML = '';
+            $('note-content').scrollTop = 0;
+            renderAll();
+            if (opts.focus === 'title') { $('note-title').focus(); }
+            else if (opts.focus === 'content') { $('note-content').focus(); }
+        }
+
+        function updateStats() {
+            const n = cur(); if (!n) return;
+            const text = $('note-content').value;
+            const words = (text.trim().match(/\S+/g) || []).length;
+            $('stat-words').textContent = words + (words === 1 ? ' word' : ' words');
+            $('stat-chars').textContent = text.length.toLocaleString() + ' characters';
+            $('stat-read').textContent = words ? Math.max(1, Math.ceil(words / 220)) + ' min read' : '';
+            $('stat-edited').textContent = 'Edited ' + ago(n._editedAt ? new Date(n._editedAt) : D(n.updated_at));
+        }
+
+        /* ── saving: every edit is written to the note object immediately, then synced in the background ── */
+        function refreshSaveState() {
+            const n = cur(), el = $('save-state');
+            if (!n) { el.textContent = ''; return; }
+            let cls = 'saved', txt = '✓ Saved';
+            if (!canEdit(n)) { cls = ''; txt = 'View only'; }
+            else if (n._saving) { cls = 'saving'; txt = 'Saving…'; }
+            else if (n._err) { cls = 'error'; txt = n._fail > 0 && n._errStatus === 0 ? 'Offline · will retry' : 'Save failed · retrying'; }
+            else if (n._dirty) { cls = 'dirty'; txt = 'Unsaved changes…'; }
+            el.className = 'save ' + cls; el.textContent = txt;
+        }
+        function onEdit(n) {
+            n._v++; n._dirty = true; n._fresh = false; n._editedAt = Date.now();
+            clearTimeout(saveTimers.get(keyOf(n)));
+            saveTimers.set(keyOf(n), setTimeout(() => save(n), 700));
+            lsSet('wn.draft.' + keyOf(n), { t: n.title, c: n.content, tags: n.tags, at: Date.now() });
+            refreshSaveState(); updateStats(); renderPreviewSoon(); renderListSoon();
+        }
+        async function save(n, opts) {
+            if (!n || !n._dirty || !canEdit(n)) return;
+            if (n._saving) { n._again = true; return n._saving; }
+            clearTimeout(saveTimers.get(keyOf(n)));
+            const v = n._v;
+            const body = isShared(n) ? { owner_email: n.owner_email, title: n.title, content: n.content } : { title: n.title, content: n.content, tags: n.tags };
+            const url = isShared(n) ? '/api/notes/shared/' + n.id + '/update' : '/api/notes/' + n.id;
+            n._saving = (async () => {
+                refreshSaveState();
+                const r = await api(url, J('PUT', body, opts && opts.keepalive ? { keepalive: true } : null));
+                n._saving = null;
+                if (r.ok) {
+                    n._err = null; n._fail = 0;
+                    const ua = isShared(n) ? (r.data && r.data.updated_at) : (r.data && r.data.note && r.data.note.updated_at);
+                    if (ua) n.updated_at = ua;
+                    if (n._v === v) { n._dirty = false; n._editedAt = null; lsDel('wn.draft.' + keyOf(n)); }
+                } else if (r.status === 404 && !isShared(n)) {         // deleted somewhere else
+                    n._dirty = false; n._gone = true; notes = notes.filter(x => x !== n);
+                    toast('That note was deleted on another device', { err: true });
+                    if (keyOf(n) === curKey) { curKey = null; showEmpty(); }
+                } else {
+                    n._err = r.error; n._errStatus = r.status; n._fail++;
+                    if (r.status === 403) { toast('You no longer have edit access to this note', { err: true }); n._dirty = false; }
+                    else if (r.status === 400) { toast(r.error, { err: true }); n._dirty = false; }
+                    else setTimeout(() => save(n), Math.min(30000, 2000 * Math.pow(2, n._fail - 1)));
+                }
+                refreshSaveState(); renderListSoon();
+                if (n._again) { n._again = false; return save(n); }
+            })();
+            return n._saving;
+        }
+        const saveAll = opts => Promise.all(allNotes().filter(n => n._dirty).map(n => save(n, opts)));
+
+        $('note-title').addEventListener('input', () => { const n = cur(); if (!n || !canEdit(n)) return; n.title = $('note-title').value; onEdit(n); });
+        $('note-content').addEventListener('input', () => { const n = cur(); if (!n || !canEdit(n)) return; n.content = $('note-content').value; onEdit(n); });
+        window.addEventListener('beforeunload', () => { saveAll({ keepalive: true }); });
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) saveAll({ keepalive: true });
+            else if (currentUser) refreshAll();
+        });
+
+        /* ── note actions ── */
+        async function newNote(init) {
+            init = init || {};
+            const r = await api('/api/notes', J('POST', { title: init.title || '', content: init.content || '', tags: init.tags || [], is_favorite: !!init.is_favorite }));
+            if (!r.ok) { toast(r.error, { err: true }); return null; }
+            const n = hydrate(r.data.note);
+            n.title = init.title || ''; n._fresh = !init.title && !init.content;
+            notes.unshift(n);
+            if (folder === 'shared' || folder === 'mine-shared' || folder === 'favorites') folder = 'all';
+            tagFilter = null; query = ''; $('search-input').value = ''; $('search-box').classList.remove('has-text');
+            openNote(keyOf(n), { focus: init.content ? 'content' : 'title' });
+            closeNav();
+            return n;
+        }
+
+        async function deleteNote(n) {
+            n = n || cur();
+            if (!n || isShared(n)) return;
+            const snap = { title: n.title, content: n.content, tags: n.tags.slice(), is_favorite: n.is_favorite };
+            clearTimeout(saveTimers.get(keyOf(n)));
+            n._dirty = false;
+            const r = await api('/api/notes/' + n.id, { method: 'DELETE' });
+            if (!r.ok && r.status !== 404) { toast(r.error, { err: true }); return; }
+            n._gone = true; lsDel('wn.draft.' + keyOf(n));
+            const items = listItems(), at = items.indexOf(n);
+            notes = notes.filter(x => x !== n);
+            if (keyOf(n) === curKey) {
+                curKey = null;
+                const next = listItems()[Math.min(at, listItems().length - 1)];
+                if (next && !isMobile()) openNote(keyOf(next)); else showEmpty();
+            }
+            renderAll();
+            toast('Note deleted', { undo: async () => { const x = await newNote(snap); if (x) toast('Note restored'); } });
+        }
+
+        async function toggleFav(n) {
+            n = n || cur(); if (!n || isShared(n)) return;
+            n.is_favorite = !n.is_favorite; n._favPending = true;
+            if (keyOf(n) === curKey) applyEditability(n);
+            renderAll();
+            const r = await api('/api/notes/' + n.id + '/favorite', J('POST', { favorite: n.is_favorite }));
+            n._favPending = false;
+            if (!r.ok) { n.is_favorite = !n.is_favorite; if (keyOf(n) === curKey) applyEditability(n); renderAll(); toast(r.error, { err: true }); }
+            else toast(n.is_favorite ? 'Added to favorites' : 'Removed from favorites');
+        }
+
+        function addTag(raw) {
+            const n = cur(); if (!n || isShared(n)) return;
+            const t = normTag(raw); if (!t) return;
+            if (n.tags.indexOf(t) >= 0) { toast('Already tagged #' + t); return; }
+            if (n.tags.length >= 20) { toast('A note can have up to 20 tags', { err: true }); return; }
+            n.tags.push(t); onEdit(n); save(n); renderTagsRow(); renderNav();
+        }
+        function removeTag(t) {
+            const n = cur(); if (!n || isShared(n)) return;
+            n.tags = n.tags.filter(x => x !== t); onEdit(n); save(n);
+            if (tagFilter === t && !notes.some(x => x.tags.indexOf(t) >= 0)) tagFilter = null;
+            renderTagsRow(); renderNav();
+        }
+        $('tags-row').addEventListener('click', e => { const b = e.target.closest('[data-rm-tag]'); if (b) removeTag(b.dataset.rmTag); });
+        $('tags-row').addEventListener('keydown', e => {
+            if (e.target.id !== 'tag-input') return;
+            if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); const v = e.target.value; e.target.value = ''; addTag(v); const ni = $('tag-input'); if (ni) ni.focus(); }
+            else if (e.key === 'Backspace' && !e.target.value) { const n = cur(); if (n && n.tags.length) removeTag(n.tags[n.tags.length - 1]); }
+        });
+        $('tags-row').addEventListener('change', e => { if (e.target.id === 'tag-input' && e.target.value) { const v = e.target.value; e.target.value = ''; addTag(v); } });
+
+        /* ── list / nav interactions ── */
+        $('notes-list').addEventListener('click', e => {
+            const star = e.target.closest('[data-star]');
+            if (star) { e.stopPropagation(); toggleFav(getNote(star.dataset.star)); return; }
+            const it = e.target.closest('.note-item');
+            if (it) openNote(it.dataset.key);
+        });
+        $('notes-list').addEventListener('keydown', e => {
+            const it = e.target.closest('.note-item'); if (!it) return;
+            if (e.key === 'Enter') openNote(it.dataset.key);
+            else if (e.key === 'ArrowDown' && it.nextElementSibling) { e.preventDefault(); it.nextElementSibling.focus(); }
+            else if (e.key === 'ArrowUp' && it.previousElementSibling) { e.preventDefault(); it.previousElementSibling.focus(); }
+        });
+        document.querySelectorAll('.folder-item').forEach(b => b.addEventListener('click', async () => {
+            folder = b.dataset.folder; tagFilter = null; closeNav();
+            if (folder === 'shared') await loadShared();
+            renderAll();
+        }));
+        $('tag-list').addEventListener('click', e => { const t = e.target.closest('[data-tag]'); if (!t) return; tagFilter = tagFilter === t.dataset.tag ? null : t.dataset.tag; closeNav(); renderAll(); });
+        $('clear-tag').onclick = () => { tagFilter = null; renderAll(); };
+        $('search-input').addEventListener('input', e => { query = e.target.value; $('search-box').classList.toggle('has-text', !!query); renderList(); });
+        $('search-input').addEventListener('keydown', e => {
+            if (e.key === 'Escape') { $('search-clear').click(); e.target.blur(); }
+            else if (e.key === 'Enter') { const first = listItems()[0]; if (first) openNote(keyOf(first)); }
+            else if (e.key === 'ArrowDown') { const f = document.querySelector('.note-item'); if (f) { e.preventDefault(); f.focus(); } }
+        });
+        $('search-clear').onclick = () => { query = ''; $('search-input').value = ''; $('search-box').classList.remove('has-text'); renderList(); };
+        $('sort-select').value = sortBy;
+        $('sort-select').onchange = e => { sortBy = e.target.value; lsSet('wn.sort', sortBy); renderList(); };
+        $('new-note-btn').onclick = () => newNote();
+        $('empty-new').onclick = () => newNote();
+        $('favorite-btn').onclick = () => toggleFav();
+        const closeNav = () => document.body.classList.remove('nav-open');
+        $('menu-btn').onclick = () => document.body.classList.toggle('nav-open');
+        $('scrim').onclick = closeNav;
+        $('back-btn').onclick = () => { document.body.classList.remove('show-editor'); const p = cur(); discardIfEmpty(p); renderAll(); };
+        $('focus-btn').onclick = () => { document.body.classList.toggle('focus'); $('focus-btn').classList.toggle('active', document.body.classList.contains('focus')); };
+
+        /* more menu */
+        const closeMenus = () => document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('show'));
+        $('more-btn').onclick = e => { e.stopPropagation(); $('more-menu').classList.toggle('show'); };
+        document.addEventListener('click', e => { if (!e.target.closest('.menu-wrap')) closeMenus(); });
+        function noteAsMarkdown(n) { const c = n.content.trim(); return (/^#\s/.test(c) || !n.title.trim() ? '' : '# ' + n.title.trim() + '\n\n') + n.content; }
+        function download(name, text, type) {
+            const url = URL.createObjectURL(new Blob([text], { type: type || 'text/plain' }));
+            const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+        }
+        const slug = s => (String(s || 'note').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'note').slice(0, 60);
+        $('more-menu').addEventListener('click', async e => {
+            const b = e.target.closest('[data-act]'); if (!b) return;
+            closeMenus();
+            const n = cur(); if (!n) return;
+            const act = b.dataset.act;
+            if (act === 'delete') deleteNote(n);
+            else if (act === 'duplicate') { const x = await newNote({ title: (n.title || 'Untitled') + ' (copy)', content: n.content || ' ', tags: n.tags.slice() }); if (x) toast('Duplicated'); }
+            else if (act === 'copy') { try { await navigator.clipboard.writeText(noteAsMarkdown(n)); toast('Copied to clipboard'); } catch (err) { toast('Copy was blocked by the browser', { err: true }); } }
+            else if (act === 'md') download(slug(n.title) + '.md', noteAsMarkdown(n), 'text/markdown');
+            else if (act === 'txt') download(slug(n.title) + '.txt', (n.title ? n.title + '\n\n' : '') + n.content, 'text/plain');
+        });
+        $('export-all-btn').onclick = () => {
+            if (!notes.length) { toast('No notes to export yet'); return; }
+            download('wizard-notes-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(notes.map(n => ({ title: n.title, content: n.content, tags: n.tags, is_favorite: n.is_favorite, created_at: n.created_at, updated_at: n.updated_at })), null, 2), 'application/json');
+            toast(`Exported ${notes.length} notes`);
+        };
+
+        /* import (button or drag-and-drop) */
+        async function importFiles(files) {
+            let ok = 0;
+            for (const f of files) {
+                if (!/\.(md|markdown|txt)$/i.test(f.name) && !/^text\//.test(f.type)) continue;
+                if (f.size > 190000) { toast(`${f.name} is too big to import`, { err: true }); continue; }
+                let text = await f.text(), title = f.name.replace(/\.[^.]+$/, '');
+                const h = text.match(/^\s*#\s+(.+)\n/);
+                if (h) { title = h[1].trim(); text = text.replace(/^\s*#\s+.+\n+/, ''); }
+                const r = await api('/api/notes', J('POST', { title: title.slice(0, 200), content: text }));
+                if (r.ok) { notes.unshift(hydrate(r.data.note)); ok++; }
+            }
+            if (ok) { folder = 'all'; renderAll(); openNote(keyOf(notes[0])); toast(`Imported ${ok} note${ok > 1 ? 's' : ''}`); }
+            else toast('Nothing to import (use .md or .txt files)', { err: true });
+        }
+        $('import-btn').onclick = () => $('import-file').click();
+        $('import-file').onchange = e => { importFiles([...e.target.files]); e.target.value = ''; closeNav(); };
+        let dragDepth = 0;
+        window.addEventListener('dragenter', e => { if (e.dataTransfer && [...e.dataTransfer.types].indexOf('Files') >= 0) { dragDepth++; $('drop-veil').classList.add('show'); } });
+        window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $('drop-veil').classList.remove('show'); });
+        window.addEventListener('dragover', e => e.preventDefault());
+        window.addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; $('drop-veil').classList.remove('show'); if (e.dataTransfer && e.dataTransfer.files.length) importFiles([...e.dataTransfer.files]); });
+
+        /* ── formatting toolbar ── */
+        const ta = () => $('note-content');
+        function afterEdit() { ta().dispatchEvent(new Event('input', { bubbles: true })); ta().focus(); }
+        function wrapSel(pre, post, ph) {
+            const t = ta(), s = t.selectionStart, e = t.selectionEnd, v = t.value, sel = v.slice(s, e);
+            if (sel && v.slice(s - pre.length, s) === pre && v.slice(e, e + post.length) === post) {          // already wrapped: unwrap
+                t.setRangeText(sel, s - pre.length, e + post.length, 'select');
+            } else if (sel.startsWith(pre) && sel.endsWith(post) && sel.length >= pre.length + post.length) {
+                t.setRangeText(sel.slice(pre.length, sel.length - post.length), s, e, 'select');
+            } else {
+                t.setRangeText(pre + (sel || ph) + post, s, e, 'end');
+                if (!sel) t.setSelectionRange(s + pre.length, s + pre.length + ph.length); else t.setSelectionRange(s + pre.length, s + pre.length + sel.length);
+            }
+            afterEdit();
+        }
+        function prefixLines(fn, test) {
+            const t = ta(), v = t.value;
+            const s = v.lastIndexOf('\n', t.selectionStart - 1) + 1;
+            let e = v.indexOf('\n', t.selectionEnd); if (e < 0) e = v.length;
+            const lines = v.slice(s, e).split('\n');
+            const allHave = lines.every(l => !l.trim() || test(l));
+            const out = lines.map((l, i) => allHave ? l.replace(test.strip, '') : (l.trim() || lines.length === 1 ? fn(l.replace(/^\s*(#{1,6}\s+|[-*+]\s+(\[[ xX]\]\s+)?|\d+[.)]\s+|>\s?)/, ''), i) : l));
+            t.setRangeText(out.join('\n'), s, e, 'select'); afterEdit();
+        }
+        const T = (re) => { const f = l => re.test(l); f.strip = re; return f; };
+        const FORMATS = {
+            bold: () => wrapSel('**', '**', 'bold'),
+            italic: () => wrapSel('*', '*', 'italic'),
+            strike: () => wrapSel('~~', '~~', 'text'),
+            h1: () => prefixLines(l => '# ' + l, T(/^# /)),
+            h2: () => prefixLines(l => '## ' + l, T(/^## /)),
+            ul: () => prefixLines(l => '- ' + l, T(/^[-*+] (?!\[[ xX]\])/)),
+            ol: () => prefixLines((l, i) => (i + 1) + '. ' + l, T(/^\d+[.)] /)),
+            task: () => prefixLines(l => '- [ ] ' + l, T(/^[-*+] \[[ xX]\] /)),
+            quote: () => prefixLines(l => '> ' + l, T(/^> ?/)),
+            code: () => {
+                const t = ta(), sel = t.value.slice(t.selectionStart, t.selectionEnd);
+                if (sel.indexOf('\n') >= 0) { t.setRangeText('```\n' + sel + '\n```', t.selectionStart, t.selectionEnd, 'end'); afterEdit(); } else wrapSel('`', '`', 'code');
+            },
+            link: () => {
+                const t = ta(), s = t.selectionStart, e = t.selectionEnd, sel = t.value.slice(s, e);
+                const txt = sel || 'link text';
+                t.setRangeText(`[${txt}](https://)`, s, e, 'end');
+                const start = s + txt.length + 3; t.setSelectionRange(start + 8, start + 8); afterEdit();
+            },
+            hr: () => { const t = ta(); t.setRangeText('\n\n---\n\n', t.selectionStart, t.selectionEnd, 'end'); afterEdit(); }
+        };
+        $('format-bar').addEventListener('click', e => {
+            const b = e.target.closest('[data-fmt]'); if (!b || b.disabled) return;
+            if (mode === 'preview') setMode('edit');
+            FORMATS[b.dataset.fmt]();
+        });
+        $('mode-toggle').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (b) setMode(b.dataset.mode); });
+        // continue lists on Enter
+        $('note-content').addEventListener('keydown', e => {
+            const t = e.target;
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && !e.isComposing && t.selectionStart === t.selectionEnd && !t.readOnly) {
+                const v = t.value, pos = t.selectionStart, ls = v.lastIndexOf('\n', pos - 1) + 1;
+                const line = v.slice(ls, pos);
+                const m = line.match(/^(\s*)([-*+] \[[ xX]\] |[-*+] |(\d+)([.)]) )(.*)$/);
+                if (m && v.slice(pos).split('\n')[0].trim() === '' || (m && pos < v.length && v[pos] === '\n')) {
+                    e.preventDefault();
+                    if (!m[5].trim()) { t.setRangeText('', ls, pos, 'end'); t.setRangeText('\n', t.selectionStart, t.selectionStart, 'end'); }
+                    else {
+                        let next = m[2];
+                        if (m[3]) next = (parseInt(m[3], 10) + 1) + m[4] + ' ';
+                        else if (/\[[ xX]\]/.test(m[2])) next = m[2].replace(/\[[ xX]\]/, '[ ]');
+                        t.setRangeText('\n' + m[1] + next, pos, pos, 'end');
+                    }
+                    t.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            } else if ((e.ctrlKey || e.metaKey) && !e.altKey && !t.readOnly) {
+                const k = e.key.toLowerCase();
+                if (k === 'b') { e.preventDefault(); FORMATS.bold(); }
+                else if (k === 'i') { e.preventDefault(); FORMATS.italic(); }
+                else if (k === 'k') { e.preventDefault(); FORMATS.link(); }
+            }
+        });
+        // tick boxes in the preview
+        $('preview').addEventListener('click', e => {
+            const cb = e.target.closest('input[type=checkbox][data-line]'); if (!cb) return;
+            const n = cur();
+            if (!n || !canEdit(n)) { e.preventDefault(); return; }
+            const lines = ta().value.split('\n'), i = +cb.dataset.line;
+            if (!/^\s*[-*+] \[[ xX]\]/.test(lines[i] || '')) return;
+            lines[i] = lines[i].replace(/\[[ xX]\]/, cb.checked ? '[x]' : '[ ]');
+            ta().value = lines.join('\n'); n.content = ta().value; onEdit(n); renderPreview();
+        });
+
+        /* ── AI assistant ── */
+        function aiScope() {
+            const t = ta();
+            if (t.selectionEnd > t.selectionStart && document.activeElement === t) return { kind: 'selection', s: t.selectionStart, e: t.selectionEnd };
+            if (aiScope.last && aiScope.last.key === curKey && t.selectionEnd > t.selectionStart && aiScope.last.s === t.selectionStart) return { kind: 'selection', s: t.selectionStart, e: t.selectionEnd };
+            return { kind: 'note', s: 0, e: t.value.length };
+        }
+        function updateScope() {
+            const t = ta();
+            if (t.selectionEnd > t.selectionStart) aiScope.last = { key: curKey, s: t.selectionStart, e: t.selectionEnd };
+            const sc = (t.selectionEnd > t.selectionStart) ? { kind: 'selection', len: t.selectionEnd - t.selectionStart } : { kind: 'note', len: t.value.length };
+            $('ai-scope').textContent = sc.kind === 'selection' ? `Applies to selected text (${sc.len} chars)` : 'Applies to the whole note';
+        }
+        ['select', 'keyup', 'mouseup', 'input', 'focus'].forEach(ev => ta().addEventListener(ev, updateScope));
+        $('ai-head').onclick = () => { const p = $('ai-panel'); p.classList.toggle('open'); $('ai-head').setAttribute('aria-expanded', p.classList.contains('open')); lsSet('wn.ai', p.classList.contains('open')); };
+        $('ai-head').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('ai-head').click(); } });
+        if (lsGet('wn.ai', false)) { $('ai-panel').classList.add('open'); $('ai-head').setAttribute('aria-expanded', 'true'); }
+
+        const REPLACE_FIRST = ['fix', 'shorten', 'expand', 'professional', 'friendly', 'bullets', 'custom'];
+        const LABELS = { summarize: 'Summary', fix: 'Fixed text', shorten: 'Shorter version', expand: 'Expanded version', professional: 'Professional version', friendly: 'Friendly version', bullets: 'Bullet points', actions: 'Action items', outline: 'Outline', continue: 'Continuation', title: 'Suggested title', tags: 'Suggested tags', custom: 'Result' };
+        async function runAI(action, instruction) {
+            const n = cur(); if (!n || aiBusy) return;
+            const t = ta(), sc = aiScope();
+            const text = t.value.slice(sc.s, sc.e);
+            if (!text.trim() && action !== 'custom') { toast('Write something first', { err: true }); return; }
+            if (!$('ai-panel').classList.contains('open')) $('ai-head').click();
+            aiBusy = true;
+            document.querySelectorAll('.ai-chip').forEach(b => { b.disabled = true; }); $('ai-go').disabled = true;
+            const box = $('ai-result'); box.className = 'ai-result show'; box.innerHTML = '<div class="ai-result-body"><span class="spinner"></span>The wizard is thinking…</div>';
+            const key = curKey;
+            const r = await api('/api/notes/ai', J('POST', { action, text, instruction }));
+            aiBusy = false;
+            document.querySelectorAll('.ai-chip').forEach(b => { b.disabled = false; }); $('ai-go').disabled = false;
+            if (!r.ok) { box.innerHTML = `<div class="ai-result-body" style="color:var(--danger)">${esc(r.error)}</div><div class="ai-result-actions"><button data-ai-act="discard">Dismiss</button></div>`; return; }
+            const ed = canEdit(n);
+            aiScope.pending = { key, action, sc, result: r.data.result, tags: r.data.tags };
+            let body = '', actions = '';
+            if (action === 'tags') {
+                const tags = r.data.tags || [];
+                body = tags.length ? tags.map(x => `<span class="chip" style="padding-right:10px">#${esc(x)}</span>`).join(' ') : 'No tag ideas this time.';
+                actions = (tags.length && !isShared(n) ? '<button class="primary" data-ai-act="addtags">Add all tags</button>' : '') + '<button data-ai-act="discard">Dismiss</button>';
+            } else if (action === 'title') {
+                body = `<b>${esc(r.data.result)}</b>`;
+                actions = (ed ? '<button class="primary" data-ai-act="settitle">Use as title</button>' : '') + '<button data-ai-act="discard">Dismiss</button>';
+            } else {
+                body = `<div class="md">${mdToHtml(r.data.result)}</div>`;
+                const where = sc.kind === 'selection' ? 'selection' : 'note';
+                const rep = ed ? `<button data-ai-act="replace" class="${REPLACE_FIRST.indexOf(action) >= 0 ? 'primary' : ''}">Replace ${where}</button>` : '';
+                const ins = ed ? `<button data-ai-act="insert" class="${REPLACE_FIRST.indexOf(action) >= 0 ? '' : 'primary'}">Insert below</button>` : '';
+                actions = (REPLACE_FIRST.indexOf(action) >= 0 ? rep + ins : ins + rep) + '<button data-ai-act="copy">Copy</button><button data-ai-act="discard">Dismiss</button>';
+            }
+            box.innerHTML = `<div class="ai-result-head"><span>${LABELS[action] || 'Result'}</span><span>${action === 'custom' ? esc(instruction).slice(0, 40) : ''}</span></div><div class="ai-result-body">${body}</div><div class="ai-result-actions">${actions}</div>`;
+        }
+        function applyAIText(newContent, label) {
+            const n = cur(), t = ta();
+            const before = { key: curKey, content: t.value, title: n.title };
+            t.value = newContent; n.content = newContent; onEdit(n); save(n);
+            aiUndo = before;
+            toast(label, { undo: () => { const m = getNote(before.key); if (!m) return; if (keyOf(m) === curKey) { ta().value = before.content; m.content = before.content; onEdit(m); save(m); renderPreview(); } else { m.content = before.content; onEdit(m); save(m); } toast('AI change undone'); } });
+        }
+        $('ai-result').addEventListener('click', async e => {
+            const b = e.target.closest('[data-ai-act]'); if (!b) return;
+            const p = aiScope.pending, act = b.dataset.aiAct, box = $('ai-result');
+            if (act === 'discard' || !p) { box.className = 'ai-result'; box.innerHTML = ''; return; }
+            if (p.key !== curKey) { toast('Open the note this result was for to apply it', { err: true }); return; }
+            const n = cur(), t = ta();
+            if (act === 'copy') { try { await navigator.clipboard.writeText(p.result); toast('Copied'); } catch (err) { toast('Copy was blocked by the browser', { err: true }); } return; }
+            if (act === 'settitle') { n.title = p.result; $('note-title').value = p.result; onEdit(n); save(n); toast('Title updated'); }
+            else if (act === 'addtags') { (p.tags || []).forEach(x => { const tt = normTag(x); if (tt && n.tags.indexOf(tt) < 0 && n.tags.length < 20) n.tags.push(tt); }); onEdit(n); save(n); renderTagsRow(); renderNav(); toast('Tags added'); }
+            else if (act === 'replace') {
+                const cc = t.value; const s = Math.min(p.sc.s, cc.length), en = Math.min(p.sc.e, cc.length);
+                applyAIText(cc.slice(0, s) + p.result + cc.slice(en), 'AI change applied');
+            } else if (act === 'insert') {
+                const cc = t.value; const at = p.sc.kind === 'selection' ? Math.min(p.sc.e, cc.length) : cc.length;
+                applyAIText(cc.slice(0, at) + (cc.slice(0, at).trim() ? '\n\n' : '') + p.result + cc.slice(at), 'Added to your note');
+            }
+            renderPreview(); updateStats(); updateScope();
+            box.className = 'ai-result'; box.innerHTML = '';
+        });
+        $('ai-chips').addEventListener('click', e => { const b = e.target.closest('[data-ai]'); if (b) runAI(b.dataset.ai, ''); });
+        $('ai-go').onclick = () => { const v = $('ai-prompt').value.trim(); if (!v) { $('ai-prompt').focus(); return; } runAI('custom', v); $('ai-prompt').value = ''; };
+        $('ai-prompt').addEventListener('keydown', e => { if (e.key === 'Enter') $('ai-go').click(); });
+
+        /* ── sharing ── */
+        function renderPeople() {
+            const n = cur(); const people = n && !isShared(n) ? n.shares : [];
+            $('people').style.display = people.length ? 'block' : 'none';
+            $('people-list').innerHTML = people.map(s => `<div class="person"><span>${esc(s.email)}</span>
+                <select data-share-perm="${esc(s.email)}" aria-label="Permission for ${esc(s.email)}"><option value="view"${s.permission === 'view' ? ' selected' : ''}>Can view</option><option value="edit"${s.permission === 'edit' ? ' selected' : ''}>Can edit</option></select>
+                <button data-unshare="${esc(s.email)}" aria-label="Remove ${esc(s.email)}" title="Remove access">✕</button></div>`).join('');
+        }
+        function openShare() {
+            const n = cur(); if (!n) { toast('Select a note first', { err: true }); return; }
+            if (isShared(n)) { toast("Only the owner can share this note", { err: true }); return; }
+            $('share-error').style.display = 'none'; renderPeople();
+            $('share-modal').classList.add('show'); setTimeout(() => $('share-email').focus(), 30);
+        }
+        $('share-btn').onclick = openShare;
+        $('cancel-share').onclick = () => $('share-modal').classList.remove('show');
+        $('share-modal').addEventListener('click', e => { if (e.target === $('share-modal')) $('share-modal').classList.remove('show'); });
+        async function doShare(email, permission) {
+            const n = cur(); const err = $('share-error');
+            if (!email) { err.textContent = 'Enter an email address'; err.style.display = 'block'; return false; }
+            err.style.display = 'none';
+            const r = await api('/api/notes/' + n.id + '/share', J('POST', { email, permission }));
+            if (!r.ok) { err.textContent = r.error || 'Share failed'; err.style.display = 'block'; return false; }
+            n.shares = r.data.shares || n.shares; renderPeople(); renderAll();
+            toast(r.data.message || 'Shared');
+            return true;
+        }
+        $('confirm-share').onclick = async () => {
+            const btn = $('confirm-share'); btn.disabled = true;
+            const ok = await doShare($('share-email').value.trim(), $('share-permission').value);
+            btn.disabled = false; if (ok) $('share-email').value = '';
+        };
+        $('share-email').addEventListener('keydown', e => { if (e.key === 'Enter') $('confirm-share').click(); });
+        $('people-list').addEventListener('change', async e => { const s = e.target.closest('[data-share-perm]'); if (s) await doShare(s.dataset.sharePerm, s.value); });
+        $('people-list').addEventListener('click', async e => {
+            const b = e.target.closest('[data-unshare]'); if (!b) return;
+            const n = cur();
+            const r = await api('/api/notes/' + n.id + '/share', J('DELETE', { email: b.dataset.unshare }));
+            if (!r.ok) { toast(r.error, { err: true }); return; }
+            n.shares = r.data.shares || []; renderPeople(); renderAll(); toast('Access removed');
+        });
+
+        /* ── keyboard ── */
+        const typing = el => el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable);
+        function cycleMode() { setMode({ edit: 'split', split: 'preview', preview: 'edit' }[mode]); }
+        $('help-btn').onclick = () => { closeNav(); $('help-modal').classList.add('show'); };
+        $('close-help').onclick = () => $('help-modal').classList.remove('show');
+        $('help-modal').addEventListener('click', e => { if (e.target === $('help-modal')) $('help-modal').classList.remove('show'); });
+        document.addEventListener('keydown', e => {
+            const k = e.key.toLowerCase();
+            if (e.key === 'Escape') {
+                if ($('help-modal').classList.contains('show')) $('help-modal').classList.remove('show');
+                else if ($('share-modal').classList.contains('show')) $('share-modal').classList.remove('show');
+                else { closeMenus(); closeNav(); if (document.body.classList.contains('focus')) $('focus-btn').click(); }
+                return;
+            }
+            if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); const n = cur(); if (n) { save(n).then(() => toast('Saved')); } return; }
+            if (e.altKey && k === 'p') { e.preventDefault(); cycleMode(); return; }
+            if (e.altKey && k === 'f') { e.preventDefault(); $('focus-btn').click(); return; }
+            if ((e.ctrlKey || e.metaKey) && k === 'k' && e.target.id !== 'note-content') { e.preventDefault(); $('search-input').focus(); return; }
+            if ((e.ctrlKey || e.metaKey) && k === 'z' && toastUndo && !(e.target.id === 'note-content' || e.target.id === 'note-title')) { e.preventDefault(); $('toast-undo').click(); return; }
+            if (e.ctrlKey || e.metaKey || e.altKey || typing(e.target) || document.querySelector('.modal-overlay.show')) return;
+            if (k === 'n') { e.preventDefault(); newNote(); }
+            else if (e.key === '/') { e.preventDefault(); $('search-input').focus(); }
+            else if (e.key === '?') $('help-btn').click();
+        });
+
+        /* ── startup ── */
+        function recoverDrafts() {
+            let n = 0;
+            notes.forEach(note => {
+                const d = lsGet('wn.draft.' + keyOf(note), null);
+                if (!d || typeof d.c !== 'string') return;
+                if (d.at > D(note.updated_at).getTime() && (d.c !== note.content || d.t !== note.title)) {
+                    note.content = d.c; note.title = d.t; if (Array.isArray(d.tags)) note.tags = d.tags;
+                    note._v++; note._dirty = true; note._editedAt = d.at; n++;
+                    save(note);
+                } else lsDel('wn.draft.' + keyOf(note));
+            });
+            if (n) toast(`Recovered unsaved changes in ${n} note${n > 1 ? 's' : ''}`);
+        }
+
+        async function init() {
+            setMode(mode);
+            renderAll();
+            const r = await api('/api/check-auth');
+            if (r.ok && r.data && r.data.authenticated && r.data.user) {
+                currentUser = r.data.user;
+                $('user-email').textContent = currentUser.email;
+                await Promise.all([loadNotes(), loadShared()]);
+                loaded = true;
+                recoverDrafts();
+                renderAll();
+                const last = lsGet('wn.last', null);
+                if (!isMobile()) {
+                    const start = (last && getNote(last)) ? last : (listItems()[0] ? keyOf(listItems()[0]) : null);
+                    if (start) openNote(start); else showEmpty();
+                } else showEmpty();
+                setInterval(() => { if (!document.hidden && !aiBusy) refreshAll(); updateStats(); }, 25000);
+                return;
+            }
+            if (r.status === 0) { $('user-email').textContent = 'Offline'; loaded = true; renderAll(); showEmpty(); toast(r.error, { err: true }); return; }
             window.location.href = 'https://wizardecosystem.dev';
         }
-
-        async function loadNotes() {
-            try {
-                const res = await fetch(`${API}/api/notes`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    notes = data.notes || [];
-                    renderNotesList();
-                    renderTags();
-                    if (notes.length > 0 && !currentNoteId && !isSharedNote) {
-                        selectNote(notes[0].id);
-                    }
-                }
-            } catch(e) { console.error('Load notes error:', e); }
-        }
-
-        async function loadSharedNotesList() {
-            try {
-                const res = await fetch(`${API}/api/notes/shared`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    sharedNotes = data.shared_notes || [];
-                    if (currentFolder === 'shared') {
-                        renderSharedNotesList();
-                    }
-                }
-            } catch(e) { console.error('Load shared error:', e); }
-        }
-
-        function renderSharedNotesList() {
-            const container = document.getElementById('notes-list');
-            if (sharedNotes.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted);">📭 No notes shared with you</div>';
-                return;
-            }
-            container.innerHTML = sharedNotes.map(n => `
-                <div class="note-item ${currentNoteId === n.id && isSharedNote ? 'active' : ''}" data-id="${n.id}" data-owner="${n.owner_email}" data-permission="${n.permission}" data-title="${esc(n.title)}" data-content="${esc(n.content)}" data-shared="true">
-                    <div class="note-title">
-                        ${esc(n.title)}
-                        <span class="permission-badge ${n.permission === 'edit' ? 'permission-edit' : 'permission-view'}">${n.permission === 'edit' ? '✏️ Can edit' : '👁️ Can view'}</span>
-                    </div>
-                    <div class="note-preview">${esc(n.content.substring(0, 80))}${n.content.length > 80 ? '…' : ''}</div>
-                    <div class="note-date">from ${esc(n.owner_name)} · ${new Date(n.shared_at).toLocaleDateString()}</div>
-                </div>
-            `).join('');
-            
-            document.querySelectorAll('.note-item[data-shared="true"]').forEach(el => {
-                el.addEventListener('click', () => {
-                    const noteId = parseInt(el.dataset.id);
-                    const owner = el.dataset.owner;
-                    const permission = el.dataset.permission;
-                    const title = el.dataset.title;
-                    const content = el.dataset.content;
-                    openSharedNote(noteId, owner, permission, title, content);
-                });
-            });
-        }
-
-        function openSharedNote(noteId, ownerEmail, permission, title, content) {
-            isSharedNote = true;
-            currentNoteId = noteId;
-            currentSharedNoteData = { id: noteId, owner_email: ownerEmail, permission: permission, title: title, content: content };
-            sharedPermission = permission;
-            
-            document.getElementById('note-title').value = title;
-            document.getElementById('note-content').value = content;
-            document.getElementById('note-content').readOnly = (permission !== 'edit');
-            document.getElementById('favorite-btn').style.display = 'none';
-            document.getElementById('rename-btn').style.display = 'none';
-            document.getElementById('share-btn').style.display = 'none';
-            document.getElementById('delete-note-btn').style.display = 'none';
-            document.getElementById('add-tag-btn').style.display = 'none';
-            document.getElementById('tag-input').style.display = 'none';
-            
-            const banner = document.getElementById('shared-note-banner');
-            banner.style.display = 'block';
-            document.getElementById('shared-owner-name').textContent = ownerEmail;
-            document.getElementById('shared-permission-text').textContent = permission === 'edit' ? 'You can edit this note' : 'You can only view this note';
-            
-            renderNotesList();
-            renderSharedNotesList();
-        }
-
-        async function saveSharedNote() {
-            if (!isSharedNote || sharedPermission !== 'edit') return;
-            
-            const newTitle = document.getElementById('note-title').value;
-            const newContent = document.getElementById('note-content').value;
-            
-            try {
-                const res = await fetch(`${API}/api/notes/shared/${currentNoteId}/update`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ 
-                        owner_email: currentSharedNoteData.owner_email,
-                        title: newTitle, 
-                        content: newContent 
-                    })
-                });
-                if (res.ok) {
-                    currentSharedNoteData.title = newTitle;
-                    currentSharedNoteData.content = newContent;
-                    toast('Shared note saved');
-                }
-            } catch(e) { console.error('Save shared error:', e); }
-        }
-
-        async function saveNote() {
-            if (isSharedNote) {
-                await saveSharedNote();
-                return;
-            }
-            if (!currentNoteId) return;
-            
-            const title = document.getElementById('note-title').value;
-            const content = document.getElementById('note-content').value;
-            const note = notes.find(n => n.id === currentNoteId);
-            if (!note) return;
-            
-            try {
-                const res = await fetch(`${API}/api/notes/${currentNoteId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ title, content, tags: note.tags || [] })
-                });
-                if (res.ok) {
-                    const updated = await res.json();
-                    const index = notes.findIndex(n => n.id === currentNoteId);
-                    if (index !== -1) notes[index] = updated.note;
-                    renderNotesList();
-                }
-            } catch(e) { console.error('Save error:', e); }
-        }
-
-        async function createNewNote() {
-            const title = document.getElementById('new-note-title').value.trim() || 'Untitled';
-            const content = document.getElementById('new-note-content').value;
-            
-            try {
-                const res = await fetch(`${API}/api/notes`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ title, content })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    notes.unshift(data.note);
-                    renderNotesList();
-                    selectNote(data.note.id);
-                    document.getElementById('new-note-modal').classList.remove('show');
-                    document.getElementById('new-note-title').value = '';
-                    document.getElementById('new-note-content').value = '';
-                    toast('✨ Note created');
-                }
-            } catch(e) { console.error('Create error:', e); }
-        }
-
-        async function renameNote() {
-            if (isSharedNote) {
-                if (sharedPermission === 'edit') {
-                    const newTitle = document.getElementById('rename-title').value.trim();
-                    if (newTitle) {
-                        document.getElementById('note-title').value = newTitle;
-                        await saveSharedNote();
-                        document.getElementById('rename-modal').classList.remove('show');
-                        toast('Note renamed');
-                    }
-                }
-                return;
-            }
-            
-            const newTitle = document.getElementById('rename-title').value.trim();
-            if (!newTitle || !currentNoteId) return;
-            
-            const note = notes.find(n => n.id === currentNoteId);
-            if (!note) return;
-            
-            try {
-                const res = await fetch(`${API}/api/notes/${currentNoteId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ title: newTitle, content: note.content, tags: note.tags || [] })
-                });
-                if (res.ok) {
-                    note.title = newTitle;
-                    document.getElementById('note-title').value = newTitle;
-                    renderNotesList();
-                    document.getElementById('rename-modal').classList.remove('show');
-                    toast('Note renamed');
-                }
-            } catch(e) { console.error('Rename error:', e); }
-        }
-
-        async function deleteNote() {
-            if (isSharedNote) {
-                toast('Cannot delete shared notes', true);
-                return;
-            }
-            if (!currentNoteId) return;
-            if (!confirm('Delete this note?')) return;
-            try {
-                const res = await fetch(`${API}/api/notes/${currentNoteId}`, { method: 'DELETE', credentials: 'include' });
-                if (res.ok) {
-                    notes = notes.filter(n => n.id !== currentNoteId);
-                    renderNotesList();
-                    renderTags();
-                    if (notes.length > 0) {
-                        selectNote(notes[0].id);
-                    } else {
-                        currentNoteId = null;
-                        isSharedNote = false;
-                        document.getElementById('note-title').value = '';
-                        document.getElementById('note-content').value = '';
-                        document.getElementById('shared-note-banner').style.display = 'none';
-                        document.getElementById('note-content').readOnly = false;
-                        document.getElementById('favorite-btn').style.display = 'flex';
-                        document.getElementById('rename-btn').style.display = 'flex';
-                        document.getElementById('share-btn').style.display = 'flex';
-                        document.getElementById('delete-note-btn').style.display = 'flex';
-                        document.getElementById('add-tag-btn').style.display = 'flex';
-                        document.getElementById('tag-input').style.display = 'flex';
-                    }
-                    toast('Note deleted');
-                }
-            } catch(e) { console.error('Delete error:', e); }
-        }
-
-        async function toggleFavorite() {
-            if (isSharedNote) return;
-            const note = notes.find(n => n.id === currentNoteId);
-            if (!note) return;
-            const newFav = !note.is_favorite;
-            
-            try {
-                const res = await fetch(`${API}/api/notes/${currentNoteId}/favorite`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ favorite: newFav })
-                });
-                if (res.ok) {
-                    note.is_favorite = newFav;
-                    renderNotesList();
-                    const favBtn = document.getElementById('favorite-btn');
-                    favBtn.innerHTML = newFav ? '⭐' : '☆';
-                    favBtn.classList.toggle('active', newFav);
-                    toast(newFav ? 'Added to favorites' : 'Removed from favorites');
-                }
-            } catch(e) { console.error('Favorite error:', e); }
-        }
-
-        async function addTag() {
-            if (isSharedNote) {
-                toast('Cannot add tags to shared notes', true);
-                return;
-            }
-            const tagInput = document.getElementById('tag-input');
-            const tag = tagInput.value.trim().toLowerCase();
-            if (!tag || !currentNoteId) return;
-            
-            const note = notes.find(n => n.id === currentNoteId);
-            if (!note) return;
-            
-            const tags = note.tags || [];
-            if (tags.includes(tag)) {
-                toast('Tag already exists', true);
-                return;
-            }
-            tags.push(tag);
-            
-            try {
-                const res = await fetch(`${API}/api/notes/${currentNoteId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ title: note.title, content: note.content, tags })
-                });
-                if (res.ok) {
-                    note.tags = tags;
-                    renderNotesList();
-                    renderTags();
-                    tagInput.value = '';
-                    toast(`#${tag} added`);
-                }
-            } catch(e) { console.error('Add tag error:', e); }
-        }
-
-        async function askAI() {
-            const prompt = document.getElementById('ai-prompt').value;
-            const currentContent = document.getElementById('note-content').value;
-            if (!prompt && !currentContent) {
-                toast('Enter a prompt or write some content first', true);
-                return;
-            }
-            
-            const responseDiv = document.getElementById('ai-response');
-            responseDiv.style.display = 'block';
-            responseDiv.innerHTML = '<div style="text-align:center;"><div class="spinner" style="width:20px;height:20px;border:2px solid rgba(201,168,76,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;"></div></div>';
-            
-            try {
-                const aiPrompt = prompt ? 
-                    `Improve/transform the following note based on: ${prompt}\n\nNote content:\n${currentContent}\n\nReturn ONLY the improved/transformed version of the note. Do not add explanations or commentary.` :
-                    `Summarize this note in 2-3 sentences:\n\n${currentContent}`;
-                
-                const res = await fetch(`${API}/api/chat/simple`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ prompt: aiPrompt, mode: 'Fast' })
-                });
-                const data = await res.json();
-                if (data.response) {
-                    if (prompt) {
-                        document.getElementById('note-content').value = data.response;
-                        await saveNote();
-                        responseDiv.innerHTML = `<span style="color:var(--success);">✅ Note updated with AI suggestion!</span>`;
-                        toast('Note updated with AI');
-                        setTimeout(() => responseDiv.style.display = 'none', 2000);
-                    } else {
-                        responseDiv.innerHTML = `<strong style="color:var(--gold);">✨ Summary:</strong><br><br>${esc(data.response)}`;
-                    }
-                }
-            } catch(e) { responseDiv.innerHTML = 'Error getting AI response'; }
-            document.getElementById('ai-prompt').value = '';
-        }
-
-        async function shareNote() {
-            if (isSharedNote) {
-                toast('Cannot share shared notes', true);
-                return;
-            }
-            const email = document.getElementById('share-email').value.trim();
-            const permission = document.getElementById('share-permission').value;
-            const errorDiv = document.getElementById('share-error');
-            
-            if (!email) {
-                errorDiv.textContent = 'Enter an email address';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            errorDiv.style.display = 'none';
-            
-            try {
-                const res = await fetch(`${API}/api/notes/${currentNoteId}/share`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ email, permission })
-                });
-                if (res.ok) {
-                    toast(`Note shared with ${email}`);
-                    document.getElementById('share-modal').classList.remove('show');
-                    document.getElementById('share-email').value = '';
-                } else {
-                    const err = await res.json();
-                    errorDiv.textContent = err.error || 'Share failed';
-                    errorDiv.style.display = 'block';
-                }
-            } catch(e) {
-                errorDiv.textContent = 'Connection error';
-                errorDiv.style.display = 'block';
-            }
-        }
-
-        function selectNote(id) {
-            if (currentNoteId === id && !isSharedNote) return;
-            isSharedNote = false;
-            currentNoteId = id;
-            const note = notes.find(n => n.id === id);
-            if (note) {
-                document.getElementById('note-title').value = note.title;
-                document.getElementById('note-content').value = note.content;
-                document.getElementById('note-content').readOnly = false;
-                document.getElementById('shared-note-banner').style.display = 'none';
-                document.getElementById('favorite-btn').style.display = 'flex';
-                document.getElementById('rename-btn').style.display = 'flex';
-                document.getElementById('share-btn').style.display = 'flex';
-                document.getElementById('delete-note-btn').style.display = 'flex';
-                document.getElementById('add-tag-btn').style.display = 'flex';
-                document.getElementById('tag-input').style.display = 'flex';
-                const favBtn = document.getElementById('favorite-btn');
-                favBtn.innerHTML = note.is_favorite ? '⭐' : '☆';
-                favBtn.classList.toggle('active', note.is_favorite);
-            }
-            renderNotesList();
-            if (currentFolder === 'shared') {
-                renderSharedNotesList();
-            }
-        }
-
-        function filterNotes() {
-            let filtered = [...notes];
-            if (currentFolder === 'favorites') {
-                filtered = filtered.filter(n => n.is_favorite);
-            } else if (currentFolder === 'recent') {
-                filtered = filtered.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 10);
-            }
-            if (currentTag) {
-                filtered = filtered.filter(n => n.tags && n.tags.includes(currentTag));
-            }
-            return filtered;
-        }
-
-        function renderNotesList() {
-            const container = document.getElementById('notes-list');
-            const filtered = filterNotes();
-            
-            if (filtered.length === 0 && currentFolder !== 'shared') {
-                container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--muted);">📭 No notes<br>Click "New Note" to start</div>';
-                return;
-            }
-            
-            if (currentFolder === 'shared') {
-                renderSharedNotesList();
-                return;
-            }
-            
-            container.innerHTML = filtered.map(n => `
-                <div class="note-item ${n.id === currentNoteId && !isSharedNote ? 'active' : ''}" data-id="${n.id}">
-                    <div class="note-title">${esc(n.title || 'Untitled')}${n.is_favorite ? ' ⭐' : ''}</div>
-                    <div class="note-preview">${esc((n.content || '').substring(0, 80))}${(n.content || '').length > 80 ? '…' : ''}</div>
-                    <div class="note-date">${new Date(n.updated_at).toLocaleDateString()}</div>
-                    ${n.tags && n.tags.length ? `<div class="note-tags">${n.tags.map(t => `<span class="note-tag">#${esc(t)}</span>`).join('')}</div>` : ''}
-                </div>
-            `).join('');
-            
-            document.querySelectorAll('.note-item:not([data-shared="true"])').forEach(el => {
-                el.addEventListener('click', () => selectNote(parseInt(el.dataset.id)));
-            });
-            
-            document.getElementById('all-count').textContent = notes.length;
-            document.getElementById('fav-count').textContent = notes.filter(n => n.is_favorite).length;
-        }
-
-        function renderTags() {
-            const allTags = new Set();
-            notes.forEach(n => { if (n.tags) n.tags.forEach(t => allTags.add(t)); });
-            const container = document.getElementById('tag-list');
-            if (allTags.size === 0) {
-                container.innerHTML = '<div style="color:var(--muted); font-size:11px; text-align:center;">No tags yet</div>';
-                return;
-            }
-            container.innerHTML = Array.from(allTags).map(t => `
-                <div class="tag ${currentTag === t ? 'active' : ''}" data-tag="${esc(t)}">#${esc(t)}</div>
-            `).join('');
-            
-            document.querySelectorAll('.tag').forEach(el => {
-                el.addEventListener('click', () => {
-                    const tag = el.dataset.tag;
-                    currentTag = currentTag === tag ? null : tag;
-                    renderTags();
-                    renderNotesList();
-                });
-            });
-        }
-
-        // Auto-save
-        document.getElementById('note-title').addEventListener('input', () => {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => saveNote(), 500);
-        });
-        document.getElementById('note-content').addEventListener('input', () => {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => saveNote(), 500);
-        });
-
-        // Event Listeners
-        document.getElementById('new-note-btn').onclick = () => document.getElementById('new-note-modal').classList.add('show');
-        document.getElementById('confirm-new-note').onclick = createNewNote;
-        document.getElementById('cancel-new-note').onclick = () => document.getElementById('new-note-modal').classList.remove('show');
-        document.getElementById('rename-btn').onclick = () => {
-            if (!currentNoteId && !isSharedNote) { toast('Select a note first', true); return; }
-            if (isSharedNote && sharedPermission !== 'edit') { toast('You only have view permission', true); return; }
-            document.getElementById('rename-title').value = document.getElementById('note-title').value;
-            document.getElementById('rename-modal').classList.add('show');
-        };
-        document.getElementById('confirm-rename').onclick = renameNote;
-        document.getElementById('cancel-rename').onclick = () => document.getElementById('rename-modal').classList.remove('show');
-        document.getElementById('delete-note-btn').onclick = deleteNote;
-        document.getElementById('favorite-btn').onclick = toggleFavorite;
-        document.getElementById('share-btn').onclick = () => {
-            if (!currentNoteId && !isSharedNote) { toast('Select a note first', true); return; }
-            if (isSharedNote) { toast('Cannot share shared notes', true); return; }
-            document.getElementById('share-modal').classList.add('show');
-        };
-        document.getElementById('confirm-share').onclick = shareNote;
-        document.getElementById('cancel-share').onclick = () => document.getElementById('share-modal').classList.remove('show');
-        document.getElementById('shared-btn').onclick = () => {
-            currentFolder = 'shared';
-            document.querySelectorAll('.folder-item').forEach(f => f.classList.remove('active'));
-            document.querySelector('.folder-item[data-folder="shared"]').classList.add('active');
-            renderNotesList();
-        };
-        document.getElementById('ai-action-btn').onclick = askAI;
-        document.getElementById('add-tag-btn').onclick = addTag;
-        document.getElementById('tag-input').addEventListener('keypress', e => { if (e.key === 'Enter') addTag(); });
-        document.getElementById('ai-prompt').addEventListener('keypress', e => { if (e.key === 'Enter') askAI(); });
-
-        // Folder navigation
-        document.querySelectorAll('.folder-item').forEach(f => {
-            f.addEventListener('click', () => {
-                document.querySelectorAll('.folder-item').forEach(x => x.classList.remove('active'));
-                f.classList.add('active');
-                currentFolder = f.dataset.folder;
-                currentTag = null;
-                isSharedNote = false;
-                renderTags();
-                renderNotesList();
-                if (currentFolder !== 'shared') {
-                    document.getElementById('shared-note-banner').style.display = 'none';
-                }
-            });
-        });
-
-        window.addEventListener('beforeunload', () => { if (currentNoteId) saveNote(); });
-
-        const hamburger = document.createElement('button');
-        hamburger.innerHTML = '☰';
-        hamburger.style.cssText = 'position:fixed; top:15px; left:15px; z-index:1000; background:linear-gradient(135deg,var(--gold),#a8751e); border:none; border-radius:50%; width:40px; height:40px; font-size:20px; color:var(--ink); cursor:pointer; display:none;';
-        document.body.appendChild(hamburger);
-        hamburger.addEventListener('click', () => document.querySelector('.sidebar').classList.toggle('open'));
-        
-        if (window.innerWidth <= 700) {
-            hamburger.style.display = 'block';
-            document.querySelector('.sidebar').classList.add('open');
-        }
-
-        checkAuth();
+        init();
     </script>
 </body>
 </html>
