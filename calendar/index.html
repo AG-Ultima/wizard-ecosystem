@@ -634,6 +634,86 @@
             .sidebar { width: 100%; min-width: unset; height: auto; overflow: visible; }
             .main { flex: 1; overflow: auto; }
         }
+
+        /* ── v2 additions ── */
+        .today-btn {
+            background: rgba(201,168,76,0.1);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 7px 14px;
+            color: var(--gold);
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .today-btn:hover { background: rgba(201,168,76,0.2); border-color: var(--border-strong); }
+        .current-month-title { min-width: 0; white-space: nowrap; }
+        .calendar-header { gap: 12px; flex-wrap: wrap; }
+
+        .month-view { grid-template-rows: auto repeat(6, minmax(96px, 1fr)); }
+        .month-day-cell { min-height: 0; overflow: hidden; }
+        .month-day-cell.other-month { opacity: 0.38; cursor: pointer; }
+        .month-day-cell.selected:not(.today) .day-number { border: 1px solid var(--border-strong); }
+        .event-pill .ev-time { color: var(--muted); font-size: 10px; flex-shrink: 0; }
+        .event-pill .ev-title { overflow: hidden; text-overflow: ellipsis; }
+        .event-pill.all-day { background: rgba(255,255,255,0.09); }
+        .more-link {
+            background: none; border: none; color: var(--gold); font-size: 11px; cursor: pointer;
+            padding: 2px 4px; font-family: 'DM Sans', sans-serif;
+        }
+        .more-link:hover { text-decoration: underline; }
+        .mini-day.selected:not(.today) { outline: 1px solid var(--border-strong); }
+
+        /* time grid (week + day) */
+        .week-view { position: relative; }
+        .week-day-col { position: relative; min-width: 0; }
+        .week-day-header { height: 42px; display: flex; align-items: center; justify-content: center; z-index: 5; }
+        .week-day-header.today-col { color: var(--gold); font-weight: 600; }
+        .week-allday { border-bottom: 1px solid var(--border); padding: 4px 3px; display: flex; flex-direction: column; gap: 2px; }
+        .week-allday .event-pill { margin: 0; }
+        .tg-layer { position: absolute; left: 0; right: 0; height: 1440px; pointer-events: none; z-index: 2; }
+        .tg-event {
+            position: absolute; pointer-events: auto; cursor: pointer; overflow: hidden;
+            border-radius: 7px; border-left: 3px solid var(--gold);
+            padding: 2px 6px; font-size: 11px; line-height: 1.25; color: var(--silver);
+            transition: filter 0.15s;
+        }
+        .tg-event:hover { filter: brightness(1.35); z-index: 3; }
+        .tg-event .tg-time { color: var(--silver-dim); font-size: 10px; }
+        .tg-event .tg-title { font-weight: 500; }
+        .now-line { position: absolute; left: 0; right: 0; height: 2px; background: var(--danger); z-index: 4; pointer-events: none; }
+        .now-line::before { content: ''; position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+
+        /* modal */
+        .modal-box { max-height: 92vh; overflow-y: auto; padding: 36px 36px 28px; }
+        .field-row > div { flex: 1; min-width: 0; }
+        .check-row { display: flex; align-items: center; gap: 8px; margin: 2px 0 14px; font-size: 13px; color: var(--silver-dim); cursor: pointer; }
+        .check-row input { accent-color: var(--gold); width: 15px; height: 15px; }
+        .scope-box { background: rgba(201,168,76,0.07); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; }
+        .scope-box label { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; color: var(--silver-dim); }
+        .scope-box input { accent-color: var(--gold); }
+        .scope-title { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+        .modal-error { color: var(--danger); font-size: 13px; margin: 0 0 10px; min-height: 0; }
+        .modal-error:empty { display: none; }
+        .hint { font-size: 12px; color: var(--muted); margin: -6px 0 12px; }
+        select.field option { background: #13102a; color: var(--silver); }
+        #toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: #1d1838; border: 1px solid var(--border-strong); color: var(--silver);
+            padding: 10px 18px; border-radius: 100px; font-size: 13px; opacity: 0; pointer-events: none;
+            transition: all 0.25s; z-index: 10000;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast.err { border-color: var(--danger); color: #ffb3b3; }
+        @media (max-width: 600px) {
+            body { height: auto; overflow: auto; }
+            .calendar-container { height: auto; min-height: 100vh; }
+            .main { min-height: 100vh; }
+            .month-view { grid-template-rows: auto repeat(6, minmax(70px, 1fr)); }
+            .event-pill .ev-time { display: none; }
+            .modal-box { padding: 26px 20px; }
+        }
     </style>
 </head>
 <body>
@@ -675,13 +755,15 @@
         <main class="main" role="main">
             <div class="calendar-header">
                 <div class="header-left">
-                    <button class="month-nav-btn" id="prev-month" aria-label="Previous month">←</button>
+                    <button class="today-btn" id="today-btn" title="Jump to today (T)">Today</button>
+                    <button class="month-nav-btn" id="prev-month" aria-label="Previous">←</button>
                     <h1 id="current-month" class="current-month-title"></h1>
-                    <button class="month-nav-btn" id="next-month" aria-label="Next month">→</button>
+                    <button class="month-nav-btn" id="next-month" aria-label="Next">→</button>
                 </div>
                 <div class="view-buttons" role="group" aria-label="Calendar view">
                     <button class="view-btn active" data-view="month">Month</button>
                     <button class="view-btn" data-view="week">Week</button>
+                    <button class="view-btn" data-view="day">Day</button>
                 </div>
             </div>
 
@@ -697,7 +779,9 @@
             <h2 class="modal-title" id="modal-title">New Event</h2>
 
             <label class="field-label" for="event-title">Event title</label>
-            <input class="field" type="text" id="event-title" placeholder="Name your event…" autocomplete="off">
+            <input class="field" type="text" id="event-title" placeholder="Name your event…" autocomplete="off" maxlength="200">
+
+            <label class="check-row"><input type="checkbox" id="event-allday"> All-day</label>
 
             <div class="field-row">
                 <div>
@@ -710,36 +794,58 @@
                 </div>
             </div>
 
-            <label class="field-label" for="event-color">Color</label>
-            <div class="color-select-wrap">
-                <select class="field" id="event-color">
-                    <option value="gold">✦ Gold</option>
-                    <option value="violet">✦ Violet</option>
-                    <option value="blue">✦ Blue</option>
-                    <option value="green">✦ Green</option>
-                    <option value="red">✦ Red</option>
-                </select>
+            <div class="field-row">
+                <div>
+                    <label class="field-label" for="event-color">Color</label>
+                    <div class="color-select-wrap">
+                        <select class="field" id="event-color">
+                            <option value="gold">✦ Gold</option>
+                            <option value="violet">✦ Violet</option>
+                            <option value="blue">✦ Blue</option>
+                            <option value="green">✦ Green</option>
+                            <option value="red">✦ Red</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="field-label" for="repeat">Repeat</label>
+                    <div class="color-select-wrap">
+                        <select class="field" id="repeat">
+                            <option value="none">Does not repeat</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                </div>
             </div>
+            <div id="repeat-count-wrap" style="display:none;">
+                <label class="field-label" for="repeat-count">Number of events</label>
+                <input class="field" type="number" id="repeat-count" min="2" max="366" value="12">
+            </div>
+            <p class="hint" id="series-hint" style="display:none;"></p>
 
-            <label class="field-label" for="repeat">Repeat</label>
-            <div class="repeat-select-wrap">
-                <select class="field" id="repeat">
-                    <option value="none">Does not repeat</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                </select>
-            </div>
+            <label class="field-label" for="event-location">Location</label>
+            <input class="field" type="text" id="event-location" placeholder="Optional" autocomplete="off" maxlength="500">
 
             <label class="field-label" for="event-desc">Description</label>
             <textarea class="field" id="event-desc" placeholder="Optional notes…"></textarea>
 
+            <div class="scope-box" id="scope-box" style="display:none;">
+                <div class="scope-title">This is a repeating event. Apply changes to</div>
+                <label><input type="radio" name="scope" value="one" checked> This event only</label>
+                <label><input type="radio" name="scope" value="following"> This and following events</label>
+                <label><input type="radio" name="scope" value="all"> All events in the series</label>
+            </div>
+
+            <p class="modal-error" id="modal-error" role="alert"></p>
             <button class="btn-primary" id="save-event">Save Event</button>
             <button class="btn-danger" id="delete-event" style="display:none;">Delete Event</button>
             <button class="btn-ghost" id="close-modal">Cancel</button>
         </div>
     </div>
+    <div id="toast" role="status" aria-live="polite"></div>
 
     <script>
         /* ── Starfield ── */
@@ -770,340 +876,482 @@
         })();
 
         /* ── App Logic ── */
-        const API_BASE = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null, events = [], currentDate = new Date(), currentView = 'month', editingId = null;
+        const API_BASE = window.WIZ_API_BASE || 'https://arnav0928.pythonanywhere.com';
+        let currentUser = null, events = [], currentDate = new Date(), currentView = 'month';
+        let editingId = null, editingEvent = null, lastLoad = 0;
 
-        const COLOR_MAP = {
-            gold:   '#c9a84c',
-            violet: '#7c5cbf',
-            blue:   '#4a8fe8',
-            green:  '#5cb87a',
-            red:    '#e05555'
-        };
+        const COLOR_MAP = { gold: '#c9a84c', violet: '#7c5cbf', purple: '#7c5cbf', blue: '#4a8fe8', green: '#5cb87a', red: '#e05555' };
+        const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        const $ = id => document.getElementById(id);
+        const pad = n => String(n).padStart(2, '0');
+        const getColor = c => COLOR_MAP[c] || COLOR_MAP.gold;
 
-        function getColor(c) { return COLOR_MAP[c] || COLOR_MAP.gold; }
-        function escapeHtml(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-
-        // Generate recurring event dates
-        function generateRecurringDates(startDate, repeat, occurrences = 12) {
-            const dates = [new Date(startDate)];
-            if (repeat === 'none') return dates;
-            
-            const start = new Date(startDate);
-            for (let i = 1; i < occurrences; i++) {
-                const next = new Date(start);
-                switch(repeat) {
-                    case 'daily':
-                        next.setDate(start.getDate() + i);
-                        break;
-                    case 'weekly':
-                        next.setDate(start.getDate() + (i * 7));
-                        break;
-                    case 'monthly':
-                        next.setMonth(start.getMonth() + i);
-                        break;
-                    case 'yearly':
-                        next.setFullYear(start.getFullYear() + i);
-                        break;
-                }
-                dates.push(next);
-            }
-            return dates;
+        function esc(t) {
+            return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        async function checkAuth() {
+        /* ── date helpers: everything is LOCAL wall-clock time, never UTC ── */
+        const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const toInput = d => `${ymd(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+        const sameDay = (a, b) => ymd(a) === ymd(b);
+        function parseLocal(s) {
+            const m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+            return m ? new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)) : new Date(NaN);
+        }
+        function addMonthsSafe(d, n) {          // Oct 31 + 1 month = Nov 30, never Dec 1
+            const t = new Date(d.getFullYear(), d.getMonth() + n, 1);
+            const last = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate();
+            return new Date(t.getFullYear(), t.getMonth(), Math.min(d.getDate(), last));
+        }
+        function fmtTime(d) {
+            const h = d.getHours() % 12 || 12, m = d.getMinutes();
+            return `${h}${m ? ':' + pad(m) : ''} ${d.getHours() < 12 ? 'AM' : 'PM'}`;
+        }
+        function fmtShort(d) {
+            const h = d.getHours() % 12 || 12, m = d.getMinutes();
+            return `${h}${m ? ':' + pad(m) : ''}${d.getHours() < 12 ? 'a' : 'p'}`;
+        }
+
+        function toast(msg, isErr) {
+            const t = $('toast');
+            t.textContent = msg;
+            t.className = 'show' + (isErr ? ' err' : '');
+            clearTimeout(toast._t);
+            toast._t = setTimeout(() => { t.className = ''; }, isErr ? 4500 : 2200);
+        }
+
+        /* ── API ── */
+        async function api(path, opts) {
             try {
-                const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated && data.user) {
-                        currentUser = data.user;
-                        document.getElementById('user-email').textContent = currentUser.email;
-                        await loadEvents();
-                        renderAll();
-                        return;
-                    }
-                }
-            } catch(e) {}
+                const res = await fetch(API_BASE + path, Object.assign({ credentials: 'include' }, opts || {}));
+                let data = null;
+                try { data = await res.json(); } catch (e) {}
+                return { ok: res.ok, status: res.status, data, error: (data && data.error) || (res.ok ? '' : 'Request failed (' + res.status + ')') };
+            } catch (e) {
+                return { ok: false, status: 0, data: null, error: "Can't reach the server. Check your connection." };
+            }
+        }
+        const sendJson = (method, body) => ({ method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+        async function checkAuth() {
+            const r = await api('/api/check-auth');
+            if (r.ok && r.data && r.data.authenticated && r.data.user) {
+                currentUser = r.data.user;
+                $('user-email').textContent = currentUser.email;
+                await loadEvents();
+                renderAll({ scroll: true });
+                return;
+            }
+            if (r.status === 0) {                       // offline: don't kick the user out
+                $('user-email').textContent = 'Offline';
+                toast(r.error, true);
+                renderAll({ scroll: true });
+                return;
+            }
             window.location.href = 'https://wizardecosystem.dev';
         }
 
         async function loadEvents() {
-            try {
-                const res = await fetch(`${API_BASE}/api/calendar/events`, { credentials: 'include' });
-                if (res.ok) { const data = await res.json(); events = data.events || []; }
-            } catch(e) {}
-        }
-
-        async function saveEvent(eventData) {
-            const method = editingId ? 'PUT' : 'POST';
-            const url = editingId ? `${API_BASE}/api/calendar/events/${editingId}` : `${API_BASE}/api/calendar/events`;
-            
-            // Handle recurring events
-            const repeat = eventData.repeat || 'none';
-            if (repeat !== 'none' && !editingId) {
-                // Create multiple events for recurring
-                const startDate = new Date(eventData.start);
-                const endDate = new Date(eventData.end);
-                const duration = endDate - startDate;
-                const recurringDates = generateRecurringDates(startDate, repeat, 12);
-                
-                let success = true;
-                for (const date of recurringDates) {
-                    const newEnd = new Date(date.getTime() + duration);
-                    const singleEvent = {
-                        title: eventData.title,
-                        start: date.toISOString(),
-                        end: newEnd.toISOString(),
-                        description: eventData.description,
-                        color: eventData.color,
-                        repeat: repeat
-                    };
-                    const res = await fetch(`${API_BASE}/api/calendar/events`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify(singleEvent)
-                    });
-                    if (!res.ok) success = false;
-                }
-                if (success) { await loadEvents(); renderAll(); return true; }
-                return false;
+            const r = await api('/api/calendar/events');
+            if (r.ok) {
+                events = (r.data.events || []).map(e => {
+                    e._s = parseLocal(e.start); e._e = parseLocal(e.end);
+                    if (isNaN(e._e) || e._e < e._s) e._e = e._s;
+                    return e;
+                }).filter(e => !isNaN(e._s));
+                lastLoad = Date.now();
+            } else if (r.status !== 401) {
+                toast(r.error, true);
             }
-            
-            try {
-                const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(eventData) });
-                if (res.ok) { await loadEvents(); renderAll(); return true; }
-            } catch(e) {}
-            return false;
         }
 
-        async function deleteEvent() {
-            if (!editingId || !confirm('Delete this event?')) return false;
-            
-            // Check if it's a recurring event
-            const event = events.find(e => e.id === editingId);
-            if (event && event.repeat && event.repeat !== 'none') {
-                const deleteAll = confirm('This is a recurring event. Delete all occurrences?');
-                if (deleteAll) {
-                    // Delete all events with same title and repeat pattern
-                    for (const e of events) {
-                        if (e.title === event.title && e.repeat === event.repeat) {
-                            await fetch(`${API_BASE}/api/calendar/events/${e.id}`, { method: 'DELETE', credentials: 'include' });
-                        }
-                    }
-                    await loadEvents();
-                    renderAll();
-                    closeModal();
-                    return true;
-                }
+        /* ── event queries ── */
+        function effEnd(e) {                            // an event ending exactly at midnight doesn't spill into the next day
+            return (!e.all_day && e._e > e._s && e._e.getHours() === 0 && e._e.getMinutes() === 0)
+                ? new Date(e._e.getTime() - 60000) : e._e;
+        }
+        function eventsOn(day) {
+            const ds = startOfDay(day), de = addDays(ds, 1);
+            return events.filter(e => e._s < de && effEnd(e) >= ds)
+                .sort((a, b) => (b.all_day - a.all_day) || (a._s - b._s) || a.title.localeCompare(b.title));
+        }
+
+        /* ── rendering ── */
+        function titleText() {
+            const d = currentDate;
+            if (currentView === 'month') return `${d.toLocaleString('default', { month: 'long' })} <em>${d.getFullYear()}</em>`;
+            if (currentView === 'day') return `${d.toLocaleString('default', { weekday: 'long' })}, ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()} <em>${d.getFullYear()}</em>`;
+            const a = addDays(startOfDay(d), -d.getDay()), b = addDays(a, 6);
+            const left = `${MONTHS_SHORT[a.getMonth()]} ${a.getDate()}`;
+            const right = a.getMonth() === b.getMonth() ? `${b.getDate()}` : `${MONTHS_SHORT[b.getMonth()]} ${b.getDate()}`;
+            return `${left} – ${right} <em>${b.getFullYear()}</em>`;
+        }
+
+        function renderAll(opts) {
+            $('current-month').innerHTML = titleText();
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === currentView));
+            const monthEl = $('month-view'), weekEl = $('week-view');
+            if (currentView === 'month') {
+                monthEl.style.display = 'grid';
+                weekEl.classList.remove('active');
+                renderMonthView();
+            } else {
+                monthEl.style.display = 'none';
+                weekEl.classList.add('active');
+                renderTimeView(opts && opts.scroll);
             }
-            
-            try {
-                const res = await fetch(`${API_BASE}/api/calendar/events/${editingId}`, { method: 'DELETE', credentials: 'include' });
-                if (res.ok) { await loadEvents(); renderAll(); closeModal(); return true; }
-            } catch(e) {}
-            return false;
-        }
-
-        function renderAll() {
-            const label = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-            const [month, year] = [
-                currentDate.toLocaleString('default', { month: 'long' }),
-                currentDate.getFullYear()
-            ];
-            document.getElementById('current-month').innerHTML = `${month} <em>${year}</em>`;
-            renderMonthView();
             renderMiniCalendar();
         }
 
+        function pillHtml(ev) {
+            const time = ev.all_day ? '' : `<span class="ev-time">${fmtShort(ev._s)}</span>`;
+            return `<div class="event-pill ${ev.all_day ? 'all-day' : ''}" data-event-id="${ev.id}" role="button" tabindex="0" title="${esc(ev.title)}" aria-label="${esc(ev.title)}">
+                <span class="event-dot" style="background:${getColor(ev.color)};"></span>${time}<span class="ev-title">${esc(ev.title)}</span></div>`;
+        }
+
         function renderMonthView() {
-            const year = currentDate.getFullYear(), month = currentDate.getMonth();
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const y = currentDate.getFullYear(), m = currentDate.getMonth();
+            const first = new Date(y, m, 1);
+            const gridStart = addDays(first, -first.getDay());
             const today = new Date();
+            const MAX = 3;
             let html = '';
-
-            ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d => {
-                html += `<div class="month-day-header">${d}</div>`;
-            });
-
-            for (let i = 0; i < firstDay; i++) html += `<div class="month-day-cell other-month"></div>`;
-
-            for (let d = 1; d <= daysInMonth; d++) {
-                const date = new Date(year, month, d);
-                const isToday = date.toDateString() === today.toDateString();
-                const dayEvents = events.filter(e => new Date(e.start).toDateString() === date.toDateString());
-                html += `<div class="month-day-cell ${isToday ? 'today' : ''}" data-year="${year}" data-month="${month}" data-day="${d}" role="gridcell" tabindex="0" aria-label="${date.toDateString()}">
-                    <span class="day-number">${d}</span>`;
-                dayEvents.forEach(ev => {
-                    html += `<div class="event-pill" data-event-id="${ev.id}" role="button" tabindex="0" aria-label="${escapeHtml(ev.title)}">
-                        <span class="event-dot" style="background:${getColor(ev.color)};"></span>${escapeHtml(ev.title)}
-                    </div>`;
-                });
+            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(d => { html += `<div class="month-day-header">${d}</div>`; });
+            for (let i = 0; i < 42; i++) {
+                const date = addDays(gridStart, i);
+                const cls = ['month-day-cell'];
+                if (sameDay(date, today)) cls.push('today');
+                if (date.getMonth() !== m) cls.push('other-month');
+                if (sameDay(date, currentDate)) cls.push('selected');
+                const evs = eventsOn(date);
+                html += `<div class="${cls.join(' ')}" data-date="${ymd(date)}" role="gridcell" tabindex="0" aria-label="${esc(date.toDateString())}">
+                    <span class="day-number">${date.getDate()}</span>`;
+                evs.slice(0, MAX).forEach(ev => { html += pillHtml(ev); });
+                if (evs.length > MAX) html += `<button class="more-link" data-more="${ymd(date)}">+${evs.length - MAX} more</button>`;
                 html += `</div>`;
             }
-
-            const remaining = 42 - (firstDay + daysInMonth);
-            for (let i = 0; i < remaining; i++) html += `<div class="month-day-cell other-month"></div>`;
-
-            document.getElementById('month-view').innerHTML = html;
-
-            document.querySelectorAll('.month-day-cell:not(.other-month)').forEach(cell => {
+            const el = $('month-view');
+            el.innerHTML = html;
+            el.querySelectorAll('.month-day-cell').forEach(cell => {
                 cell.addEventListener('click', e => {
-                    if (!e.target.closest('.event-pill')) {
-                        const y = parseInt(cell.dataset.year), m = parseInt(cell.dataset.month), d = parseInt(cell.dataset.day);
-                        if (y && d >= 0) openCreateModal(new Date(y, m, d), 9);
-                    }
+                    if (e.target.closest('.event-pill') || e.target.closest('.more-link')) return;
+                    openCreateModal(parseLocal(cell.dataset.date), 9);
                 });
-                cell.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') cell.click();
-                });
+                cell.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target === cell) cell.click(); });
             });
-            document.querySelectorAll('.event-pill').forEach(el => {
+            el.querySelectorAll('.more-link').forEach(b => b.addEventListener('click', e => {
+                e.stopPropagation(); currentDate = parseLocal(b.dataset.more); currentView = 'day'; renderAll({ scroll: true });
+            }));
+            bindPills(el);
+        }
+
+        function bindPills(root) {
+            root.querySelectorAll('[data-event-id]').forEach(el => {
                 el.addEventListener('click', e => { e.stopPropagation(); openEditModal(parseInt(el.dataset.eventId)); });
-                el.addEventListener('keydown', e => { if (e.key === 'Enter') el.click(); });
+                el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.stopPropagation(); el.click(); } });
             });
         }
 
         function renderMiniCalendar() {
-            const year = currentDate.getFullYear(), month = currentDate.getMonth();
-            const firstDay = new Date(year, month, 1).getDay();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const y = currentDate.getFullYear(), m = currentDate.getMonth();
+            const first = new Date(y, m, 1), dim = new Date(y, m + 1, 0).getDate();
             const today = new Date();
             let html = '';
-
-            ['S','M','T','W','T','F','S'].forEach(d => { html += `<div class="mini-weekday">${d}</div>`; });
-            for (let i = 0; i < firstDay; i++) html += `<div class="mini-day other-month"></div>`;
-            for (let d = 1; d <= daysInMonth; d++) {
-                const date = new Date(year, month, d);
-                const isToday = date.toDateString() === today.toDateString();
-                const hasEvent = events.some(e => new Date(e.start).toDateString() === date.toDateString());
-                html += `<div class="mini-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''}" data-day="${d}" role="gridcell" tabindex="0" aria-label="${date.toDateString()}">${d}</div>`;
+            ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(d => { html += `<div class="mini-weekday">${d}</div>`; });
+            for (let i = 0; i < first.getDay(); i++) html += `<div class="mini-day other-month"></div>`;
+            for (let d = 1; d <= dim; d++) {
+                const date = new Date(y, m, d);
+                const cls = ['mini-day'];
+                if (sameDay(date, today)) cls.push('today');
+                if (sameDay(date, currentDate)) cls.push('selected');
+                if (eventsOn(date).length) cls.push('has-event');
+                html += `<div class="${cls.join(' ')}" data-day="${d}" role="gridcell" tabindex="0" aria-label="${esc(date.toDateString())}">${d}</div>`;
             }
-
-            document.getElementById('mini-calendar-grid').innerHTML = html;
-            document.getElementById('mini-current-month').textContent =
-                currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-            document.querySelectorAll('.mini-day[data-day]').forEach(day => {
-                day.addEventListener('click', () => {
-                    currentDate = new Date(year, month, parseInt(day.dataset.day));
-                    renderAll();
-                });
+            $('mini-calendar-grid').innerHTML = html;
+            $('mini-current-month').textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            $('mini-calendar-grid').querySelectorAll('.mini-day[data-day]').forEach(day => {
+                const go = () => { currentDate = new Date(y, m, parseInt(day.dataset.day)); renderAll({ scroll: currentView !== 'month' }); };
+                day.addEventListener('click', go);
+                day.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
             });
+        }
+
+        /* week + day share one renderer */
+        function layoutSegments(segs) {
+            segs.sort((a, b) => a.top - b.top || b.bottom - a.bottom);
+            const out = []; let cluster = [], clusterEnd = -1;
+            const flush = () => {
+                const cols = [];
+                cluster.forEach(s => {
+                    let c = cols.findIndex(end => end <= s.top);
+                    if (c < 0) { c = cols.length; cols.push(0); }
+                    cols[c] = s.bottom; s.col = c;
+                });
+                cluster.forEach(s => { s.cols = cols.length; });
+                out.push(...cluster); cluster = [];
+            };
+            segs.forEach(s => {
+                if (cluster.length && s.top >= clusterEnd) { flush(); clusterEnd = -1; }
+                cluster.push(s); clusterEnd = Math.max(clusterEnd, s.bottom);
+            });
+            if (cluster.length) flush();
+            return out;
+        }
+
+        function renderTimeView(scroll) {
+            const n = currentView === 'day' ? 1 : 7;
+            const base = startOfDay(currentDate);
+            const first = n === 1 ? base : addDays(base, -base.getDay());
+            const days = Array.from({ length: n }, (_, i) => addDays(first, i));
+            const today = new Date();
+            const el = $('week-view');
+            const prevScroll = el.scrollTop;
+
+            const perDay = days.map(d => eventsOn(d));
+            const allRows = Math.max(0, ...perDay.map(l => l.filter(e => e.all_day).length));
+            const adH = allRows ? allRows * 22 + 8 : 0;
+            const HEAD = 42;
+
+            el.style.gridTemplateColumns = `64px repeat(${n}, 1fr)`;
+            let html = `<div class="week-time-gutter"><div class="time-label" style="height:${HEAD}px;"></div>`;
+            if (adH) html += `<div class="time-label" style="height:${adH}px;">all-day</div>`;
+            for (let h = 0; h < 24; h++) html += `<div class="time-label">${h === 0 ? '12 AM' : h < 12 ? h + ' AM' : h === 12 ? '12 PM' : (h - 12) + ' PM'}</div>`;
+            html += `</div>`;
+
+            days.forEach((d, i) => {
+                const isToday = sameDay(d, today);
+                const dayStart = startOfDay(d), dayEnd = addDays(dayStart, 1);
+                html += `<div class="week-day-col"><div class="week-day-header ${isToday ? 'today-col' : ''}">${d.toLocaleString('default', { weekday: 'short' })} ${d.getDate()}</div>`;
+                if (adH) {
+                    html += `<div class="week-allday" style="height:${adH}px;">`;
+                    perDay[i].filter(e => e.all_day).forEach(ev => { html += pillHtml(ev); });
+                    html += `</div>`;
+                }
+                for (let h = 0; h < 24; h++) html += `<div class="week-hour-cell" data-date="${ymd(d)}" data-h="${h}"></div>`;
+
+                const segs = perDay[i].filter(e => !e.all_day).map(ev => {
+                    const s = ev._s < dayStart ? dayStart : ev._s, e2 = ev._e > dayEnd ? dayEnd : ev._e;
+                    const top = (s - dayStart) / 60000, bottom = Math.max(top + 22, (e2 - dayStart) / 60000);
+                    return { ev, top, bottom };
+                });
+                html += `<div class="tg-layer" style="top:${HEAD + adH}px;">`;
+                layoutSegments(segs).forEach(s => {
+                    const c = getColor(s.ev.color), w = 100 / s.cols;
+                    html += `<div class="tg-event" data-event-id="${s.ev.id}" role="button" tabindex="0" title="${esc(s.ev.title)}"
+                        style="top:${s.top}px;height:${s.bottom - s.top - 1}px;left:calc(${s.col * w}% + 2px);width:calc(${w}% - 4px);background:${c}33;border-left-color:${c};">
+                        <div class="tg-title">${esc(s.ev.title)}</div><div class="tg-time">${fmtTime(s.ev._s)} – ${fmtTime(s.ev._e)}</div></div>`;
+                });
+                if (isToday) html += `<div class="now-line" style="top:${today.getHours() * 60 + today.getMinutes()}px;"></div>`;
+                html += `</div></div>`;
+            });
+            el.innerHTML = html;
+            el.querySelectorAll('.week-hour-cell').forEach(cell => {
+                cell.onclick = () => openCreateModal(parseLocal(cell.dataset.date), parseInt(cell.dataset.h));
+            });
+            bindPills(el);
+            if (scroll) {
+                const showNow = days.some(d => sameDay(d, today));
+                el.scrollTop = Math.max(0, (showNow ? today.getHours() : 7) * 60 - 60);
+            } else {
+                el.scrollTop = prevScroll;
+            }
+        }
+
+        /* ── navigation ── */
+        function step(dir) {
+            if (currentView === 'month') currentDate = addMonthsSafe(currentDate, dir);
+            else currentDate = addDays(currentDate, (currentView === 'week' ? 7 : 1) * dir);
+            renderAll({ scroll: currentView !== 'month' });
+        }
+        function setView(v) { currentView = v; renderAll({ scroll: true }); }
+
+        $('prev-month').onclick = () => step(-1);
+        $('next-month').onclick = () => step(1);
+        $('today-btn').onclick = () => { currentDate = new Date(); renderAll({ scroll: true }); };
+        $('mini-prev-month').onclick = () => { currentDate = addMonthsSafe(currentDate, -1); renderAll(); };
+        $('mini-next-month').onclick = () => { currentDate = addMonthsSafe(currentDate, 1); renderAll(); };
+        document.querySelectorAll('.view-btn').forEach(btn => { btn.onclick = () => setView(btn.dataset.view); });
+
+        /* ── modal ── */
+        const isOpen = () => $('event-modal').classList.contains('show');
+        const scopeVal = () => (document.querySelector('input[name="scope"]:checked') || {}).value || 'one';
+
+        function setAllDayUI(on) {
+            const s = $('event-start'), e = $('event-end');
+            const sv = s.value, ev = e.value;
+            s.type = e.type = on ? 'date' : 'datetime-local';
+            if (on) { s.value = sv.slice(0, 10); e.value = ev.slice(0, 10); }
+            else {
+                s.value = sv.length === 10 ? sv + 'T09:00' : sv;
+                e.value = ev.length === 10 ? ev + 'T10:00' : ev;
+                if (e.value <= s.value) { const d = parseLocal(s.value); d.setHours(d.getHours() + 1); e.value = toInput(d); }
+            }
+        }
+        function syncRepeatUI() {
+            const series = editingEvent && editingEvent.series_id;
+            const rep = $('repeat').value;
+            $('repeat-count-wrap').style.display = (!series && rep !== 'none') ? 'block' : 'none';
+            if (!series && rep !== 'none') $('repeat-count').value = { daily: 30, weekly: 12, monthly: 12, yearly: 5 }[rep];
+        }
+        function showModal(isEdit) {
+            prevStart = $('event-start').value;
+            $('modal-error').textContent = '';
+            $('delete-event').style.display = isEdit ? 'block' : 'none';
+            $('save-event').textContent = isEdit ? 'Save Changes' : 'Save Event';
+            $('event-modal').classList.add('show');
+            setTimeout(() => $('event-title').focus(), 30);
         }
 
         function openCreateModal(date, hour) {
-            editingId = null;
-            document.getElementById('modal-title').textContent = 'New Event';
-            document.getElementById('delete-event').style.display = 'none';
+            editingId = null; editingEvent = null;
+            $('modal-title').textContent = 'New Event';
             const start = new Date(date); start.setHours(hour, 0, 0, 0);
             const end = new Date(start); end.setHours(hour + 1, 0, 0, 0);
-            document.getElementById('event-start').value = start.toISOString().slice(0, 16);
-            document.getElementById('event-end').value = end.toISOString().slice(0, 16);
-            document.getElementById('event-title').value = '';
-            document.getElementById('event-desc').value = '';
-            document.getElementById('event-color').value = 'gold';
-            document.getElementById('repeat').value = 'none';
-            document.getElementById('event-modal').classList.add('show');
+            $('event-allday').checked = false;
+            $('event-start').type = $('event-end').type = 'datetime-local';
+            $('event-start').value = toInput(start);
+            $('event-end').value = toInput(end);
+            $('event-title').value = '';
+            $('event-desc').value = '';
+            $('event-location').value = '';
+            $('event-color').value = 'gold';
+            $('repeat').value = 'none'; $('repeat').disabled = false;
+            $('series-hint').style.display = 'none';
+            $('scope-box').style.display = 'none';
+            syncRepeatUI();
+            showModal(false);
         }
 
         function openEditModal(id) {
-            const event = events.find(e => e.id === id);
-            if (!event) return;
-            editingId = id;
-            document.getElementById('modal-title').textContent = 'Edit Event';
-            document.getElementById('delete-event').style.display = 'block';
-            document.getElementById('event-title').value = event.title;
-            document.getElementById('event-start').value = event.start.slice(0, 16);
-            document.getElementById('event-end').value = event.end.slice(0, 16);
-            document.getElementById('event-desc').value = event.description || '';
-            document.getElementById('event-color').value = event.color || 'gold';
-            document.getElementById('repeat').value = event.repeat || 'none';
-            document.getElementById('event-modal').classList.add('show');
+            const ev = events.find(e => e.id === id);
+            if (!ev) return;
+            editingId = id; editingEvent = ev;
+            $('modal-title').textContent = 'Edit Event';
+            $('event-title').value = ev.title;
+            $('event-allday').checked = !!ev.all_day;
+            const t = ev.all_day ? 'date' : 'datetime-local';
+            $('event-start').type = $('event-end').type = t;
+            $('event-start').value = ev.all_day ? ymd(ev._s) : toInput(ev._s);
+            $('event-end').value = ev.all_day ? ymd(ev._e) : toInput(ev._e);
+            $('event-desc').value = ev.description || '';
+            $('event-location').value = ev.location || '';
+            $('event-color').value = ev.color === 'purple' ? 'violet' : (ev.color || 'gold');
+            const series = !!ev.series_id;
+            $('repeat').value = series ? ev.repeat : 'none';
+            $('repeat').disabled = series;
+            const count = series ? events.filter(e => e.series_id === ev.series_id).length : 0;
+            $('series-hint').style.display = series ? 'block' : 'none';
+            $('series-hint').textContent = series ? `Repeats ${ev.repeat} · ${count} events in this series` : '';
+            $('scope-box').style.display = series ? 'block' : 'none';
+            document.querySelector('input[name="scope"][value="one"]').checked = true;
+            syncRepeatUI();
+            showModal(true);
         }
 
-        function closeModal() { document.getElementById('event-modal').classList.remove('show'); }
+        function closeModal() { $('event-modal').classList.remove('show'); }
 
-        document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderAll(); };
-        document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderAll(); };
-        document.getElementById('mini-prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderAll(); };
-        document.getElementById('mini-next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderAll(); };
-        document.getElementById('create-btn').onclick = () => openCreateModal(new Date(), 9);
-        document.getElementById('close-modal').onclick = closeModal;
-        document.getElementById('delete-event').onclick = deleteEvent;
-
-        document.getElementById('event-modal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
+        $('create-btn').onclick = () => {
+            const now = new Date(), d = new Date(currentDate);
+            openCreateModal(d, sameDay(d, now) ? Math.min(now.getHours() + 1, 22) : 9);
+        };
+        $('close-modal').onclick = closeModal;
+        $('event-modal').addEventListener('click', e => { if (e.target === $('event-modal')) closeModal(); });
+        $('event-allday').onchange = e => setAllDayUI(e.target.checked);
+        $('repeat').onchange = syncRepeatUI;
+        let prevStart = '';
+        $('event-start').addEventListener('focus', () => { prevStart = $('event-start').value; });
+        $('event-start').addEventListener('change', () => {                // moving the start moves the end too (keeps the duration)
+            const s = $('event-start').value, e = $('event-end').value, allDay = $('event-allday').checked;
+            if (s && e && prevStart && prevStart.length === s.length) {
+                const shift = parseLocal(s) - parseLocal(prevStart);
+                const ne = new Date(parseLocal(e).getTime() + shift);
+                $('event-end').value = allDay ? ymd(ne) : toInput(ne);
+            } else if (s && (!e || e <= s) && !allDay) {
+                const d = parseLocal(s); d.setHours(d.getHours() + 1); $('event-end').value = toInput(d);
+            }
+            prevStart = s;
         });
 
-        document.getElementById('save-event').onclick = async () => {
-            const title = document.getElementById('event-title').value.trim();
-            const start = document.getElementById('event-start').value;
-            const end   = document.getElementById('event-end').value;
-            const repeat = document.getElementById('repeat').value;
-            if (!title || !start || !end) { alert('Please fill in all required fields.'); return; }
-            const eventData = { 
-                title, start, end, 
-                description: document.getElementById('event-desc').value, 
-                color: document.getElementById('event-color').value,
-                repeat: repeat
+        $('save-event').onclick = async () => {
+            const btn = $('save-event'), err = $('modal-error');
+            err.textContent = '';
+            const title = $('event-title').value.trim();
+            const allDay = $('event-allday').checked;
+            const start = $('event-start').value, end = $('event-end').value;
+            if (!title) { err.textContent = 'Give the event a title.'; $('event-title').focus(); return; }
+            if (!start || !end) { err.textContent = 'Pick a start and an end.'; return; }
+            if (allDay ? end < start : end <= start) { err.textContent = 'The end has to be after the start.'; return; }
+
+            const payload = {
+                title, start, end, all_day: allDay,
+                description: $('event-desc').value, location: $('event-location').value.trim(),
+                color: $('event-color').value
             };
-            if (await saveEvent(eventData)) closeModal();
-            else alert('Failed to save event. Please try again.');
+            const series = editingEvent && editingEvent.series_id;
+            if (!series) {
+                payload.repeat = $('repeat').value;
+                if (payload.repeat !== 'none') payload.repeat_count = parseInt($('repeat-count').value) || undefined;
+            } else {
+                payload.scope = scopeVal();
+            }
+            btn.disabled = true;
+            const r = editingId
+                ? await api(`/api/calendar/events/${editingId}`, sendJson('PUT', payload))
+                : await api('/api/calendar/events', sendJson('POST', payload));
+            btn.disabled = false;
+            if (!r.ok) { err.textContent = r.error; return; }
+            closeModal();
+            const n = (r.data && (r.data.created || r.data.updated)) || 1;
+            toast(editingId ? (n > 1 ? `Updated ${n} events` : 'Event updated') : (n > 1 ? `Created ${n} events` : 'Event created'));
+            await loadEvents();
+            renderAll();
         };
 
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.onclick = () => {
-                document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentView = btn.dataset.view;
-                const monthEl = document.getElementById('month-view');
-                const weekEl  = document.getElementById('week-view');
-                if (currentView === 'month') {
-                    monthEl.style.display = 'grid';
-                    weekEl.classList.remove('active');
-                } else {
-                    monthEl.style.display = 'none';
-                    weekEl.classList.add('active');
-                    renderWeekView();
-                }
-            };
+        $('delete-event').onclick = async () => {
+            if (!editingId) return;
+            const ev = editingEvent, series = ev && ev.series_id;
+            const scope = series ? scopeVal() : 'one';
+            let n = 1;
+            if (series) {
+                const sib = events.filter(e => e.series_id === ev.series_id);
+                n = scope === 'all' ? sib.length : scope === 'following' ? sib.filter(e => e._s >= ev._s).length : 1;
+            }
+            if (!confirm(n > 1 ? `Delete ${n} events?` : 'Delete this event?')) return;
+            const r = await api(`/api/calendar/events/${editingId}?scope=${scope}`, { method: 'DELETE' });
+            if (!r.ok) { $('modal-error').textContent = r.error; return; }
+            closeModal();
+            toast(n > 1 ? `Deleted ${n} events` : 'Event deleted');
+            await loadEvents();
+            renderAll();
+        };
+
+        /* ── keyboard + refresh ── */
+        document.addEventListener('keydown', e => {
+            if (isOpen()) {
+                if (e.key === 'Escape') { closeModal(); }
+                else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey || e.target.id === 'event-title')) { e.preventDefault(); $('save-event').click(); }
+                return;
+            }
+            if (e.ctrlKey || e.metaKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || ''))) return;
+            const k = e.key.toLowerCase();
+            if (k === 't') $('today-btn').click();
+            else if (k === 'm') setView('month');
+            else if (k === 'w') setView('week');
+            else if (k === 'd') setView('day');
+            else if (k === 'c') $('create-btn').click();
+            else if (e.key === 'ArrowLeft') step(-1);
+            else if (e.key === 'ArrowRight') step(1);
         });
 
-        function renderWeekView() {
-            const year = currentDate.getFullYear(), month = currentDate.getMonth(), day = currentDate.getDate();
-            const startOfWeek = new Date(year, month, day - currentDate.getDay());
-            const today = new Date();
-            const weekEl = document.getElementById('week-view');
-            let html = `<div class="week-time-gutter">`;
-            html += `<div class="time-label" style="height:42px;"></div>`;
-            for (let h = 0; h < 24; h++) {
-                html += `<div class="time-label">${h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h-12} PM`}</div>`;
+        // pick up events the AI (or another tab) added while this page was in the background
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible' && currentUser && !isOpen() && Date.now() - lastLoad > 15000) {
+                await loadEvents(); renderAll();
             }
-            html += `</div>`;
-            for (let col = 0; col < 7; col++) {
-                const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + col);
-                const isToday = d.toDateString() === today.toDateString();
-                const dayStr = d.toLocaleString('default', { weekday: 'short' });
-                const dayNum = d.getDate();
-                html += `<div class="week-day-col">
-                    <div class="week-day-header ${isToday ? 'today-col' : ''}">${dayStr} ${dayNum}</div>`;
-                for (let h = 0; h < 24; h++) {
-                    const cellDate = new Date(d); cellDate.setHours(h, 0, 0, 0);
-                    html += `<div class="week-hour-cell" data-ts="${cellDate.toISOString().slice(0,16)}"></div>`;
-                }
-                html += `</div>`;
-            }
-            weekEl.innerHTML = html;
-            weekEl.querySelectorAll('.week-hour-cell').forEach(cell => {
-                cell.onclick = () => {
-                    const dt = new Date(cell.dataset.ts);
-                    openCreateModal(dt, dt.getHours());
-                };
-            });
-        }
+        });
 
         checkAuth();
     </script>
