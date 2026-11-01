@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="theme-color" content="#1c1410">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Wizard Heat — Extreme Weather & Hydration Assistant for Arizona. Track heat risk, hydration, and stay safe in the desert.">
     <title>Wizard Heat — Extreme Weather & Hydration Assistant</title>
@@ -12,853 +13,569 @@
 
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
         :root {
-            /* Desert-at-noon palette: sun-baked sand, dry sky, ember heat */
-            --sand-dark: #1c1410;
-            --sand-mid: #241a14;
-            --sand-card: #2b2019;
-            --sun: #f2a53c;
-            --sun-light: #ffc773;
-            --ember: #ff6b47;
-            --ember-deep: #c73e2c;
-            --sky: #4f9dad;
-            --sky-light: #7fc4d1;
-            --paper: #f4ead9;
-            --paper-dim: rgba(244,234,217,0.62);
-            --paper-faint: rgba(244,234,217,0.34);
-            --line: rgba(242,165,60,0.16);
-            --line-strong: rgba(242,165,60,0.4);
-            --danger: #ff5c4d;
-            --warning: #f2a53c;
-            --success: #7fc47a;
+            color-scheme: dark;
+            --sand-dark:#1c1410; --sand-mid:#241a14; --sand-card:#2b2019; --pop:#33261d;
+            --sun:#f2a53c; --sun-light:#ffc773; --ember:#ff6b47; --ember-deep:#c73e2c; --sky:#4f9dad; --sky-light:#7fc4d1;
+            --paper:#f4ead9; --paper-dim:rgba(244,234,217,.66); --paper-faint:rgba(244,234,217,.42);
+            --ln:244,234,217; --line:rgba(242,165,60,.16); --line-strong:rgba(242,165,60,.42);
+            --danger:#ff5c4d; --warning:#f2a53c; --success:#7fc47a; --on-sun:#1c1410;
+            --star-op:.5; --amb-op:.38; --shadow:0 18px 60px rgba(0,0,0,.5); --nav-bg:rgba(28,20,16,.92);
         }
-
+        html[data-theme="light"] {
+            color-scheme: light;
+            --sand-dark:#fbf3e4; --sand-mid:#f6ead4; --sand-card:#fffaf0; --pop:#ffffff;
+            --sun:#d9851a; --sun-light:#a85f08; --ember:#d9482b; --ember-deep:#a8301c; --sky:#2f7f90; --sky-light:#1f6b7c;
+            --paper:#2c2016; --paper-dim:rgba(44,32,22,.72); --paper-faint:rgba(44,32,22,.5);
+            --ln:44,32,22; --line:rgba(168,95,8,.2); --line-strong:rgba(168,95,8,.45);
+            --danger:#d6301f; --warning:#b86a00; --success:#2f7d32; --on-sun:#fffaf0;
+            --star-op:0; --amb-op:.16; --shadow:0 14px 44px rgba(90,60,20,.22); --nav-bg:rgba(251,243,228,.94);
+        }
         html, body { height: 100%; overflow: hidden; }
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-            background: var(--sand-dark);
-            color: var(--paper);
-        }
-
-        h3.section-title {
-            font-family: 'Fraunces', serif;
-            font-size: 19px; font-weight: 500; font-style: italic;
-            color: var(--sun-light);
-            letter-spacing: 0.01em;
-        }
-
-        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.5; }
-
-        /* Signature element: a slow heat-shimmer horizon glow that recolors with risk */
-        .horizon {
-            position: fixed; left: 0; right: 0; bottom: 0; height: 42vh;
-            pointer-events: none; z-index: 0;
-            background: linear-gradient(to top, var(--horizon-color, var(--ember-deep)) 0%, transparent 78%);
-            opacity: 0.22;
-            filter: blur(60px);
-            transition: background 1.2s ease;
-            animation: shimmer 7s ease-in-out infinite;
-        }
-        @keyframes shimmer {
-            0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.20; }
-            50% { transform: translateY(-10px) scaleX(1.03); opacity: 0.28; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .horizon { animation: none; }
-        }
-
-        .amb {
-            position: fixed; border-radius: 50%;
-            filter: blur(130px); pointer-events: none; z-index: 0;
-            opacity: 0.38; animation: drift 20s ease-in-out infinite alternate;
-        }
+        body { font-family: 'Space Grotesk', sans-serif; background: var(--sand-dark); color: var(--paper); transition: background .3s, color .3s; -webkit-text-size-adjust: 100%; }
+        button { font-family: inherit; color: inherit; cursor: pointer; }
+        input, select { font-family: inherit; }
+        [hidden] { display: none !important; }
+        :focus-visible { outline: 2px solid var(--sun-light); outline-offset: 2px; }
+        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: var(--star-op); transition: opacity .3s; }
+        .horizon { position: fixed; left: 0; right: 0; bottom: 0; height: 42vh; pointer-events: none; z-index: 0; background: linear-gradient(to top, var(--horizon-color, var(--ember-deep)) 0%, transparent 78%); opacity: .22; filter: blur(60px); transition: background 1.2s ease; animation: shimmer 7s ease-in-out infinite; }
+        @keyframes shimmer { 0%,100% { transform: translateY(0) scaleX(1); opacity: .20; } 50% { transform: translateY(-10px) scaleX(1.03); opacity: .28; } }
+        .amb { position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; opacity: var(--amb-op); animation: drift 20s ease-in-out infinite alternate; }
         .amb-1 { width: 580px; height: 580px; top: -200px; left: -160px; background: radial-gradient(circle, var(--sun), transparent 70%); }
         .amb-2 { width: 460px; height: 460px; bottom: -140px; right: -120px; background: radial-gradient(circle, var(--ember), transparent 70%); animation-delay: -8s; }
-        .amb-3 { width: 380px; height: 380px; top: 30%; right: 10%; background: radial-gradient(circle, var(--sky), transparent 70%); opacity: 0.22; animation-delay: -14s; }
         @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(35px,25px) scale(1.08); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pop-in { from { opacity: 0; transform: scale(.95) translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes sk { from { background-position: -300px 0; } to { background-position: 300px 0; } }
+        @keyframes splash { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
 
-        .app-shell {
-            position: relative; z-index: 10;
-            display: flex; flex-direction: column;
-            height: 100vh; overflow: hidden;
-            max-width: 1200px; margin: 0 auto;
-            padding: 16px 20px;
-        }
+        .app-shell { position: relative; z-index: 10; display: flex; flex-direction: column; height: 100vh; height: 100dvh; max-width: 1200px; margin: 0 auto; padding: 14px 20px 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 8px 0 14px; border-bottom: 1px solid var(--line); flex-shrink: 0; flex-wrap: wrap; }
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+        .logo-glyph { font-size: 26px; filter: drop-shadow(0 0 8px rgba(242,165,60,.5)); }
+        .logo-name { font-family: 'Fraunces', serif; font-size: 23px; font-weight: 500; font-style: italic; background: linear-gradient(135deg, var(--sun-light), var(--ember)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-name span { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 400; font-size: 11px; color: var(--paper-faint); -webkit-text-fill-color: var(--paper-faint); letter-spacing: .08em; text-transform: uppercase; margin-left: 4px; }
+        .nav-links { display: flex; gap: 4px; font-size: 13px; font-weight: 500; }
+        .nav-links button, .nav-links a { color: var(--paper-dim); text-decoration: none; background: none; border: 1px solid transparent; padding: 7px 14px; border-radius: 100px; transition: all .2s; font-size: 13px; font-weight: 500; }
+        .nav-links button:hover, .nav-links a:hover { background: rgba(242,165,60,.1); color: var(--paper); }
+        .nav-links button.active { background: rgba(242,165,60,.16); color: var(--sun-light); border-color: var(--line-strong); }
+        .hdr-right { display: flex; gap: 8px; align-items: center; }
+        .pillbtn { background: rgba(242,165,60,.1); border: 1px solid var(--line-strong); border-radius: 100px; padding: 6px 13px; font-size: 12px; font-weight: 600; color: var(--sun-light); transition: background .2s; white-space: nowrap; }
+        .pillbtn:hover { background: rgba(242,165,60,.22); }
+        .loc { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--paper-dim); background: rgba(var(--ln),.05); border: 1px solid var(--line); border-radius: 100px; padding: 6px 12px; max-width: 220px; }
+        .loc span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .loc.dflt { border-color: var(--line-strong); color: var(--sun-light); }
 
-        /* Header */
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            gap: 16px;
-            padding: 10px 0 16px;
-            border-bottom: 1px solid var(--line);
-            flex-shrink: 0;
-        }
-        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .logo-glyph {
-            font-size: 26px;
-            filter: drop-shadow(0 0 8px rgba(242,165,60,0.5));
-        }
-        .logo-name {
-            font-family: 'Fraunces', serif;
-            font-size: 23px; font-weight: 500; font-style: italic;
-            background: linear-gradient(135deg, var(--sun-light), var(--ember));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .logo-name span { font-family: 'Space Grotesk', sans-serif; font-style: normal; font-weight: 400; font-size: 12px; color: var(--paper-faint); -webkit-text-fill-color: var(--paper-faint); letter-spacing: 0.08em; text-transform: uppercase; }
+        .main-content { flex: 1; overflow-y: auto; padding: 20px 0 28px; scrollbar-width: thin; scroll-behavior: smooth; }
+        .main-content::-webkit-scrollbar { width: 5px; } .main-content::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 4px; }
+        .tab { display: none; animation: rise .3s ease both; } .tab.active { display: block; }
+        h3.section-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; font-style: italic; color: var(--sun-light); margin-bottom: 4px; }
+        .sub { font-size: 12.5px; color: var(--paper-faint); margin-bottom: 14px; }
 
-        .nav-links { display: flex; gap: 6px; font-size: 13px; font-weight: 500; }
-        .nav-links a {
-            color: var(--paper-dim); text-decoration: none;
-            padding: 7px 14px; border-radius: 100px;
-            transition: all 0.2s;
-        }
-        .nav-links a:hover { background: rgba(242,165,60,0.08); color: var(--paper); }
-        .nav-links a.active { background: rgba(242,165,60,0.14); color: var(--sun-light); border: 1px solid var(--line-strong); }
+        .err-bar { display: none; align-items: center; gap: 12px; padding: 10px 14px; margin-bottom: 14px; background: rgba(255,92,77,.12); border: 1px solid var(--danger); border-radius: 12px; font-size: 13px; }
+        .err-bar.show { display: flex; } .err-bar button { margin-left: auto; }
 
-        /* Main Content */
-        .main-content { flex: 1; overflow-y: auto; padding: 22px 0; scrollbar-width: thin; }
-        .main-content::-webkit-scrollbar { width: 4px; }
-        .main-content::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+        .weather-current { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-bottom: 20px; }
+        .weather-card { background: linear-gradient(150deg, rgba(242,165,60,.12), var(--sand-card) 55%, var(--sand-mid)); border: 1px solid var(--line); border-radius: 22px; padding: 26px; position: relative; overflow: hidden; }
+        .weather-card::before { content: '☉'; position: absolute; top: -18px; right: -6px; font-size: 130px; color: var(--sun); opacity: .07; pointer-events: none; }
+        .wx-top { display: flex; align-items: center; gap: 14px; }
+        .wx-ico { font-size: 54px; line-height: 1; filter: drop-shadow(0 4px 14px rgba(242,165,60,.3)); }
+        .temp { font-family: 'Fraunces', serif; font-size: 66px; font-weight: 400; line-height: 1; font-variant-numeric: tabular-nums; }
+        .temp small { font-family: 'Space Grotesk', sans-serif; font-size: 18px; color: var(--paper-faint); }
+        .condition { font-size: 15px; color: var(--paper-dim); margin-top: 8px; text-transform: capitalize; }
+        .details { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px 14px; margin-top: 18px; }
+        .details div { font-size: 11px; color: var(--paper-faint); text-transform: uppercase; letter-spacing: .06em; }
+        .details b { display: block; font-size: 16px; color: var(--paper); font-weight: 600; text-transform: none; letter-spacing: 0; margin-top: 2px; font-variant-numeric: tabular-nums; }
+        .risk-badge { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border-radius: 100px; font-size: 12px; font-weight: 700; letter-spacing: .04em; margin-top: 18px; }
+        .risk-desc { font-size: 13px; color: var(--paper-dim); margin-top: 10px; line-height: 1.5; }
+        .stale { font-size: 11px; color: var(--paper-faint); margin-top: 12px; }
 
-        /* Current Weather */
-        .weather-current { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .card { background: var(--sand-card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+        .hydration-tracker { background: linear-gradient(150deg, rgba(79,157,173,.24), rgba(79,157,173,.05)); border: 1px solid rgba(79,157,173,.34); border-radius: 22px; padding: 22px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .ring { position: relative; width: 136px; height: 136px; margin-bottom: 8px; }
+        .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+        .ring .bg { stroke: rgba(79,157,173,.2); } .ring .fg { stroke: var(--sky-light); transition: stroke-dasharray .7s cubic-bezier(.2,.8,.2,1); }
+        .ring.done .fg { stroke: var(--success); } .ring.splash { animation: splash .5s ease; }
+        .ring .mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .progress-label { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 500; color: var(--sky-light); line-height: 1; font-variant-numeric: tabular-nums; }
+        .sub-label { font-size: 12.5px; color: var(--paper-dim); font-variant-numeric: tabular-nums; }
+        .actions { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+        .actions button, .chipbtn { background: rgba(79,157,173,.16); border: 1px solid rgba(79,157,173,.34); border-radius: 100px; padding: 8px 15px; font-size: 12.5px; font-weight: 600; color: var(--paper); transition: background .2s, transform .1s; }
+        .actions button:hover, .chipbtn:hover { background: rgba(79,157,173,.3); } .actions button:active { transform: scale(.95); }
+        .actions button:disabled { opacity: .5; cursor: default; }
+        .hyd-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; justify-content: center; font-size: 12px; color: var(--paper-faint); flex-wrap: wrap; }
+        .linkbtn { background: none; border: none; color: var(--sky-light); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; padding: 2px 4px; }
+        .week { display: flex; gap: 6px; align-items: flex-end; height: 48px; margin-top: 14px; width: 100%; max-width: 250px; }
+        .week i { flex: 1; background: rgba(79,157,173,.35); border-radius: 4px 4px 2px 2px; min-height: 3px; position: relative; } .week i.met { background: var(--sky-light); } .week i.today { outline: 1px solid var(--sky-light); outline-offset: 1px; }
+        .week-lab { display: flex; gap: 6px; width: 100%; max-width: 250px; font-size: 9.5px; color: var(--paper-faint); margin-top: 3px; } .week-lab span { flex: 1; text-align: center; }
+        #hydration-message { margin-top: 8px; font-size: 12px; color: var(--paper-faint); min-height: 16px; }
+        .custom { display: flex; gap: 6px; margin-top: 10px; align-items: center; justify-content: center; }
+        .custom input { width: 84px; background: rgba(var(--ln),.07); border: 1px solid rgba(79,157,173,.4); border-radius: 100px; padding: 7px 12px; color: var(--paper); font-size: 13px; text-align: center; }
 
-        .weather-card {
-            background: linear-gradient(150deg, rgba(242,165,60,0.1), var(--sand-card) 55%, var(--sand-mid));
-            border: 1px solid var(--line);
-            border-radius: 20px;
-            padding: 26px;
-            position: relative;
-            overflow: hidden;
-        }
-        .weather-card::before {
-            content: '☉';
-            position: absolute; top: -18px; right: -6px;
-            font-size: 130px; color: var(--sun);
-            opacity: 0.06; pointer-events: none;
-        }
-        .weather-card .temp {
-            font-family: 'Fraunces', serif;
-            font-size: 62px; font-weight: 400;
-            color: var(--paper); line-height: 1;
-        }
-        .weather-card .temp small { font-family: 'Space Grotesk', sans-serif; font-size: 18px; color: var(--paper-faint); }
-        .weather-card .condition { font-size: 15px; color: var(--paper-dim); margin-top: 6px; }
-        .weather-card .details {
-            display: flex; gap: 18px; flex-wrap: wrap;
-            margin-top: 16px; font-size: 12.5px; color: var(--paper-faint);
-        }
-        .weather-card .details span { display: flex; align-items: center; gap: 5px; }
+        .strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 20px; scrollbar-width: thin; }
+        .strip .h { flex: 0 0 auto; min-width: 66px; text-align: center; background: var(--sand-card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 8px; position: relative; overflow: hidden; }
+        .strip .h::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--rc, var(--success)); }
+        .strip .h small { display: block; font-size: 11px; color: var(--paper-faint); } .strip .h b { display: block; font-size: 16px; margin-top: 2px; font-variant-numeric: tabular-nums; } .strip .h span { font-size: 18px; }
+        .rec-item { padding: 11px 14px; margin-bottom: 7px; background: rgba(242,165,60,.07); border-radius: 12px; border-left: 3px solid var(--sun); font-size: 13.5px; color: var(--paper-dim); line-height: 1.5; animation: rise .3s ease both; }
+        .safety { display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-radius: 14px; margin-bottom: 20px; font-size: 13.5px; border: 1px solid var(--line); background: var(--sand-card); }
+        .safety b { font-size: 12px; letter-spacing: .05em; }
 
-        .risk-badge {
-            display: inline-block; padding: 7px 16px; border-radius: 100px;
-            font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
-            margin-top: 14px;
-        }
+        .forecast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(138px, 1fr)); gap: 12px; margin: 14px 0; }
+        .fday { background: var(--sand-card); border: 1px solid var(--line); border-radius: 16px; padding: 15px 12px; text-align: center; transition: all .18s; position: relative; width: 100%; }
+        .fday:hover { border-color: var(--line-strong); transform: translateY(-2px); } .fday.sel { border-color: var(--sun); background: rgba(242,165,60,.1); }
+        .fday .day { font-size: 13px; font-weight: 600; } .fday .date { font-size: 11px; color: var(--paper-faint); }
+        .fday .icon { font-size: 30px; margin: 6px 0 2px; } .fday .hi { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; font-variant-numeric: tabular-nums; } .fday .lo { font-size: 12px; color: var(--paper-faint); }
+        .fday .rain { font-size: 11px; color: var(--sky-light); margin-top: 3px; min-height: 14px; }
+        .fday .risk, .pill { font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 100px; display: inline-block; margin-top: 7px; letter-spacing: .04em; text-transform: uppercase; }
+        .hours { background: var(--sand-card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; animation: rise .25s ease both; }
+        .hours h4 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 16px; margin-bottom: 12px; }
+        .hrow { display: grid; grid-template-columns: 52px 30px 1fr 46px 44px; gap: 10px; align-items: center; padding: 7px 0; font-size: 13px; border-top: 1px solid rgba(var(--ln),.06); }
+        .hrow:first-of-type { border-top: none; } .hrow .bar { height: 8px; border-radius: 100px; background: rgba(var(--ln),.08); overflow: hidden; } .hrow .bar i { display: block; height: 100%; border-radius: 100px; background: var(--rc); }
+        .hrow .t { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; } .hrow .p { color: var(--sky-light); font-size: 11.5px; text-align: right; } .hrow .k { color: var(--paper-faint); }
 
-        /* Hydration */
-        .hydration-tracker {
-            background: linear-gradient(150deg, rgba(79,157,173,0.22), rgba(79,157,173,0.04));
-            border: 1px solid rgba(79,157,173,0.32);
-            border-radius: 20px;
-            padding: 24px;
-            text-align: center;
-            display: flex; flex-direction: column; justify-content: center;
-        }
-        .hydration-tracker .progress-ring {
-            width: 76px; height: 76px; border-radius: 50%;
-            border: 4px solid rgba(79,157,173,0.2);
-            position: relative; margin: 0 auto 10px;
-        }
-        .hydration-tracker .progress-ring .fill {
-            width: 100%; height: 100%; border-radius: 50%;
-            border: 4px solid var(--sky-light);
-            clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
-            transform: rotate(0deg);
-            transition: transform 0.5s;
-        }
-        .hydration-tracker .progress-label { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; color: var(--sky-light); }
-        .hydration-tracker .sub-label { font-size: 12px; color: var(--paper-faint); }
-        .hydration-tracker .actions { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
-        .hydration-tracker .actions button {
-            background: rgba(79,157,173,0.14);
-            border: 1px solid rgba(79,157,173,0.3);
-            border-radius: 100px; padding: 7px 14px;
-            font-size: 12px; font-weight: 500; color: var(--paper);
-            cursor: pointer; transition: background 0.2s;
-        }
-        .hydration-tracker .actions button:hover { background: rgba(79,157,173,0.26); }
-        #hydration-message { margin-top: 10px; font-size: 12px; color: var(--paper-faint); min-height: 14px; }
+        .centers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 14px; }
+        .center-item { background: var(--sand-card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; animation: rise .3s ease both; display: flex; flex-direction: column; gap: 5px; }
+        .center-item .name { font-weight: 600; font-size: 14.5px; display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+        .center-item .address { font-size: 12.5px; color: var(--paper-faint); } .center-item .hrs { font-size: 12.5px; color: var(--sun-light); }
+        .services { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; } .services span { font-size: 10.5px; background: rgba(242,165,60,.13); color: var(--sun-light); padding: 3px 9px; border-radius: 100px; }
+        .open { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 100px; white-space: nowrap; } .open.y { background: rgba(127,196,122,.18); color: var(--success); } .open.n { background: rgba(255,92,77,.15); color: var(--danger); }
+        .center-item .go { margin-top: 8px; align-self: flex-start; text-decoration: none; }
+        .note { font-size: 12px; color: var(--paper-faint); margin-top: 14px; line-height: 1.5; }
+        .notice { padding: 12px 14px; border-radius: 12px; background: rgba(242,165,60,.1); border: 1px solid var(--line-strong); font-size: 13px; margin-top: 12px; line-height: 1.5; }
 
-        /* Recommendations */
-        .rec-item {
-            padding: 10px 14px; margin-bottom: 7px;
-            background: rgba(242,165,60,0.05);
-            border-radius: 10px; border-left: 2px solid var(--sun);
-            font-size: 13px; color: var(--paper-dim); line-height: 1.5;
-        }
-
-        /* Forecast */
-        .forecast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
-        .forecast-item {
-            background: var(--sand-card); border: 1px solid var(--line);
-            border-radius: 16px; padding: 16px; text-align: center;
-        }
-        .forecast-item .day { font-size: 13px; font-weight: 500; }
-        .forecast-item .temp-high { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; margin-top: 4px; }
-        .forecast-item .temp-low { font-size: 12px; color: var(--paper-faint); }
-        .forecast-item .icon { font-size: 26px; margin: 6px 0; }
-        .forecast-item .risk { font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 100px; display: inline-block; margin-top: 6px; letter-spacing: 0.02em; }
-
-        /* Cooling Centers */
-        .centers-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
-        .center-item { background: var(--sand-card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
-        .center-item .name { font-weight: 600; font-size: 14px; }
-        .center-item .address { font-size: 12px; color: var(--paper-faint); margin: 4px 0; }
-        .center-item .services { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
-        .center-item .services span { font-size: 10px; background: rgba(242,165,60,0.12); color: var(--sun-light); padding: 3px 9px; border-radius: 100px; }
-
-        /* Activity Safety */
         .activity-selector { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
-        .activity-selector button {
-            background: rgba(244,234,217,0.04);
-            border: 1px solid var(--line);
-            border-radius: 100px; padding: 7px 16px;
-            font-size: 12.5px; font-weight: 500; color: var(--paper-dim);
-            cursor: pointer; transition: all 0.2s;
-        }
-        .activity-selector button:hover { background: rgba(242,165,60,0.08); }
-        .activity-selector button.active {
-            background: linear-gradient(135deg, var(--sun), var(--ember));
-            color: var(--sand-dark); border-color: transparent; font-weight: 600;
-        }
-        .activity-advice { background: var(--sand-card); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-top: 4px; }
-        .activity-advice .status { font-size: 14px; font-weight: 700; letter-spacing: 0.03em; }
-        .activity-advice .advice-text { font-size: 13.5px; color: var(--paper-dim); margin-top: 10px; line-height: 1.65; }
+        .activity-selector button { background: rgba(var(--ln),.05); border: 1px solid var(--line); border-radius: 100px; padding: 8px 16px; font-size: 13px; font-weight: 500; color: var(--paper-dim); transition: all .2s; }
+        .activity-selector button:hover { background: rgba(242,165,60,.1); }
+        .activity-selector button.active { background: linear-gradient(135deg, var(--sun), var(--ember)); color: var(--on-sun); border-color: transparent; font-weight: 700; }
+        .dur { display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--paper-dim); margin-bottom: 14px; flex-wrap: wrap; } .dur input { flex: 1; min-width: 160px; max-width: 320px; accent-color: var(--sun); } .dur b { color: var(--paper); min-width: 62px; }
+        .activity-advice { background: var(--sand-card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+        .activity-advice .status { font-size: 13px; font-weight: 800; letter-spacing: .06em; }
+        .advice-text { font-size: 15px; margin-top: 10px; line-height: 1.6; }
+        .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+        .facts div { background: rgba(var(--ln),.05); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: var(--paper-faint); text-transform: uppercase; letter-spacing: .05em; } .facts b { display: block; font-size: 15px; color: var(--paper); text-transform: none; letter-spacing: 0; margin-top: 2px; }
+        .tips { margin: 14px 0 0 18px; font-size: 13.5px; color: var(--paper-dim); line-height: 1.7; }
 
-        /* Footer */
-        .footer { flex-shrink: 0; text-align: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: 11px; color: var(--paper-faint); display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .footer .refresh-countdown { color: var(--paper-faint); }
-        .footer .refresh-countdown::before { content: '·'; margin-right: 10px; }
+        .tool-card { background: var(--sand-card); border: 1px solid var(--line); border-radius: 18px; padding: 20px; margin-bottom: 14px; }
+        .tool-card h4 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 17px; margin-bottom: 6px; }
+        .tool-card p { font-size: 13px; color: var(--paper-faint); line-height: 1.5; margin-bottom: 14px; }
+        .tool-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; } .tool-row label { font-size: 13px; color: var(--paper-dim); }
+        .tool-row input[type=number] { width: 74px; background: rgba(var(--ln),.06); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; color: var(--paper); font-size: 14px; }
+        .tool-btn { background: linear-gradient(135deg, var(--sun), var(--ember)); color: var(--on-sun); border: none; border-radius: 100px; padding: 9px 20px; font-size: 13px; font-weight: 700; }
+        .tool-btn.secondary { background: rgba(var(--ln),.07); color: var(--paper); border: 1px solid var(--line); font-weight: 600; }
+        .timer-display { font-family: 'Fraunces', serif; font-size: 36px; color: var(--sun-light); margin: 12px 0 0; font-variant-numeric: tabular-nums; }
+        .tool-status { margin-top: 10px; font-size: 12.5px; color: var(--paper-faint); }
 
-        .unit-toggle {
-            background: rgba(242,165,60,0.1);
-            border: 1px solid var(--line-strong);
-            border-radius: 100px;
-            padding: 6px 14px;
-            font-size: 12px; font-weight: 600; color: var(--sun-light);
-            cursor: pointer; transition: background 0.2s;
-            flex-shrink: 0;
-        }
-        .unit-toggle:hover { background: rgba(242,165,60,0.2); }
+        .footer { flex-shrink: 0; text-align: center; padding: 10px 0 12px; border-top: 1px solid var(--line); font-size: 11px; color: var(--paper-faint); display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .skel { border-radius: 14px; background: linear-gradient(90deg, rgba(var(--ln),.05) 25%, rgba(var(--ln),.11) 50%, rgba(var(--ln),.05) 75%); background-size: 600px 100%; animation: sk 1.2s linear infinite; }
+        .empty { text-align: center; padding: 34px 16px; color: var(--paper-faint); font-size: 14px; line-height: 1.6; }
+        .spinner { width: 14px; height: 14px; border: 2px solid var(--line-strong); border-top-color: var(--sun-light); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: -2px; }
 
-        /* Tools tab */
-        .tool-card {
-            background: var(--sand-card); border: 1px solid var(--line);
-            border-radius: 16px; padding: 20px; margin-bottom: 16px;
-        }
-        .tool-card h4 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 16px; color: var(--paper); margin-bottom: 6px; }
-        .tool-card p { font-size: 12.5px; color: var(--paper-faint); line-height: 1.5; margin-bottom: 14px; }
-        .tool-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-        .tool-row label { font-size: 12.5px; color: var(--paper-dim); }
-        .tool-row input[type="number"] {
-            width: 70px; background: rgba(244,234,217,0.05); border: 1px solid var(--line);
-            border-radius: 8px; padding: 6px 10px; color: var(--paper); font-family: 'Space Grotesk', sans-serif; font-size: 13px;
-        }
-        .tool-btn {
-            background: linear-gradient(135deg, var(--sun), var(--ember));
-            color: var(--sand-dark); border: none; border-radius: 100px;
-            padding: 8px 18px; font-size: 12.5px; font-weight: 600; cursor: pointer;
-        }
-        .tool-btn.secondary {
-            background: rgba(244,234,217,0.06); color: var(--paper); border: 1px solid var(--line);
-        }
-        .tool-btn:disabled { opacity: 0.5; cursor: default; }
-        .timer-display {
-            font-family: 'Fraunces', serif; font-size: 32px; color: var(--sun-light);
-            margin: 10px 0;
-        }
-        .toast {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
-            background: var(--sand-card); border: 1px solid var(--line-strong);
-            color: var(--paper); padding: 10px 20px; border-radius: 100px;
-            font-size: 13px; z-index: 100; opacity: 0; pointer-events: none;
-            transition: all 0.3s;
-        }
-        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(20,12,8,.78); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center; padding: 16px; }
+        html[data-theme="light"] .modal-overlay { background: rgba(60,40,20,.45); }
+        .modal-overlay.show { display: flex; animation: fade-in .15s ease; }
+        .modal-box { background: var(--pop); border: 1px solid var(--line-strong); border-radius: 22px; padding: 24px; width: 380px; max-width: 100%; box-shadow: var(--shadow); animation: pop-in .2s ease; }
+        .modal-box h3 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; font-style: italic; color: var(--sun-light); margin-bottom: 12px; }
+        .modal-box input[type=number] { width: 100%; background: rgba(var(--ln),.06); border: 1px solid var(--line-strong); border-radius: 12px; padding: 12px 14px; color: var(--paper); font-size: 20px; font-weight: 600; }
+        .mrow { display: flex; gap: 10px; margin-top: 16px; } .mrow .tool-btn { flex: 1; }
+        .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(30px); background: var(--pop); border: 1px solid var(--line-strong); color: var(--paper); padding: 10px 18px; border-radius: 100px; font-size: 13px; z-index: 2000; opacity: 0; pointer-events: none; transition: all .3s; display: flex; gap: 12px; align-items: center; box-shadow: var(--shadow); max-width: calc(100vw - 32px); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; } .toast.err { border-color: var(--danger); } .toast button { background: none; border: none; color: var(--sun-light); font-weight: 700; font-size: 13px; display: none; } .toast.has-undo button { display: block; }
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        a:focus-visible, button:focus-visible { outline: 2px solid var(--sun-light); outline-offset: 2px; }
-
-        @media (max-width: 640px) {
-            .weather-current { grid-template-columns: 1fr; }
-            .header { flex-direction: column; gap: 12px; align-items: flex-start; }
-            .nav-links { flex-wrap: wrap; }
+        .tabbar { display: none; }
+        @media (max-width: 760px) {
+            .app-shell { padding: 10px 14px 0; }
+            .header { padding-bottom: 10px; } .nav-links { display: none; }
+            .hdr-right { width: 100%; justify-content: space-between; } .hdr-right .loc { flex: 1; max-width: none; }
+            .weather-current { grid-template-columns: 1fr; } .weather-card { padding: 20px; } .temp { font-size: 54px; } .wx-ico { font-size: 44px; }
+            .main-content { padding-bottom: 90px; } .footer { display: none; }
+            .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; background: var(--nav-bg); border-top: 1px solid var(--line); backdrop-filter: blur(16px); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+            .tabbar button { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 10.5px; color: var(--paper-faint); padding: 5px 0; border-radius: 12px; }
+            .tabbar button span { font-size: 19px; } .tabbar button.active { color: var(--sun-light); }
+            .toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+            .hrow { grid-template-columns: 46px 26px 1fr 40px 38px; gap: 8px; font-size: 12.5px; }
         }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; animation-iteration-count: 1 !important; } .horizon { animation: none; } }
     </style>
 </head>
 <body>
     <canvas id="starfield" aria-hidden="true"></canvas>
     <div class="horizon" id="horizon-glow" aria-hidden="true"></div>
-    <div class="amb amb-1" aria-hidden="true"></div>
-    <div class="amb amb-2" aria-hidden="true"></div>
-    <div class="amb amb-3" aria-hidden="true"></div>
+    <div class="amb amb-1" aria-hidden="true"></div><div class="amb amb-2" aria-hidden="true"></div>
 
     <div class="app-shell">
-        <!-- Header -->
         <header class="header">
-            <a href="/" class="logo">
-                <span class="logo-glyph">☉</span>
-                <span class="logo-name">Wizard Heat <span>Arizona</span></span>
-            </a>
-            <nav class="nav-links">
-                <a href="#" class="active" data-tab="dashboard">Dashboard</a>
-                <a href="#" data-tab="forecast">Forecast</a>
-                <a href="#" data-tab="centers">Cooling Centers</a>
-                <a href="#" data-tab="activity">Activity Safety</a>
-                <a href="#" data-tab="tools">Tools</a>
-                <a href="/">← Home</a>
+            <a href="https://wizardecosystem.dev" class="logo" aria-label="Wizard Ecosystem home"><span class="logo-glyph" aria-hidden="true">☉</span><span class="logo-name">Wizard Heat <span>Arizona</span></span></a>
+            <nav class="nav-links" id="nav" aria-label="Sections" role="tablist">
+                <button class="active" data-tab="dashboard" role="tab">Dashboard</button>
+                <button data-tab="forecast" role="tab">Forecast</button>
+                <button data-tab="centers" role="tab">Cooling Centers</button>
+                <button data-tab="activity" role="tab">Activity Safety</button>
+                <button data-tab="tools" role="tab">Tools</button>
+                <a href="https://wizardecosystem.dev">← Home</a>
             </nav>
-            <button id="unit-toggle" class="unit-toggle" title="Switch temperature units">°F</button>
+            <div class="hdr-right">
+                <button class="loc" id="loc" title="Refresh my location"><span id="loc-text">📍 Locating…</span></button>
+                <button id="theme-btn" class="pillbtn" aria-label="Switch light or dark theme" title="Theme">🌙</button>
+                <button id="unit-toggle" class="pillbtn" title="Switch temperature units">°F</button>
+            </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Dashboard Tab -->
-            <div id="tab-dashboard" class="tab-content active">
-                <div class="weather-current" id="weather-current">
+        <main class="main-content" id="main">
+            <div class="err-bar" id="err-bar" role="alert"><span id="err-msg">Something went wrong.</span><button class="pillbtn" id="err-retry">Try again</button></div>
+
+            <section class="tab active" id="tab-dashboard" aria-label="Dashboard">
+                <div class="weather-current">
                     <div class="weather-card">
-                        <div class="temp" id="current-temp">--° <small>F</small></div>
-                        <div class="condition" id="current-condition">Loading...</div>
+                        <div class="wx-top"><span class="wx-ico" id="wx-ico" aria-hidden="true">☀️</span><div><div class="temp" id="current-temp">--°</div></div></div>
+                        <div class="condition" id="current-condition">Loading…</div>
                         <div class="details">
-                            <span>💧 <span id="current-humidity">--</span>%</span>
-                            <span>🌡️ Feels <span id="current-feels">--</span>°F</span>
-                            <span>🌬️ <span id="current-wind">--</span> mph</span>
-                            <span>☀️ UV <span id="current-uv">--</span></span>
+                            <div>Feels like<b id="current-feels">--</b></div><div>Humidity<b id="current-humidity">--</b></div>
+                            <div>Wind<b id="current-wind">--</b></div><div>UV index<b id="current-uv">--</b></div>
+                            <div>Today<b id="current-range">--</b></div>
                         </div>
-                        <div id="risk-badge" class="risk-badge">Loading...</div>
+                        <div id="risk-badge" class="risk-badge" style="background:rgba(var(--ln),.1)">Loading…</div>
+                        <div class="risk-desc" id="risk-desc"></div>
+                        <div class="stale" id="stale"></div>
                     </div>
-                    <div class="hydration-tracker">
-                        <div class="progress-ring">
-                            <div class="fill" id="hydration-fill" style="transform: rotate(0deg);"></div>
-                        </div>
-                        <div class="progress-label" id="hydration-percent">0%</div>
-                        <div class="sub-label" id="hydration-text">0 oz / 64 oz</div>
-                        <div class="actions">
-                            <button onclick="trackHydration(8)">+8oz</button>
-                            <button onclick="trackHydration(16)">+16oz</button>
-                            <button onclick="trackHydration(24)">+24oz</button>
-                        </div>
-                        <div id="hydration-message"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="section-title">Recommendations</h3>
-                    <div id="recommendations" style="margin-top:12px;">
-                        <div style="color:var(--paper-faint);">Loading recommendations...</div>
+                    <div class="hydration-tracker" id="hyd">
+                        <div class="ring" id="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"></circle><circle class="fg" id="ring-fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="0 327"></circle></svg>
+                            <div class="mid"><div class="progress-label" id="hydration-percent">0%</div></div></div>
+                        <div class="sub-label" id="hydration-text">0 oz / 80 oz</div>
+                        <div class="actions" id="drinks"><button data-oz="8">+8 oz</button><button data-oz="16">+16 oz</button><button data-oz="24">+24 oz</button><button id="drink-custom">Custom</button></div>
+                        <div class="custom" id="custom-row" hidden><input type="number" id="custom-oz" min="1" max="128" inputmode="decimal" placeholder="oz" aria-label="Ounces"><button class="chipbtn" id="custom-add">Add</button></div>
+                        <div id="hydration-message" role="status"></div>
+                        <div class="hyd-row"><button class="linkbtn" id="undo-btn" disabled>↶ Undo last</button><span>·</span><button class="linkbtn" id="goal-btn">Goal ✎</button><span id="streak"></span></div>
+                        <div class="week" id="week" aria-label="Last 7 days"></div><div class="week-lab" id="week-lab"></div>
                     </div>
                 </div>
-            </div>
+                <div class="safety" id="safety" hidden></div>
+                <h3 class="section-title">Next hours</h3>
+                <div class="strip" id="strip"><div class="skel" style="height:76px;width:100%"></div></div>
+                <h3 class="section-title">Recommendations</h3>
+                <div id="recommendations" style="margin-top:10px"><div class="skel" style="height:44px;margin-bottom:7px"></div><div class="skel" style="height:44px"></div></div>
+            </section>
 
-            <!-- Forecast Tab -->
-            <div id="tab-forecast" class="tab-content">
-                <h3 class="section-title">5-Day Forecast</h3>
-                <div id="forecast-container" class="forecast-grid">
-                    <div style="color:var(--paper-faint);">Loading forecast...</div>
-                </div>
-            </div>
+            <section class="tab" id="tab-forecast" aria-label="Forecast">
+                <h3 class="section-title">Forecast</h3><div class="sub">Tap a day to see it hour by hour. Risk reflects the hottest part of the day.</div>
+                <div id="forecast-container" class="forecast-grid"></div><div id="hours-panel"></div>
+            </section>
 
-            <!-- Cooling Centers Tab -->
-            <div id="tab-centers" class="tab-content">
-                <h3 class="section-title">Cooling Centers</h3>
-                <div id="centers-container" class="centers-grid">
-                    <div style="color:var(--paper-faint);">Loading cooling centers...</div>
-                </div>
-            </div>
+            <section class="tab" id="tab-centers" aria-label="Cooling centers">
+                <h3 class="section-title">Cooling Centers</h3><div class="sub" id="centers-sub">Places to get out of the heat, closest first.</div>
+                <div id="centers-notice"></div><div id="centers-container" class="centers-grid"></div><div class="note" id="centers-note"></div>
+            </section>
 
-            <!-- Activity Safety Tab -->
-            <div id="tab-activity" class="tab-content">
-                <h3 class="section-title">Activity Safety</h3>
-                <div class="activity-selector" id="activity-selector">
-                    <button class="active" data-activity="hiking">🥾 Hiking</button>
-                    <button data-activity="running">🏃 Running</button>
-                    <button data-activity="walking">🚶 Walking</button>
-                    <button data-activity="biking">🚴 Biking</button>
-                    <button data-activity="gardening">🌱 Gardening</button>
-                    <button data-activity="sports">⚽ Sports</button>
-                    <button data-activity="pool">🏊 Pool</button>
-                    <button data-activity="picnic">🧺 Picnic</button>
-                </div>
-                <div class="activity-advice" id="activity-advice">
-                    <div style="color:var(--paper-faint);">Select an activity to get safety advice.</div>
-                </div>
-            </div>
+            <section class="tab" id="tab-activity" aria-label="Activity safety">
+                <h3 class="section-title">Activity Safety</h3><div class="sub">Based on right-now conditions at your location.</div>
+                <div class="activity-selector" id="activity-selector" role="group" aria-label="Activity">
+                    <button class="active" data-activity="hiking">🥾 Hiking</button><button data-activity="running">🏃 Running</button><button data-activity="walking">🚶 Walking</button><button data-activity="biking">🚴 Biking</button>
+                    <button data-activity="gardening">🌱 Gardening</button><button data-activity="sports">⚽ Sports</button><button data-activity="pool">🏊 Pool</button><button data-activity="picnic">🧺 Picnic</button></div>
+                <div class="dur"><label for="dur">How long?</label><input type="range" id="dur" min="15" max="240" step="15" value="30"><b id="dur-v">30 min</b></div>
+                <div class="activity-advice" id="activity-advice"><div class="skel" style="height:90px"></div></div>
+            </section>
 
-            <!-- Tools Tab (fully client-side, no backend required) -->
-            <div id="tab-tools" class="tab-content">
-                <h3 class="section-title">Tools</h3>
-
-                <div class="tool-card" style="margin-top:14px;">
-                    <h4>💧 Hydration Reminders</h4>
-                    <p>Get a browser notification every so often as a nudge to drink water — runs entirely in this tab.</p>
-                    <div class="tool-row">
-                        <label>Every</label>
-                        <input type="number" id="reminder-interval" min="5" max="120" value="30" step="5">
-                        <label>minutes</label>
-                        <button class="tool-btn" id="reminder-toggle">Start Reminders</button>
-                    </div>
-                    <div id="reminder-status" style="margin-top:10px; font-size:12px; color:var(--paper-faint);">Off</div>
-                </div>
-
-                <div class="tool-card">
-                    <h4>🧴 Sunscreen Timer</h4>
-                    <p>SPF wears off — this counts down to your next reapplication and notifies you when it's time.</p>
-                    <div class="tool-row">
-                        <label>Reapply every</label>
-                        <input type="number" id="spf-interval" min="30" max="240" value="120" step="10">
-                        <label>minutes</label>
-                        <button class="tool-btn" id="spf-toggle">Start Timer</button>
-                    </div>
-                    <div class="timer-display" id="spf-display" style="display:none;">--:--</div>
-                </div>
-
-                <div class="tool-card">
-                    <h4>📋 Share Current Conditions</h4>
-                    <p>Copy a quick summary of right-now conditions and hydration status to your clipboard.</p>
-                    <button class="tool-btn secondary" id="copy-summary">Copy Summary</button>
-                </div>
-            </div>
+            <section class="tab" id="tab-tools" aria-label="Tools">
+                <h3 class="section-title">Tools</h3><div class="sub">These run in this browser tab and need no account data.</div>
+                <div class="tool-card"><h4>💧 Hydration reminders</h4><p>A gentle nudge to drink. Skipped automatically once you have hit today’s goal.</p>
+                    <div class="tool-row"><label for="reminder-interval">Every</label><input type="number" id="reminder-interval" min="5" max="120" value="30" step="5"><label>minutes</label><button class="tool-btn" id="reminder-toggle">Start reminders</button></div><div class="tool-status" id="reminder-status">Off</div></div>
+                <div class="tool-card"><h4>🧴 Sunscreen timer</h4><p>Counts down to your next reapplication and keeps counting if you reload the page.</p>
+                    <div class="tool-row"><label for="spf-interval">Reapply every</label><input type="number" id="spf-interval" min="30" max="240" value="120" step="10"><label>minutes</label><button class="tool-btn" id="spf-toggle">Start timer</button></div><div class="timer-display" id="spf-display" hidden>--:--</div></div>
+                <div class="tool-card"><h4>📋 Share current conditions</h4><p>Copy a short summary of conditions and your hydration to paste anywhere.</p><button class="tool-btn secondary" id="copy-summary">Copy summary</button></div>
+            </section>
         </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <span>☉ Wizard Heat — Powered by OpenWeatherMap & Wizard AI · Stay safe in the heat</span>
-            <span class="refresh-countdown" id="refresh-countdown"></span>
-        </footer>
+        <footer class="footer"><span>☉ Wizard Heat · Weather by OpenWeatherMap · Stay safe in the heat</span><span id="refresh-countdown"></span></footer>
     </div>
 
-    <div class="toast" id="toast"></div>
+    <nav class="tabbar" id="tabbar" aria-label="Sections">
+        <button class="active" data-tab="dashboard"><span>🏠</span>Today</button><button data-tab="forecast"><span>📅</span>Forecast</button><button data-tab="centers"><span>🏛️</span>Cooling</button><button data-tab="activity"><span>🥾</span>Activity</button><button data-tab="tools"><span>🧰</span>Tools</button>
+    </nav>
 
+    <div class="modal-overlay" id="goal-modal" role="dialog" aria-modal="true" aria-labelledby="goal-h"><form class="modal-box" id="goal-form"><h3 id="goal-h">Daily water goal</h3>
+        <input type="number" id="goal-input" min="16" max="300" step="1" inputmode="numeric" aria-label="Goal in ounces"><div class="sub" id="goal-hint" style="margin:10px 0 0"></div>
+        <div class="mrow"><button type="button" class="tool-btn secondary" data-close>Cancel</button><button type="submit" class="tool-btn" id="goal-save">Save</button></div></form></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-msg"></span><button id="toast-undo" type="button">Undo</button></div>
     <script>
-        // ── Starfield ──
+        /* ── Starfield ── */
         (function() {
-            const canvas = document.getElementById('starfield');
-            const ctx = canvas.getContext('2d');
-            let stars = [];
-            const N = 160;
-
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            resize();
-            window.addEventListener('resize', resize);
-
-            for (let i = 0; i < N; i++) {
-                stars.push({
-                    x: Math.random(),
-                    y: Math.random(),
-                    r: Math.random() * 1.2 + 0.2,
-                    a: Math.random(),
-                    speed: Math.random() * 0.0005 + 0.0002,
-                });
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const t = Date.now() / 1000;
-                stars.forEach(s => {
-                    const alpha = 0.3 + 0.5 * Math.sin(t * s.speed * 6000 + s.a * 100);
-                    ctx.beginPath();
-                    ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(244,234,217,${alpha})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            }
-            draw();
+            const canvas = document.getElementById('starfield'), ctx = canvas.getContext('2d'), stars = [];
+            const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const resize = () => { canvas.width = innerWidth; canvas.height = innerHeight; }; resize(); addEventListener('resize', resize);
+            for (let i = 0; i < 130; i++) stars.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.2 + .2, a: Math.random(), sp: Math.random() * .0005 + .0002 });
+            function draw() { ctx.clearRect(0, 0, canvas.width, canvas.height); const t = Date.now() / 1000;
+                stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, 6.283); ctx.fillStyle = `rgba(244,234,217,${still ? .5 : .3 + .5 * Math.sin(t * s.sp * 6000 + s.a * 100)})`; ctx.fill(); });
+                if (!still && !document.hidden) requestAnimationFrame(draw); }
+            draw(); document.addEventListener('visibilitychange', () => { if (!document.hidden && !still) requestAnimationFrame(draw); });
         })();
 
-        const API_BASE = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null;
-        let currentLocation = null;
-        let lastWeatherData = null;
-        let unit = localStorage.getItem('wh_unit') || 'F';
+        /* ── helpers ── */
+        const API = window.WIZ_API_BASE || 'https://arnav0928.pythonanywhere.com';
+        const HOME = 'https://wizardecosystem.dev';
+        const $ = id => document.getElementById(id);
+        const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+        const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } })();
+        const DEFAULT_LOC = { lat: 33.4484, lon: -112.0740 };
+        const REFRESH_MS = 300000;
+        const S = { cur: null, fc: null, hyd: null, loc: null, unit: store.get('wh_unit', 'F') === 'C' ? 'C' : 'F', theme: store.get('wh_theme', 'auto'), tab: 'dashboard',
+                    activity: 'hiking', dur: 30, selDay: 0, nextAt: Date.now() + REFRESH_MS, loadedAt: 0, authed: false };
+        const fToC = f => (f - 32) * 5 / 9;
+        const T = f => f == null ? '--' : Math.round(S.unit === 'F' ? f : fToC(f));
+        const WIND = mph => S.unit === 'F' ? `${Math.round(mph)} mph` : `${Math.round(mph * 1.609)} km/h`;
+        const ICONS = { '01d': '☀️', '01n': '🌙', '02d': '⛅', '02n': '☁️', '03d': '☁️', '03n': '☁️', '04d': '☁️', '04n': '☁️', '09d': '🌧️', '09n': '🌧️', '10d': '🌦️', '10n': '🌧️', '11d': '⛈️', '11n': '⛈️', '13d': '❄️', '13n': '❄️', '50d': '🌫️', '50n': '🌫️' };
+        const ico = c => ICONS[c] || '☀️';
+        const RC = { safe: '#7fc47a', caution: '#f2c94c', warning: '#f2a53c', danger: '#ff5c4d', extreme: '#c73e2c' };
+        const riskTint = lvl => { const c = RC[lvl] || '#888'; return `background:${c}2a;color:${c}`; };
+        const ZERO_SAFE = n => Number.isFinite(+n) ? +n : 0;
 
-        function toast(msg) {
-            const el = document.getElementById('toast');
-            el.textContent = msg;
-            el.classList.add('show');
-            clearTimeout(toast._t);
-            toast._t = setTimeout(() => el.classList.remove('show'), 2600);
+        let toastT, undoFn = null;
+        function toast(msg, o = {}) {
+            const t = $('toast'); $('toast-msg').textContent = msg; t.classList.toggle('err', !!o.err); t.classList.toggle('has-undo', !!o.undo); undoFn = o.undo || null;
+            t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => { t.classList.remove('show'); undoFn = null; }, o.undo ? 6000 : 3000);
         }
+        $('toast-undo').onclick = () => { const f = undoFn; undoFn = null; $('toast').classList.remove('show'); if (f) f(); };
+        let errRetry = null;
+        function showErr(msg, retry) { $('err-msg').textContent = msg; errRetry = retry || null; $('err-retry').hidden = !retry; $('err-bar').classList.add('show'); }
+        const hideErr = () => $('err-bar').classList.remove('show');
+        $('err-retry').onclick = () => { hideErr(); if (errRetry) errRetry(); };
 
-        function fToC(f) { return Math.round((f - 32) * 5 / 9); }
+        async function api(path, o = {}) {
+            const sep = path.includes('?') ? '&' : '?';
+            let res;
+            try {
+                res = await fetch(`${API}/api/heat${path}${o.method && o.method !== 'GET' ? '' : sep + 'tz=' + encodeURIComponent(TZ)}`, { credentials: 'include', method: o.method || 'GET', headers: o.body ? { 'Content-Type': 'application/json' } : undefined, body: o.body ? JSON.stringify({ tz: TZ, ...o.body }) : undefined });
+            } catch (e) { return { ok: false, net: true, data: {} }; }
+            if (res.status === 401) { location.href = HOME; return { ok: false, status: 401, data: {} }; }
+            let data = {}; try { data = await res.json(); } catch (e) {}
+            return { ok: res.ok && data.success !== false, status: res.status, data };
+        }
+        const geo = () => S.loc ? { lat: S.loc.lat, lon: S.loc.lon } : DEFAULT_LOC;
+        const geoQ = () => `lat=${geo().lat}&lon=${geo().lon}`;
 
-        // ========== GEOLOCATION ==========
-        function getLocation() {
-            return new Promise((resolve) => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-                        () => resolve({ lat: 33.4484, lon: -112.0740 }),
-                        { timeout: 5000, enableHighAccuracy: false }
-                    );
-                } else {
-                    resolve({ lat: 33.4484, lon: -112.0740 });
-                }
+        /* ── location ── */
+        function getLocation(force) {
+            return new Promise(resolve => {
+                if (!navigator.geolocation) return resolve({ ...DEFAULT_LOC, isDefault: true });
+                navigator.geolocation.getCurrentPosition(p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude, isDefault: false }), () => resolve({ ...DEFAULT_LOC, isDefault: true }), { timeout: 6000, maximumAge: force ? 0 : 600000, enableHighAccuracy: false });
             });
         }
-
-        // ========== AUTH ==========
-        async function checkAuth() {
-            try {
-                const res = await fetch(`${API_BASE}/api/check-auth`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated && data.user) {
-                        currentUser = data.user;
-                        return true;
-                    }
-                }
-            } catch(e) {}
-            window.location.href = 'https://wizardecosystem.dev';
-            return false;
+        function renderLoc(name) {
+            const l = S.loc || {}; const el = $('loc');
+            el.classList.toggle('dflt', !!l.isDefault);
+            $('loc-text').textContent = l.isDefault ? `📍 ${name || 'Phoenix'} (default) · tap to use mine` : `📍 ${name || 'My location'}`;
+            el.title = l.isDefault ? 'Using Phoenix. Tap to allow location access.' : 'Refresh my location';
         }
+        $('loc').onclick = async () => { $('loc-text').textContent = '📍 Locating…'; S.loc = await getLocation(true); S.fc = null; renderLoc(S.cur && S.cur.name); refreshAll(true); };
 
-        // ========== FETCH WEATHER ==========
-        async function fetchWeather() {
-            if (!currentLocation) currentLocation = await getLocation();
-            const { lat, lon } = currentLocation;
-            try {
-                const res = await fetch(`${API_BASE}/api/heat/current?lat=${lat}&lon=${lon}`, {
-                    credentials: 'include',
-                    headers: { 'Accept': 'application/json' }
-                });
-                if (!res.ok) throw new Error(`Weather API error: ${res.status}`);
-                const data = await res.json();
-                if (data.success) updateWeatherUI(data);
-                else showError(data.error || 'Failed to load weather');
-            } catch(e) {
-                console.error('Weather fetch error:', e);
-                showError('Unable to load weather data. Please try again.');
-            }
+        /* ── theme / units ── */
+        function applyTheme() {
+            const t = S.theme === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : S.theme;
+            document.documentElement.setAttribute('data-theme', t); $('theme-btn').textContent = t === 'light' ? '☀️' : '🌙';
+            const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#fbf3e4' : '#1c1410';
         }
+        $('theme-btn').onclick = () => { const cur = document.documentElement.getAttribute('data-theme'); S.theme = cur === 'light' ? 'dark' : 'light'; store.set('wh_theme', S.theme); applyTheme(); };
+        $('unit-toggle').onclick = () => { S.unit = S.unit === 'F' ? 'C' : 'F'; store.set('wh_unit', S.unit); $('unit-toggle').textContent = '°' + S.unit; renderAll(); };
 
-        function showError(message) {
-            document.getElementById('current-temp').innerHTML = '--° <small>F</small>';
-            document.getElementById('current-condition').textContent = message;
-            const badge = document.getElementById('risk-badge');
-            badge.textContent = '⚠️ Error';
-            badge.style.background = 'rgba(255,92,77,0.18)';
-            badge.style.color = '#ff5c4d';
+        /* ── hydration ── */
+        function renderHydration() {
+            const h = S.hyd; if (!h) return;
+            const pct = Math.min(100, h.percent_complete || 0), C = 2 * Math.PI * 52;
+            $('ring-fg').setAttribute('stroke-dasharray', `${C * pct / 100} ${C}`); $('ring').classList.toggle('done', h.today_total >= h.goal);
+            $('hydration-percent').textContent = pct + '%';
+            $('hydration-text').textContent = `${+h.today_total.toFixed(1)} oz / ${h.goal} oz`;
+            $('hydration-message').textContent = h.today_total >= h.goal ? '✅ Goal met. Nice work!' : `${+(h.goal - h.today_total).toFixed(1)} oz to go`;
+            $('streak').textContent = h.streak > 0 ? `🔥 ${h.streak}-day streak` : '';
+            const mx = Math.max(h.goal, ...h.week.map(w => w.oz), 1);
+            $('week').innerHTML = h.week.map((w, i) => `<i class="${w.oz >= h.goal ? 'met' : ''} ${i === 6 ? 'today' : ''}" style="height:${Math.max(6, w.oz / mx * 100)}%" title="${esc(w.day)}: ${w.oz} oz"></i>`).join('');
+            $('week-lab').innerHTML = h.week.map(w => { const [y, m, d] = w.day.split('-').map(Number); return `<span>${'SMTWTFS'[new Date(y, m - 1, d).getDay()]}</span>`; }).join('');
+            $('undo-btn').disabled = !(h.entries && h.entries.length);
         }
-
-        function updateWeatherUI(data) {
-            lastWeatherData = data;
-            renderTemps();
-            const current = data.current;
-            const risk = data.risk;
-
-            document.getElementById('current-condition').textContent = current.condition || 'Unknown';
-            document.getElementById('current-humidity').textContent = current.humidity || 0;
-            document.getElementById('current-wind').textContent = current.wind_speed || 0;
-            document.getElementById('current-uv').textContent = current.uv_index || '--';
-
-            const badge = document.getElementById('risk-badge');
-            if (risk) {
-                badge.textContent = `${risk.emoji || '🟢'} ${(risk.level || 'SAFE').toUpperCase()}`;
-                badge.style.background = (risk.color || '#4f9dad') + '2a';
-                badge.style.color = risk.color || '#4f9dad';
-                // Signature element: tint the horizon glow to match current risk
-                document.getElementById('horizon-glow').style.setProperty('--horizon-color', risk.color || '#c73e2c');
-            }
-
-            const hyd = data.hydrations || {};
-            const percent = hyd.percent || 0;
-            document.getElementById('hydration-percent').textContent = percent + '%';
-            document.getElementById('hydration-text').textContent = hyd.message || '0 oz / 80 oz';
-            document.getElementById('hydration-fill').style.transform = `rotate(${percent * 3.6}deg)`;
-            if (hyd.message) document.getElementById('hydration-message').textContent = hyd.message;
-
-            const recs = data.recommendations || [];
-            const recContainer = document.getElementById('recommendations');
-            recContainer.innerHTML = recs.length
-                ? recs.map(r => `<div class="rec-item">${r}</div>`).join('')
-                : '<div style="color:var(--paper-faint);">No recommendations available</div>';
+        let drinking = false;
+        async function drink(oz) {
+            if (drinking) return; drinking = true; document.querySelectorAll('#drinks button, #custom-add').forEach(b => b.disabled = true);
+            const wasMet = S.hyd && S.hyd.today_total >= S.hyd.goal;
+            const r = await api('/hydration', { method: 'POST', body: { amount: oz } });
+            drinking = false; document.querySelectorAll('#drinks button, #custom-add').forEach(b => b.disabled = false);
+            if (!r.ok) { toast(r.net ? "Can't reach the server. Try again." : (r.data.error || 'Could not save that'), { err: true }); return; }
+            S.hyd = r.data; renderHydration(); $('ring').classList.remove('splash'); void $('ring').offsetWidth; $('ring').classList.add('splash');
+            toast(r.data.today_total >= r.data.goal && !wasMet ? '🎉 Daily goal reached!' : `💧 +${oz} oz`, { undo: undoDrink });
         }
-
-        function renderTemps() {
-            if (!lastWeatherData) return;
-            const c = lastWeatherData.current;
-            const t = c.temp || 0, f = c.feels_like || 0;
-            const dt = unit === 'F' ? t : fToC(t);
-            const df = unit === 'F' ? f : fToC(f);
-            document.getElementById('current-temp').innerHTML = `${dt}° <small>${unit}</small>`;
-            document.getElementById('current-feels').textContent = df;
+        async function undoDrink() {
+            const r = await api('/hydration/undo', { method: 'POST', body: {} });
+            if (r.ok) { S.hyd = r.data; renderHydration(); toast('Removed'); } else toast(r.data.error || 'Nothing to undo', { err: true });
         }
-
-        document.getElementById('unit-toggle').addEventListener('click', () => {
-            unit = unit === 'F' ? 'C' : 'F';
-            localStorage.setItem('wh_unit', unit);
-            document.getElementById('unit-toggle').textContent = `°${unit}`;
-            renderTemps();
-            if (lastForecastData) updateForecastUI(lastForecastData);
+        $('drinks').addEventListener('click', e => { const b = e.target.closest('[data-oz]'); if (b) drink(+b.dataset.oz); });
+        $('drink-custom').onclick = () => { const r = $('custom-row'); r.hidden = !r.hidden; if (!r.hidden) $('custom-oz').focus(); };
+        $('custom-add').onclick = () => { const v = parseFloat($('custom-oz').value); if (!(v > 0 && v <= 128)) { toast('Enter 1 to 128 oz', { err: true }); return; } $('custom-oz').value = ''; $('custom-row').hidden = true; drink(v); };
+        $('custom-oz').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('custom-add').click(); } });
+        $('undo-btn').onclick = undoDrink;
+        $('goal-btn').onclick = () => {
+            const sg = S.cur && S.cur.suggested_goal; $('goal-input').value = S.hyd ? S.hyd.goal : 80;
+            $('goal-hint').innerHTML = sg ? `Today’s heat suggests about <b>${sg} oz</b>. <button type="button" class="linkbtn" id="use-sg">Use ${sg}</button>` : '';
+            $('goal-modal').classList.add('show'); setTimeout(() => $('goal-input').select(), 30);
+            const u = $('use-sg'); if (u) u.onclick = () => { $('goal-input').value = sg; };
+        };
+        $('goal-form').addEventListener('submit', async e => {
+            e.preventDefault(); const g = parseFloat($('goal-input').value); if (!(g >= 16 && g <= 300)) { toast('Pick between 16 and 300 oz', { err: true }); return; }
+            $('goal-save').disabled = true; const r = await api('/hydration/goal', { method: 'POST', body: { goal: g } }); $('goal-save').disabled = false;
+            if (r.ok) { S.hyd = r.data; renderHydration(); $('goal-modal').classList.remove('show'); toast('Goal updated'); } else toast(r.data.error || 'Could not save', { err: true });
         });
-        document.getElementById('unit-toggle').textContent = `°${unit}`;
+        document.querySelectorAll('.modal-overlay').forEach(o => { o.addEventListener('mousedown', e => { if (e.target === o) o.classList.remove('show'); }); o.querySelectorAll('[data-close]').forEach(b => b.onclick = () => o.classList.remove('show')); });
 
-        // ========== FETCH FORECAST ==========
-        let lastForecastData = null;
-        async function fetchForecast() {
-            if (!currentLocation) currentLocation = await getLocation();
-            const { lat, lon } = currentLocation;
-            try {
-                const res = await fetch(`${API_BASE}/api/heat/forecast?lat=${lat}&lon=${lon}`, { credentials: 'include' });
-                const data = await res.json();
-                if (data.success) { lastForecastData = data; updateForecastUI(data); }
-            } catch(e) { console.error('Forecast error:', e); }
+        /* ── dashboard ── */
+        function renderCurrent() {
+            const c = S.cur; if (!c) return;
+            $('wx-ico').textContent = ico(c.icon); $('current-temp').innerHTML = `${T(c.temp)}° <small>${S.unit}</small>`; $('current-condition').textContent = c.condition || '';
+            $('current-feels').textContent = c.effective > c.temp + 1 ? `${T(c.effective)}° heat index` : `${T(c.feels_like)}°`;
+            $('current-humidity').textContent = c.humidity + '%'; $('current-wind').textContent = WIND(c.wind_speed);
+            $('current-uv').textContent = c.uv_index == null ? 'n/a' : (Math.round(c.uv_index) + (c.uv_index >= 8 ? ' (very high)' : c.uv_index >= 6 ? ' (high)' : ''));
+            $('current-range').textContent = c.high != null ? `${T(c.high)}° / ${T(c.low)}°` : '--';
+            const r = S.risk, b = $('risk-badge'); b.textContent = `${r.emoji} ${r.level.toUpperCase()}`; b.style.cssText = riskTint(r.level); $('risk-desc').textContent = r.description;
+            $('horizon-glow').style.setProperty('--horizon-color', r.color);
+            const s = S.safety; const sb = $('safety'); sb.hidden = !s;
+            if (s) { const col = { red: RC.danger, orange: RC.warning, yellow: RC.caution, green: RC.success || RC.safe }[s.status] || '#888'; sb.innerHTML = `<b style="color:${col}">${esc(s.text)}</b><span>${esc(s.recommendation)}</span>`; sb.style.borderColor = col + '66'; }
+            $('stale').textContent = S.updated ? `Updated ${S.updated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}` : '';
+            $('recommendations').innerHTML = (S.recs || []).map(x => `<div class="rec-item">${esc(x)}</div>`).join('') || '<div class="empty">No recommendations right now.</div>';
+            renderLoc(c.name);
         }
-
-        function updateForecastUI(data) {
-            const container = document.getElementById('forecast-container');
-            if (!data.daily || !data.daily.length) {
-                container.innerHTML = '<div style="color:var(--paper-faint);">No forecast available</div>';
-                return;
-            }
-            const riskColors = {
-                'safe': '#7fc47a', 'caution': '#f2a53c', 'warning': '#f2a53c',
-                'danger': '#ff5c4d', 'extreme': '#c73e2c'
-            };
-            const conv = (v) => unit === 'F' ? v : fToC(v);
-            container.innerHTML = data.daily.map(day => `
-                <div class="forecast-item">
-                    <div class="day">${day.day}</div>
-                    <div class="icon">☀️</div>
-                    <div class="temp-high">${conv(day.max_temp)}°</div>
-                    <div class="temp-low">${conv(day.min_temp)}°</div>
-                    <div class="risk" style="background:${riskColors[day.risk_level] || '#888'}2a; color:${riskColors[day.risk_level] || '#888'};">${day.risk_level}</div>
-                </div>
-            `).join('');
+        function renderStrip() {
+            const el = $('strip'); if (!S.fc) { el.innerHTML = ''; return; }
+            const hrs = S.fc.daily.flatMap(d => d.hours).slice(0, 9);
+            el.innerHTML = hrs.length ? hrs.map(h => `<div class="h" style="--rc:${RC[h.risk_level]}"><small>${esc(h.hour)}</small><span>${ico(h.icon)}</span><b>${T(h.temp)}°</b></div>`).join('') : '';
         }
-
-        // ========== FETCH COOLING CENTERS ==========
-        async function fetchCoolingCenters() {
-            if (!currentLocation) currentLocation = await getLocation();
-            const { lat, lon } = currentLocation;
-            try {
-                const res = await fetch(`${API_BASE}/api/heat/cooling-centers?lat=${lat}&lon=${lon}`, { credentials: 'include' });
-                const data = await res.json();
-                if (data.success) updateCentersUI(data);
-            } catch(e) { console.error('Centers error:', e); }
+        async function loadCurrent(manual) {
+            const r = await api(`/current?${geoQ()}`);
+            if (!r.ok) { if (!S.cur) { $('current-condition').textContent = 'Weather unavailable'; $('risk-badge').textContent = '⚠️ Unavailable'; } showErr(r.net ? "Can't reach the server. Check your connection." : (r.data.error || 'Could not load the weather'), () => refreshAll(true)); return false; }
+            hideErr(); const d = r.data; S.cur = { ...d.current, name: d.location.name, suggested_goal: d.hydrations.suggested_goal }; S.risk = d.risk; S.safety = d.activity_safety; S.recs = d.recommendations;
+            if (S.loc && d.location.is_default && !S.loc.isDefault) S.loc.isDefault = true;
+            S.hyd = { today_total: d.hydrations.today_total, goal: d.hydrations.goal, percent_complete: d.hydrations.percent, week: d.hydrations.week, streak: d.hydrations.streak, entries: S.hyd && S.hyd.entries };
+            S.updated = new Date(); S.loadedAt = Date.now(); S.nextAt = Date.now() + REFRESH_MS; renderCurrent(); renderHydration();
+            if (!S.hyd.entries) api('/hydration/status').then(s => { if (s.ok) { S.hyd = s.data; renderHydration(); } });
+            return true;
         }
-
-        function updateCentersUI(data) {
-            const container = document.getElementById('centers-container');
-            if (!data.centers || !data.centers.length) {
-                container.innerHTML = '<div style="color:var(--paper-faint);">No cooling centers found nearby.</div>';
-                return;
-            }
-            container.innerHTML = data.centers.map(c => `
-                <div class="center-item">
-                    <div class="name">🏛️ ${c.name}</div>
-                    <div class="address">📍 ${c.address}</div>
-                    ${c.distance_miles ? `<div style="font-size:11px;color:var(--paper-faint);">${c.distance_miles} miles away</div>` : ''}
-                    <div style="font-size:12px;color:var(--sun-light); margin-top:4px;">🕐 ${c.hours}</div>
-                    <div class="services">${c.services.map(s => `<span>${s}</span>`).join('')}</div>
-                </div>
-            `).join('');
+        async function loadForecast() {
+            const r = await api(`/forecast?${geoQ()}`);
+            if (!r.ok) { if (S.tab === 'forecast') $('forecast-container').innerHTML = `<div class="empty" style="grid-column:1/-1">${r.net ? "Can't reach the server." : esc(r.data.error || 'Forecast unavailable')}<br><button class="pillbtn" id="fc-retry">Try again</button></div>`; return; }
+            S.fc = r.data; renderStrip(); if (S.tab === 'forecast') renderForecast();
         }
+        function refreshAll(manual) { return Promise.all([loadCurrent(manual), loadForecast()]); }
 
-        // ========== HYDRATION ==========
-        async function trackHydration(oz) {
-            try {
-                const res = await fetch(`${API_BASE}/api/heat/hydration`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ amount: oz })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById('hydration-message').textContent = data.message || '';
-                    document.getElementById('hydration-percent').textContent = data.percent_complete + '%';
-                    document.getElementById('hydration-text').textContent = `${data.today_total} oz / ${data.goal} oz`;
-                    const pct = Math.min(100, data.percent_complete);
-                    document.getElementById('hydration-fill').style.transform = `rotate(${pct * 3.6}deg)`;
-                    if (data.today_total >= data.goal) {
-                        document.getElementById('hydration-message').textContent = `✅ Goal met! ${data.today_total}oz / ${data.goal}oz`;
-                    }
-                }
-            } catch(e) { console.error('Hydration error:', e); }
+        /* ── forecast ── */
+        function dayName(d, i) { if (i === 0) return 'Today'; if (i === 1) return 'Tomorrow'; return d.day.slice(0, 3); }
+        function renderForecast() {
+            const c = $('forecast-container'); if (!S.fc) { c.innerHTML = Array(5).fill('<div class="skel" style="height:150px"></div>').join(''); return; }
+            const days = S.fc.daily; if (!days.length) { c.innerHTML = '<div class="empty" style="grid-column:1/-1">No forecast available.</div>'; $('hours-panel').innerHTML = ''; return; }
+            if (S.selDay >= days.length) S.selDay = 0;
+            c.innerHTML = days.map((d, i) => `<button class="fday ${i === S.selDay ? 'sel' : ''}" data-i="${i}" aria-pressed="${i === S.selDay}" aria-label="${esc(d.day)} ${T(d.max_temp)} degrees"><div class="day">${dayName(d, i)}</div><div class="date">${esc(d.date.slice(5).replace('-', '/'))}</div><div class="icon">${ico(d.icon)}</div><div class="hi">${T(d.max_temp)}°</div><div class="lo">${T(d.min_temp)}° low</div><div class="rain">${d.precip >= 20 ? '💧 ' + d.precip + '%' : ''}</div><span class="risk" style="${riskTint(d.risk_level)}">${esc(d.risk_level)}</span></button>`).join('');
+            const d = days[S.selDay];
+            $('hours-panel').innerHTML = `<div class="hours"><h4>${esc(d.day)}${d.partial ? ' (rest of day)' : ''} · ${esc(d.condition)}</h4>${d.hours.map(h => { const lo = 60, hi = 125, w = Math.max(4, Math.min(100, (h.heat_index - lo) / (hi - lo) * 100)); return `<div class="hrow"><span class="k">${esc(h.hour)}</span><span>${ico(h.icon)}</span><div class="bar" title="${esc(h.risk_level)}"><i style="width:${w}%;--rc:${RC[h.risk_level]}"></i></div><span class="t">${T(h.temp)}°</span><span class="p">${h.precip >= 20 ? h.precip + '%' : ''}</span></div>`; }).join('')}</div>`;
         }
+        $('forecast-container').addEventListener('click', e => { const b = e.target.closest('.fday'); if (b) { S.selDay = +b.dataset.i; renderForecast(); } if (e.target.closest('#fc-retry')) loadForecast(); });
 
-        // ========== ACTIVITY SAFETY ==========
-        async function fetchActivitySafety(activity) {
-            try {
-                const res = await fetch(`${API_BASE}/api/heat/activity-safety`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ activity, duration: 30 })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    const colors = { 'danger': '#ff5c4d', 'warning': '#f2a53c', 'safe': '#7fc47a' };
-                    document.getElementById('activity-advice').innerHTML = `
-                        <div class="status" style="color:${colors[data.status] || '#fff'}">${data.status.toUpperCase()}</div>
-                        <div class="advice-text">${data.advice}</div>
-                        <div style="margin-top:12px; font-size:13px; color:var(--sun-light);">
-                            💧 Water needed: ${data.water_needed_oz} oz
-                            <br>${data.best_time || ''}
-                        </div>
-                    `;
-                }
-            } catch(e) { console.error('Activity error:', e); }
+        /* ── cooling centers ── */
+        let centersLoaded = false;
+        async function loadCenters() {
+            const c = $('centers-container'); if (!centersLoaded) c.innerHTML = Array(4).fill('<div class="skel" style="height:140px"></div>').join('');
+            const r = await api(`/cooling-centers?${S.loc && !S.loc.isDefault ? geoQ() : geoQ()}`);
+            if (!r.ok) { c.innerHTML = `<div class="empty" style="grid-column:1/-1">${r.net ? "Can't reach the server." : esc(r.data.error || 'Could not load cooling centers')}<br><button class="pillbtn" id="centers-retry">Try again</button></div>`; return; }
+            centersLoaded = true; const d = r.data;
+            $('centers-notice').innerHTML = d.far_away ? `<div class="notice">📍 These cooling centers are in the Phoenix area, and the nearest one is about ${Math.round(d.nearest_miles)} miles from you. Check your city or county website for local options.</div>` : (S.loc && S.loc.isDefault ? `<div class="notice">Using Phoenix as your location. Tap the location chip at the top to share yours for accurate distances.</div>` : '');
+            c.innerHTML = d.centers.map(x => `<div class="center-item"><div class="name"><span>🏛️ ${esc(x.name)}</span>${x.open_now === true ? '<span class="open y">Open now</span>' : x.open_now === false ? '<span class="open n">Closed now</span>' : ''}</div>
+                <div class="address">📍 ${esc(x.address)}</div>${x.distance_miles != null ? `<div class="address">${x.distance_miles} miles away</div>` : ''}<div class="hrs">🕐 ${esc(x.hours)}</div>
+                <div class="services">${x.services.map(s => `<span>${esc(s)}</span>`).join('')}</div><a class="pillbtn go" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(x.name + ', ' + x.address)}">Directions ↗</a></div>`).join('');
+            $('centers-note').textContent = d.note || '';
         }
+        $('centers-container').addEventListener('click', e => { if (e.target.closest('#centers-retry')) loadCenters(); });
 
-        // ========== TAB SWITCHING ==========
-        document.querySelectorAll('.nav-links a[data-tab]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
-                link.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-                document.getElementById(`tab-${link.dataset.tab}`).classList.add('active');
-                if (link.dataset.tab === 'forecast') fetchForecast();
-                if (link.dataset.tab === 'centers') fetchCoolingCenters();
-                if (link.dataset.tab === 'activity') fetchActivitySafety('hiking');
-            });
+        /* ── activity ── */
+        let actT, actSeq = 0;
+        function loadActivity(now) {
+            clearTimeout(actT); actT = setTimeout(async () => {
+                const my = ++actSeq, el = $('activity-advice');
+                const r = await api('/activity-safety', { method: 'POST', body: { activity: S.activity, duration: S.dur, lat: geo().lat, lon: geo().lon } });
+                if (my !== actSeq) return;
+                if (!r.ok) { el.innerHTML = `<div class="empty">${r.net ? "Can't reach the server." : esc(r.data.error || 'Could not get advice')}<br><button class="pillbtn" id="act-retry">Try again</button></div>`; return; }
+                const d = r.data, col = { danger: RC.danger, warning: RC.warning, safe: RC.safe }[d.status];
+                el.innerHTML = `<div class="status" style="color:${col}">${d.status === 'safe' ? '✅ LOOKS GOOD' : d.status === 'warning' ? '⚠️ USE CAUTION' : '🚫 NOT RECOMMENDED'}</div><div class="advice-text">${esc(d.advice)}</div>
+                    <div class="facts"><div>Feels like<b>${T(d.heat_index)}°${S.unit}</b></div><div>Water for ${d.duration} min<b>${d.water_needed_oz} oz</b></div>${d.limit_minutes ? `<div>Suggested limit<b>${d.limit_minutes} min</b></div>` : ''}<div>Best time<b style="font-size:13px">${esc(d.best_time.replace('⏰ ', ''))}</b></div></div>
+                    <ul class="tips">${d.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+            }, now ? 0 : 280);
+        }
+        $('activity-selector').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.activity = b.dataset.activity; document.querySelectorAll('#activity-selector button').forEach(x => x.classList.toggle('active', x === b)); loadActivity(true); });
+        $('dur').addEventListener('input', e => { S.dur = +e.target.value; $('dur-v').textContent = S.dur >= 60 ? `${Math.floor(S.dur / 60)} h${S.dur % 60 ? ' ' + S.dur % 60 + ' min' : ''}` : S.dur + ' min'; loadActivity(false); });
+        $('activity-advice').addEventListener('click', e => { if (e.target.closest('#act-retry')) loadActivity(true); });
+
+        /* ── tabs ── */
+        const TABS = ['dashboard', 'forecast', 'centers', 'activity', 'tools'];
+        function setTab(t, push = true) {
+            if (!TABS.includes(t)) t = 'dashboard'; S.tab = t;
+            document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.id === 'tab-' + t));
+            document.querySelectorAll('[data-tab]').forEach(b => { b.classList.toggle('active', b.dataset.tab === t); if (b.getAttribute('role') === 'tab') b.setAttribute('aria-selected', b.dataset.tab === t); });
+            $('main').scrollTop = 0; if (push) { try { history.replaceState(null, '', '#' + t); } catch (e) {} }
+            if (t === 'forecast') { renderForecast(); if (!S.fc) loadForecast(); }
+            if (t === 'centers') loadCenters(); if (t === 'activity') loadActivity(true);
+        }
+        document.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+        addEventListener('hashchange', () => { const v = location.hash.slice(1); if (TABS.includes(v) && v !== S.tab) setTab(v, false); });
+
+        /* ── tools ── */
+        const hasNote = () => 'Notification' in window;
+        const canNote = () => hasNote() && Notification.permission === 'granted';
+        const askNote = () => { try { if (hasNote() && Notification.permission === 'default') Notification.requestPermission(); } catch (e) {} };
+        const notify = (t, b) => { try { if (canNote()) { new Notification(t, { body: b }); return; } } catch (e) {} toast(t); };
+        let remT = null;
+        function startReminders(fromLoad) {
+            const mins = Math.min(120, Math.max(5, parseInt($('reminder-interval').value) || 30)); $('reminder-interval').value = mins; if (!fromLoad) askNote();
+            clearInterval(remT); remT = setInterval(() => { if (S.hyd && S.hyd.today_total >= S.hyd.goal) return; notify('💧 Time to hydrate', 'Take a water break. You are in the Arizona heat.'); }, mins * 60000);
+            $('reminder-toggle').textContent = 'Stop reminders'; $('reminder-status').textContent = `On, every ${mins} min${hasNote() || fromLoad ? '' : ' (notifications unsupported, you will see an on-screen reminder)'}`;
+            store.set('wh_reminder_on', '1'); store.set('wh_reminder_mins', String(mins));
+        }
+        function stopReminders() { clearInterval(remT); remT = null; $('reminder-toggle').textContent = 'Start reminders'; $('reminder-status').textContent = 'Off'; store.set('wh_reminder_on', '0'); }
+        $('reminder-toggle').onclick = () => remT ? stopReminders() : startReminders(false);
+        let spfTick = null;
+        const mmss = ms => { const t = Math.max(0, Math.floor(ms / 1000)); return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`; };
+        function runSpf(end) {
+            $('spf-display').hidden = false; $('spf-toggle').textContent = 'Cancel timer'; clearInterval(spfTick);
+            const tick = () => { const left = end - Date.now(); if (left <= 0) { clearInterval(spfTick); spfTick = null; $('spf-display').textContent = '00:00'; store.set('wh_spf_end', ''); notify('🧴 Reapply sunscreen', 'Your SPF window is up.'); $('spf-toggle').textContent = 'Start timer'; return; } $('spf-display').textContent = mmss(left); };
+            tick(); if (Date.now() < end) spfTick = setInterval(tick, 1000);
+        }
+        $('spf-toggle').onclick = () => {
+            if (spfTick) { clearInterval(spfTick); spfTick = null; store.set('wh_spf_end', ''); $('spf-display').hidden = true; $('spf-toggle').textContent = 'Start timer'; return; }
+            const mins = Math.min(240, Math.max(10, parseInt($('spf-interval').value) || 120)); askNote(); const end = Date.now() + mins * 60000; store.set('wh_spf_end', String(end)); runSpf(end);
+        };
+        $('copy-summary').onclick = async () => {
+            if (!S.cur) { toast('No conditions loaded yet'); return; } const c = S.cur, h = S.hyd;
+            const txt = `Wizard Heat: ${T(c.temp)}°${S.unit} in ${c.name || 'my area'}, ${c.condition}. Feels like ${T(c.effective)}°. Risk: ${S.risk.level.toUpperCase()}.` + (h ? ` Water today: ${h.today_total}/${h.goal} oz.` : '');
+            try { await navigator.clipboard.writeText(txt); toast('Copied to clipboard'); } catch (e) { toast('Could not copy. Clipboard unavailable.', { err: true }); }
+        };
+
+        /* ── refresh / lifecycle ── */
+        function tickCountdown() {
+            const left = Math.max(0, S.nextAt - Date.now()); $('refresh-countdown').textContent = S.cur ? `refreshes in ${Math.floor(left / 60000)}:${String(Math.floor(left % 60000 / 1000)).padStart(2, '0')}` : '';
+            if (left === 0 && !document.hidden && S.authed) { S.nextAt = Date.now() + REFRESH_MS; refreshAll(false); }
+        }
+        setInterval(tickCountdown, 1000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden && S.authed && Date.now() - S.loadedAt > REFRESH_MS) refreshAll(false); });
+        function renderAll() { renderCurrent(); renderStrip(); if (S.tab === 'forecast') renderForecast(); if (S.tab === 'activity') loadActivity(true); }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { const m = document.querySelector('.modal-overlay.show'); if (m) m.classList.remove('show'); return; }
+            if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey || document.querySelector('.modal-overlay.show')) return;
+            if (/^[1-5]$/.test(e.key)) setTab(TABS[+e.key - 1]); else if (e.key === 'r') refreshAll(true);
         });
+        matchMedia('(prefers-color-scheme: light)').addEventListener && matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (S.theme === 'auto') applyTheme(); });
 
-        // ========== ACTIVITY SELECTOR ==========
-        document.querySelectorAll('#activity-selector button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#activity-selector button').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                fetchActivitySafety(btn.dataset.activity);
-            });
-        });
-
-        // ========== HYDRATION REMINDERS (client-side only) ==========
-        let reminderTimer = null;
-        const reminderToggle = document.getElementById('reminder-toggle');
-        const reminderStatus = document.getElementById('reminder-status');
-
-        function startReminders() {
-            const mins = Math.max(5, parseInt(document.getElementById('reminder-interval').value) || 30);
-            if (Notification && Notification.permission === 'default') Notification.requestPermission();
-            clearInterval(reminderTimer);
-            reminderTimer = setInterval(() => {
-                if (Notification && Notification.permission === 'granted') {
-                    new Notification('💧 Time to hydrate', { body: 'Take a water break — you\'re in the Arizona heat.' });
-                } else {
-                    toast('💧 Reminder: time to drink some water');
-                }
-            }, mins * 60000);
-            reminderToggle.textContent = 'Stop Reminders';
-            reminderStatus.textContent = `On — every ${mins} min`;
-            localStorage.setItem('wh_reminder_on', '1');
-            localStorage.setItem('wh_reminder_mins', String(mins));
-        }
-        function stopReminders() {
-            clearInterval(reminderTimer);
-            reminderTimer = null;
-            reminderToggle.textContent = 'Start Reminders';
-            reminderStatus.textContent = 'Off';
-            localStorage.setItem('wh_reminder_on', '0');
-        }
-        reminderToggle.addEventListener('click', () => reminderTimer ? stopReminders() : startReminders());
-        if (localStorage.getItem('wh_reminder_on') === '1') {
-            document.getElementById('reminder-interval').value = localStorage.getItem('wh_reminder_mins') || 30;
-            startReminders();
-        }
-
-        // ========== SUNSCREEN TIMER (client-side only) ==========
-        let spfEndTime = null, spfTick = null;
-        const spfToggle = document.getElementById('spf-toggle');
-        const spfDisplay = document.getElementById('spf-display');
-
-        function formatMMSS(ms) {
-            const total = Math.max(0, Math.floor(ms / 1000));
-            const m = String(Math.floor(total / 60)).padStart(2, '0');
-            const s = String(total % 60).padStart(2, '0');
-            return `${m}:${s}`;
-        }
-        function startSpfTimer() {
-            const mins = Math.max(10, parseInt(document.getElementById('spf-interval').value) || 120);
-            spfEndTime = Date.now() + mins * 60000;
-            spfDisplay.style.display = 'block';
-            spfToggle.textContent = 'Cancel Timer';
-            clearInterval(spfTick);
-            spfTick = setInterval(() => {
-                const remaining = spfEndTime - Date.now();
-                if (remaining <= 0) {
-                    clearInterval(spfTick);
-                    spfDisplay.textContent = '00:00';
-                    if (Notification && Notification.permission === 'granted') {
-                        new Notification('🧴 Reapply sunscreen', { body: 'Your SPF window is up.' });
-                    } else {
-                        toast('🧴 Time to reapply sunscreen');
-                    }
-                    spfToggle.textContent = 'Start Timer';
-                    spfEndTime = null;
-                    return;
-                }
-                spfDisplay.textContent = formatMMSS(remaining);
-            }, 1000);
-        }
-        spfToggle.addEventListener('click', () => {
-            if (spfEndTime) {
-                clearInterval(spfTick);
-                spfEndTime = null;
-                spfDisplay.style.display = 'none';
-                spfToggle.textContent = 'Start Timer';
-            } else {
-                if (Notification && Notification.permission === 'default') Notification.requestPermission();
-                startSpfTimer();
-            }
-        });
-
-        // ========== COPY SUMMARY (client-side only) ==========
-        document.getElementById('copy-summary').addEventListener('click', async () => {
-            if (!lastWeatherData) { toast('No conditions loaded yet'); return; }
-            const c = lastWeatherData.current, r = lastWeatherData.risk || {}, hyd = lastWeatherData.hydrations || {};
-            const dt = unit === 'F' ? c.temp : fToC(c.temp);
-            const summary = `Wizard Heat — ${dt}°${unit}, ${c.condition || ''}. Risk: ${(r.level || 'safe').toUpperCase()}. Hydration: ${hyd.message || 'n/a'}.`;
-            try {
-                await navigator.clipboard.writeText(summary);
-                toast('Copied to clipboard');
-            } catch(e) {
-                toast('Could not copy — clipboard unavailable');
-            }
-        });
-
-        // ========== REFRESH COUNTDOWN (client-side only) ==========
-        let nextRefreshAt = Date.now() + 300000;
-        function tickRefreshCountdown() {
-            const remaining = Math.max(0, nextRefreshAt - Date.now());
-            const mins = Math.floor(remaining / 60000);
-            const secs = Math.floor((remaining % 60000) / 1000);
-            document.getElementById('refresh-countdown').textContent = `next refresh in ${mins}:${String(secs).padStart(2,'0')}`;
-        }
-        setInterval(tickRefreshCountdown, 1000);
-        tickRefreshCountdown();
-
-        // ========== INIT ==========
+        /* ── init ── */
         async function init() {
-            const authed = await checkAuth();
-            if (!authed) return;
-            currentLocation = await getLocation();
-            await fetchWeather();
-            nextRefreshAt = Date.now() + 300000;
-            setInterval(() => {
-                fetchWeather();
-                nextRefreshAt = Date.now() + 300000;
-            }, 300000);
+            applyTheme(); $('unit-toggle').textContent = '°' + S.unit;
+            let res; try { res = await fetch(API + '/api/check-auth', { credentials: 'include' }); } catch (e) { showErr("Can't reach the server. Check your connection.", init); return; }
+            let data = {}; try { data = await res.json(); } catch (e) {}
+            if (!res.ok && res.status !== 401) { showErr('The server had a problem. Try again in a moment.', init); return; }
+            if (!data.authenticated || !data.user) { location.href = HOME; return; }
+            hideErr(); S.authed = true;
+            const sp = store.get('wh_spf_end', ''); if (sp && +sp > Date.now() - 1000) runSpf(+sp);
+            if (store.get('wh_reminder_on', '0') === '1') { $('reminder-interval').value = store.get('wh_reminder_mins', '30'); startReminders(true); }
+            const v = location.hash.slice(1); if (TABS.includes(v)) setTab(v, false);
+            S.loc = await getLocation(false); renderLoc(); await refreshAll(false);
         }
         init();
     </script>
