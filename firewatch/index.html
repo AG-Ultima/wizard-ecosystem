@@ -344,11 +344,24 @@
         $('search-form').addEventListener('submit', e => { e.preventDefault(); const q = $('q').value.trim(); if (q.length < 2) { toast('Type a city, town or ZIP code', { err: true }); $('q').focus(); return; } load({ text: q, force: true }); });
         $('radius').value = String([50, 100, 150, 250].includes(S.radius) ? S.radius : 150);
         $('radius').onchange = () => { S.radius = +$('radius').value; store.set('wf_radius', String(S.radius)); load({ force: true }); };
+        const GEO_WHY = { 1: 'Location is blocked for this site (tap the lock icon next to the address to allow it).', 2: 'Your device could not work out where it is.', 3: 'Finding your position took too long.' };
+        async function approxLocation(why) {
+            // Fallback when the browser can't give a position: a coarse, network-based guess (city level).
+            try {
+                const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 6000);
+                const r = await fetch('https://ipwho.is/', { signal: ctl.signal }); clearTimeout(t); const j = await r.json();
+                if (j && j.success !== false && Number.isFinite(+j.latitude) && Number.isFinite(+j.longitude)) {
+                    $('mine').disabled = false; S.loc = { lat: +j.latitude, lon: +j.longitude, name: 'My location', isDefault: false };
+                    toast(`${why} Using your approximate location${j.city ? ' (' + j.city + ')' : ''}.`); load({ force: true, fromGps: true }); return;
+                }
+            } catch (e) {}
+            $('mine').disabled = false; renderLoc(); toast(`${why} Type your city or ZIP instead.`, { err: true }); $('q').focus();
+        }
         $('mine').onclick = () => {
-            if (!navigator.geolocation) { toast('This browser cannot share your location. Search for a place instead.', { err: true }); return; }
+            if (!navigator.geolocation) { approxLocation('This browser cannot share your location.'); return; }
             $('mine').disabled = true; $('loc-text').textContent = '📍 Locating…';
             navigator.geolocation.getCurrentPosition(p => { $('mine').disabled = false; S.loc = { lat: p.coords.latitude, lon: p.coords.longitude, name: 'My location', isDefault: false }; load({ force: true, fromGps: true }); },
-                () => { $('mine').disabled = false; renderLoc(); toast('Location access was blocked. Search for a place instead.', { err: true }); }, { timeout: 8000, maximumAge: 0 });
+                e => approxLocation(GEO_WHY[e && e.code] || 'Could not get your location.'), { timeout: 10000, maximumAge: 120000, enableHighAccuracy: false });
         };
         function initialLocation() {
             const saved = jget('wf_loc', null);
@@ -401,9 +414,10 @@
         function renderSources(d) {
             const s = d.status.sources;
             $('sources').innerHTML = Object.keys(SRC).filter(k => s[k]).map(k => { const x = s[k], us = k === 'nws' && x.ok && x.covered === false;
-                return `<span class="src ${x.ok ? '' : 'bad'}" data-src="${k}"><i></i>${SRC[k]}${x.ok ? (us ? ' <small>US only</small>' : '') : ` <small>${esc(ERR[x.error] || 'unavailable')}</small>`}</span>`; }).join('');
+                return `<span class="src ${x.ok ? '' : 'bad'}" data-src="${k}" title="${esc(x.hint || '')}"><i></i>${SRC[k]}${x.ok ? (us ? ' <small>US only</small>' : '') : ` <small>${esc(ERR[x.error] || 'unavailable')}</small>`}</span>`; }).join('');
             const f = s.nasa_firms;
-            $('firms-warn').innerHTML = f && !f.ok ? `<div class="warn" role="alert"><b>Satellite fire detection is unavailable right now.</b> An empty fire list below does <b>not</b> mean there are no fires. Check <a href="${firmsUrl(d.place.lat, d.place.lng, 8)}" target="_blank" rel="noopener" style="color:var(--sun-light)">the NASA FIRMS map</a> directly.</div>` : '';
+            $('firms-warn').innerHTML = f && !f.ok ? `<div class="warn" role="alert"><b>Satellite fire detection is unavailable right now.</b> An empty fire list below does <b>not</b> mean there are no fires. Check <a href="${firmsUrl(d.place.lat, d.place.lng, 8)}" target="_blank" rel="noopener" style="color:var(--sun-light)">the NASA FIRMS map</a> directly.${f.hint ? `<br><small id="firms-hint">Reason: ${esc(f.hint)}</small>` : ''}</div>` : '';
+            $('firms-warn').innerHTML += Object.keys(SRC).filter(k => k !== 'nasa_firms' && s[k] && !s[k].ok && s[k].hint).map(k => `<div class="note" style="margin:-6px 0 12px">${SRC[k]}: ${esc(s[k].hint)}</div>`).join('');
         }
         const firmsUrl = (lat, lon, z) => `https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@${(+lon).toFixed(3)},${(+lat).toFixed(3)},${z || 9}.0z`;
         function renderHero(d) {
