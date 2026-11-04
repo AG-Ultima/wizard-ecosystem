@@ -333,38 +333,30 @@
             const l = S.loc || DEFAULT_LOC; $('loc').classList.toggle('dflt', !!l.isDefault);
             $('loc-text').textContent = `📍 ${l.name || 'My location'}${l.isDefault ? ' (default)' : ''}`;
         }
-        function saveLoc(l) { S.loc = { lat: l.lat, lon: l.lon, name: l.name, isDefault: false }; store.set('wf_loc', JSON.stringify({ lat: l.lat, lon: l.lon, name: l.name })); addRecent(S.loc); renderLoc(); }
+        function saveLoc(l) { S.loc = { lat: l.lat, lon: l.lon, name: l.name, isDefault: false }; store.set('wf_loc2', JSON.stringify({ lat: l.lat, lon: l.lon, name: l.name })); addRecent(S.loc); renderLoc(); }
         function addRecent(l) {
-            let r = jget('wf_recents', []).filter(x => x && x.name !== l.name); r.unshift({ name: l.name, lat: l.lat, lon: l.lon }); store.set('wf_recents', JSON.stringify(r.slice(0, 5))); renderRecents();
+            let r = jget('wf_recents2', []).filter(x => x && x.name !== l.name); r.unshift({ name: l.name, lat: l.lat, lon: l.lon }); store.set('wf_recents2', JSON.stringify(r.slice(0, 5))); renderRecents();
         }
         function renderRecents() {
-            const r = jget('wf_recents', []); $('recents').innerHTML = r.map((x, i) => `<button type="button" data-i="${i}" title="Check ${esc(x.name)}">🕘 ${esc(x.name)}</button>`).join('');
+            const r = jget('wf_recents2', []); $('recents').innerHTML = r.map((x, i) => `<button type="button" data-i="${i}" title="Check ${esc(x.name)}">🕘 ${esc(x.name)}</button>`).join('');
         }
-        $('recents').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; const x = jget('wf_recents', [])[+b.dataset.i]; if (x) { saveLoc(x); load({ force: true }); } });
+        $('recents').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; const x = jget('wf_recents2', [])[+b.dataset.i]; if (x) { saveLoc(x); load({ force: true }); } });
         $('search-form').addEventListener('submit', e => { e.preventDefault(); const q = $('q').value.trim(); if (q.length < 2) { toast('Type a city, town or ZIP code', { err: true }); $('q').focus(); return; } load({ text: q, force: true }); });
         $('radius').value = String([50, 100, 150, 250].includes(S.radius) ? S.radius : 150);
         $('radius').onchange = () => { S.radius = +$('radius').value; store.set('wf_radius', String(S.radius)); load({ force: true }); };
         const GEO_WHY = { 1: 'Location is blocked for this site (tap the lock icon next to the address to allow it).', 2: 'Your device could not work out where it is.', 3: 'Finding your position took too long.' };
-        async function approxLocation(why) {
-            // Fallback when the browser can't give a position: a coarse, network-based guess (city level).
-            try {
-                const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 6000);
-                const r = await fetch('https://ipwho.is/', { signal: ctl.signal }); clearTimeout(t); const j = await r.json();
-                if (j && j.success !== false && Number.isFinite(+j.latitude) && Number.isFinite(+j.longitude)) {
-                    $('mine').disabled = false; S.loc = { lat: +j.latitude, lon: +j.longitude, name: 'My location', isDefault: false };
-                    toast(`${why} Using your approximate location${j.city ? ' (' + j.city + ')' : ''}.`); load({ force: true, fromGps: true }); return;
-                }
-            } catch (e) {}
+        function geoFail(why) {
+            // No network-based guessing: a wrong city on a fire page is worse than asking.
             $('mine').disabled = false; renderLoc(); toast(`${why} Type your city or ZIP instead.`, { err: true }); $('q').focus();
         }
         $('mine').onclick = () => {
-            if (!navigator.geolocation) { approxLocation('This browser cannot share your location.'); return; }
+            if (!navigator.geolocation) { geoFail('This browser cannot share your location.'); return; }
             $('mine').disabled = true; $('loc-text').textContent = '📍 Locating…';
             navigator.geolocation.getCurrentPosition(p => { $('mine').disabled = false; S.loc = { lat: p.coords.latitude, lon: p.coords.longitude, name: 'My location', isDefault: false }; load({ force: true, fromGps: true }); },
-                e => approxLocation(GEO_WHY[e && e.code] || 'Could not get your location.'), { timeout: 10000, maximumAge: 120000, enableHighAccuracy: false });
+                e => geoFail(GEO_WHY[e && e.code] || 'Could not get your location.'), { timeout: 10000, maximumAge: 120000, enableHighAccuracy: false });
         };
         function initialLocation() {
-            const saved = jget('wf_loc', null);
+            const saved = jget('wf_loc2', null);
             if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lon)) return Promise.resolve({ ...saved, isDefault: false });
             return new Promise(res => {
                 if (!navigator.geolocation) return res({ ...DEFAULT_LOC });
