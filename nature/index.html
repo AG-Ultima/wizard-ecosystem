@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="Wizard Nature — Desert survival and wildlife identification app. Cactus tracker, snake ID, sunset forecast, and more.">
+    <meta name="description" content="Wizard Nature: desert wildlife and plant ID, cactus tracker, sunset forecast for anywhere, wildflowers and camping.">
     <meta name="author" content="Arnav Gupta">
     <meta name="theme-color" content="#141f16">
     <title>🌵 Wizard Nature — Desert Survival & Wildlife</title>
@@ -13,905 +13,568 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            /* Wizard Nature keeps its own desert-flora identity (dusk greens, sunset
-               ember, cactus bloom) rather than borrowing Heat/FireWatch's sand palette —
-               but shares the ecosystem's type system, radii, and structural rhythm. */
-            --desert:        #141f16;
-            --desert-mid:    #1a271c;
-            --desert-card:   #202f22;
-            --cactus:        #5ba06c;
-            --cactus-light:  #86c493;
-            --cactus-dark:   #2a5a3a;
-            --sunset:        #e8844a;
-            --sunset-light:  #f5ab7a;
-            --bloom:         #d97fa8;
-            --gold:          #c9a84c;
-            --gold-light:    #e8c97a;
-            --sand:          #ece3d1;
-            --sand-dim:      rgba(236,227,209,0.62);
-            --sand-faint:    rgba(236,227,209,0.34);
-            --line:          rgba(91,160,108,0.18);
-            --line-strong:   rgba(91,160,108,0.42);
-            --danger:        #e0685a;
-            --success:       #7fc47a;
-            --warning:       #f2b84e;
-            --radius: 20px;
+            color-scheme: dark;
+            --desert:#141f16; --desert-mid:#1a271c; --desert-card:#202f22; --pop:#263a29;
+            --cactus:#5ba06c; --cactus-light:#86c493; --cactus-dark:#2a5a3a; --sunset:#e8844a; --sunset-light:#f5ab7a; --bloom:#d97fa8;
+            --gold:#c9a84c; --gold-light:#e8c97a; --sand:#ece3d1; --sand-dim:rgba(236,227,209,.66); --sand-faint:rgba(236,227,209,.42); --ln:236,227,209;
+            --line:rgba(91,160,108,.2); --line-strong:rgba(91,160,108,.46); --danger:#ec7566; --success:#7fc47a; --warning:#f2b84e; --on-accent:#10190f;
+            --glow-color:#5ba06c; --star-op:.45; --amb-op:.3; --shadow:0 18px 60px rgba(0,0,0,.5); --nav-bg:rgba(20,31,22,.94);
         }
-
+        html[data-theme="light"] {
+            color-scheme: light;
+            --desert:#f4f0e3; --desert-mid:#ece6d2; --desert-card:#fffdf6; --pop:#ffffff;
+            --cactus:#2f7d46; --cactus-light:#1f6a38; --cactus-dark:#bfe0c5; --sunset:#d4642a; --sunset-light:#b04c17; --bloom:#b9487f;
+            --gold:#9a7b1e; --gold-light:#7a5f10; --sand:#1f2a20; --sand-dim:rgba(31,42,32,.74); --sand-faint:rgba(31,42,32,.52); --ln:31,42,32;
+            --line:rgba(47,125,70,.22); --line-strong:rgba(47,125,70,.5); --danger:#c4301f; --success:#2f7d32; --warning:#a86800; --on-accent:#fffdf6;
+            --star-op:0; --amb-op:.14; --shadow:0 14px 44px rgba(60,70,40,.22); --nav-bg:rgba(244,240,227,.95);
+        }
         html, body { height: 100%; overflow: hidden; }
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-            background: var(--desert);
-            color: var(--sand);
-        }
-        h1, h2, .logo-name, .feature-title, .panel-title {
-            font-family: 'Fraunces', serif;
-        }
-
-        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.45; }
-
-        /* Signature element: a "desert light" glow that shifts with the actual time
-           of day — dawn peach, midday green, dusk ember, night indigo — echoing the
-           app's own subject (you're out there watching the sky) rather than a risk
-           reading like the sibling apps use. */
-        .day-glow {
-            position: fixed; left: 0; right: 0; bottom: 0; height: 44vh;
-            pointer-events: none; z-index: 0;
-            background: linear-gradient(to top, var(--glow-color, var(--cactus)) 0%, transparent 78%);
-            opacity: 0.2; filter: blur(70px);
-            transition: background 3s ease;
-            animation: shimmer 9s ease-in-out infinite;
-        }
-        @keyframes shimmer {
-            0%, 100% { transform: translateY(0) scaleX(1); opacity: 0.18; }
-            50% { transform: translateY(-8px) scaleX(1.03); opacity: 0.26; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .day-glow, .logo-glyph { animation: none !important; }
-        }
-
-        .amb {
-            position: fixed; border-radius: 50%;
-            filter: blur(130px); pointer-events: none; z-index: 0;
-            opacity: 0.32; animation: drift 22s ease-in-out infinite alternate;
-        }
+        body { font-family: 'Space Grotesk', sans-serif; background: var(--desert); color: var(--sand); transition: background .3s, color .3s; -webkit-text-size-adjust: 100%; }
+        button { font-family: inherit; color: inherit; cursor: pointer; } input, select { font-family: inherit; }
+        [hidden] { display: none !important; }
+        :focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+        h1, h2, h3, h4, .logo-name { font-family: 'Fraunces', serif; }
+        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: var(--star-op); transition: opacity .3s; }
+        .day-glow { position: fixed; left: 0; right: 0; bottom: 0; height: 44vh; pointer-events: none; z-index: 0; background: linear-gradient(to top, var(--glow-color) 0%, transparent 78%); opacity: .2; filter: blur(70px); transition: background 3s ease; animation: shimmer 9s ease-in-out infinite; }
+        @keyframes shimmer { 0%,100% { transform: translateY(0) scaleX(1); opacity: .18; } 50% { transform: translateY(-8px) scaleX(1.03); opacity: .26; } }
+        .amb { position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; opacity: var(--amb-op); animation: drift 22s ease-in-out infinite alternate; }
         .amb-1 { width: 600px; height: 600px; top: -200px; left: -200px; background: radial-gradient(circle, var(--cactus), transparent 70%); }
         .amb-2 { width: 460px; height: 460px; bottom: -100px; right: -100px; background: radial-gradient(circle, var(--sunset), transparent 70%); animation-delay: -9s; }
-        .amb-3 { width: 380px; height: 380px; top: 35%; left: 55%; background: radial-gradient(circle, var(--bloom), transparent 70%); opacity: 0.16; animation-delay: -15s; }
         @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(-30px,25px) scale(1.08); } }
-
-        .app-shell { position: relative; z-index: 10; display: flex; height: 100vh; }
-
-        /* Sidebar */
-        .sidebar {
-            width: 280px; flex-shrink: 0;
-            background: linear-gradient(165deg, rgba(91,160,108,0.1), rgba(20,31,22,0.96) 40%);
-            border-right: 1px solid var(--line);
-            display: flex; flex-direction: column;
-            backdrop-filter: blur(20px);
-            overflow-y: auto;
-        }
-        .sidebar::-webkit-scrollbar { width: 3px; }
-        .sidebar::-webkit-scrollbar-thumb { background: var(--cactus); border-radius: 3px; }
-
-        .sidebar-head { padding: 20px 18px 16px; border-bottom: 1px solid var(--line); }
-        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 16px; }
-        .logo-glyph { font-size: 30px; filter: drop-shadow(0 0 12px rgba(91,160,108,0.45)); animation: lev 5s ease-in-out infinite; }
-        @keyframes lev { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        .logo-name {
-            font-size: 20px; font-weight: 500; font-style: italic;
-            background: linear-gradient(135deg, var(--cactus-light), var(--gold-light));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .user-card {
-            background: rgba(91,160,108,0.08);
-            border: 1px solid var(--line);
-            border-radius: 14px;
-            padding: 10px 12px;
-            margin-bottom: 16px;
-        }
-        .user-email { font-size: 11px; color: var(--sand-dim); word-break: break-all; }
-
-        .nav-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-            margin-bottom: 2px;
-        }
-        .nav-item:hover { background: rgba(236,227,209,0.04); border-color: var(--line); }
-        .nav-item.active { background: rgba(91,160,108,0.16); border-color: var(--cactus); }
-        .nav-icon { font-size: 18px; width: 28px; }
-        .nav-label { font-size: 13px; }
-
-        /* Main */
-        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-
-        .main-header {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--line);
-            background: rgba(20,31,22,0.7);
-            backdrop-filter: blur(12px);
-            flex-shrink: 0;
-        }
-        .main-header h1 { font-size: 25px; font-weight: 500; font-style: italic; color: var(--sand); }
-        .main-header p { font-size: 13px; color: var(--sand-faint); margin-top: 2px; }
-
-        .content-area { flex: 1; overflow-y: auto; padding: 24px; }
-        .content-area::-webkit-scrollbar { width: 4px; }
-        .content-area::-webkit-scrollbar-thumb { background: var(--cactus); border-radius: 4px; }
-
-        /* Feature Cards */
-        .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .feature-card {
-            background: linear-gradient(150deg, rgba(91,160,108,0.14), var(--desert-card) 55%, var(--desert-mid));
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            padding: 24px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .feature-card:hover { transform: translateY(-4px); border-color: var(--cactus); box-shadow: 0 8px 30px rgba(91,160,108,0.16); }
-        .feature-icon { font-size: 38px; margin-bottom: 12px; }
-        .feature-title { font-size: 18px; font-weight: 500; margin-bottom: 8px; }
-        .feature-desc { font-size: 13px; color: var(--sand-faint); line-height: 1.5; }
-
-        /* Panels */
-        .panel {
-            background: linear-gradient(150deg, rgba(232,132,74,0.08), var(--desert-card) 55%, var(--desert-mid));
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-        .panel-title { font-size: 18px; font-weight: 500; margin-bottom: 16px; }
-        .panel-title em { color: var(--cactus-light); font-style: italic; }
-
-        .upload-area {
-            border: 2px dashed var(--line);
-            border-radius: 16px;
-            padding: 40px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .upload-area:hover { border-color: var(--cactus); background: rgba(91,160,108,0.06); }
-        .upload-area.dragover { border-color: var(--gold); background: rgba(201,168,76,0.06); }
-        .upload-area input { display: none; }
-
-        .result-box {
-            margin-top: 20px;
-            padding: 20px;
-            background: rgba(91,160,108,0.1);
-            border-radius: 12px;
-            display: none;
-            border-left: 4px solid var(--cactus);
-        }
-        .result-box.show { display: block; animation: fadeSlide 0.4s ease; }
-        @keyframes fadeSlide { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
-
-        .result-image { max-width: 100%; max-height: 300px; border-radius: 12px; margin-top: 12px; }
-        .result-text { font-size: 14px; line-height: 1.8; color: var(--sand); white-space: pre-wrap; }
-        .result-text strong { color: var(--gold-light); }
-        .result-text .danger { color: var(--danger); }
-        .result-text .success { color: var(--success); }
-
-        .result-badge { display: inline-block; padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; margin-top: 8px; }
-        .badge-danger { background: rgba(224,104,90,0.2); color: var(--danger); }
-        .badge-success { background: rgba(91,160,108,0.2); color: var(--cactus-light); }
-        .badge-warning { background: rgba(242,184,78,0.2); color: var(--warning); }
-        .badge-gold { background: rgba(201,168,76,0.2); color: var(--gold-light); }
-
-        .cactus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
-        .cactus-card {
-            background: rgba(236,227,209,0.03);
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        .cactus-card:hover { transform: translateY(-2px); border-color: var(--cactus); }
-        .cactus-card.spotted { border-color: var(--cactus); background: rgba(91,160,108,0.1); }
-        .cactus-emoji { font-size: 46px; margin-bottom: 8px; }
-        .cactus-name { font-size: 14px; font-weight: 500; }
-        .cactus-status { font-size: 11px; color: var(--sand-faint); margin-top: 4px; }
-        .cactus-status.seen { color: var(--success); }
-        .cactus-status.unseen { color: var(--sand-faint); }
-
-        .sunset-meter { width: 100%; height: 12px; background: rgba(236,227,209,0.06); border-radius: 100px; overflow: hidden; margin-top: 8px; }
-        .sunset-fill { height: 100%; border-radius: 100px; transition: width 1s ease; background: linear-gradient(90deg, var(--gold), var(--sunset), #d94f3a); }
-
-        .camping-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-        .camping-card {
-            background: rgba(236,227,209,0.03);
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 16px;
-            transition: all 0.3s;
-        }
-        .camping-card:hover { transform: translateY(-2px); border-color: var(--gold); }
-        .camping-name { font-size: 15px; font-weight: 600; }
-        .camping-location { font-size: 12px; color: var(--sand-faint); margin-top: 4px; }
-        .camping-features { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 8px; }
-        .camping-feature { background: rgba(201,168,76,0.1); border: 1px solid var(--line); border-radius: 100px; padding: 2px 8px; font-size: 10px; color: var(--sand-faint); }
-
-        .loading-spinner {
-            display: inline-block; width: 24px; height: 24px;
-            border: 2px solid rgba(91,160,108,0.2);
-            border-top-color: var(--cactus);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle; margin-right: 10px;
-        }
+        @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes sk { from { background-position: -300px 0; } to { background-position: 300px 0; } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-        .toast {
-            position: fixed; bottom: 30px; left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: linear-gradient(135deg, var(--cactus), var(--cactus-dark));
-            color: var(--desert);
-            padding: 10px 24px;
-            border-radius: 100px;
-            font-size: 13px; font-weight: 600;
-            z-index: 10000;
-            transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        .app { position: relative; z-index: 10; display: flex; height: 100vh; height: 100dvh; }
+        .sidebar { width: 250px; flex-shrink: 0; background: linear-gradient(165deg, rgba(91,160,108,.1), var(--nav-bg) 40%); border-right: 1px solid var(--line); display: flex; flex-direction: column; backdrop-filter: blur(20px); padding: 20px 14px; }
+        .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; margin: 0 6px 22px; }
+        .logo-glyph { font-size: 30px; filter: drop-shadow(0 0 12px rgba(91,160,108,.45)); }
+        .logo-name { font-size: 20px; font-weight: 500; font-style: italic; background: linear-gradient(135deg, var(--cactus-light), var(--gold-light)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid transparent; background: none; width: 100%; text-align: left; font-size: 14px; color: var(--sand-dim); transition: all .2s; margin-bottom: 3px; }
+        .nav-item:hover { background: rgba(var(--ln),.05); color: var(--sand); } .nav-item.active { background: rgba(91,160,108,.16); border-color: var(--cactus); color: var(--sand); font-weight: 600; }
+        .nav-icon { font-size: 19px; width: 26px; text-align: center; }
+        .side-foot { margin-top: auto; padding: 14px 6px 0; border-top: 1px solid var(--line); font-size: 11px; color: var(--sand-faint); line-height: 1.7; }
+        .side-foot a { color: inherit; }
+
+        .main { flex: 1; display: flex; flex-direction: column; min-width: 0; position: relative; }
+        .topbar { display: flex; align-items: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--line); background: var(--nav-bg); backdrop-filter: blur(12px); flex-shrink: 0; flex-wrap: wrap; }
+        .topbar h1 { font-size: 24px; font-weight: 500; font-style: italic; flex: 1; min-width: 150px; } .topbar h1 small { display: block; font-family: 'Space Grotesk'; font-style: normal; font-size: 12px; color: var(--sand-faint); font-weight: 400; margin-top: 2px; }
+        .pill { display: inline-flex; gap: 6px; align-items: center; background: rgba(91,160,108,.12); border: 1px solid var(--line-strong); border-radius: 100px; padding: 7px 13px; font-size: 12.5px; font-weight: 600; color: var(--cactus-light); white-space: nowrap; transition: background .2s; }
+        .pill:hover { background: rgba(91,160,108,.24); } #loc { max-width: 250px; } #loc span { overflow: hidden; text-overflow: ellipsis; } #loc.dflt { border-color: var(--gold); color: var(--gold-light); }
+        .content { flex: 1; overflow-y: auto; padding: 24px; scroll-behavior: smooth; scrollbar-width: thin; }
+        .content > section { max-width: 1060px; margin: 0 auto; animation: rise .3s ease both; }
+        .view { display: none; } .view.active { display: block; }
+
+        .locpanel { position: absolute; right: 24px; top: 66px; z-index: 50; width: min(420px, calc(100% - 32px)); background: var(--pop); border: 1px solid var(--line-strong); border-radius: 18px; padding: 16px; box-shadow: var(--shadow); animation: rise .2s ease both; }
+        .locpanel h4 { font-size: 16px; font-weight: 500; margin-bottom: 10px; }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .row input[type=search], .row select { flex: 1; min-width: 0; background: rgba(var(--ln),.06); border: 1px solid var(--line-strong); border-radius: 100px; padding: 10px 16px; color: var(--sand); font-size: 14px; }
+        .row select option { background: var(--pop); color: var(--sand); }
+        .btn { background: linear-gradient(135deg, var(--cactus), var(--gold)); color: var(--on-accent); border: none; border-radius: 100px; padding: 10px 20px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+        .btn:disabled { opacity: .55; cursor: default; } .btn.ghost { background: rgba(var(--ln),.07); color: var(--sand); border: 1px solid var(--line); font-weight: 600; } .btn.ghost:hover { background: rgba(91,160,108,.14); } .btn.danger { background: rgba(236,117,102,.18); color: var(--danger); border: 1px solid var(--danger); }
+        .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; } .chips:empty { display: none; }
+        .chip { background: rgba(var(--ln),.05); border: 1px solid var(--line); border-radius: 100px; padding: 5px 12px; font-size: 12px; color: var(--sand-dim); } .chip:hover { background: rgba(91,160,108,.14); color: var(--sand); } .chip.on { background: rgba(91,160,108,.22); border-color: var(--cactus); color: var(--sand); font-weight: 600; }
+        .err-bar { display: none; align-items: center; gap: 12px; padding: 10px 14px; margin: 0 auto 14px; max-width: 1060px; background: rgba(236,117,102,.14); border: 1px solid var(--danger); border-radius: 12px; font-size: 13px; } .err-bar.show { display: flex; } .err-bar button { margin-left: auto; }
+
+        .card { background: linear-gradient(150deg, rgba(91,160,108,.1), var(--desert-card) 55%, var(--desert-mid)); border: 1px solid var(--line); border-radius: 20px; padding: 22px; margin-bottom: 18px; }
+        .card h3 { font-size: 19px; font-weight: 500; font-style: italic; margin-bottom: 4px; } .card .hint { font-size: 12.5px; color: var(--sand-faint); line-height: 1.55; margin-bottom: 12px; }
+        .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; } .grid2 > .card { margin-bottom: 0; } .grid2 + .card, .grid2 + .grid2 { margin-top: 18px; }
+        .link-card { cursor: pointer; transition: transform .25s, border-color .25s, box-shadow .25s; text-align: left; width: 100%; display: block; } .link-card:hover { transform: translateY(-3px); border-color: var(--cactus); box-shadow: 0 10px 30px rgba(91,160,108,.14); }
+        .sub { font-size: 12.5px; color: var(--sand-faint); }
+        .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; }
+        .tile { background: rgba(var(--ln),.05); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: var(--sand-faint); text-transform: uppercase; letter-spacing: .05em; } .tile b { display: block; font-size: 17px; color: var(--sand); text-transform: none; letter-spacing: 0; margin-top: 2px; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .notice { padding: 12px 14px; border-radius: 12px; background: rgba(242,184,78,.1); border: 1px solid rgba(242,184,78,.4); font-size: 13px; line-height: 1.55; margin-top: 12px; } .notice.red { background: rgba(236,117,102,.12); border-color: var(--danger); } .notice b { color: var(--gold-light); } .notice.red b { color: var(--danger); }
+        .empty { text-align: center; padding: 30px 16px; color: var(--sand-faint); font-size: 14px; line-height: 1.6; }
+        .skel { border-radius: 14px; background: linear-gradient(90deg, rgba(var(--ln),.05) 25%, rgba(var(--ln),.11) 50%, rgba(var(--ln),.05) 75%); background-size: 600px 100%; animation: sk 1.2s linear infinite; }
+        .spinner { width: 18px; height: 18px; border: 2px solid var(--line-strong); border-top-color: var(--cactus-light); border-radius: 50%; animation: spin .7s linear infinite; display: inline-block; vertical-align: -4px; margin-right: 8px; }
+
+        .sunhero { display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
+        .gauge { width: 190px; flex-shrink: 0; text-align: center; } .gauge svg { width: 100%; display: block; }
+        .gauge .num { font-family: 'Fraunces', serif; font-size: 40px; line-height: 1; margin-top: -48px; position: relative; font-variant-numeric: tabular-nums; } .gauge .num small { font-size: 16px; color: var(--sand-faint); }
+        .gauge .lab { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; margin-top: 6px; font-weight: 700; }
+        .sunbody { flex: 1; min-width: 240px; }
+        .times { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 4px 0 14px; } .times div { background: rgba(var(--ln),.05); border-radius: 14px; padding: 11px 13px; font-size: 11px; color: var(--sand-faint); text-transform: uppercase; letter-spacing: .05em; } .times b { display: block; font-family: 'Fraunces', serif; font-size: 21px; color: var(--sand); letter-spacing: 0; text-transform: none; margin-top: 2px; font-weight: 500; font-variant-numeric: tabular-nums; } .times div.main { background: rgba(232,132,74,.14); border: 1px solid rgba(232,132,74,.4); }
+        .countdown { font-size: 14px; color: var(--sunset-light); font-weight: 600; margin-bottom: 12px; }
+        .factors { list-style: none; display: flex; flex-direction: column; gap: 6px; } .factors li { font-size: 13px; padding: 8px 12px; background: rgba(var(--ln),.05); border-left: 3px solid var(--tone, var(--gold)); border-radius: 8px; line-height: 1.45; }
+        .factors li.good { --tone: var(--success); } .factors li.bad { --tone: var(--danger); } .factors li.neutral { --tone: var(--gold); }
+        .outlook { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; } .oday { background: rgba(var(--ln),.05); border: 1px solid var(--line); border-radius: 14px; padding: 12px 8px; text-align: center; position: relative; overflow: hidden; } .oday.first { border-color: var(--sunset); }
+        .oday .d { font-size: 12px; font-weight: 600; } .oday .r { font-family: 'Fraunces', serif; font-size: 24px; margin: 4px 0 2px; font-variant-numeric: tabular-nums; } .oday .l { font-size: 11px; color: var(--sand-faint); } .oday::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--rc, var(--line)); }
+
+        .seg { display: inline-flex; gap: 4px; background: rgba(var(--ln),.06); border: 1px solid var(--line); border-radius: 100px; padding: 4px; margin-bottom: 18px; flex-wrap: wrap; }
+        .seg button { background: none; border: none; border-radius: 100px; padding: 9px 18px; font-size: 13.5px; font-weight: 600; color: var(--sand-dim); transition: all .2s; } .seg button:hover { color: var(--sand); } .seg button.active { background: linear-gradient(135deg, var(--cactus), var(--gold)); color: var(--on-accent); }
+        .drop { border: 2px dashed var(--line-strong); border-radius: 18px; padding: 34px 20px; text-align: center; transition: all .25s; } .drop.dragover { border-color: var(--gold); background: rgba(201,168,76,.08); } .drop .big { font-size: 44px; margin-bottom: 8px; } .drop .btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+        .drop input { display: none; }
+        .preview { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; } .preview img { width: 120px; height: 120px; object-fit: cover; border-radius: 14px; border: 1px solid var(--line); }
+        .result { margin-top: 18px; border-left: 4px solid var(--rc, var(--cactus)); animation: rise .3s ease both; }
+        .result h3 { font-size: 24px; font-style: normal; } .result h3 i { display: block; font-size: 14px; font-style: italic; color: var(--sand-faint); font-family: 'Space Grotesk'; margin-top: 2px; font-weight: 400; }
+        .badges { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; } .badge { font-size: 11.5px; font-weight: 700; padding: 5px 12px; border-radius: 100px; letter-spacing: .03em; } .b-red { background: rgba(236,117,102,.2); color: var(--danger); } .b-green { background: rgba(127,196,122,.2); color: var(--success); } .b-gold { background: rgba(242,184,78,.2); color: var(--warning); } .b-grey { background: rgba(var(--ln),.1); color: var(--sand-dim); }
+        .result h5 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--gold-light); margin: 14px 0 5px; } .result p, .result li { font-size: 14px; line-height: 1.65; color: var(--sand-dim); } .result ul { margin-left: 18px; }
+        .history { display: flex; flex-direction: column; gap: 8px; } .hrow { display: flex; gap: 12px; align-items: center; padding: 10px 14px; background: rgba(var(--ln),.04); border: 1px solid var(--line); border-radius: 12px; font-size: 13.5px; } .hrow .ic { font-size: 22px; } .hrow .n { flex: 1; min-width: 0; } .hrow .n i { display: block; font-size: 12px; color: var(--sand-faint); } .hrow time { font-size: 11px; color: var(--sand-faint); }
+        .gate { text-align: center; padding: 34px 18px; } .gate p { color: var(--sand-dim); margin: 8px 0 16px; line-height: 1.6; }
+
+        .progress { height: 10px; border-radius: 100px; background: rgba(var(--ln),.08); overflow: hidden; margin: 10px 0 4px; } .progress i { display: block; height: 100%; background: linear-gradient(90deg, var(--cactus), var(--gold)); transition: width .5s; }
+        .cactus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin: 16px 0; }
+        .cactus-card { background: rgba(var(--ln),.04); border: 1px solid var(--line); border-radius: 16px; padding: 16px; text-align: center; transition: all .25s; width: 100%; position: relative; } .cactus-card:hover { transform: translateY(-3px); border-color: var(--cactus); } .cactus-card.spotted { border-color: var(--cactus); background: rgba(91,160,108,.14); }
+        .cactus-card svg { width: 64px; height: 64px; margin-bottom: 6px; opacity: .5; transition: opacity .3s, transform .3s; } .cactus-card.spotted svg { opacity: 1; transform: scale(1.06); }
+        .cactus-card .nm { font-weight: 600; font-size: 14.5px; } .cactus-card .st { font-size: 12px; margin-top: 3px; color: var(--sand-faint); } .cactus-card.spotted .st { color: var(--success); font-weight: 600; } .cactus-card .fact { font-size: 11.5px; color: var(--sand-faint); line-height: 1.5; margin-top: 8px; }
+        .cactus-card .rare { position: absolute; top: 10px; right: 10px; font-size: 10px; background: rgba(242,184,78,.2); color: var(--warning); border-radius: 100px; padding: 2px 8px; font-weight: 700; }
+        .cactus-card.busy { opacity: .6; pointer-events: none; }
+
+        .phase { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; } .phase .ic { font-size: 48px; } .phase b { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 500; display: block; }
+        .cal { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; margin: 16px 0; } .cal div { text-align: center; font-size: 10.5px; padding: 8px 0 6px; border-radius: 8px; background: rgba(var(--ln),.05); color: var(--sand-faint); position: relative; } .cal div.pk { background: rgba(217,127,168,.28); color: var(--sand); } .cal div.er, .cal div.cb, .cal div.mb, .cal div.fb { background: rgba(91,160,108,.26); color: var(--sand); } .cal div.now { outline: 2px solid var(--gold); font-weight: 700; }
+        .camp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; } .camp { background: rgba(var(--ln),.04); border: 1px solid var(--line); border-radius: 16px; padding: 16px; transition: all .25s; display: flex; flex-direction: column; gap: 6px; } .camp:hover { transform: translateY(-2px); border-color: var(--gold); }
+        .camp .t { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 15px; } .camp .loc { font-size: 12.5px; color: var(--sand-faint); } .camp .desc { font-size: 13px; color: var(--sand-dim); line-height: 1.5; } .camp .meta { font-size: 12px; color: var(--sand-faint); } .camp .stars { color: var(--gold-light); font-size: 12px; letter-spacing: 1px; }
+        .feat { display: flex; gap: 5px; flex-wrap: wrap; } .feat span { background: rgba(201,168,76,.12); border: 1px solid var(--line); border-radius: 100px; padding: 2px 9px; font-size: 10.5px; color: var(--sand-dim); }
+        .tag { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 100px; white-space: nowrap; align-self: flex-start; } .tag.in { background: rgba(127,196,122,.2); color: var(--success); } .tag.out { background: rgba(var(--ln),.1); color: var(--sand-faint); }
+        .camp a { color: var(--cactus-light); font-size: 12.5px; font-weight: 600; text-decoration: none; margin-top: auto; padding-top: 6px; } .camp a:hover { text-decoration: underline; }
+
+        .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(40px); background: var(--pop); border: 1px solid var(--line-strong); color: var(--sand); padding: 10px 20px; border-radius: 100px; font-size: 13px; z-index: 2000; opacity: 0; pointer-events: none; transition: all .3s; box-shadow: var(--shadow); max-width: calc(100vw - 32px); text-align: center; } .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); } .toast.err { border-color: var(--danger); }
+        .tabbar { display: none; }
+        @media (max-width: 880px) {
+            .sidebar { display: none; } .topbar { padding: 12px 16px; } .topbar h1 { font-size: 20px; } .content { padding: 16px 16px 96px; }
+            .locpanel { right: 12px; left: 12px; width: auto; top: 60px; } .times b { font-size: 18px; } .gauge { width: 170px; margin: 0 auto; } .sunhero { justify-content: center; } .outlook { gap: 6px; } .oday { padding: 10px 4px; } .oday .r { font-size: 20px; }
+            .cal { grid-template-columns: repeat(6, 1fr); } .grid2 { grid-template-columns: 1fr; }
+            .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; background: var(--nav-bg); border-top: 1px solid var(--line); backdrop-filter: blur(16px); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+            .tabbar button { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 10.5px; color: var(--sand-faint); padding: 5px 0; border-radius: 12px; } .tabbar button span { font-size: 20px; } .tabbar button.active { color: var(--cactus-light); font-weight: 600; }
+            .toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
         }
-        .toast.show { transform: translateX(-50%) translateY(0); }
-        .toast.error { background: linear-gradient(135deg, var(--danger), #a3392c); color: var(--sand); }
-
-        button:focus-visible, .upload-area:focus-visible, .nav-item:focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
-
-        /* Mobile */
-        @media (max-width: 700px) {
-            .sidebar { position: absolute; left: 0; top: 0; bottom: 0; z-index: 100; transform: translateX(-100%); transition: transform 0.3s ease; }
-            .sidebar.open { transform: translateX(0); }
-            .feature-grid { grid-template-columns: 1fr; }
-            .cactus-grid { grid-template-columns: repeat(2, 1fr); }
-            .camping-grid { grid-template-columns: 1fr; }
-            .main-header h1 { font-size: 20px; }
-            .content-area { padding: 16px; }
-        }
-
-        @media (max-width: 480px) {
-            .cactus-grid { grid-template-columns: repeat(2, 1fr); }
-            .sidebar { width: 100%; }
-        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; animation-iteration-count: 1 !important; } .day-glow { animation: none; } }
     </style>
 </head>
 <body>
     <canvas id="starfield" aria-hidden="true"></canvas>
     <div class="day-glow" id="day-glow" aria-hidden="true"></div>
-    <div class="amb amb-1" aria-hidden="true"></div>
-    <div class="amb amb-2" aria-hidden="true"></div>
-    <div class="amb amb-3" aria-hidden="true"></div>
+    <div class="amb amb-1" aria-hidden="true"></div><div class="amb amb-2" aria-hidden="true"></div>
 
-    <div class="app-shell">
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-head">
-                <a class="logo" href="https://wizardecosystem.dev">
-                    <span class="logo-glyph">🌵</span>
-                    <span class="logo-name">Wizard Nature</span>
-                </a>
-                <div class="user-card">
-                    <div class="user-email" id="user-email">Loading…</div>
-                </div>
-            </div>
-
-            <nav style="padding: 0 12px; flex: 1;">
-                <div class="nav-item active" data-view="home">
-                    <span class="nav-icon">🏠</span>
-                    <span class="nav-label">Dashboard</span>
-                </div>
-                <div class="nav-item" data-view="cactus">
-                    <span class="nav-icon">🌵</span>
-                    <span class="nav-label">Cactus Tracker</span>
-                </div>
-                <div class="nav-item" data-view="snake">
-                    <span class="nav-icon">🐍</span>
-                    <span class="nav-label">Snake ID</span>
-                </div>
-                <div class="nav-item" data-view="sunset">
-                    <span class="nav-icon">🌅</span>
-                    <span class="nav-label">Sunset Forecast</span>
-                </div>
-                <div class="nav-item" data-view="critter">
-                    <span class="nav-icon">🦎</span>
-                    <span class="nav-label">Critter ID</span>
-                </div>
-                <div class="nav-item" data-view="plant">
-                    <span class="nav-icon">🌿</span>
-                    <span class="nav-label">Plant ID</span>
-                </div>
-                <div class="nav-item" data-view="wildflower">
-                    <span class="nav-icon">🌸</span>
-                    <span class="nav-label">Wildflower Alert</span>
-                </div>
-                <div class="nav-item" data-view="camping">
-                    <span class="nav-icon">🏕️</span>
-                    <span class="nav-label">Camping Guide</span>
-                </div>
+    <div class="app">
+        <aside class="sidebar" aria-label="Sections">
+            <a class="logo" href="https://wizardecosystem.dev" aria-label="Wizard Ecosystem home"><span class="logo-glyph" aria-hidden="true">🌵</span><span class="logo-name">Wizard Nature</span></a>
+            <nav id="nav">
+                <button class="nav-item active" data-view="today"><span class="nav-icon">🏠</span>Today</button>
+                <button class="nav-item" data-view="identify"><span class="nav-icon">📸</span>Identify</button>
+                <button class="nav-item" data-view="cactus"><span class="nav-icon">🌵</span>Cactus Tracker</button>
+                <button class="nav-item" data-view="sunset"><span class="nav-icon">🌅</span>Sunset</button>
+                <button class="nav-item" data-view="explore"><span class="nav-icon">🧭</span>Explore</button>
             </nav>
-
-            <div style="padding: 16px; border-top: 1px solid var(--line);">
-                <div style="font-size: 11px; color: var(--sand-faint); text-align: center;">
-                    🌵 Sonoran Desert · Arizona
-                </div>
-            </div>
+            <div class="side-foot"><span id="who">Signing in…</span><br>🌵 Sonoran Desert guide<br><a href="https://wizardecosystem.dev">← Wizard Ecosystem</a></div>
         </aside>
 
-        <!-- Main -->
-        <main class="main">
-            <div class="main-header">
-                <h1 id="page-title">🌵 Desert Dashboard</h1>
-                <p id="page-subtitle">Your Sonoran Desert companion</p>
+        <div class="main">
+            <header class="topbar">
+                <h1 id="title">Today<small id="subtitle">Your desert companion</small></h1>
+                <button class="pill" id="loc" aria-haspopup="dialog" aria-expanded="false" title="Change place"><span id="loc-text">📍 Locating…</span></button>
+                <button class="pill" id="theme-btn" aria-label="Switch light or dark theme" title="Theme">🌙</button>
+            </header>
+            <div class="locpanel" id="locpanel" role="dialog" aria-label="Choose a place" hidden>
+                <h4>Where are you watching from?</h4>
+                <form class="row" id="loc-form" role="search"><input type="search" id="q" placeholder="City, town or ZIP" aria-label="Search a place" autocomplete="off" maxlength="80"><button class="btn" id="go" type="submit">Go</button></form>
+                <div class="row" style="margin-top:10px"><button class="btn ghost" id="mine" type="button">📍 Use my location</button></div>
+                <div class="chips" id="recents" aria-label="Recent places"></div>
             </div>
+            <div class="content" id="content">
+                <div class="err-bar" id="err-bar" role="alert"><span id="err-msg">Something went wrong.</span><button class="pill" id="err-retry">Try again</button></div>
 
-            <div class="content-area" id="content-area">
-                <!-- Rendered by JS -->
+                <section class="view active" id="v-today" aria-label="Today">
+                    <button class="card link-card" id="t-sunset" data-go="sunset"><div class="skel" style="height:130px"></div></button>
+                    <div class="grid2">
+                        <button class="card link-card" id="t-flower" data-go="explore"><div class="skel" style="height:110px"></div></button>
+                        <button class="card link-card" id="t-cactus" data-go="cactus"><div class="skel" style="height:110px"></div></button>
+                    </div>
+                    <div class="card" style="margin-top:18px"><h3>Identify what you find</h3><div class="hint">Snap a photo of a snake, a critter or a plant.</div>
+                        <div class="row"><button class="btn ghost" data-ident="snake">🐍 Snake</button><button class="btn ghost" data-ident="critter">🦎 Critter</button><button class="btn ghost" data-ident="plant">🌿 Plant</button></div></div>
+                </section>
+
+                <section class="view" id="v-identify" aria-label="Identify">
+                    <div class="seg" id="id-kinds" role="group" aria-label="What are you identifying?"><button data-kind="snake" class="active">🐍 Snake</button><button data-kind="critter">🦎 Critter</button><button data-kind="plant">🌿 Plant</button></div>
+                    <div class="card" id="id-card">
+                        <div id="id-gate" class="gate" hidden><div style="font-size:42px">🔒</div><p>Photo identification needs a Wizard account.</p><a class="btn" href="https://wizardecosystem.dev" style="text-decoration:none;display:inline-block">Sign in</a></div>
+                        <div id="id-main">
+                            <div class="drop" id="id-drop">
+                                <div class="big" aria-hidden="true">📸</div><div id="id-prompt">Add a photo of the snake</div><div class="sub" style="margin-top:6px">JPG, PNG or WebP. Photos are shrunk on your device before upload.</div>
+                                <div class="btns"><button class="btn" id="id-take" type="button">📷 Take photo</button><button class="btn ghost" id="id-choose" type="button">🖼️ Choose photo</button></div>
+                                <input type="file" id="id-file" accept="image/*"><input type="file" id="id-camera" accept="image/*" capture="environment">
+                            </div>
+                            <div id="id-work" hidden><div class="preview"><img id="id-img" alt="Your photo"><div><div id="id-status"></div></div></div></div>
+                        </div>
+                        <div class="notice red" id="id-safety"><b>Safety first.</b> AI can be wrong. Never approach or handle a snake to identify it, and never eat a wild plant because of an app.</div>
+                    </div>
+                    <div id="id-result"></div>
+                    <div class="card"><div class="row" style="justify-content:space-between"><h3>Recent identifications</h3><button class="btn ghost" id="hist-clear" style="padding:6px 14px">Clear</button></div><div class="history" id="id-history"></div></div>
+                </section>
+
+                <section class="view" id="v-cactus" aria-label="Cactus tracker">
+                    <div class="card"><div class="row" style="justify-content:space-between"><div><h3>Cacti you have spotted</h3><div class="hint" style="margin:0">Tap a cactus when you see one in the wild.</div></div><b id="cactus-count" style="font-family:Fraunces,serif;font-size:30px">0/6</b></div><div class="progress"><i id="cactus-bar" style="width:0%"></i></div></div>
+                    <div id="cactus-gate" class="card gate" hidden><div style="font-size:42px">🔒</div><p>Sign in to keep your cactus list.</p><a class="btn" href="https://wizardecosystem.dev" style="text-decoration:none;display:inline-block">Sign in</a></div>
+                    <div class="cactus-grid" id="cactus-grid"></div>
+                    <div class="row"><button class="btn" id="cactus-all">✅ Mark all spotted</button><button class="btn ghost" id="cactus-reset">🔄 Reset</button></div>
+                </section>
+
+                <section class="view" id="v-sunset" aria-label="Sunset">
+                    <div class="card" id="sun-card"><div class="skel" style="height:190px"></div></div>
+                    <div class="card" id="sun-outlook-card" hidden><h3>The next five evenings</h3><div class="hint">Estimated from the cloud, rain and air-quality forecast at each sunset.</div><div class="outlook" id="sun-outlook"></div></div>
+                    <div class="card" id="sun-spots-card" hidden><h3 id="sun-spots-title">Good places to watch</h3><div class="chips" id="sun-spots" style="margin-top:6px"></div></div>
+                    <div class="notice" id="sun-note"><b>An estimate, not a promise.</b> The score comes from the forecast cloud, rain and air quality at sunset. Sunset times are calculated for your exact spot.</div>
+                </section>
+
+                <section class="view" id="v-explore" aria-label="Explore">
+                    <div class="seg" id="ex-tabs" role="group" aria-label="Explore"><button data-x="flowers" class="active">🌸 Wildflowers</button><button data-x="camping">🏕️ Camping</button></div>
+                    <div id="x-flowers"><div class="card" id="flower-card"><div class="skel" style="height:200px"></div></div></div>
+                    <div id="x-camping" hidden>
+                        <div class="row" style="margin-bottom:12px;justify-content:space-between"><div class="chips" id="camp-filters" style="margin:0"></div><select id="camp-sort" aria-label="Sort campsites" class="pill" style="background:rgba(var(--ln),.06)"><option value="rating">Top rated</option><option value="near">Nearest to me</option></select></div>
+                        <div class="camp-grid" id="camp-list"><div class="skel" style="height:160px"></div></div>
+                        <div class="notice" id="camp-note" style="margin-top:16px"></div>
+                    </div>
+                </section>
             </div>
-        </main>
+        </div>
     </div>
-
-    <div id="toast" class="toast"></div>
-
+    <nav class="tabbar" id="tabbar" aria-label="Sections">
+        <button class="active" data-view="today"><span>🏠</span>Today</button><button data-view="identify"><span>📸</span>Identify</button><button data-view="cactus"><span>🌵</span>Cactus</button><button data-view="sunset"><span>🌅</span>Sunset</button><button data-view="explore"><span>🧭</span>Explore</button>
+    </nav>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script>
-        // ── Starfield ──
+        /* ── Starfield ── */
         (function() {
-            const canvas = document.getElementById('starfield');
-            const ctx = canvas.getContext('2d');
-            let stars = [];
-            const N = 160;
-
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            resize();
-            window.addEventListener('resize', resize);
-
-            for (let i = 0; i < N; i++) {
-                stars.push({
-                    x: Math.random(),
-                    y: Math.random(),
-                    r: Math.random() * 1.2 + 0.2,
-                    a: Math.random(),
-                    speed: Math.random() * 0.0005 + 0.0002,
-                });
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const t = Date.now() / 1000;
-                stars.forEach(s => {
-                    const alpha = 0.3 + 0.5 * Math.sin(t * s.speed * 6000 + s.a * 100);
-                    ctx.beginPath();
-                    ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(236,227,209,${alpha})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            }
-            draw();
+            const canvas = document.getElementById('starfield'), ctx = canvas.getContext('2d'), stars = [];
+            const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const resize = () => { canvas.width = innerWidth; canvas.height = innerHeight; }; resize(); addEventListener('resize', resize);
+            for (let i = 0; i < 130; i++) stars.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.2 + .2, a: Math.random(), sp: Math.random() * .0005 + .0002 });
+            function draw() { ctx.clearRect(0, 0, canvas.width, canvas.height); const t = Date.now() / 1000;
+                stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, 6.283); ctx.fillStyle = `rgba(244,234,217,${still ? .5 : .3 + .5 * Math.sin(t * s.sp * 6000 + s.a * 100)})`; ctx.fill(); });
+                if (!still && !document.hidden) requestAnimationFrame(draw); }
+            draw(); document.addEventListener('visibilitychange', () => { if (!document.hidden && !still) requestAnimationFrame(draw); });
         })();
 
-        const API = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null;
-        let currentView = 'home';
-        let isProcessing = false;
+        /* ── helpers ── */
+        const API = window.WIZ_API_BASE || 'https://arnav0928.pythonanywhere.com';
+        const HOME = 'https://wizardecosystem.dev';
+        const $ = id => document.getElementById(id);
+        const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+        const jget = (k, d) => { try { const v = JSON.parse(store.get(k, '')); return v == null ? d : v; } catch (e) { return d; } };
+        const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; } })();
+        const DEFAULT_LOC = { lat: 33.4484, lon: -112.0740, name: 'Phoenix, Arizona', isDefault: true };
+        const TABS = ['today', 'identify', 'cactus', 'sunset', 'explore'];
+        const TITLES = { today: ['Today', 'Your desert companion'], identify: ['Identify', 'Snakes, critters and plants from a photo'], cactus: ['Cactus Tracker', 'The cacti you have spotted'], sunset: ['Sunset', 'How good will it be?'], explore: ['Explore', 'Wildflowers and camping in Arizona'] };
+        const S = { view: 'today', authed: false, user: null, loc: null, sun: null, flower: null, camp: null, cactus: null, kind: 'snake', theme: store.get('wn_theme', 'auto'), ex: 'flowers', campFilter: 'all', campSort: 'rating', ctl: {}, idBusy: false, imgUrl: null, lastBlob: null };
 
-        function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        let toastT;
+        function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.classList.toggle('err', !!err); t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 4200); }
+        let errRetry = null;
+        function showErr(msg, retry) { $('err-msg').textContent = msg; errRetry = retry || null; $('err-retry').hidden = !retry; $('err-bar').classList.add('show'); }
+        const hideErr = () => $('err-bar').classList.remove('show');
+        $('err-retry').onclick = () => { hideErr(); if (errRetry) errRetry(); };
 
-        function toast(msg, isError = false) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.className = `toast ${isError ? 'error' : ''}`;
-            t.classList.add('show');
-            clearTimeout(t._timeout);
-            t._timeout = setTimeout(() => t.classList.remove('show'), 3500);
+        async function api(path, o = {}) {
+            const sep = path.includes('?') ? '&' : '?', url = `${API}${path}${o.body instanceof FormData || o.method === 'POST' ? '' : sep + 'tz=' + encodeURIComponent(TZ)}`;
+            let res;
+            try { res = await fetch(url, { credentials: 'include', method: o.method || 'GET', signal: o.signal, headers: o.json ? { 'Content-Type': 'application/json' } : undefined, body: o.json ? JSON.stringify(o.json) : o.body }); }
+            catch (e) { return { ok: false, net: e.name !== 'AbortError', aborted: e.name === 'AbortError', status: 0, data: {} }; }
+            let data = {}; try { data = await res.json(); } catch (e) {}
+            return { ok: res.ok && data.success !== false, status: res.status, data };
+        }
+        function latest(key) { if (S.ctl[key]) S.ctl[key].abort(); return (S.ctl[key] = new AbortController()).signal; }
+
+        /* ── theme ── */
+        function applyTheme() {
+            const t = S.theme === 'auto' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : S.theme;
+            document.documentElement.setAttribute('data-theme', t); $('theme-btn').textContent = t === 'light' ? '☀️' : '🌙';
+            const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#f4f0e3' : '#141f16';
+        }
+        $('theme-btn').onclick = () => { S.theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; store.set('wn_theme', S.theme); applyTheme(); };
+        matchMedia('(prefers-color-scheme: light)').addEventListener && matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (S.theme === 'auto') applyTheme(); });
+
+        /* ── navigation ── */
+        function setView(v, push = true) {
+            if (!TABS.includes(v)) v = 'today'; S.view = v;
+            document.querySelectorAll('.view').forEach(x => x.classList.toggle('active', x.id === 'v-' + v));
+            document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+            $('title').firstChild.textContent = TITLES[v][0]; $('subtitle').textContent = TITLES[v][1]; $('content').scrollTop = 0; closeLoc();
+            if (push) { try { history.replaceState(null, '', '#' + v); } catch (e) {} }
+        }
+        document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+        document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => setView(b.dataset.go)));
+        addEventListener('hashchange', () => { const v = location.hash.slice(1); if (TABS.includes(v) && v !== S.view) setView(v, false); });
+
+        /* ── location (shared by sunset + camping distances) ── */
+        function renderLoc() { const l = S.loc || DEFAULT_LOC; $('loc').classList.toggle('dflt', !!l.isDefault); $('loc-text').textContent = `📍 ${l.name || 'My location'}${l.isDefault ? ' (default)' : ''}`; }
+        function openLoc() { $('locpanel').hidden = false; $('loc').setAttribute('aria-expanded', 'true'); setTimeout(() => $('q').focus(), 30); }
+        function closeLoc() { $('locpanel').hidden = true; $('loc').setAttribute('aria-expanded', 'false'); }
+        $('loc').onclick = () => $('locpanel').hidden ? openLoc() : closeLoc();
+        document.addEventListener('click', e => { if (!$('locpanel').hidden && !e.target.closest('#locpanel') && !e.target.closest('#loc')) closeLoc(); });
+        function saveLoc(p) { S.loc = { lat: p.lat, lon: p.lon, name: p.name, isDefault: false }; store.set('wn_loc2', JSON.stringify({ lat: p.lat, lon: p.lon, name: p.name })); addRecent(S.loc); renderLoc(); }
+        function addRecent(l) { const r = jget('wn_recents2', []).filter(x => x && x.name !== l.name); r.unshift({ name: l.name, lat: l.lat, lon: l.lon }); store.set('wn_recents2', JSON.stringify(r.slice(0, 5))); renderRecents(); }
+        function renderRecents() { $('recents').innerHTML = jget('wn_recents2', []).map((x, i) => `<button type="button" class="chip" data-i="${i}">🕘 ${esc(x.name)}</button>`).join(''); }
+        $('recents').addEventListener('click', e => { const b = e.target.closest('[data-i]'); if (!b) return; const x = jget('wn_recents2', [])[+b.dataset.i]; if (x) { saveLoc(x); closeLoc(); placeChanged(); } });
+        $('loc-form').addEventListener('submit', async e => {
+            e.preventDefault(); const q = $('q').value.trim(); if (q.length < 2) { toast('Type a city, town or ZIP code', true); return; }
+            const ok = await loadSunset({ text: q, force: true }); if (ok) { $('q').value = ''; closeLoc(); loadCamp(); }
+        });
+        const GEO_WHY = { 1: 'Location is blocked for this site (tap the lock icon next to the address to allow it).', 2: 'Your device could not work out where it is.', 3: 'Finding your position took too long.' };
+        function geoFail(why) { $('mine').disabled = false; renderLoc(); toast(`${why} Type your city or ZIP instead.`, true); $('q').focus(); }
+        $('mine').onclick = () => {
+            if (!navigator.geolocation) { geoFail('This browser cannot share your location.'); return; }
+            $('mine').disabled = true;
+            navigator.geolocation.getCurrentPosition(async p => { S.loc = { lat: p.coords.latitude, lon: p.coords.longitude, name: 'My location', isDefault: false }; $('mine').disabled = false; const ok = await loadSunset({ force: true, gps: true }); if (ok) { closeLoc(); loadCamp(); } },
+                e => geoFail(GEO_WHY[e && e.code] || 'Could not get your location.'), { timeout: 10000, maximumAge: 120000, enableHighAccuracy: false });
+        };
+        function initialLocation() {
+            const saved = jget('wn_loc2', null);
+            if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lon)) return Promise.resolve({ ...saved, isDefault: false });
+            return new Promise(res => { if (!navigator.geolocation) return res({ ...DEFAULT_LOC }); navigator.geolocation.getCurrentPosition(p => res({ lat: p.coords.latitude, lon: p.coords.longitude, name: 'My location', isDefault: false, gps: true }), () => res({ ...DEFAULT_LOC }), { timeout: 5000, maximumAge: 600000 }); });
+        }
+        function placeChanged() { loadSunset({ force: true }); loadCamp(); }
+
+        /* ── sunset ── */
+        const RC = r => r == null ? '#8a948a' : r >= 8.5 ? '#ff7a45' : r >= 7 ? '#e8944a' : r >= 5.5 ? '#c9a84c' : r >= 4 ? '#8fae6c' : '#8a948a';
+        function gaugeSvg(r) {
+            const L = Math.PI * 80, pct = r == null ? 0 : r * 10;
+            return `<div class="gauge" role="img" aria-label="${r == null ? 'Sunset rating unavailable' : 'Sunset rating ' + r + ' out of 10'}"><svg viewBox="0 0 200 112"><path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="rgba(var(--ln),.12)" stroke-width="14" stroke-linecap="round"/><path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="${RC(r)}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${(L * pct / 100).toFixed(1)} ${L.toFixed(1)}" style="transition:stroke-dasharray .9s cubic-bezier(.2,.8,.2,1)"/></svg>
+                <div class="num" style="color:${RC(r)}">${r == null ? '?' : r.toFixed(1)}<small>${r == null ? '' : '/10'}</small></div></div>`;
+        }
+        function countdown(iso) {
+            const m = Math.round((Date.parse(iso) - Date.now()) / 60000);
+            if (m > 90) return `in ${Math.floor(m / 60)} h ${m % 60} min`; if (m > 1) return `in ${m} min`; if (m >= -30) return 'happening now'; return 'already passed';
+        }
+        async function loadSunset(o = {}) {
+            const qs = new URLSearchParams(); if (o.text) qs.set('location', o.text); else { const l = S.loc || DEFAULT_LOC; qs.set('lat', l.lat.toFixed(5)); qs.set('lon', l.lon.toFixed(5)); }
+            if (!S.sun) $('sun-card').innerHTML = '<div class="skel" style="height:190px"></div>';
+            const r = await api('/api/nature/sunset-forecast?' + qs, { signal: latest('sun') });
+            if (r.aborted) return false;
+            if (r.status === 400 && r.data.code === 'place_not_found') { toast(r.data.error, true); return false; }
+            if (!r.ok || !r.data.sun && !r.data.message) {
+                const msg = r.net ? "Can't reach the server. Check your connection." : r.status === 429 ? 'Too many requests. Wait a minute, then try again.' : (r.data.error || 'The forecast had a problem. Try again.');
+                if (S.sun) showErr(msg + ' Showing the last forecast.', () => loadSunset({ force: true })); else { showErr(msg, () => loadSunset({ force: true })); $('sun-card').innerHTML = '<div class="empty">The sunset forecast could not load.</div>'; renderToday(); }
+                return false;
+            }
+            hideErr(); S.sun = r.data;
+            if (r.data.place && (o.text || o.gps)) saveLoc({ lat: r.data.place.lat, lon: r.data.place.lon, name: r.data.place.name });
+            else if (S.loc && S.loc.name === 'My location' && r.data.place.name) { S.loc.name = r.data.place.name; renderLoc(); }
+            renderSunset(); renderToday(); applyGlow(); return true;
+        }
+        function renderSunset() {
+            const d = S.sun; if (!d) return; const s = d.sun, place = esc(d.place.name);
+            if (!s) { $('sun-card').innerHTML = `<h3>${place}</h3><div class="empty">${esc(d.message || 'No sunset to show.')}</div>`; $('sun-outlook-card').hidden = true; $('sun-spots-card').hidden = true; return; }
+            const title = d.day === 'today' ? 'Tonight’s sunset' : d.day === 'tomorrow' ? 'Tomorrow’s sunset' : 'Next sunset';
+            $('sun-card').innerHTML = `<div class="sunhero">${gaugeSvg(d.rating)}<div class="sunbody"><h3>${title}</h3><div class="sub" style="margin-bottom:10px">${place}${d.place.tz_source === 'solar' ? ' · time zone estimated' : ''}</div>
+                <div class="countdown" id="sun-cd" data-iso="${esc(s.sunset)}">${esc(countdown(s.sunset))}</div>
+                <div class="times"><div>Golden hour<b id="sun-golden">${esc(s.golden_hour_local)}</b></div><div class="main">Sunset<b id="sun-time">${esc(s.sunset_local)}</b></div><div>Light fades<b id="sun-dusk">${esc(s.dusk_local)}</b></div></div>
+                ${d.conditions_ok ? `<div style="font-weight:700;color:${RC(d.rating)};margin-bottom:8px" id="sun-label">${esc(d.label)}</div><ul class="factors" id="sun-factors">${d.factors.map(f => `<li class="${esc(f.tone)}">${esc(f.text)}</li>`).join('')}</ul>`
+                    : `<div class="notice" id="sun-nodata"><b>Cloud and air-quality data are unavailable right now.</b> The sunset time above is still exact for this spot.</div>`}</div></div>
+                ${d.conditions_ok ? `<div class="tiles" id="sun-tiles"><div class="tile">Cloud cover<b>${d.cloud_cover == null ? '—' : d.cloud_cover + '%'}</b></div><div class="tile">Humidity<b>${d.humidity == null ? '—' : d.humidity + '%'}</b></div><div class="tile">Air quality<b>${esc(d.air_quality || '—')}${d.aqi != null ? ' · ' + d.aqi : ''}</b></div><div class="tile">Rain chance<b>${d.precip_chance == null ? '—' : d.precip_chance + '%'}</b></div></div>` : ''}`;
+            const out = (d.outlook || []).filter(o => o.rating != null);
+            $('sun-outlook-card').hidden = !out.length;
+            $('sun-outlook').innerHTML = (d.outlook || []).map((o, i) => `<div class="oday ${i === 0 ? 'first' : ''}" style="--rc:${RC(o.rating)}"><div class="d">${i === 0 && d.day === 'today' ? 'Tonight' : esc(o.weekday)}</div><div class="r" style="color:${RC(o.rating)}">${o.rating == null ? '—' : o.rating.toFixed(1)}</div><div class="l">${esc(o.label || 'no data')}</div><div class="l">${esc(o.sunset_local || '')}</div></div>`).join('');
+            $('sun-spots-card').hidden = !d.spots; if (d.spots) { $('sun-spots-title').textContent = `Good places to watch near ${d.spots.region}`; $('sun-spots').innerHTML = d.spots.spots.map(x => `<span class="chip">${esc(x)}</span>`).join(''); }
+        }
+        setInterval(() => document.querySelectorAll('[data-iso]').forEach(el => { el.textContent = countdown(el.dataset.iso); }), 30000);
+        function applyGlow() {
+            let c = '#5ba06c'; const s = S.sun && S.sun.sun, now = Date.now();
+            if (s) { const g = Date.parse(s.golden_hour), du = Date.parse(s.dusk), sr = Date.parse(s.sunrise);
+                if (now >= g && now <= du) c = '#e8844a'; else if (now > du || now < sr) c = '#3a2f6e'; else if (now < sr + 5400000) c = '#f5ab7a'; }
+            else { const h = new Date().getHours(); c = h >= 17 && h < 20 ? '#e8844a' : (h >= 20 || h < 5) ? '#3a2f6e' : h < 8 ? '#f5ab7a' : '#5ba06c'; }
+            $('day-glow').style.setProperty('--glow-color', c);
+        }
+        setInterval(applyGlow, 120000);
+
+        /* ── wildflowers ── */
+        const PH_ICON = { 'Waiting': '🌱', 'Early bloom': '🌼', 'Peak bloom': '🌸', 'Cactus bloom': '🌵', 'Monsoon wait': '⛅', 'Monsoon bloom': '🌻', 'Fall bloom': '🍂', 'Dormant': '💤' };
+        const PH_CLS = { 'Peak bloom': 'pk', 'Early bloom': 'er', 'Cactus bloom': 'cb', 'Monsoon bloom': 'mb', 'Fall bloom': 'fb' };
+        async function loadFlower() {
+            const r = await api('/api/nature/wildflower-alert');
+            if (!r.ok) { $('flower-card').innerHTML = `<div class="empty">Could not load the wildflower guide.<br><button class="btn ghost" id="fl-retry" style="margin-top:10px">Try again</button></div>`; $('fl-retry').onclick = loadFlower; S.flower = null; renderToday(); return; }
+            S.flower = r.data; renderFlower(); renderToday();
+        }
+        function renderFlower() {
+            const f = S.flower; if (!f) return;
+            $('flower-card').innerHTML = `<div class="phase"><span class="ic" aria-hidden="true">${PH_ICON[f.phase] || '🌸'}</span><div><b id="fl-phase">${esc(f.phase)}</b><span class="sub">${esc(f.status)}</span></div></div>
+                <div class="cal" id="fl-cal" role="img" aria-label="Bloom calendar by month">${f.calendar.map(c => `<div class="${PH_CLS[c.phase] || ''} ${c.month === f.month ? 'now' : ''}" title="${esc(c.phase)}">${esc(c.name)}</div>`).join('')}</div>
+                ${f.highlights.length ? `<h4 style="margin:6px 0">Look for this month</h4><div class="chips" style="margin-top:0">${f.highlights.map(h => `<span class="chip">${esc(h)}</span>`).join('')}</div>` : ''}
+                <h4 style="margin:16px 0 6px">Good places to go</h4><div class="chips" style="margin-top:0">${f.best_spots.map(h => `<span class="chip">${esc(h)}</span>`).join('')}</div>
+                <div class="row" style="margin-top:16px"><button class="btn ghost" id="fl-ics">📅 Add a bloom reminder to my calendar</button></div>
+                <div class="notice" style="margin-top:14px">${esc(f.note)}</div>`;
+            $('fl-ics').onclick = downloadBloomReminder;
+        }
+        function downloadBloomReminder() {
+            const now = new Date(); let y = now.getFullYear(); if (now.getMonth() >= 1) y++;                       // next Feb 1
+            const ymd = (dt) => `${dt.getFullYear()}${String(dt.getMonth() + 1).padStart(2, '0')}${String(dt.getDate()).padStart(2, '0')}`;
+            const start = new Date(y, 1, 1), end = new Date(y, 1, 2), stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+            const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Wizard Nature//EN', 'BEGIN:VEVENT', `UID:${Date.now()}@wizardecosystem.dev`, `DTSTAMP:${stamp}`, `DTSTART;VALUE=DATE:${ymd(start)}`, `DTEND;VALUE=DATE:${ymd(end)}`,
+                'SUMMARY:Check for desert wildflowers', 'DESCRIPTION:Bloom season starts around now. A wet winter means a better show. Check recent reports from state parks before you go.', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); a.download = 'wildflower-reminder.ics'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+            toast('Reminder file downloaded. Open it to add it to your calendar.');
         }
 
-        function showLoading(container, msg = 'Loading...') {
-            container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--sand-faint);"><div class="loading-spinner"></div>${esc(msg)}</div>`;
+        /* ── camping ── */
+        async function loadCamp() {
+            const l = S.loc || DEFAULT_LOC, r = await api(`/api/nature/camping-guide?lat=${l.lat.toFixed(4)}&lon=${l.lon.toFixed(4)}`, { signal: latest('camp') });
+            if (r.aborted) return;
+            if (!r.ok) { $('camp-list').innerHTML = `<div class="empty">Could not load campsites.<br><button class="btn ghost" id="camp-retry" style="margin-top:10px">Try again</button></div>`; $('camp-retry').onclick = loadCamp; S.camp = null; renderToday(); return; }
+            S.camp = r.data; renderCamp(); renderToday();
         }
-
-        function markdownToHtml(text) {
-            if (!text) return '';
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/\n/g, '<br>');
+        function renderCamp() {
+            const c = S.camp; if (!c) return;
+            const counts = {}; c.campsites.forEach(x => x.features.forEach(f => counts[f] = (counts[f] || 0) + 1));
+            const feats = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).slice(0, 5), filters = [['all', 'All'], ['season', 'In season now'], ...feats.map(f => [f, f])];
+            $('camp-filters').innerHTML = filters.map(([k, n]) => `<button class="chip ${S.campFilter === k ? 'on' : ''}" data-f="${esc(k)}">${esc(n)}</button>`).join('');
+            let list = c.campsites.filter(x => S.campFilter === 'all' || (S.campFilter === 'season' ? x.in_season : x.features.includes(S.campFilter)));
+            list = [...list].sort(S.campSort === 'near' ? (a, b) => (a.distance_mi ?? 1e9) - (b.distance_mi ?? 1e9) : (a, b) => b.rating - a.rating || a.name.localeCompare(b.name));
+            $('camp-list').innerHTML = list.length ? list.map(x => `<article class="camp" data-id="${esc(x.id)}"><div class="t"><span>${esc(x.name)}</span><span class="tag ${x.in_season ? 'in' : 'out'}">${x.in_season ? 'In season' : 'Off season'}</span></div>
+                <div class="loc">📍 ${esc(x.location)}${x.distance_mi != null ? ` · about ${x.distance_mi} mi away` : ''}</div><div class="stars" aria-label="${x.rating} of 5 stars">${'★'.repeat(x.rating)}${'☆'.repeat(5 - x.rating)}</div>
+                <div class="desc">${esc(x.description)}</div><div class="feat">${x.features.map(f => `<span>${esc(f)}</span>`).join('')}</div><div class="meta">📅 ${esc(x.season)} · Reserve ${esc(x.reserve)}</div>
+                <a href="${esc(x.url)}" target="_blank" rel="noopener">Official page ↗</a></article>`).join('') : '<div class="empty">Nothing matches that filter right now.</div>';
+            $('camp-note').textContent = c.note;
         }
+        $('camp-filters').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (b) { S.campFilter = b.dataset.f; renderCamp(); } });
+        $('camp-sort').onchange = () => { S.campSort = $('camp-sort').value; renderCamp(); };
+        $('ex-tabs').addEventListener('click', e => { const b = e.target.closest('[data-x]'); if (!b) return; S.ex = b.dataset.x; document.querySelectorAll('#ex-tabs button').forEach(x => x.classList.toggle('active', x === b)); $('x-flowers').hidden = S.ex !== 'flowers'; $('x-camping').hidden = S.ex !== 'camping'; });
 
-        // Signature element: tint the ambient glow to the actual local time of day
-        function applyDayGlow() {
-            const hour = new Date().getHours();
-            let color;
-            if (hour >= 5 && hour < 8) color = '#f5ab7a';       // dawn
-            else if (hour >= 8 && hour < 17) color = '#5ba06c'; // midday, cactus green
-            else if (hour >= 17 && hour < 20) color = '#e8844a'; // dusk
-            else color = '#3a2f6e';                              // night, indigo
-            document.getElementById('day-glow').style.setProperty('--glow-color', color);
-        }
-        applyDayGlow();
-        setInterval(applyDayGlow, 600000);
-
-        async function checkAuth() {
-            try {
-                const res = await fetch(`${API}/api/check-auth`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated && data.user) {
-                        currentUser = data.user;
-                        document.getElementById('user-email').textContent = currentUser.email;
-                        return;
-                    }
-                }
-            } catch(e) {}
-            window.location.href = 'https://wizardecosystem.dev';
-        }
-
-        // Cactus data
-        const cactusData = [
-            { id: 'saguaro', name: 'Saguaro', emoji: '🌵', status: 'Common' },
-            { id: 'barrel', name: 'Barrel Cactus', emoji: '🟢', status: 'Common' },
-            { id: 'prickly_pear', name: 'Prickly Pear', emoji: '🟣', status: 'Common' },
-            { id: 'cholla', name: 'Cholla', emoji: '🌵', status: 'Common' },
-            { id: 'organ_pipe', name: 'Organ Pipe', emoji: '🎵', status: 'Rare' },
-            { id: 'senita', name: 'Senita', emoji: '🕯️', status: 'Rare' },
+        /* ── cactus tracker ── */
+        const SVG = (body) => `<svg viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+        const G = 'stroke="var(--cactus-light)"', GF = 'fill="var(--cactus)" stroke="var(--cactus-light)" stroke-width="2"';
+        const CACTI = [
+            { id: 'saguaro', name: 'Saguaro', fact: 'Arms can take 50 to 75 years to appear.', svg: SVG(`<rect x="24" y="8" width="16" height="50" rx="8" ${GF}/><path d="M24 40H14V26M40 34h10V20" ${G} stroke-width="8"/>`) },
+            { id: 'barrel', name: 'Barrel Cactus', fact: 'Crowned with yellow fruit that stays on for months.', svg: SVG(`<ellipse cx="32" cy="38" rx="18" ry="20" ${GF}/><path d="M32 18v40M22 21c-5 10-5 26 0 35M42 21c5 10 5 26 0 35" stroke="var(--desert-card)" stroke-width="1.6" opacity=".6"/><circle cx="32" cy="16" r="4" fill="var(--bloom)"/>`) },
+            { id: 'prickly_pear', name: 'Prickly Pear', fact: 'Pads (nopales) and red fruit (tunas) are eaten when prepared.', svg: SVG(`<ellipse cx="32" cy="44" rx="15" ry="11" ${GF}/><ellipse cx="22" cy="26" rx="9" ry="13" transform="rotate(-20 22 26)" ${GF}/><ellipse cx="43" cy="24" rx="9" ry="13" transform="rotate(20 43 24)" ${GF}/><circle cx="22" cy="14" r="3" fill="var(--bloom)"/><circle cx="44" cy="12" r="3" fill="var(--bloom)"/>`) },
+            { id: 'cholla', name: 'Cholla', fact: 'Teddy-bear cholla joints detach easily. Keep pets back.', svg: SVG(`<path d="M32 58V30M32 44L18 34V18M32 38l14-8V14M18 26l-7-5M46 22l7-4" ${G} stroke-width="7"/>`) },
+            { id: 'organ_pipe', name: 'Organ Pipe', rare: true, fact: 'In the US it grows wild almost only in Organ Pipe Cactus National Monument.', svg: SVG(`<rect x="10" y="26" width="9" height="32" rx="4.5" ${GF}/><rect x="21" y="12" width="10" height="46" rx="5" ${GF}/><rect x="33" y="20" width="10" height="38" rx="5" ${GF}/><rect x="45" y="30" width="9" height="28" rx="4.5" ${GF}/>`) },
+            { id: 'senita', name: 'Senita', rare: true, fact: 'Called “old man” cactus for its whiskery grey spines near the top.', svg: SVG(`<rect x="14" y="14" width="8" height="44" rx="4" ${GF}/><rect x="28" y="6" width="8" height="52" rx="4" ${GF}/><rect x="42" y="18" width="8" height="40" rx="4" ${GF}/><path d="M26 10l-3-3M40 14l3-3M14 18l-3-3" stroke="var(--sand)" stroke-width="1.4" opacity=".7"/>`) },
         ];
-
-        // Views
-        const views = {
-            home: () => `
-                <div class="feature-grid">
-                    <div class="feature-card" onclick="switchView('cactus')">
-                        <div class="feature-icon">🌵</div>
-                        <div class="feature-title">Cactus Tracker</div>
-                        <div class="feature-desc">Identify saguaro, barrel, prickly pear, and cholla</div>
-                    </div>
-                    <div class="feature-card" onclick="switchView('snake')">
-                        <div class="feature-icon">🐍</div>
-                        <div class="feature-title">Snake ID</div>
-                        <div class="feature-desc">Upload a photo — AI identifies rattlesnake vs harmless</div>
-                    </div>
-                    <div class="feature-card" onclick="switchView('sunset')">
-                        <div class="feature-icon">🌅</div>
-                        <div class="feature-title">Sunset Forecast</div>
-                        <div class="feature-desc">Predicts how good the sunset will be 🌵</div>
-                    </div>
-                    <div class="feature-card" onclick="switchView('critter')">
-                        <div class="feature-icon">🦎</div>
-                        <div class="feature-title">Critter ID</div>
-                        <div class="feature-desc">Identify lizards, birds, and desert wildlife</div>
-                    </div>
-                    <div class="feature-card" onclick="switchView('plant')">
-                        <div class="feature-icon">🌿</div>
-                        <div class="feature-title">Plant ID</div>
-                        <div class="feature-desc">Identify cacti, wildflowers, and desert plants</div>
-                    </div>
-                    <div class="feature-card" onclick="switchView('wildflower')">
-                        <div class="feature-icon">🌸</div>
-                        <div class="feature-title">Wildflower Alert</div>
-                        <div class="feature-desc">Bloom notifications after winter rains</div>
-                    </div>
-                    <div class="feature-card" onclick="switchView('camping')">
-                        <div class="feature-icon">🏕️</div>
-                        <div class="feature-title">Camping Guide</div>
-                        <div class="feature-desc">Best campsites in Arizona</div>
-                    </div>
-                </div>
-            `,
-
-            cactus: () => `
-                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🌵 Cactus Tracker</h2>
-                <p style="color:var(--sand-faint); margin-bottom:20px;">Track the cacti you've spotted in the Sonoran Desert</p>
-                <div class="cactus-grid" id="cactus-grid">
-                    ${cactusData.map(c => `
-                        <div class="cactus-card" data-cactus="${c.id}" onclick="toggleCactus('${c.id}')">
-                            <div class="cactus-emoji">${c.emoji}</div>
-                            <div class="cactus-name">${esc(c.name)}</div>
-                            <div class="cactus-status unseen" id="cactus-status-${c.id}">🔍 Not yet</div>
-                        </div>
-                    `).join('')}
-                </div>
-                <div style="margin-top:20px; display:flex; gap:12px; flex-wrap:wrap;">
-                    <button onclick="markAllCactusSpotted()" style="background:var(--cactus); border:none; border-radius:100px; padding:10px 20px; color:var(--desert); font-weight:600; cursor:pointer; font-family:inherit;">✅ Mark All Spotted</button>
-                    <button onclick="resetCactus()" style="background:rgba(236,227,209,0.05); border:1px solid var(--line); border-radius:100px; padding:10px 20px; color:var(--sand-dim); cursor:pointer; font-family:inherit;">🔄 Reset</button>
-                </div>
-            `,
-
-            snake: () => `
-                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🐍 Snake ID</h2>
-                <p style="color:var(--sand-faint); margin-bottom:20px;">Upload a photo — AI will identify if it's a rattlesnake or harmless</p>
-                <div class="upload-area" id="snake-upload">
-                    <div style="font-size:48px; margin-bottom:12px;">📸</div>
-                    <div>Tap or drag to upload a snake photo</div>
-                    <div style="font-size:12px; color:var(--sand-faint); margin-top:8px;">PNG, JPG, WebP</div>
-                    <input type="file" id="snake-file" accept="image/*">
-                </div>
-                <div class="result-box" id="snake-result">
-                    <div class="result-text" id="snake-text"></div>
-                    <img class="result-image" id="snake-image" style="display:none;">
-                </div>
-            `,
-
-            sunset: () => `
-                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🌅 Sunset Forecast</h2>
-                <p style="color:var(--sand-faint); margin-bottom:20px;">Arizona has the best sunsets — here's how good tonight's will be</p>
-                <div class="panel" id="sunset-panel">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                        <span style="font-size:18px;">Tonight's Sunset</span>
-                        <span style="font-size:32px; font-weight:700; color:var(--sunset-light);" id="sunset-rating">--</span>
-                    </div>
-                    <div class="sunset-meter"><div class="sunset-fill" id="sunset-fill" style="width:0%;"></div></div>
-                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:var(--sand-faint);">
-                        <span>☁️ Cloud cover: <span id="sunset-cloud">--</span>%</span>
-                        <span>💧 Humidity: <span id="sunset-humidity">--</span>%</span>
-                        <span>🌬️ Air quality: <span id="sunset-air">--</span></span>
-                    </div>
-                    <div id="sunset-recommendation" style="margin-top:16px; padding:12px; background:rgba(232,132,74,0.1); border-radius:12px; border-left:3px solid var(--sunset);">
-                        Loading forecast...
-                    </div>
-                </div>
-            `,
-
-            critter: () => `
-                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🦎 Critter ID</h2>
-                <p style="color:var(--sand-faint); margin-bottom:20px;">Identify lizards, birds, and other desert wildlife</p>
-                <div class="upload-area" id="critter-upload">
-                    <div style="font-size:48px; margin-bottom:12px;">📸</div>
-                    <div>Tap or drag to upload a critter photo</div>
-                    <input type="file" id="critter-file" accept="image/*">
-                </div>
-                <div class="result-box" id="critter-result">
-                    <div class="result-text" id="critter-text"></div>
-                    <img class="result-image" id="critter-image" style="display:none;">
-                </div>
-            `,
-
-            plant: () => `
-                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🌿 Plant ID</h2>
-                <p style="color:var(--sand-faint); margin-bottom:20px;">Identify cacti, wildflowers, and desert plants</p>
-                <div class="upload-area" id="plant-upload">
-                    <div style="font-size:48px; margin-bottom:12px;">📸</div>
-                    <div>Tap or drag to upload a plant photo</div>
-                    <input type="file" id="plant-file" accept="image/*">
-                </div>
-                <div class="result-box" id="plant-result">
-                    <div class="result-text" id="plant-text"></div>
-                    <img class="result-image" id="plant-image" style="display:none;">
-                </div>
-            `,
-
-            wildflower: () => `
-                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🌸 Wildflower Alert</h2>
-                <p style="color:var(--sand-faint); margin-bottom:20px;">Bloom notifications after winter rains</p>
-                <div class="panel" id="wildflower-panel">
-                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-                        <span style="font-size:40px;" id="wildflower-icon">🌸</span>
-                        <div>
-                            <div style="font-weight:600;" id="wildflower-status">Loading...</div>
-                            <div style="color:var(--sand-faint); font-size:13px;" id="wildflower-detail"></div>
-                        </div>
-                    </div>
-                    <div style="margin-top:16px; padding:12px; background:rgba(242,184,78,0.1); border-radius:12px;" id="wildflower-spots">
-                        Loading best spots...
-                    </div>
-                    <button onclick="setBloomAlert()" style="margin-top:12px; background:var(--cactus); border:none; border-radius:100px; padding:8px 16px; color:var(--desert); font-weight:600; cursor:pointer; font-family:inherit;">🔔 Set Bloom Alert</button>
-                </div>
-            `,
-
-            camping: () => `
-                <h2 style="font-family:'Fraunces',serif; font-style:italic; font-weight:500; font-size:22px; margin-bottom:8px;">🏕️ Camping Guide</h2>
-                <p style="color:var(--sand-faint); margin-bottom:20px;">Best campsites in Arizona</p>
-                <div id="camping-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px;">
-                    <div style="text-align:center; padding:40px; color:var(--sand-faint);"><div class="loading-spinner"></div> Loading campsites...</div>
-                </div>
-            `
+        const cactusDate = d => { if (!d) return ''; const [y, m, dd] = d.split('-').map(Number); return new Date(y, m - 1, dd).toLocaleDateString([], { month: 'short', day: 'numeric' }); };
+        async function loadCactus() {
+            if (!S.authed) { S.cactus = null; renderCactus(); renderToday(); return; }
+            const r = await api('/api/nature/cactus-tracker');
+            if (!r.ok) { if (r.status === 401) S.authed = false; else showErr(r.net ? "Can't reach the server. Check your connection." : 'Could not load your cactus list.', loadCactus); S.cactus = null; renderCactus(); renderToday(); return; }
+            S.cactus = r.data.cactus; renderCactus(); renderToday();
+        }
+        const spottedCount = () => S.cactus ? CACTI.filter(c => S.cactus[c.id] && S.cactus[c.id].spotted).length : 0;
+        function renderCactus() {
+            $('cactus-gate').hidden = S.authed; $('cactus-grid').hidden = !S.authed; $('cactus-all').hidden = !S.authed; $('cactus-reset').hidden = !S.authed;
+            const n = spottedCount(); $('cactus-count').textContent = `${n}/${CACTI.length}`; $('cactus-bar').style.width = (n / CACTI.length * 100) + '%';
+            if (!S.authed) return;
+            $('cactus-grid').innerHTML = CACTI.map(c => { const st = (S.cactus || {})[c.id] || {}, on = !!st.spotted;
+                return `<button class="cactus-card ${on ? 'spotted' : ''}" data-id="${c.id}" aria-pressed="${on}">${c.rare ? '<span class="rare">Rare</span>' : ''}${c.svg}<div class="nm">${esc(c.name)}</div><div class="st">${on ? '✅ Spotted' + (st.spotted_at ? ' · ' + esc(cactusDate(st.spotted_at)) : '') : '🔍 Not yet'}</div><div class="fact">${esc(c.fact)}</div></button>`; }).join('');
+        }
+        async function setCactus(ids, spotted) {
+            if (!S.cactus) S.cactus = {}; const prev = JSON.parse(JSON.stringify(S.cactus));
+            ids.forEach(id => { S.cactus[id] = { ...(S.cactus[id] || {}), spotted, spotted_at: spotted ? new Date().toLocaleDateString('en-CA') : null }; }); renderCactus(); renderToday();
+            const r = await api('/api/nature/cactus-tracker', { method: 'POST', json: ids.length === 1 ? { cactus_type: ids[0], spotted } : { cactus_types: ids, spotted } });
+            if (!r.ok) { S.cactus = prev; renderCactus(); renderToday(); toast(r.net ? "Can't reach the server. Not saved." : (r.data.error || 'Could not save that.'), true); return false; }
+            S.cactus = r.data.cactus; renderCactus(); renderToday(); return true;
+        }
+        $('cactus-grid').addEventListener('click', async e => {
+            const b = e.target.closest('.cactus-card'); if (!b || b.classList.contains('busy')) return; b.classList.add('busy');
+            const id = b.dataset.id, now = !(S.cactus && S.cactus[id] && S.cactus[id].spotted), ok = await setCactus([id], now);
+            if (ok && now) toast(`🌵 ${CACTI.find(c => c.id === id).name} spotted!`);
+        });
+        $('cactus-all').onclick = async () => { if (await setCactus(CACTI.map(c => c.id), true)) toast('🌵 All cacti marked as spotted'); };
+        let resetT = null;
+        $('cactus-reset').onclick = async () => {
+            if (!resetT) { $('cactus-reset').textContent = 'Tap again to clear all'; $('cactus-reset').classList.add('danger'); resetT = setTimeout(() => { resetT = null; $('cactus-reset').textContent = '🔄 Reset'; $('cactus-reset').classList.remove('danger'); }, 4000); return; }
+            clearTimeout(resetT); resetT = null; $('cactus-reset').textContent = '🔄 Reset'; $('cactus-reset').classList.remove('danger');
+            if (await setCactus(CACTI.map(c => c.id), false)) toast('Cactus list cleared');
         };
 
-        function switchView(view) {
-            currentView = view;
-            document.querySelectorAll('.nav-item').forEach(el => {
-                el.classList.toggle('active', el.dataset.view === view);
-            });
-            renderContent();
-            if (view === 'sunset') loadSunsetForecast();
-            if (view === 'wildflower') loadWildflowerAlert();
-            if (view === 'camping') loadCampingGuide();
-            if (view === 'cactus') loadCactusTracker();
+        /* ── today ── */
+        function renderToday() {
+            const d = S.sun, s = d && d.sun;
+            $('t-sunset').innerHTML = !d ? '<div class="skel" style="height:130px"></div>' : !s ? `<h3>Sunset</h3><div class="sub">${esc(d.message || 'No sunset to show.')}</div>`
+                : `<div class="sunhero" style="gap:18px">${gaugeSvg(d.rating)}<div class="sunbody"><h3 id="today-sun-title">${d.day === 'today' ? 'Tonight’s sunset' : 'Tomorrow’s sunset'}${d.conditions_ok ? ' · ' + esc(d.label) : ''}</h3><div class="sub">${esc(d.place.name)}</div>
+                    <div style="font-family:Fraunces,serif;font-size:30px;margin:6px 0 2px" id="today-sun-time">${esc(s.sunset_local)}</div><div class="countdown" data-iso="${esc(s.sunset)}" style="margin:0">${esc(countdown(s.sunset))}</div>
+                    ${d.conditions_ok ? '' : '<div class="sub" style="margin-top:6px">Conditions unavailable right now.</div>'}</div></div>`;
+            const f = S.flower;
+            $('t-flower').innerHTML = !f ? '<h3>Wildflowers</h3><div class="sub">Loading…</div>' : `<div class="phase"><span class="ic" aria-hidden="true">${PH_ICON[f.phase] || '🌸'}</span><div><h3 style="margin:0">Wildflowers</h3><b id="today-flower" style="font-size:20px">${esc(f.phase)}</b></div></div><div class="sub" style="margin-top:8px">${esc(f.status)}</div>`;
+            $('t-cactus').innerHTML = `<h3>Cactus tracker</h3>` + (S.authed ? `<div style="font-family:Fraunces,serif;font-size:34px" id="today-cactus">${spottedCount()}<small style="font-size:16px;color:var(--sand-faint)">/${CACTI.length} spotted</small></div><div class="progress"><i style="width:${spottedCount() / CACTI.length * 100}%"></i></div>` : '<div class="sub">Sign in to keep a list of the cacti you have spotted.</div>');
         }
 
-        function renderContent() {
-            const container = document.getElementById('content-area');
-            const titles = {
-                home: ['🌵 Desert Dashboard', 'Your Sonoran Desert companion'],
-                cactus: ['🌵 Cactus Tracker', 'Track the cacti you\'ve spotted'],
-                snake: ['🐍 Snake ID', 'Upload a photo for AI identification'],
-                sunset: ['🌅 Sunset Forecast', 'Arizona has the best sunsets'],
-                critter: ['🦎 Critter ID', 'Identify lizards, birds, and wildlife'],
-                plant: ['🌿 Plant ID', 'Identify cacti, wildflowers, and plants'],
-                wildflower: ['🌸 Wildflower Alert', 'Bloom notifications after winter rains'],
-                camping: ['🏕️ Camping Guide', 'Best campsites in Arizona']
-            };
-            const [title, subtitle] = titles[currentView] || titles.home;
-            document.getElementById('page-title').textContent = title;
-            document.getElementById('page-subtitle').textContent = subtitle;
-            container.innerHTML = views[currentView]();
-            setupUploadHandlers();
+        /* ── identify ── */
+        const KIND = {
+            snake: { icon: '🐍', prompt: 'Add a photo of the snake', safety: '<b>Safety first.</b> Never approach or handle a snake to identify it. Many harmless snakes look like rattlesnakes and the reverse. If bitten, stay still and call 911 or Poison Control (1-800-222-1222).' },
+            critter: { icon: '🦎', prompt: 'Add a photo of the animal', safety: '<b>Keep your distance.</b> Never feed or touch wild animals. If one is injured, call a licensed wildlife rehabilitator.' },
+            plant: { icon: '🌿', prompt: 'Add a photo of the plant', safety: '<b>Never eat a wild plant</b> because of an app. Some toxic desert plants look like safe ones.' },
+        };
+        function setKind(k) {
+            S.kind = k; document.querySelectorAll('#id-kinds button').forEach(b => b.classList.toggle('active', b.dataset.kind === k));
+            $('id-prompt').textContent = KIND[k].prompt; $('id-safety').innerHTML = KIND[k].safety; $('id-result').innerHTML = ''; resetWork();
         }
+        $('id-kinds').addEventListener('click', e => { const b = e.target.closest('[data-kind]'); if (b) setKind(b.dataset.kind); });
+        document.querySelectorAll('[data-ident]').forEach(b => b.addEventListener('click', () => { setKind(b.dataset.ident); setView('identify'); }));
+        function resetWork() { $('id-work').hidden = true; $('id-drop').hidden = false; if (S.imgUrl) { URL.revokeObjectURL(S.imgUrl); S.imgUrl = null; } S.lastBlob = null; }
+        $('id-take').onclick = () => $('id-camera').click(); $('id-choose').onclick = () => $('id-file').click();
+        ['id-file', 'id-camera'].forEach(id => $(id).addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) identify(f); }));
+        const drop = $('id-drop');
+        drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); }); drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+        drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('dragover'); const f = e.dataTransfer.files[0]; if (f) identify(f); });
+        document.addEventListener('paste', e => { if (S.view !== 'identify' || !S.authed) return; const it = [...(e.clipboardData && e.clipboardData.items || [])].find(i => i.type.startsWith('image/')); if (it) identify(it.getAsFile()); });
 
-        // ========== CACTUS TRACKER ==========
-        let cactusSpotted = {};
-
-        async function loadCactusTracker() {
+        async function prepImage(file) {                     // shrink on the device: faster uploads, and iPhone HEIC photos become JPEG
+            const looksImage = (file.type || '').startsWith('image/') || /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(file.name || '');
+            if (!looksImage) throw new Error('That does not look like a photo.');
             try {
-                const res = await fetch(`${API}/api/nature/cactus-tracker`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.cactus) {
-                        Object.keys(data.cactus).forEach(key => {
-                            cactusSpotted[key] = data.cactus[key].spotted;
-                            const el = document.getElementById(`cactus-status-${key}`);
-                            const card = document.querySelector(`.cactus-card[data-cactus="${key}"]`);
-                            if (el) {
-                                if (cactusSpotted[key]) {
-                                    el.textContent = '✅ Spotted!';
-                                    el.className = 'cactus-status seen';
-                                    if (card) card.classList.add('spotted');
-                                } else {
-                                    el.textContent = '🔍 Not yet';
-                                    el.className = 'cactus-status unseen';
-                                    if (card) card.classList.remove('spotted');
-                                }
-                            }
-                        });
-                    }
-                }
-            } catch(e) { console.error('Load cactus error:', e); }
-        }
-
-        async function toggleCactus(id) {
-            const newState = !cactusSpotted[id];
-            cactusSpotted[id] = newState;
-            try {
-                await fetch(`${API}/api/nature/cactus-tracker`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ cactus_type: id, spotted: newState })
-                });
-                const el = document.getElementById(`cactus-status-${id}`);
-                const card = document.querySelector(`.cactus-card[data-cactus="${id}"]`);
-                if (el) {
-                    if (newState) {
-                        el.textContent = '✅ Spotted!';
-                        el.className = 'cactus-status seen';
-                        if (card) card.classList.add('spotted');
-                        toast(`🌵 ${cactusData.find(c => c.id === id)?.name} marked as spotted!`);
-                    } else {
-                        el.textContent = '🔍 Not yet';
-                        el.className = 'cactus-status unseen';
-                        if (card) card.classList.remove('spotted');
-                    }
-                }
-            } catch(e) { toast('Failed to update', true); }
-        }
-
-        async function markAllCactusSpotted() {
-            for (const c of cactusData) {
-                if (!cactusSpotted[c.id]) {
-                    await toggleCactus(c.id);
-                }
-            }
-            toast('🌵 All cacti marked as spotted!');
-        }
-
-        async function resetCactus() {
-            for (const c of cactusData) {
-                if (cactusSpotted[c.id]) {
-                    await toggleCactus(c.id);
-                }
-            }
-            toast('🔄 Cactus tracker reset');
-        }
-
-        // ========== IMAGE UPLOAD HANDLERS ==========
-        function setupUploadHandlers() {
-            setupUpload('snake', '/api/nature/snake-id', 'snake-text', 'snake-image');
-            setupUpload('critter', '/api/nature/critter-id', 'critter-text', 'critter-image');
-            setupUpload('plant', '/api/nature/plant-id', 'plant-text', 'plant-image');
-        }
-
-        function setupUpload(prefix, endpoint, textId, imageId) {
-            const fileInput = document.getElementById(`${prefix}-file`);
-            const uploadArea = document.getElementById(`${prefix}-upload`);
-            const resultDiv = document.getElementById(`${prefix}-result`);
-            const textEl = document.getElementById(textId);
-            const imageEl = document.getElementById(imageId);
-
-            if (!fileInput || !uploadArea) return;
-
-            uploadArea.addEventListener('click', () => fileInput.click());
-
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-            uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                if (e.dataTransfer.files.length) {
-                    fileInput.files = e.dataTransfer.files;
-                    fileInput.dispatchEvent(new Event('change'));
-                }
-            });
-
-            fileInput.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                resultDiv.classList.add('show');
-                textEl.innerHTML = `<div class="loading-spinner"></div> Analyzing with Qwen Vision AI...`;
-                if (imageEl) {
-                    imageEl.style.display = 'block';
-                    imageEl.src = URL.createObjectURL(file);
-                }
-
-                try {
-                    const formData = new FormData();
-                    formData.append('image', file);
-                    const res = await fetch(`${API}${endpoint}`, {
-                        method: 'POST',
-                        credentials: 'include',
-                        body: formData
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                        textEl.innerHTML = markdownToHtml(data.result);
-                        toast(`✅ ${prefix.charAt(0).toUpperCase() + prefix.slice(1)} identified!`);
-                    } else {
-                        textEl.innerHTML = `❌ Error: ${data.error || 'Could not identify. Please try again.'}`;
-                        toast('Identification failed', true);
-                    }
-                } catch(err) {
-                    textEl.innerHTML = '❌ Error analyzing image. Please try again.';
-                    toast('Error analyzing image', true);
-                }
-            };
-        }
-
-        // ========== SUNSET FORECAST ==========
-        async function loadSunsetForecast() {
-            const ratingEl = document.getElementById('sunset-rating');
-            const fillEl = document.getElementById('sunset-fill');
-            const cloudEl = document.getElementById('sunset-cloud');
-            const humidityEl = document.getElementById('sunset-humidity');
-            const airEl = document.getElementById('sunset-air');
-            const recEl = document.getElementById('sunset-recommendation');
-
-            if (!ratingEl) return;
-
-            try {
-                const res = await fetch(`${API}/api/nature/sunset-forecast`, { credentials: 'include' });
-                const data = await res.json();
-                if (data.success) {
-                    ratingEl.textContent = `${data.rating}/10`;
-                    fillEl.style.width = `${(data.rating / 10) * 100}%`;
-                    cloudEl.textContent = data.cloud_cover || '--';
-                    humidityEl.textContent = data.humidity || '--';
-                    airEl.textContent = data.air_quality || 'Good';
-                    recEl.textContent = data.recommendation || '🌵 Enjoy the Arizona sunset!';
-                } else {
-                    recEl.textContent = '🌵 Unable to load forecast. Check back later!';
-                }
-            } catch(e) {
-                recEl.textContent = '🌵 Error loading forecast. Please try again.';
+                const bmp = await createImageBitmap(file), k = Math.min(1, 1280 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
+                c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k)); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); if (bmp.close) bmp.close();
+                const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', .85)); if (!blob) throw new Error('encode');
+                return blob;
+            } catch (e) {
+                if (file.size <= 7.5 * 1024 * 1024 && /^image\/(jpeg|png|webp)$/.test(file.type)) return file;
+                throw new Error('This photo format could not be read here. Try a JPG or PNG.');
             }
         }
-
-        // ========== WILDFLOWER ALERT ==========
-        async function loadWildflowerAlert() {
-            const statusEl = document.getElementById('wildflower-status');
-            const detailEl = document.getElementById('wildflower-detail');
-            const spotsEl = document.getElementById('wildflower-spots');
-            const iconEl = document.getElementById('wildflower-icon');
-
-            if (!statusEl) return;
-
-            try {
-                const res = await fetch(`${API}/api/nature/wildflower-alert`, { credentials: 'include' });
-                const data = await res.json();
-                if (data.success) {
-                    statusEl.textContent = data.bloom_status || 'Unknown';
-                    detailEl.textContent = data.status || '';
-                    spotsEl.innerHTML = `<strong>🌾 Best spots:</strong> ${(data.best_spots || []).join(', ')}`;
-                    if (data.is_bloom_season) {
-                        iconEl.textContent = '🌸';
-                        statusEl.style.color = 'var(--success)';
-                    } else {
-                        iconEl.textContent = '🌵';
-                        statusEl.style.color = 'var(--sand-faint)';
-                    }
-                }
-            } catch(e) { console.error('Wildflower error:', e); }
+        async function identify(file) {
+            if (!S.authed) { $('id-gate').hidden = false; $('id-main').hidden = true; return; }
+            if (S.idBusy) return; S.idBusy = true; $('id-result').innerHTML = '';
+            $('id-drop').hidden = true; $('id-work').hidden = false; const st = $('id-status');
+            if (S.imgUrl) URL.revokeObjectURL(S.imgUrl); S.imgUrl = URL.createObjectURL(file); $('id-img').src = S.imgUrl;
+            st.innerHTML = '<span class="spinner"></span>Preparing photo…';
+            let blob; try { blob = await prepImage(file); } catch (e) { S.idBusy = false; st.innerHTML = `${esc(e.message)} <button class="btn ghost" id="id-again" style="margin-left:8px">Choose another</button>`; $('id-again').onclick = resetWork; return; }
+            S.lastBlob = blob; st.innerHTML = '<span class="spinner"></span>Identifying… this can take up to 20 seconds.';
+            const fd = new FormData(); fd.append('image', blob, 'photo.jpg');
+            const kind = S.kind, r = await api(`/api/nature/${kind}-id`, { method: 'POST', body: fd }); S.idBusy = false;
+            if (r.status === 401) { S.authed = false; $('id-gate').hidden = false; $('id-main').hidden = true; return; }
+            if (!r.ok) { const msg = r.net ? "Can't reach the server. Check your connection." : (r.data.error || 'Identification failed. Try again.');
+                st.innerHTML = `${esc(msg)} <button class="btn" id="id-retry" style="margin-left:8px">Try again</button> <button class="btn ghost" id="id-again">New photo</button>`; $('id-retry').onclick = () => identify(new File([S.lastBlob], 'photo.jpg', { type: S.lastBlob.type })); $('id-again').onclick = resetWork; return; }
+            st.innerHTML = `<span style="color:var(--success);font-weight:700">Done.</span> <button class="btn ghost" id="id-again" style="margin-left:8px">Identify another</button>`; $('id-again').onclick = resetWork;
+            renderResult(kind, r.data); if (r.data.data && r.data.data.identified) saveHistory(kind, r.data.data);
         }
-
-        function setBloomAlert() {
-            toast('🔔 You\'ll be notified when wildflowers bloom!');
+        function renderResult(kind, r) {
+            const d = r.data, safety = `<div class="notice ${kind === 'snake' ? 'red' : ''}" style="margin-top:14px">${esc(r.safety)}</div>`, ai = `<div class="sub" style="margin-top:12px">${esc(r.disclaimer || 'AI identification can be wrong.')}</div>`;
+            if (!d) { $('id-result').innerHTML = `<div class="card result"><h3>Unstructured answer</h3><p style="white-space:pre-wrap;margin-top:8px">${esc(r.result).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</p>${safety}${ai}</div>`; return; }
+            if (!d.identified) { $('id-result').innerHTML = `<div class="card result" id="id-card-res" style="--rc:var(--warning)"><h3>I can’t tell from this photo</h3><p style="margin-top:8px">${esc(d.if_unsure || 'Try a sharper, closer photo in good light, from a safe distance, showing the whole animal or plant.')}</p>${kind === 'snake' ? '<div class="badges"><span class="badge b-red">⚠️ Treat any unidentified snake as dangerous</span></div>' : ''}${safety}${ai}</div>`; return; }
+            const badges = [`<span class="badge ${d.confidence === 'high' ? 'b-green' : d.confidence === 'medium' ? 'b-gold' : 'b-red'}">${esc(d.confidence)} confidence</span>`];
+            if (kind === 'snake') { badges.push(d.treat_as_dangerous ? '<span class="badge b-red">⚠️ Treat as dangerous</span>' : '<span class="badge b-green">Likely non-venomous, still keep your distance</span>', `<span class="badge b-grey">Venomous: ${esc(d.venomous)}</span>`, `<span class="badge ${d.danger_level === 'high' ? 'b-red' : d.danger_level === 'medium' ? 'b-gold' : 'b-grey'}">Danger: ${esc(d.danger_level)}</span>`); }
+            if (kind === 'critter') badges.push(`<span class="badge b-grey">${esc(d.category)}</span>`, `<span class="badge ${d.conservation_status === 'endangered' ? 'b-red' : d.conservation_status === 'threatened' ? 'b-gold' : 'b-grey'}">${esc(d.conservation_status)}</span>`);
+            if (kind === 'plant') badges.push(`<span class="badge b-grey">${esc(d.plant_type)}</span>`, `<span class="badge ${d.edible === 'yes' ? 'b-gold' : d.edible === 'no' ? 'b-red' : 'b-grey'}">Edible: ${esc(d.edible)}</span>`);
+            const sec = (t, body) => body ? `<h5>${t}</h5>${body}` : '', li = a => a && a.length ? `<ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : '';
+            $('id-result').innerHTML = `<div class="card result" id="id-card-res" style="--rc:${d.treat_as_dangerous ? 'var(--danger)' : 'var(--cactus)'}"><h3>${esc(d.common_name || 'Unknown')}${d.scientific_name ? `<i>${esc(d.scientific_name)}</i>` : ''}</h3><div class="badges">${badges.join('')}</div>
+                ${d.summary ? `<p>${esc(d.summary)}</p>` : ''}${sec('What to look for', li(d.key_features))}${kind === 'snake' ? sec('What to do', li(d.what_to_do)) : ''}${kind === 'critter' ? sec('Behavior', d.behavior && `<p>${esc(d.behavior)}</p>`) : ''}
+                ${kind === 'plant' ? sec('Blooms', d.bloom_season && `<p>${esc(d.bloom_season)}</p>`) + sec('Edibility', d.edible_notes && `<p>${esc(d.edible_notes)}</p>`) : ''}
+                ${d.similar_species.length ? sec('Easily confused with', `<div class="chips" style="margin-top:0">${d.similar_species.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>`) : ''}${sec('Fun fact', d.fun_fact && `<p>${esc(d.fun_fact)}</p>`)}${safety}${ai}</div>`;
         }
+        function saveHistory(kind, d) { const h = jget('wn_hist', []); h.unshift({ kind, name: d.common_name, sci: d.scientific_name, conf: d.confidence, ts: Date.now() }); store.set('wn_hist', JSON.stringify(h.slice(0, 8))); renderHistory(); }
+        function renderHistory() { const h = jget('wn_hist', []); $('id-history').innerHTML = h.length ? h.map(x => `<div class="hrow"><span class="ic">${(KIND[x.kind] || {}).icon || '🔎'}</span><div class="n">${esc(x.name)}<i>${esc(x.sci || '')} · ${esc(x.conf)} confidence</i></div><time>${esc(new Date(x.ts).toLocaleDateString([], { month: 'short', day: 'numeric' }))}</time></div>`).join('') : '<div class="empty" style="padding:14px">Nothing yet. Your last eight identifications show up here.</div>'; $('hist-clear').hidden = !h.length; }
+        $('hist-clear').onclick = () => { store.set('wn_hist', '[]'); renderHistory(); };
 
-        // ========== CAMPING GUIDE ==========
-        async function loadCampingGuide() {
-            const container = document.getElementById('camping-grid');
-            if (!container) return;
-
-            try {
-                const res = await fetch(`${API}/api/nature/camping-guide`, { credentials: 'include' });
-                const data = await res.json();
-                if (data.success && data.campsites) {
-                    container.innerHTML = data.campsites.map(c => `
-                        <div class="camping-card">
-                            <div class="camping-name">${esc(c.name)}</div>
-                            <div class="camping-location">📍 ${esc(c.location)}</div>
-                            <div style="color:var(--gold-light); font-size:12px; margin-top:6px;">${'⭐'.repeat(c.rating)}</div>
-                            <div class="camping-features">${(c.features || []).map(f => `<span class="camping-feature">${esc(f)}</span>`).join('')}</div>
-                            <div style="font-size:10px; color:var(--sand-faint); margin-top:8px;">📅 ${esc(c.season)} · Reserve ${esc(c.reserve)}</div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--sand-faint);">No campsites found</div>';
-                }
-            } catch(e) {
-                container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--sand-faint);">Error loading campsites</div>';
-            }
-        }
-
-        // ========== NAVIGATION ==========
-        document.querySelectorAll('.nav-item').forEach(el => {
-            el.addEventListener('click', () => switchView(el.dataset.view));
+        /* ── lifecycle ── */
+        setInterval(() => { if (!document.hidden && (S.view === 'sunset' || S.view === 'today')) loadSunset({}); }, 300000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) { applyGlow(); document.querySelectorAll('[data-iso]').forEach(el => { el.textContent = countdown(el.dataset.iso); }); } });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeLoc(); return; }
+            if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+            if (/^[1-5]$/.test(e.key)) setView(TABS[+e.key - 1]); else if (e.key === 'r') loadSunset({ force: true }); else if (e.key === '/') { e.preventDefault(); openLoc(); }
         });
 
-        // ========== MOBILE SIDEBAR ==========
-        const hamburger = document.createElement('button');
-        hamburger.innerHTML = '☰';
-        hamburger.style.cssText = 'position:fixed; top:15px; left:15px; z-index:1000; background:linear-gradient(135deg,var(--cactus),var(--cactus-dark)); border:none; border-radius:50%; width:40px; height:40px; font-size:20px; color:var(--desert); cursor:pointer; display:none;';
-        document.body.appendChild(hamburger);
-        hamburger.addEventListener('click', () => document.getElementById('sidebar').classList.toggle('open'));
-
-        if (window.innerWidth <= 700) {
-            hamburger.style.display = 'block';
-            document.getElementById('sidebar').classList.add('open');
+        async function init() {
+            applyTheme(); renderRecents(); renderHistory(); renderCactus(); setKind('snake'); applyGlow();
+            const v = location.hash.slice(1); if (TABS.includes(v)) setView(v, false);
+            const auth = await api('/api/check-auth'); S.authed = !!(auth.data && auth.data.authenticated && auth.data.user); S.user = S.authed ? auth.data.user : null;
+            $('who').textContent = S.authed ? S.user.email : 'Guest'; $('id-gate').hidden = S.authed; $('id-main').hidden = !S.authed;
+            S.loc = await initialLocation(); renderLoc();
+            await Promise.all([loadSunset(S.loc.gps ? { gps: true } : {}), loadFlower(), loadCamp(), loadCactus()]);
         }
-
-        window.addEventListener('resize', () => {
-            if (window.innerWidth <= 700) {
-                hamburger.style.display = 'block';
-            } else {
-                hamburger.style.display = 'none';
-                document.getElementById('sidebar').classList.remove('open');
-            }
-        });
-
-        // ========== INIT ==========
-        checkAuth();
-        renderContent();
-
-        // Auto-refresh sunset forecast every 5 minutes
-        setInterval(() => {
-            if (currentView === 'sunset') loadSunsetForecast();
-        }, 300000);
+        init();
     </script>
 </body>
 </html>
