@@ -1662,18 +1662,19 @@ function startLocationWatch() {
 // Ask for a fix three ways at once so one flaky provider can't leave you stuck: a high-accuracy read,
 // the continuous watch (a better fix arrives later and is used), and, if the first read fails, a
 // relaxed "network location" read. `force` skips cached positions.
-function tryAcquireLocation(force) {
+function tryAcquireLocation() {
   return new Promise(resolve => {
     if (!navigator.geolocation) { nav.geoErr = 2; return resolve(false); }
     let done = false; const finish = ok => { if (!done) { done = true; resolve(ok); } };
-    locWaiters.push(() => finish(true)); setTimeout(() => finish(false), 20000);
+    locWaiters.push(() => finish(true)); setTimeout(() => finish(false), 22000);
     const good = pos => { onPositionUpdate(pos); startLocationWatch(); finish(true); };
-    const fail = err => {
+    // First attempt is exactly the original app's request (same options, same order), so the browser prompt and the
+    // answer you get are the same as before. Only if that fails do we try the extras.
+    navigator.geolocation.getCurrentPosition(good, err => {
       if (err.code === 1) { nav.geoErr = 1; return finish(false); }
-      navigator.geolocation.getCurrentPosition(good, e2 => { if (!nav.last) nav.geoErr = e2.code; setTimeout(() => finish(false), 4000); }, { enableHighAccuracy: false, timeout: 12000, maximumAge: force ? 0 : 600000 });
-    };
-    navigator.geolocation.getCurrentPosition(good, fail, { enableHighAccuracy: true, timeout: 8000, maximumAge: force ? 0 : 30000 });
-    startLocationWatch();
+      startLocationWatch();                                   // a late or better fix will still land
+      navigator.geolocation.getCurrentPosition(good, e2 => { if (!nav.last) nav.geoErr = e2.code; setTimeout(() => finish(false), 4000); }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 });
+    }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
   });
 }
 const accText = a => a == null ? 'unknown' : a < 1000 ? '±' + Math.round(a) + ' m' : '±' + (a / 1000).toFixed(a < 10000 ? 1 : 0) + ' km';
@@ -1688,7 +1689,7 @@ function locationSettingsHtml() {
 $('settings-body').addEventListener('click', async e => {
   if (!e.target.closest('#loc-recheck')) return;
   showToast('Finding your location…'); state.centerOnFix = true; state.userPanned = false;
-  const ok = await tryAcquireLocation(true); if (!ok) { state.centerOnFix = false; showToast(nav.geoErr === 1 ? 'Location is blocked for this site.' : 'No location fix. Check Wi-Fi and device location.', true); }
+  const ok = await tryAcquireLocation(); if (!ok) { state.centerOnFix = false; showToast(nav.geoErr === 1 ? 'Location is blocked for this site.' : 'No location fix. Check Wi-Fi and device location.', true); }
   renderSettings();
 });
 $('locate-btn').addEventListener('click', async () => {
@@ -1696,7 +1697,7 @@ $('locate-btn').addEventListener('click', async () => {
   const fresh = state.userLoc && nav.last && Date.now() - nav.lastFix < 120000 && (nav.last.accuracy || 0) <= 2000;
   if (fresh) { map.flyTo({ center: [state.userLoc.lon, state.userLoc.lat], zoom: Math.max(map.getZoom(), 16), duration: 900, offset: isWide() && card.classList.contains('show') ? [railPx() / 2, 0] : [0, 0] }); return; }
   state.centerOnFix = true; showToast('Finding your location…');
-  const ok = await tryAcquireLocation(true);
+  const ok = await tryAcquireLocation();
   if (!ok) { state.centerOnFix = false; showToast(nav.geoErr === 1 ? 'Location is blocked. Allow it in your browser or car settings.' : 'Could not get a location fix. Check that Wi-Fi and location services are on, then tap again.', true); }
 });
 $('compass-btn').addEventListener('click', () => map.easeTo({ bearing: 0, pitch: state.navigationActive ? map.getPitch() : 0, duration: 500 }));
