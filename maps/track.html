@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
+<title>Follow a trip · Wizard Maps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
+<style>
+:root { --bg:#080612; --bg2:#100c20; --glass:rgba(16,12,32,.88); --fg:#f1ecff; --dim:#a79fc4; --accent:#e8c97a; --danger:#f0685f; --ok:#5fd08d; --border:rgba(232,201,122,.28); --display:'Cormorant Garamond',Georgia,serif; --sans:'DM Sans',system-ui,sans-serif; --sb:env(safe-area-inset-bottom,0px); --st:env(safe-area-inset-top,0px); }
+@media (prefers-color-scheme: light) { :root { --bg:#f6f3ec; --bg2:#fff; --glass:rgba(255,255,255,.92); --fg:#1d1830; --dim:#675f80; --accent:#7d5a0e; --border:rgba(125,90,14,.3); } }
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--fg); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+#map { position: fixed; inset: 0; }
+.card { position: fixed; z-index: 5; left: .75rem; right: .75rem; bottom: calc(.75rem + var(--sb)); background: var(--glass); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); border: 1px solid var(--border); border-radius: 1.5rem; padding: 1.125rem 1.25rem 1.25rem; box-shadow: 0 10px 40px rgba(0,0,0,.35); max-width: 30rem; margin: 0 auto; }
+@media (min-width: 760px) { .card { left: 1rem; right: auto; bottom: auto; top: 1rem; width: 27rem; margin: 0; } }
+.who { font-size: .8125rem; color: var(--dim); display: flex; align-items: center; gap: .5rem; }
+.dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--ok); animation: p 1.4s ease-in-out infinite; } .dot.off { background: var(--dim); animation: none; }
+@keyframes p { 50% { opacity: .35; } }
+h1 { font-family: var(--display); font-size: 2rem; line-height: 1.1; margin: .375rem 0 .125rem; color: var(--accent); }
+.dest { font-size: 1rem; }
+.stats { display: flex; gap: .625rem; margin-top: .875rem; }
+.stats div { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: .875rem; padding: .625rem .5rem; text-align: center; }
+.stats b { display: block; font-family: var(--display); font-size: 1.5rem; color: var(--accent); }
+.stats span { font-size: .6875rem; color: var(--dim); }
+.note { margin-top: .75rem; font-size: .8125rem; color: var(--dim); }
+a { color: var(--accent); }
+.car { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg); box-shadow: 0 0 0 4px rgba(232,201,122,.35); display: grid; place-items: center; color: var(--bg); font-size: 1rem; }
+.pin { width: 1.25rem; height: 1.25rem; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--danger); border: 2px solid #fff; }
+.maplibregl-ctrl-attrib { font-size: .6rem; }
+</style>
+</head>
+<body>
+<div id="map" aria-hidden="true"></div>
+<main class="card" aria-live="polite">
+  <div class="who"><span class="dot" id="dot"></span><span id="who">Looking for this trip…</span></div>
+  <h1 id="title">One moment</h1>
+  <div class="dest" id="dest"></div>
+  <div class="stats" id="stats" hidden>
+    <div><b id="eta-min">–</b><span id="eta-clock">away</span></div>
+    <div><b id="remain">–</b><span>to go</span></div>
+    <div><b id="speed">–</b><span id="speed-unit">speed</span></div>
+  </div>
+  <div class="note" id="note"></div>
+</main>
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<script>
+(function () {
+  'use strict';
+  const API = window.WIZ_API_BASE || 'https://arnav0928.pythonanywhere.com';
+  const token = (location.hash || '').replace(/^#/, '').trim();
+  const $ = id => document.getElementById(id);
+  const imperial = /^en-us/i.test(navigator.language || '') || /^en-(lr|mm)/i.test(navigator.language || '');
+  let map = null, carMk = null, pinMk = null, fitted = false, timer = null, fails = 0, finished = false, last = null;
+
+  const fmtDist = m => imperial ? (m < 160 ? Math.round(m * 3.281 / 10) * 10 + ' ft' : (m / 1609.344).toFixed(m < 16093 ? 1 : 0) + ' mi') : (m < 1000 ? Math.round(m / 10) * 10 + ' m' : (m / 1000).toFixed(m < 10000 ? 1 : 0) + ' km');
+  const fmtMin = ms => { const m = Math.max(0, Math.round(ms / 60000)); return m < 1 ? 'Now' : m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60 ? m % 60 + ' m' : ''); };
+  const clock = ms => new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const ago = ms => { const s = Math.max(0, Math.round((Date.now() - ms) / 1000)); return s < 10 ? 'just now' : s < 60 ? s + ' s ago' : Math.round(s / 60) + ' min ago'; };
+
+  function setMap(v) {
+    if (!map || !v.position) return;
+    const c = v.position.center; if (!c) return;
+    if (!carMk) { const el = document.createElement('div'); el.className = 'car'; el.textContent = '➤'; carMk = new maplibregl.Marker({ element: el, rotationAlignment: 'map' }).setLngLat(c).addTo(map); } else carMk.setLngLat(c);
+    if (carMk.setRotation && v.position.heading != null) carMk.setRotation(v.position.heading - 90);
+    if (v.dest && v.dest.center && !pinMk) { const el = document.createElement('div'); el.className = 'pin'; pinMk = new maplibregl.Marker({ element: el }).setLngLat(v.dest.center).addTo(map); }
+    const pad = innerWidth >= 760 ? { top: 60, bottom: 60, left: 480, right: 60 } : { top: 60, bottom: 300, left: 40, right: 40 };
+    if (!fitted && v.dest && v.dest.center) { const b = new maplibregl.LngLatBounds(c, c); b.extend(v.dest.center); map.fitBounds(b, { padding: pad, maxZoom: 16, duration: 0 }); fitted = true; }
+    else if (!fitted) { map.jumpTo({ center: c, zoom: 14 }); fitted = true; }
+    else map.easeTo({ center: c, duration: 800 });
+  }
+
+  function render(v) {
+    last = v;
+    const who = v.sharer || 'Someone', dest = (v.dest && v.dest.name) || 'their destination';
+    $('dest').textContent = dest ? 'Heading to ' + dest : '';
+    const st = v.status;
+    $('stats').hidden = true; $('dot').className = 'dot off';
+    if (st === 'arrived') { document.title = who + ' has arrived'; $('title').textContent = who + ' has arrived'; $('dest').textContent = dest; $('who').textContent = 'Trip complete'; $('note').textContent = 'This page will stop updating.'; finished = true; return; }
+    if (st === 'ended' || !v.position) { document.title = 'Trip ended'; $('title').textContent = 'This trip is no longer shared'; $('dest').textContent = ''; $('who').textContent = who + ' stopped sharing'; $('note').textContent = 'The location is removed as soon as sharing stops.'; finished = true; return; }
+    $('dot').className = 'dot';
+    $('who').textContent = 'Live · updated ' + ago(v.position.updatedMs);
+    $('title').textContent = who + ' is on the way';
+    document.title = who + ' · ' + (v.etaMs ? fmtMin(v.etaMs - Date.now()) + ' away' : 'on the way');
+    $('stats').hidden = false;
+    $('eta-min').textContent = v.etaMs ? fmtMin(v.etaMs - Date.now()) : '–'; $('eta-clock').textContent = v.etaMs ? 'arriving ' + clock(v.etaMs) : 'away';
+    $('remain').textContent = v.remainingM != null ? fmtDist(v.remainingM) : '–';
+    const sp = v.position.speed; $('speed').textContent = sp != null ? Math.round(sp * (imperial ? 2.23694 : 3.6)) : '–'; $('speed-unit').textContent = imperial ? 'mph' : 'km/h';
+    const c = v.position.center; $('note').innerHTML = '';
+    const a = document.createElement('a'); a.href = 'https://www.openstreetmap.org/?mlat=' + c[1] + '&mlon=' + c[0] + '#map=16/' + c[1] + '/' + c[0]; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = 'Open in OpenStreetMap';
+    $('note').appendChild(a);
+    setMap(v);
+  }
+
+  async function poll() {
+    clearTimeout(timer);
+    if (finished) return;
+    try {
+      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 9000);
+      const r = await fetch(API + '/api/maps/share/' + encodeURIComponent(token), { cache: 'no-store', signal: ctl.signal }); clearTimeout(t);
+      if (r.status === 404) { $('title').textContent = 'This link has expired'; $('who').textContent = 'Not found'; $('dest').textContent = ''; $('note').textContent = 'Ask for a new link.'; $('dot').className = 'dot off'; finished = true; return; }
+      if (!r.ok) throw new Error('http ' + r.status);
+      render(await r.json()); fails = 0;
+    } catch (e) {
+      fails++; $('who').textContent = fails > 1 ? 'Reconnecting…' : $('who').textContent; $('dot').className = 'dot off';
+    }
+    timer = setTimeout(poll, document.hidden ? 30000 : Math.min(60000, 8000 * (1 + fails)));
+  }
+
+  function initMap() {
+    try {
+      if (!window.maplibregl) return;
+      map = new maplibregl.Map({ container: 'map', style: 'https://tiles.openfreemap.org/styles/' + (matchMedia('(prefers-color-scheme: light)').matches ? 'liberty' : 'dark'), center: [-98, 38], zoom: 3, attributionControl: false });
+      map.addControl(new maplibregl.AttributionControl({ compact: true }));
+      window.__map = map;
+    } catch { map = null; }
+  }
+
+  if (!/^[A-Za-z0-9_-]{8,24}$/.test(token)) { $('title').textContent = 'That link looks incomplete'; $('who').textContent = 'Invalid link'; $('note').textContent = 'Open the full link you were sent.'; return; }
+  initMap(); poll();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && !finished) poll(); });
+  setInterval(() => { if (last && last.position && !finished) $('who').textContent = 'Live · updated ' + ago(last.position.updatedMs); }, 5000);
+})();
+</script>
+</body>
+</html>
