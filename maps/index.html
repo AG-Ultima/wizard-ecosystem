@@ -372,6 +372,25 @@ html.car .nav-main { font-size: 1.1875rem; }
   .card { max-height: 86dvh; overflow-y: auto; } .steps.open { max-height: 20dvh; }
 }
 
+/* entry points, saved routes, trips, live share */
+.stop-tag { display: inline-block; font-size: .625rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--on-accent); background: var(--accent); border-radius: .5rem; padding: .0625rem .4rem; margin-right: .4rem; vertical-align: .0625rem; }
+.via-row { margin-top: .375rem; font-size: .8125rem; color: var(--fg-dim); }
+.via-text { color: var(--accent-hi); }
+.tag-engine.live { color: var(--danger); border-color: var(--danger); }
+.sync-box { padding: .75rem 1rem; }
+.sync-line { display: flex; flex-direction: column; gap: .25rem; font-size: .9375rem; }
+.sync-line small { color: var(--fg-dim); font-size: .78rem; line-height: 1.5; }
+a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: inherit; }
+.trip-stats { display: flex; gap: .5rem; margin: .25rem 0 .5rem; }
+.trip-stats > div { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: .875rem; padding: .625rem .5rem; text-align: center; display: flex; flex-direction: column; gap: .125rem; }
+.trip-stats b { font-family: var(--display); font-size: 1.125rem; color: var(--accent-hi); }
+.trip-stats span { font-size: .6875rem; color: var(--fg-dim); }
+.share-pill { position: fixed; z-index: 302; left: 50%; transform: translateX(-50%); bottom: calc(5.75rem + var(--sb)); display: none; align-items: center; gap: .5rem; background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid var(--danger); color: var(--fg); border-radius: 1.5rem; padding: .375rem .375rem .375rem .875rem; font-size: .8125rem; font-weight: 600; box-shadow: var(--shadow); }
+body.navigating .share-pill:not([hidden]) { display: flex; }
+.share-pill button { height: 2rem; padding: 0 .875rem; border-radius: 1rem; background: var(--danger); color: #fff; font-weight: 700; font-size: .75rem; }
+.live-dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--danger); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (min-width: 760px) and (min-height: 480px) { .share-pill { left: calc(1rem + var(--sl) + min(var(--rail), 38vw) / 2); bottom: calc(6.5rem + var(--sb)); } }
 /* narrow phones: speed bubble floats above the bar so the ETA never gets squeezed */
 body:has(.card.show) .chips { display: none; }
 @media (max-width: 480px) {
@@ -530,6 +549,11 @@ body:has(.card.show) .chips { display: none; }
         <input type="text" id="add-address" class="field" placeholder="Search for an address" autocomplete="off">
         <div class="ac-box" id="add-address-box"></div>
       </div>
+      <span class="label">Entry point <small>(optional)</small></span>
+      <input type="text" id="add-via-name" class="field" placeholder="Owners gate" maxlength="60" autocomplete="off">
+      <div class="via-row"><span class="via-text" id="add-via-text">None: route to the address</span></div>
+      <div class="form-actions" style="margin-top:.375rem"><button type="button" class="btn" id="add-via-here">Use my location</button><button type="button" class="btn" id="add-via-map">Pick on map</button><button type="button" class="btn" id="add-via-clear" hidden>Clear</button></div>
+      <p class="hint">Standing at your owners-only gate? Tap “Use my location” and Maps will always route through it on the way here.</p>
       <div class="form-actions">
         <button class="btn" id="add-cancel">Cancel</button>
         <button class="btn primary" id="add-save">Save place</button>
@@ -537,9 +561,16 @@ body:has(.card.show) .chips { display: none; }
     </div>
     <div id="places-list"></div>
     <button class="add-btn" id="add-btn"><span class="ico" data-icon="plus"></span>Add a place</button>
+    <span class="label">Saved routes</span>
+    <div id="routes-list"></div>
+    <span class="label">Trips</span>
+    <div id="trips-summary"></div>
+    <div id="trips-list"></div>
     <div id="recents-list"></div>
   </div>
 </div>
+
+<div class="share-pill" id="share-pill" hidden><span class="live-dot"></span>Sharing live<button id="share-stop" type="button">Stop</button></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -569,7 +600,7 @@ const DEFAULTS = {
   buildings3D: false, terrain: false, globe: false, flow: false, incidents: false, showSigns: true,
   engine: 'osm', routeType: 'fastest', avoidHighways: false, avoidTolls: false, avoidFerries: false,
   voice: true, voiceRate: 0.96, lanes: true, speedLimit: true, callouts: true, cameraAlerts: true,
-  speedAlert: false, roadEvents: true, keepAwake: true
+  speedAlert: false, roadEvents: true, keepAwake: true, tripLog: true
 };
 const S = Object.assign({}, DEFAULTS);
 (function loadSettings() {
@@ -725,7 +756,8 @@ function loadSavedPlaces() {
     saveSavedPlaces();
   } else state.savedPlaces = Array.isArray(raw) ? raw : [];
 }
-function saveSavedPlaces() { if (!store.set(LS.saved, JSON.stringify(state.savedPlaces))) showToast('Could not save on this device'); }
+const cloudPing = () => { try { cloudSchedule(); } catch { } };   // defined in the cloud layer; safe before it loads
+function saveSavedPlaces() { cloudPing(); if (!store.set(LS.saved, JSON.stringify(state.savedPlaces))) showToast('Could not save on this device'); }
 loadSavedPlaces();
 
 // ───────── map ─────────
@@ -864,7 +896,7 @@ function closeSheets() {
   try { sheetReturnFocus && sheetReturnFocus.focus && sheetReturnFocus.focus(); } catch { }
 }
 backdrop.addEventListener('click', closeSheets);
-$('settings-btn').addEventListener('click', () => openSheet('settings-sheet'));
+$('settings-btn').addEventListener('click', () => { try { renderSettings(); } catch { } openSheet('settings-sheet'); });
 $('saved-btn').addEventListener('click', () => { renderPlacesList(); renderRecents(); openSheet('saved-sheet'); });
 $('settings-close').addEventListener('click', closeSheets);
 $('saved-close').addEventListener('click', closeSheets);
@@ -1028,7 +1060,7 @@ function flattenLegs(route) {
   const legs = route.legs;
   legs.forEach((leg, li) => {
     if (li < legs.length - 1 && leg.steps && leg.steps.length) {
-      const last = leg.steps[leg.steps.length - 1]; last.maneuver = Object.assign({}, last.maneuver, { type: 'waypoint' });
+      const last = leg.steps[leg.steps.length - 1]; last.maneuver = Object.assign({}, last.maneuver, { type: 'waypoint', viaName: (state.waypoints && state.waypoints[li] && state.waypoints[li].via) ? state.waypoints[li].name : undefined });
     }
     if (li > 0 && leg.steps && leg.steps.length) {
       const first = leg.steps[0];
@@ -1325,8 +1357,10 @@ async function showEv(dest) {
   } catch { }
 }
 async function selectDestination(dest, opts = {}) {
-  state.waypoints = []; renderStops(); $('stop-add-row').hidden = true;
-  state.engineOverride = null;
+  state.waypoints = (opts.waypoints || []).map(w => ({ lngLat: w.center, name: w.name })); renderStops(); $('stop-add-row').hidden = true;
+  state.engineOverride = null; state.viaDismissed = false; state.entry = null;
+  if (opts.profile && ['driving', 'walking', 'cycling'].includes(opts.profile)) { state.routeProfile = opts.profile; document.querySelectorAll('.mode').forEach(b => b.classList.toggle('active', b.dataset.profile === opts.profile)); }
+  { const hit = (opts.placeId && getPlace(opts.placeId)) || findPlaceNear(dest.lngLat, 80); if (hit && hit.via && hit.via.center) state.entry = { center: hit.via.center, name: hit.via.name || 'Entry point', place: hit.name }; }
   pushRecent(dest);
   state.endPoint = dest; state.routes = {}; state.routeData = null; clearRouteLayers(); setDestMarker(dest.lngLat);
   $('card-name').textContent = dest.name; $('card-addr').textContent = dest.address || '';
@@ -1355,6 +1389,7 @@ async function previewRoutes() {
     if (token !== state.previewToken) return;
     if (!start) { setSummary('<span class="summary-msg">Location is off. Allow it in your browser, or type a starting point above.</span>'); fromInput.focus(); return; }
   }
+  applyEntry(start);
   try {
     const route = await fetchRoute(start, state.endPoint, state.routeProfile);
     if (token !== state.previewToken) return;
@@ -1387,7 +1422,7 @@ function renderSummary(route) {
     : `<span class="tag-engine">${route._engine === 'TomTom' ? 'TomTom' : 'OpenStreetMap'} route</span>`;
   setSummary(`<span class="summary-time">${formatDuration(route.duration)}</span><span class="summary-meta">${formatDistance(route.distance)}, arrive ${arrive}</span>
     <button id="summary-share-btn" aria-label="Share ETA" data-icon="share"></button>
-    <div class="summary-row">${bits.join(' · ')}${bits.length ? ' · ' : ''}${engine}</div>`);
+    <div class="summary-row">${bits.join(' · ')}${bits.length ? ' · ' : ''}${engine} <button class="tag-engine" id="save-route-btn">Save route</button>${share.active ? ' <button class="tag-engine live" id="stop-share-tag">Sharing live · stop</button>' : ''}</div>`);
   hydrateIcons($('summary')); { const s = $('summary-share-btn').firstElementChild; if (s) s.style.cssText = 'width:1rem;height:1rem;margin:auto'; }
   const all = route._all || [];
   const via = r => (r.legs[0].steps.reduce((a, b) => b.distance > a.distance ? b : a, { distance: -1 }).name || 'route');
@@ -1397,6 +1432,8 @@ function renderSummary(route) {
 }
 $('summary').addEventListener('click', e => {
   if (e.target.closest('#summary-share-btn')) shareEta();
+  else if (e.target.closest('#save-route-btn')) saveCurrentRoute();
+  else if (e.target.closest('#stop-share-tag')) { stopShare(true).then(() => state.routeData && renderSummary(state.routeData)); }
   else if (e.target.closest('#engine-flip') && state.routeData) { state.engineOverride = state.routeData._engine === 'TomTom' ? 'osm' : 'tomtom'; state.routes = {}; previewRoutes(); }
   else if (e.target.closest('#retry-route')) { state.routes = {}; previewRoutes(); }
 });
@@ -1451,9 +1488,9 @@ async function dropPin(ll) {
 // ───────── stops ─────────
 function renderStops() {
   const el = $('stops-row'); if (!el) return;
-  el.innerHTML = state.waypoints.map((w, i) => `<div class="stop-item" data-i="${i}"><span class="from-dot v"></span><span class="stop-name">${escapeHtml(w.name)}</span>
-    <button class="stop-btn" data-act="up" ${i === 0 ? 'disabled' : ''} aria-label="Move stop earlier">${icon('up')}</button>
-    <button class="stop-btn" data-act="down" ${i === state.waypoints.length - 1 ? 'disabled' : ''} aria-label="Move stop later">${icon('down')}</button>
+  el.innerHTML = state.waypoints.map((w, i) => `<div class="stop-item ${w.via ? 'via' : ''}" data-i="${i}"><span class="from-dot v"></span><span class="stop-name">${w.via ? '<span class="stop-tag">Entry</span>' : ''}${escapeHtml(w.name)}</span>
+    ${w.via ? '' : `<button class="stop-btn" data-act="up" ${i === 0 ? 'disabled' : ''} aria-label="Move stop earlier">${icon('up')}</button>
+    <button class="stop-btn" data-act="down" ${i === state.waypoints.length - 1 || state.waypoints[i + 1].via ? 'disabled' : ''} aria-label="Move stop later">${icon('down')}</button>`}
     <button class="stop-btn" data-act="rm" aria-label="Remove stop">${icon('close')}</button></div>`).join('');
   el.querySelectorAll('svg').forEach(s => s.style.cssText = 'width:.95rem;height:.95rem');
 }
@@ -1462,7 +1499,7 @@ $('stops-row').addEventListener('click', e => {
   const i = +b.closest('.stop-item').dataset.i, w = state.waypoints;
   if (b.dataset.act === 'up' && i > 0) [w[i - 1], w[i]] = [w[i], w[i - 1]];
   else if (b.dataset.act === 'down' && i < w.length - 1) [w[i + 1], w[i]] = [w[i], w[i + 1]];
-  else if (b.dataset.act === 'rm') w.splice(i, 1); else return;
+  else if (b.dataset.act === 'rm') { if (w[i].via) state.viaDismissed = true; w.splice(i, 1); } else return;
   renderStops(); previewRoutes();
 });
 $('add-stop-btn').addEventListener('click', () => { const row = $('stop-add-row'); row.hidden = !row.hidden; if (!row.hidden) $('stop-add-input').focus(); else $('stop-add-input').value = ''; });
@@ -1472,7 +1509,7 @@ attachAutocomplete({ input: $('stop-add-input'), box: $('stop-add-box'), delay: 
 const getPlace = id => state.savedPlaces.find(p => p.id === id);
 function upsertPlace(place) { const i = state.savedPlaces.findIndex(p => p.id === place.id); if (i >= 0) state.savedPlaces[i] = place; else state.savedPlaces.push(place); saveSavedPlaces(); renderChips(); renderPlacesList(); }
 function deletePlace(id) { state.savedPlaces = state.savedPlaces.filter(p => p.id !== id); saveSavedPlaces(); renderChips(); renderPlacesList(); }
-function goToPlace(place) { closeSheets(); selectDestination({ lngLat: place.center, name: place.name, address: place.address }); }
+function goToPlace(place) { closeSheets(); selectDestination({ lngLat: place.center, name: place.name, address: place.address }, { placeId: place.id }); }
 function renderChips() {
   const ready = state.savedPlaces.filter(p => p.center), el = $('chips');
   const quick = [['⛽', 'Gas', 'gas station'], ['🍔', 'Food', 'restaurant'], ['⚡', 'EV', 'EV charging station'], ['☕', 'Coffee', 'coffee']];
@@ -1500,6 +1537,7 @@ $('places-list').addEventListener('click', e => {
   const p = getPlace(item.dataset.id); if (!p) return; if (p.center) goToPlace(p); else openEditPlace(p);
 });
 function renderRecents() {
+  renderRoutesTrips();
   const el = $('recents-list'), arr = loadRecents();
   if (!arr.length) { el.innerHTML = ''; return; }
   el.innerHTML = '<span class="label">Recent</span>' + arr.map((r, i) => `<div class="place" data-ri="${i}"><div class="place-emoji">🕘</div><div class="place-info"><div class="place-name">${escapeHtml(r.name)}</div><div class="place-addr">${escapeHtml(r.address || '')}</div></div></div>`).join('');
@@ -1512,11 +1550,11 @@ $('emoji-row').innerHTML = EMOJIS.map(e => `<button class="emoji-opt" data-emoji
 $('emoji-row').addEventListener('click', e => { const o = e.target.closest('.emoji-opt'); if (o) { selectedEmoji = o.dataset.emoji; updateEmojiSelection(); } });
 function updateEmojiSelection() { $('emoji-row').querySelectorAll('.emoji-opt').forEach(o => o.classList.toggle('selected', o.dataset.emoji === selectedEmoji)); }
 function updateSlotVisibility() { $('custom-fields').style.display = $('add-slot').value === '__new__' ? 'block' : 'none'; }
-function resetAddForm() { state.editingPlaceId = null; state.pendingPlaceCenter = null; $('add-slot').value = '__new__'; $('add-name').value = ''; $('add-address').value = ''; selectedEmoji = '🏠'; updateEmojiSelection(); $('add-btn').style.display = 'flex'; $('add-address-box').classList.remove('show'); updateSlotVisibility(); }
+function resetAddForm() { state.editingPlaceId = null; state.pendingPlaceCenter = null; state.pendingVia = null; if ($('add-via-name')) { $('add-via-name').value = ''; updateViaUI(); } $('add-slot').value = '__new__'; $('add-name').value = ''; $('add-address').value = ''; selectedEmoji = '🏠'; updateEmojiSelection(); $('add-btn').style.display = 'flex'; $('add-address-box').classList.remove('show'); updateSlotVisibility(); }
 function hideAddForm() { $('add-form').classList.remove('show'); resetAddForm(); }
 function openEditPlace(place) {
   state.editingPlaceId = place.id; $('add-slot').value = place.slot || '__new__'; $('add-name').value = place.name; $('add-address').value = place.address || '';
-  state.pendingPlaceCenter = place.center || null; selectedEmoji = place.emoji || '🏠'; updateEmojiSelection(); updateSlotVisibility();
+  state.pendingPlaceCenter = place.center || null; state.pendingVia = place.via && place.via.center ? { center: place.via.center, name: place.via.name } : null; $('add-via-name').value = state.pendingVia ? state.pendingVia.name || '' : ''; updateViaUI(); selectedEmoji = place.emoji || '🏠'; updateEmojiSelection(); updateSlotVisibility();
   $('add-form').classList.add('show'); $('add-btn').style.display = 'none'; $('add-address').focus();
 }
 $('add-slot').addEventListener('change', () => {
@@ -1539,7 +1577,7 @@ $('add-save').addEventListener('click', async () => {
     center = found[0].center; address = [found[0].name, found[0].subtitle].filter(Boolean).join(', ');
   }
   const isSlot = !!m, id = state.editingPlaceId || (isSlot ? slot : 'place_' + Date.now()), existing = getPlace(id);
-  upsertPlace({ id, name, emoji, address, center, slot: isSlot ? slot : (existing && existing.slot) || null, createdAt: (existing && existing.createdAt) || Date.now() });
+  { const pl = { id, name, emoji, address, center, slot: isSlot ? slot : (existing && existing.slot) || null, createdAt: (existing && existing.createdAt) || Date.now() }; if (state.pendingVia) pl.via = { center: state.pendingVia.center, name: state.pendingVia.name || 'Entry point' }; upsertPlace(pl); }
   showToast(`Saved "${name}"`); hideAddForm();
 });
 
@@ -1551,7 +1589,7 @@ function buildManeuver(step) {
   switch (type) {
     case 'depart': action = 'Start'; break;
     case 'arrive': action = 'Arrive at destination'; break;
-    case 'waypoint': action = 'Arrive at stop'; break;
+    case 'waypoint': action = m.viaName ? `Continue through ${m.viaName}` : 'Arrive at stop'; break;
     case 'turn': case 'end of road':
       action = mod === 'uturn' ? 'Make a U-turn' : mod === 'sharp left' ? 'Turn sharp left' : mod === 'sharp right' ? 'Turn sharp right' : mod === 'slight left' ? 'Bear left' : mod === 'slight right' ? 'Bear right' : mod === 'left' ? 'Turn left' : mod === 'right' ? 'Turn right' : 'Continue'; break;
     case 'continue': action = mod === 'slight left' ? 'Continue slightly left' : mod === 'slight right' ? 'Continue slightly right' : mod === 'uturn' ? 'Make a U-turn' : 'Continue straight'; break;
@@ -1705,6 +1743,7 @@ function onPositionUpdate(pos) {
       if ('vibrate' in navigator) try { navigator.vibrate([100, 50, 100, 50, 100]); } catch { }
     } else announceManeuver(route, Math.max(0, at[nav.idx] - nav.along), speed || 0);
   }
+  navHookTick(lon, lat, speed, now, route);
   updateNavUI();
 
   if (!nav.arrived) {
@@ -1849,7 +1888,7 @@ async function beginNavigation() {
   state.navigationActive = true; resetProgress(); nav.followUser = true; nav.userZoom = false; nav.overview = false; nav.smoothHdg = null;
   document.body.classList.add('navigating'); closeSheets();
   $('nav-end-btn').textContent = 'End'; $('nav-end-btn').classList.remove('done'); $('recenter-btn').classList.remove('show'); $('nav-overview-btn').classList.remove('on');
-  setFromMarker(null);
+  setFromMarker(null); navHookStart();
   await requestWakeLock(); await requestCompassPermission(); startCompass(); startLocationWatch(); warmSpeech(); startSpeechKeepAlive();
   speak(`Starting navigation${state.endPoint && state.endPoint.name && state.endPoint.name !== 'Dropped pin' ? ' to ' + state.endPoint.name : ''}.`);
   updateNavUI();
@@ -1863,7 +1902,7 @@ async function beginNavigation() {
   try { pipSetup(); } catch { }
 }
 function stopNavigation() {
-  const arrived = nav.arrived;
+  const arrived = nav.arrived; navHookStop(arrived);
   state.navigationActive = false; document.body.classList.remove('navigating', 'gps-lost');
   clearInterval(nav.speedTimer); nav.speedTimer = null; stopSpeechKeepAlive();
   window.removeEventListener('deviceorientationabsolute', handleOrientation, true); window.removeEventListener('deviceorientation', handleOrientation, true);
@@ -2002,6 +2041,317 @@ function pipStop() { try { if (document.pictureInPictureElement) document.exitPi
 if (pipSupported()) { $('nav-pip-btn').hidden = false; $('nav-pip-btn').addEventListener('click', pipToggle); }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && state.navigationActive && pip.video && !document.pictureInPictureElement) pipEnter(); });
 
+// ═════════ Cloud: sync, saved routes, trip log, live share, entry points ═════════
+// Local-first: everything works from this device's storage; when you're signed in to your Wizard account the same data
+// is mirrored to the Wizard server so your phone, laptop and car agree. Guests keep working exactly as before.
+const API_BASE = window.WIZ_API_BASE || 'https://arnav0928.pythonanywhere.com';
+const CLOUD_LS = 'wizard_maps_cloud_v1', ROUTES_LS = 'wizard_maps_routes_v1', TRIPS_LS = 'wizard_maps_trips_v1';
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const stable = v => v && typeof v === 'object' ? (Array.isArray(v) ? '[' + v.map(stable).join(',') + ']' : '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + stable(v[k])).join(',') + '}') : JSON.stringify(v === undefined ? null : v);
+const hashOf = o => { const c = Object.assign({}, o); delete c.updatedAt; return stable(c); };
+const PREF_SYNC = ['units', 'theme', 'scale', 'style', 'engine', 'routeType', 'clock24', 'buildings3D', 'terrain', 'globe', 'flow', 'incidents', 'showSigns', 'avoidHighways', 'avoidTolls', 'avoidFerries', 'voice', 'voiceRate', 'lanes', 'speedLimit', 'callouts', 'cameraAlerts', 'speedAlert', 'roadEvents', 'keepAwake', 'tripLog'];
+const prefsData = () => { const o = {}; PREF_SYNC.forEach(k => { if (S[k] != null) o[k] = S[k]; }); return o; };
+
+state.savedRoutes = store.json(ROUTES_LS, []); if (!Array.isArray(state.savedRoutes)) state.savedRoutes = [];
+state.trips = store.json(TRIPS_LS, []); if (!Array.isArray(state.trips)) state.trips = [];
+const saveRoutes = () => { store.set(ROUTES_LS, JSON.stringify(state.savedRoutes)); cloudSchedule(); };
+const saveTrips = () => { state.trips = state.trips.slice(0, 300); store.set(TRIPS_LS, JSON.stringify(state.trips)); cloudSchedule(); };
+
+const cloud = {
+  authed: false, user: null, status: 'off', last: 0, busy: false, again: false, timer: null, retry: 0, applying: false,
+  meta: Object.assign({ since: 0, prefsAt: 0, prefsHash: '', paused: false }, store.json(CLOUD_LS, {}))
+};
+cloud.meta.known = Object.assign({ places: {}, routes: {}, trips: {} }, cloud.meta.known || {});
+const saveCloudMeta = () => store.set(CLOUD_LS, JSON.stringify(cloud.meta));
+
+async function cloudApi(path, { method = 'GET', json, ms = 12000 } = {}) {
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(API_BASE + path, { method, credentials: 'include', signal: ctl.signal, headers: json ? { 'Content-Type': 'application/json' } : undefined, body: json ? JSON.stringify(json) : undefined });
+    let data = null; try { data = await r.json(); } catch { }
+    return { ok: r.ok, status: r.status, data };
+  } finally { clearTimeout(t); }
+}
+
+function setCloudStatus(s) { cloud.status = s; if ($('settings-sheet').classList.contains('show')) renderSettings(); }
+function cloudSchedule(ms = 1500) {
+  if (cloud.applying || !cloud.authed || cloud.meta.paused) return;
+  clearTimeout(cloud.timer); cloud.timer = setTimeout(() => cloudSync('change'), ms);
+}
+
+// work out what changed locally since the last successful sync (edits, deletions, new trips)
+function collectChanges(first) {
+  const out = { places: [], routes: [], trips: [] }, K = cloud.meta.known, marks = [], now = Date.now();
+  const scan = (kind, arr, skip) => {
+    const ids = new Set();
+    arr.forEach(it => {
+      if (!it || !it.id || (skip && skip(it))) return;
+      ids.add(it.id); const h = hashOf(it);
+      if (K[kind][it.id] !== h) { it.updatedAt = now; out[kind].push(it); marks.push([kind, it.id, h]); }
+    });
+    Object.keys(K[kind]).forEach(id => { if (!ids.has(id)) { out[kind].push({ id, deleted: true, updatedAt: now }); marks.push([kind, id, null]); } });
+  };
+  scan('places', state.savedPlaces, p => !p.center && !K.places[p.id]);   // empty Home/Work/School placeholders stay local
+  scan('routes', state.savedRoutes);
+  scan('trips', state.trips);
+  let prefs = null; const ph = stable(prefsData());
+  if (!first && ph !== cloud.meta.prefsHash) { cloud.meta.prefsAt = now; prefs = { updatedAt: now, data: prefsData() }; }
+  return { out, marks, prefs, ph };
+}
+
+function applyPulled(res) {
+  const K = cloud.meta.known; let pc = false, rc = false, tc = false;
+  const PLACEHOLDER = { home: ['Home', '🏠'], work: ['Work', '💼'], school: ['School', '📚'] };
+  (res.places || []).forEach(p => {
+    const i = state.savedPlaces.findIndex(x => x.id === p.id), cur = state.savedPlaces[i];
+    if (cur && (cur.updatedAt || 0) >= p.updatedAt) return;
+    if (p.deleted) {
+      if (cur) { if (PLACEHOLDER[cur.slot]) state.savedPlaces[i] = { id: cur.id, name: PLACEHOLDER[cur.slot][0], emoji: PLACEHOLDER[cur.slot][1], address: '', center: null, slot: cur.slot, createdAt: cur.createdAt || Date.now() }; else state.savedPlaces.splice(i, 1); pc = true; }
+      delete K.places[p.id]; return;
+    }
+    const it = Object.assign({}, p); delete it.deleted;
+    if (!it.via) delete it.via;
+    if (i >= 0) state.savedPlaces[i] = it; else state.savedPlaces.push(it);
+    K.places[p.id] = hashOf(it); pc = true;
+  });
+  (res.routes || []).forEach(p => {
+    const i = state.savedRoutes.findIndex(x => x.id === p.id), cur = state.savedRoutes[i];
+    if (cur && (cur.updatedAt || 0) >= p.updatedAt) return;
+    if (p.deleted) { if (cur) { state.savedRoutes.splice(i, 1); rc = true; } delete K.routes[p.id]; return; }
+    const it = Object.assign({}, p); delete it.deleted;
+    if (i >= 0) state.savedRoutes[i] = it; else state.savedRoutes.push(it);
+    K.routes[p.id] = hashOf(it); rc = true;
+  });
+  (res.trips || []).forEach(p => {
+    const i = state.trips.findIndex(x => x.id === p.id), cur = state.trips[i];
+    if (cur && (cur.updatedAt || 0) >= p.updatedAt) return;
+    if (p.deleted) { if (cur) { state.trips.splice(i, 1); tc = true; } delete K.trips[p.id]; return; }
+    const it = Object.assign({}, p); delete it.deleted;
+    if (i >= 0) state.trips[i] = it; else state.trips.push(it);
+    K.trips[p.id] = hashOf(it); tc = true;
+  });
+  if (tc) state.trips.sort((a, b) => b.startedAt - a.startedAt);
+  if (pc) { store.set(LS.saved, JSON.stringify(state.savedPlaces)); renderChips(); renderPlacesList(); }
+  if (rc) store.set(ROUTES_LS, JSON.stringify(state.savedRoutes));
+  if (tc) store.set(TRIPS_LS, JSON.stringify(state.trips.slice(0, 300)));
+  if (pc || rc || tc) renderRoutesTrips();
+  const pr = res.prefs;
+  if (pr && pr.data && pr.updatedAt > (cloud.meta.prefsAt || 0)) {
+    cloud.applying = true;
+    try {
+      Object.keys(pr.data).forEach(k => { if (PREF_SYNC.includes(k) && S[k] !== pr.data[k]) { if (typeof applySetting === 'function' && k !== 'tripLog' && k !== 'voiceRate') applySetting(k, pr.data[k]); else { S[k] = pr.data[k]; saveS(); } } });
+    } finally { cloud.applying = false; }
+    cloud.meta.prefsAt = pr.updatedAt; cloud.meta.prefsHash = stable(prefsData());
+    if ($('settings-sheet').classList.contains('show')) renderSettings();
+  }
+}
+
+async function cloudSync(reason) {
+  if (!cloud.authed || cloud.meta.paused) return;
+  if (cloud.busy) { cloud.again = true; return; }
+  cloud.busy = true; cloud.again = false; clearTimeout(cloud.timer);
+  const first = cloud.meta.since === 0 && !cloud.meta.prefsHash;        // brand-new device: look at the cloud's settings before pushing ours
+  if (reason !== 'quiet') setCloudStatus('syncing');
+  try {
+    const { out, marks, prefs, ph } = collectChanges(first);
+    store.set(LS.saved, JSON.stringify(state.savedPlaces)); store.set(ROUTES_LS, JSON.stringify(state.savedRoutes)); store.set(TRIPS_LS, JSON.stringify(state.trips.slice(0, 300)));
+    const body = { since: cloud.meta.since }; ['places', 'routes', 'trips'].forEach(k => { if (out[k].length) body[k] = out[k]; }); if (prefs) body.prefs = prefs;
+    const r = await cloudApi('/api/maps/sync', { method: 'POST', json: body, ms: 20000 });
+    if (r.status === 401) { cloud.authed = false; cloud.user = null; setCloudStatus('signedout'); return; }
+    if (!r.ok || !r.data || !r.data.success) throw new Error('sync ' + r.status);
+    marks.forEach(([kind, id, h]) => { if (h === null) delete cloud.meta.known[kind][id]; else cloud.meta.known[kind][id] = h; });
+    if (prefs) cloud.meta.prefsHash = ph;
+    applyPulled(r.data);
+    cloud.meta.since = r.data.serverTime || Date.now(); saveCloudMeta();
+    cloud.last = Date.now(); cloud.retry = 0;
+    if (first && !r.data.prefs) { cloud.meta.prefsHash = ''; cloud.meta.since = cloud.meta.since || 1; cloud.again = true; }   // cloud had no settings: push ours next round
+    setCloudStatus('ok');
+  } catch (e) {
+    cloud.retry = Math.min(cloud.retry + 1, 5); setCloudStatus('offline');
+    clearTimeout(cloud.timer); cloud.timer = setTimeout(() => cloudSync('retry'), Math.min(300000, 15000 * 2 ** cloud.retry));
+  } finally {
+    cloud.busy = false;
+    if (cloud.again && cloud.authed) { cloud.again = false; setTimeout(() => cloudSync('quiet'), 300); }
+  }
+}
+
+async function cloudCheckAuth(sync = true) {
+  try {
+    const r = await cloudApi('/api/check-auth', { ms: 9000 });
+    const u = r.data && r.data.authenticated && r.data.user;
+    cloud.authed = !!u; cloud.user = u || null;
+    if (cloud.authed) { cloud.status = cloud.meta.paused ? 'paused' : 'idle'; if (sync && !cloud.meta.paused) cloudSync('auth'); }
+    else cloud.status = 'signedout';
+  } catch { cloud.status = cloud.authed ? 'offline' : 'signedout'; }
+  if ($('settings-sheet').classList.contains('show')) renderSettings();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (!cloud.authed) { if (Date.now() - (cloud.checkedAt || 0) > 30000) { cloud.checkedAt = Date.now(); cloudCheckAuth(); } } else if (Date.now() - cloud.last > 20000) cloudSync('focus'); } });
+window.addEventListener('online', () => { if (cloud.authed) cloudSync('online'); });
+setInterval(() => { if (cloud.authed && document.visibilityState === 'visible' && !state.navigationActive && Date.now() - cloud.last > 120000) cloudSync('poll'); }, 30000);
+
+// ───────── settings rows ─────────
+function ago(ms) { const s = Math.max(0, Math.round((Date.now() - ms) / 1000)); return s < 10 ? 'just now' : s < 60 ? s + ' s ago' : s < 3600 ? Math.round(s / 60) + ' min ago' : Math.round(s / 3600) + ' h ago'; }
+function cloudSettingsHtml() {
+  const who = cloud.user ? escapeHtml([cloud.user.first_name, cloud.user.last_name].filter(Boolean).join(' ') || cloud.user.email || 'your account') : '';
+  let h = '<span class="label">Account &amp; sync</span><div class="group sync-box">';
+  if (cloud.authed) {
+    const st = cloud.meta.paused ? 'Cloud sync is paused.' : cloud.status === 'syncing' ? 'Syncing…' : cloud.status === 'offline' ? 'Offline. Changes are saved on this device and will sync when you are back online.' : cloud.last ? 'Synced ' + ago(cloud.last) + '.' : 'Ready.';
+    h += `<div class="sync-line"><b>${who}</b><small>${st}</small></div>`
+      + `<div class="form-actions">${cloud.meta.paused ? '<button class="btn primary" id="cloud-resume">Resume sync</button>' : '<button class="btn" id="cloud-now">Sync now</button>'}<button class="btn" id="cloud-export">Export my data</button></div>`
+      + `<div class="form-actions"><button class="btn danger" id="cloud-wipe">Delete my cloud copy</button></div>`
+      + '<p class="hint">Saved places (with entry points), routes, settings and trips follow you between your phone, laptop and car. Your TomTom key never leaves this device.</p>';
+  } else {
+    h += '<div class="sync-line"><b>Not signed in</b><small>Maps works fine without an account. Sign in to your Wizard account to sync saved places, entry points, routes, settings and trips.</small></div>'
+      + '<div class="form-actions"><a class="btn primary" href="https://wizardecosystem.dev/" target="_blank" rel="noopener">Sign in</a><button class="btn" id="cloud-check">I signed in</button></div>';
+  }
+  h += '</div>';
+  if (share.active) h += `<div class="group sync-box"><div class="sync-line"><b>Sharing your trip live</b><small>Anyone with your link can see where you are until you arrive, stop, or 6 hours pass.</small></div><div class="form-actions"><button class="btn danger" id="share-stop-btn">Stop sharing</button></div></div>`;
+  return h;
+}
+$('settings-body').addEventListener('click', async e => {
+  const id = e.target.closest('button') && e.target.closest('button').id; if (!id) return;
+  if (id === 'cloud-now') cloudSync('manual');
+  else if (id === 'cloud-check') { await cloudCheckAuth(); if (!cloud.authed) showToast('Still not signed in'); }
+  else if (id === 'cloud-resume') { cloud.meta.paused = false; saveCloudMeta(); cloud.status = 'idle'; cloudSync('manual'); }
+  else if (id === 'share-stop-btn') stopShare(true);
+  else if (id === 'cloud-export') {
+    const r = await cloudApi('/api/maps/export').catch(() => null);
+    if (!r || !r.ok) { showToast('Could not export right now'); return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(r.data, null, 2)], { type: 'application/json' })); a.download = 'wizard-maps-data.json'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  } else if (id === 'cloud-wipe') {
+    if (!confirm('Delete your Wizard Maps data from the server (places, routes, trips, settings)?\n\nYour data on this device stays, and sync is paused until you resume it.')) return;
+    const r = await cloudApi('/api/maps/data', { method: 'DELETE' }).catch(() => null);
+    if (!r || !r.ok) { showToast('Could not delete right now'); return; }
+    cloud.meta.paused = true; cloud.meta.since = 0; cloud.meta.known = { places: {}, routes: {}, trips: {} }; cloud.meta.prefsHash = ''; saveCloudMeta(); stopShare(false);
+    setCloudStatus('paused'); showToast('Cloud copy deleted');
+  }
+});
+
+// ───────── places: entry points ─────────
+const findPlaceNear = (ll, m = 80) => state.savedPlaces.find(p => p.center && distanceMeters(p.center[0], p.center[1], ll[0], ll[1]) <= m);
+state.entry = null; state.viaDismissed = false; state.pendingVia = null; state.pickVia = false;
+function applyEntry(start) {
+  state.waypoints = state.waypoints.filter(w => !w.via);
+  const e = state.entry;
+  if (e && !state.viaDismissed && start && state.endPoint) {
+    const [sx, sy] = start.lngLat, [ex, ey] = state.endPoint.lngLat;
+    const dEnd = distanceMeters(sx, sy, ex, ey), dVia = distanceMeters(e.center[0], e.center[1], ex, ey), dSV = distanceMeters(sx, sy, e.center[0], e.center[1]);
+    // only route through the entry point when you are outside it (not already past the gate) and it isn't where you stand
+    if (dEnd > dVia + 40 && dSV > 25) state.waypoints.push({ lngLat: e.center, name: e.name, via: true });
+  }
+  renderStops();
+}
+function updateViaUI() {
+  const v = state.pendingVia;
+  $('add-via-text').textContent = v ? v.name + ' ✓' : 'None: route to the address';
+  $('add-via-clear').hidden = !v; $('add-via-name').value = v ? v.name : $('add-via-name').value;
+}
+$('add-via-name').addEventListener('input', () => { if (state.pendingVia) state.pendingVia.name = $('add-via-name').value.trim().slice(0, 60) || 'Entry point'; updateViaUI(); });
+$('add-via-clear').addEventListener('click', () => { state.pendingVia = null; $('add-via-name').value = ''; updateViaUI(); });
+$('add-via-here').addEventListener('click', async () => {
+  if (!state.userLoc) { await tryAcquireLocation(); }
+  const l = state.userLoc; if (!l) { showToast('Location is off. Allow it, or use Pick on map.'); return; }
+  state.pendingVia = { center: [l.lon, l.lat], name: $('add-via-name').value.trim().slice(0, 60) || 'Entry gate' }; updateViaUI(); showToast('Entry point set to where you are');
+});
+$('add-via-map').addEventListener('click', () => {
+  state.pickVia = true; closeSheets(); showToast('Tap the gate or entrance on the map', true);
+  map.once('click', ev => {
+    state.pickVia = false; state.pendingVia = { center: [ev.lngLat.lng, ev.lngLat.lat], name: $('add-via-name').value.trim().slice(0, 60) || 'Entry gate' };
+    updateViaUI(); renderPlacesList(); renderRecents(); openSheet('saved-sheet'); $('add-form').classList.add('show'); $('add-btn').style.display = 'none';
+  });
+});
+
+// ───────── saved routes + trips (lists inside the Saved sheet) ─────────
+function saveCurrentRoute() {
+  if (!state.endPoint || !state.routeData) { showToast('Pick a destination first'); return; }
+  const stops = state.waypoints.filter(w => !w.via).map(w => ({ name: w.name, center: w.lngLat })).concat([{ name: state.endPoint.name || 'Destination', center: state.endPoint.lngLat }]);
+  const name = stops.length > 1 ? stops.map(s => s.name).join(' → ') : 'To ' + stops[0].name;
+  state.savedRoutes.unshift({ id: newId(), name: name.slice(0, 80), profile: state.routeProfile, stops, updatedAt: Date.now() }); state.savedRoutes = state.savedRoutes.slice(0, 100);
+  saveRoutes(); renderRoutesTrips(); showToast('Route saved');
+}
+function goToRoute(r) {
+  const stops = r.stops || []; if (!stops.length) return;
+  const last = stops[stops.length - 1]; closeSheets();
+  selectDestination({ lngLat: last.center, name: last.name }, { waypoints: stops.slice(0, -1), profile: r.profile });
+}
+const fmtDay = t => new Date(t).toLocaleDateString([], { month: 'short', day: 'numeric' });
+function hm(s) { const m = Math.round(s / 60); return m >= 60 ? Math.floor(m / 60) + ' h ' + (m % 60 ? (m % 60) + ' min' : '') : m + ' min'; }
+function renderRoutesTrips() {
+  const rl = $('routes-list'), tl = $('trips-list'), ts = $('trips-summary'); if (!rl) return;
+  rl.innerHTML = state.savedRoutes.length ? state.savedRoutes.map(r => `<div class="place" data-rid="${escapeHtml(r.id)}"><div class="place-emoji">🧭</div><div class="place-info"><div class="place-name">${escapeHtml(r.name)}</div><div class="place-addr">${r.stops.length} stop${r.stops.length > 1 ? 's' : ''} · ${{ driving: 'Drive', walking: 'Walk', cycling: 'Bike' }[r.profile] || 'Drive'}</div></div><button class="place-del" data-rdel="${escapeHtml(r.id)}" aria-label="Delete route" data-icon="trash"></button></div>`).join('') : '<div class="empty">No saved routes yet.<br>Open a route and tap “Save route”.</div>';
+  hydrateIcons(rl);
+  const mo = Date.now() - 30 * 86400000, recent = state.trips.filter(t => t.startedAt >= mo);
+  ts.innerHTML = state.trips.length ? `<div class="trip-stats"><div><b>${recent.length}</b><span>trips</span></div><div><b>${formatDistance(recent.reduce((a, t) => a + (t.distanceM || 0), 0))}</b><span>driven</span></div><div><b>${hm(recent.reduce((a, t) => a + (t.durationS || 0), 0)) || '0 min'}</b><span>last 30 days</span></div></div>` : '';
+  tl.innerHTML = state.trips.length ? state.trips.slice(0, 12).map(t => `<div class="place trip"><div class="place-emoji">🚗</div><div class="place-info"><div class="place-name">${escapeHtml(t.to || 'Trip')}</div><div class="place-addr">${fmtDay(t.startedAt)} · ${escapeHtml(t.from || 'Current location')} · ${formatDistance(t.distanceM || 0)} · ${hm(t.durationS || 0)}</div></div></div>`).join('') + '<div class="form-actions"><button class="btn danger" id="trips-clear">Clear trip history</button></div>' : '<div class="empty">Trips you navigate show up here, privately.</div>';
+}
+$('routes-list').addEventListener('click', e => {
+  const del = e.target.closest('[data-rdel]');
+  if (del) { e.stopPropagation(); const i = state.savedRoutes.findIndex(r => r.id === del.dataset.rdel); if (i >= 0 && confirm(`Delete "${state.savedRoutes[i].name}"?`)) { state.savedRoutes.splice(i, 1); saveRoutes(); renderRoutesTrips(); } return; }
+  const row = e.target.closest('[data-rid]'); if (row) { const r = state.savedRoutes.find(x => x.id === row.dataset.rid); if (r) goToRoute(r); }
+});
+$('trips-list').addEventListener('click', e => { if (e.target.id === 'trips-clear' && confirm('Clear your trip history on all your devices?')) { state.trips = []; saveTrips(); renderRoutesTrips(); } });
+
+// trip recording (hooks called from the navigation engine)
+const trip = { cur: null };
+function navHookStart() {
+  const r = state.routeData, here = state.userLoc ? findPlaceNear([state.userLoc.lon, state.userLoc.lat], 120) : null;
+  trip.cur = { id: newId(), startedAt: Date.now(), distM: 0, maxSpeed: 0, last: null, from: here ? here.name : (state.startPoint && state.startPoint.name) || 'Current location', to: (state.endPoint && state.endPoint.name) || '', engine: r && r._engine === 'TomTom' ? 'tomtom' : 'osm', profile: state.routeProfile };
+  share.lastSent = 0;
+}
+function navHookTick(lon, lat, speed, now, route) {
+  const c = trip.cur;
+  if (c) { if (c.last) { const d = distanceMeters(c.last[0], c.last[1], lon, lat); if (d > 2 && d < 500) c.distM += d; } c.last = [lon, lat]; if (speed != null && speed > c.maxSpeed && speed < 120) c.maxSpeed = speed; }
+  shareTick(route, lon, lat, speed, now);
+}
+function navHookStop(arrived) {
+  const c = trip.cur; trip.cur = null;
+  if (share.active) { if (arrived) { shareSend({ arrived: true }); share.active = false; share.token = null; syncSharePill(); } else stopShare(true); }
+  if (!c || S.tripLog === false) return;
+  const dur = Math.round((Date.now() - c.startedAt) / 1000);
+  if (dur < 60 || c.distM < 200) return;                                     // ignore aborted starts
+  state.trips.unshift({ id: c.id, startedAt: c.startedAt, durationS: dur, distanceM: Math.round(c.distM), from: c.from, to: c.to, engine: c.engine, profile: c.profile, maxSpeed: Math.round(c.maxSpeed * 10) / 10, updatedAt: Date.now() });
+  saveTrips(); renderRoutesTrips();
+}
+
+// ───────── live ETA share ─────────
+const share = { active: false, token: null, url: '', lastSent: 0, busy: false };
+function syncSharePill() { const p = $('share-pill'); if (p) p.hidden = !share.active; document.body.classList.toggle('sharing', share.active); }
+async function startShare() {
+  if (!cloud.authed) { return false; }
+  const route = state.routeData, dest = state.endPoint; if (!route || !dest) { showToast('Pick a destination first'); return true; }
+  const remain = state.navigationActive && nav.last ? remainingTime(route, nav.idx, nav.along) : route.duration;
+  const body = { destName: dest.name || 'my destination', destCenter: dest.lngLat, etaMs: Date.now() + remain * 1000 };
+  if (state.userLoc) body.center = [state.userLoc.lon, state.userLoc.lat];
+  const r = await cloudApi('/api/maps/share', { method: 'POST', json: body }).catch(() => null);
+  if (!r || !r.ok || !r.data || !r.data.token) { showToast(r && r.status === 429 ? 'Too many share links. Try again later.' : 'Could not start sharing'); return true; }
+  share.active = true; share.token = r.data.token; share.lastSent = Date.now();
+  share.url = new URL('track.html', location.href).href.split('#')[0] + '#' + r.data.token;
+  syncSharePill();
+  const text = `Follow my trip to ${body.destName} live:`;
+  if (navigator.share) { try { await navigator.share({ title: 'Follow my trip', text, url: share.url }); } catch { } }
+  else { try { await navigator.clipboard.writeText(`${text} ${share.url}`); showToast('Live link copied'); } catch { showToast(share.url); } }
+  return true;
+}
+async function shareSend(extra) {
+  if (!share.active || !share.token || share.busy) return;
+  share.busy = true; share.lastSent = Date.now();
+  try { const r = await cloudApi('/api/maps/share/' + share.token, { method: 'PUT', json: extra, ms: 8000 }); if (r.status === 410 || r.status === 404) { share.active = false; share.token = null; syncSharePill(); } } catch { } finally { share.busy = false; }
+}
+function shareTick(route, lon, lat, speed, now) {
+  if (!share.active || now - share.lastSent < 12000) return;
+  const rem = Math.max(0, route._len - nav.along);
+  shareSend({ center: [lon, lat], speed: speed || 0, heading: nav.last && nav.last.heading != null && !isNaN(nav.last.heading) ? nav.last.heading : undefined, remainingM: Math.round(rem), etaMs: now + remainingTime(route, nav.idx, nav.along) * 1000, arrived: nav.arrived || undefined });
+}
+async function stopShare(tell) {
+  const tok = share.token; share.active = false; share.token = null; syncSharePill();
+  if (tok) { try { await cloudApi('/api/maps/share/' + tok, { method: 'DELETE', ms: 6000 }); } catch { } if (tell) showToast('Stopped sharing'); }
+  if ($('settings-sheet').classList.contains('show')) renderSettings();
+}
+$('share-stop').addEventListener('click', () => stopShare(true));
+
+cloudCheckAuth();
+renderRoutesTrips();
+
 
 // ═══════════════ 4 · 3D / overlays / tools / settings / init ═══════════════
 function enable3DBuildings() {
@@ -2088,6 +2438,10 @@ map.on('dragstart', () => stopFly(false));
 
 // share ETA
 async function shareEta() {
+  if (cloud.authed) {
+    if (share.active && share.url) { try { if (navigator.share) await navigator.share({ title: 'Follow my trip', url: share.url }); else { await navigator.clipboard.writeText(share.url); showToast('Live link copied'); } } catch { } return; }
+    if (await startShare()) return;
+  }
   const eta = state.navigationActive ? $('nav-eta').textContent : (state.routeData ? formatClock(new Date(Date.now() + state.routeData.duration * 1000)) : '');
   if (!eta || eta === '—') { showToast('Pick a destination first'); return; }
   const text = `On my way to ${(state.endPoint && state.endPoint.name) || 'my destination'}. ETA ${eta}.`;
@@ -2155,6 +2509,7 @@ function renderSettings() {
     <div class="group">${tog('voice', 'Voice guidance')}${tog('lanes', 'Lane guidance')}${tog('speedLimit', 'Speed limit sign')}${tog('callouts', 'Traffic light and stop sign alerts')}${tog('cameraAlerts', 'Speed camera alerts')}${tog('speedAlert', 'Warn when over the limit')}${tog('roadEvents', 'Crash and road work alerts')}${tog('keepAwake', 'Keep the screen on while navigating')}</div>
     ${HAS_TTS ? `<span class="label">Voice</span>${seg('voiceRate', [['0.85', 'Slow'], ['0.96', 'Normal'], ['1.1', 'Fast']])}<div style="height:.625rem"></div><select class="field" id="voice-pick" aria-label="Voice"></select><div class="form-actions"><button class="btn" id="voice-test" style="height:2.75rem">Test voice</button></div>` : ''}
     ${TT_KEY_BUILTIN ? '' : `<span class="label">TomTom key</span><input class="field" id="tt-key" placeholder="Paste your TomTom API key" value="${escapeHtml(store.get(LS.key) || '')}" autocomplete="off" spellcheck="false"><div class="form-actions"><button class="btn" id="tt-save" style="height:2.75rem">Save and reload</button></div>`}
+    ${cloudSettingsHtml()}<div class="group" style="margin-top:.625rem">${tog('tripLog', 'Keep a private trip log', 'Distance and time of trips you navigate. Visible only to you.')}</div>
     ${IS_IOS ? `<span class="label">iPhone / iPad</span><div class="group">${tog2('safariTab', 'Safari-tab mode', 'Floating navigation video does not work in Home Screen apps (an Apple bug). Turn this on, remove the Home Screen icon and add it again.', safariTabMode)}</div>` : ''}
     ${IS_CAR ? '' : '<div class="form-actions" style="margin-top:1.5rem"><button class="btn" id="install-app-btn">Install Wizard Maps</button></div>'}
     <div class="foot">Wizard Maps · Map data © OpenStreetMap contributors<br>Routing: OpenStreetMap (OSRM) and TomTom · Search: ${hasKey ? 'TomTom' : 'Photon'}</div>`;
@@ -2162,7 +2517,7 @@ function renderSettings() {
 }
 function tog2(id, label, hint, on) { return `<div class="toggle-row"><span>${label}<small>${hint}</small></span><div class="toggle ${on ? 'active' : ''}" role="switch" aria-checked="${!!on}" tabindex="0" data-special="${id}" aria-label="${label}"></div></div>`; }
 function applySetting(key, val) {
-  const prev = S[key]; S[key] = val; saveS();
+  const prev = S[key]; S[key] = val; saveS(); cloudPing();
   switch (key) {
     case 'units': if (state.routeData) renderSummary(state.routeData); if (state.navigationActive) { nav.rendered = -1; updateNavUI(); } break;
     case 'theme': applyTheme(); break;
