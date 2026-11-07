@@ -333,6 +333,7 @@ body.navigating .toast { bottom: calc(var(--sb) + 7.5rem); }
 .dest-pin { width: 2rem; height: 2.625rem; filter: drop-shadow(0 .25rem .375rem rgba(0,0,0,.5)); }
 .from-pin { width: .875rem; height: .875rem; border-radius: 50%; background: var(--bg); border: .1875rem solid var(--violet); box-shadow: 0 0 0 .1875rem rgba(124,92,191,.3); }
 .me { width: 1.375rem; height: 1.375rem; position: relative; }
+.me-acc { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border-radius: 50%; background: rgba(74,140,255,.12); border: 1px solid rgba(74,140,255,.4); pointer-events: none; display: none; }
 .me-dot { position: absolute; inset: .1875rem; border-radius: 50%; background: #4a8cff; border: .1875rem solid #fff; box-shadow: 0 0 0 .1875rem rgba(74,140,255,.3), 0 .125rem .5rem rgba(0,0,0,.5); }
 .me-cone { position: absolute; left: 50%; bottom: 50%; width: 2.75rem; height: 2.75rem; margin-left: -1.375rem; background: radial-gradient(circle at 50% 100%, rgba(74,140,255,.55), rgba(74,140,255,0) 70%); clip-path: polygon(50% 100%, 12% 0, 88% 0); display: none; transform-origin: 50% 100%; }
 .me.has-heading .me-cone { display: block; }
@@ -1042,13 +1043,26 @@ function setFromMarker(lngLat) {
   const el = document.createElement('div'); el.className = 'from-pin';
   state.fromMarker = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
 }
-function updateUserMarker(lon, lat, heading) {
+function updateUserMarker(lon, lat, heading, acc) {
   if (!state.userMarker) {
-    const el = document.createElement('div'); el.className = 'me'; el.innerHTML = '<div class="me-cone"></div><div class="me-dot"></div>';
+    const el = document.createElement('div'); el.className = 'me'; el.innerHTML = '<div class="me-acc"></div><div class="me-cone"></div><div class="me-dot"></div>';
     state.userMarker = new maplibregl.Marker({ element: el, rotationAlignment: 'map', pitchAlignment: 'map' }).setLngLat([lon, lat]).addTo(map);
   } else state.userMarker.setLngLat([lon, lat]);
   if (heading != null && !isNaN(heading)) { state.userMarker.getElement().classList.add('has-heading'); state.userMarker.setRotation(heading); }
+  if (acc !== undefined) state.userAcc = acc;
+  sizeAccuracy();
 }
+// the pale circle shows how sure the phone/laptop/car is about where you are (metres -> pixels at this zoom)
+function sizeAccuracy() {
+  const m = state.userMarker; if (!m) return; const ring = m.getElement().querySelector('.me-acc'); if (!ring) return;
+  const acc = state.userAcc, ll = m.getLngLat();
+  if (!acc || acc < 30 || state.navigationActive || !ll) { ring.style.display = 'none'; return; }
+  const mpp = 156543.03392 * Math.cos(ll.lat * Math.PI / 180) / Math.pow(2, map.getZoom());
+  const px = Math.min(2 * acc / mpp, 1600);
+  if (px < 10) { ring.style.display = 'none'; return; }
+  ring.style.display = 'block'; ring.style.width = ring.style.height = px + 'px';
+}
+map.on('zoom', sizeAccuracy);
 
 // ───────── routing ─────────
 // Engines: "osm" = OSRM on OpenStreetMap data (the original router: it will happily route you out
@@ -1390,6 +1404,7 @@ async function previewRoutes() {
     if (!start) { setSummary('<span class="summary-msg">Location is off. Allow it in your browser, or type a starting point above.</span>'); fromInput.focus(); return; }
   }
   applyEntry(start);
+  if (start.name === 'Your location' && nav.last && (nav.last.accuracy || 0) > 5000) showToast(`Your location is only approximate (about ${Math.round(nav.last.accuracy / 1000)} km). Type a starting point above, or tap the locate button to retry.`, true);
   try {
     const route = await fetchRoute(start, state.endPoint, state.routeProfile);
     if (token !== state.previewToken) return;
@@ -1636,24 +1651,53 @@ const nav = {
 const resetProgress = () => { Object.assign(nav, { idx: 0, rendered: -1, along: 0, maxAlong: 0, progIdx: 0, off: 0, offCount: 0, offSince: 0, announced: {}, arrived: false, stoppedSince: 0, opLimit: null }); nav.said = new Set(); state.currentSpeedLimit = null; };
 
 // ───────── location ─────────
+const locWaiters = [];
 function startLocationWatch() {
   if (nav.watchId != null || !navigator.geolocation) return;
   nav.watchId = navigator.geolocation.watchPosition(onPositionUpdate, err => {
-    nav.geoErr = err.code;
-    if (err.code === 1) { try { navigator.geolocation.clearWatch(nav.watchId); } catch { } nav.watchId = null; if (state.navigationActive) showToast('Location permission was turned off', true); }
+    if (!nav.last) nav.geoErr = err.code;
+    if (err.code === 1) { try { navigator.geolocation.clearWatch(nav.watchId); } catch { } nav.watchId = null; nav.geoErr = 1; if (state.navigationActive) showToast('Location permission was turned off', true); }
   }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 });
 }
-function tryAcquireLocation() {
+// Ask for a fix three ways at once so one flaky provider can't leave you stuck: a high-accuracy read,
+// the continuous watch (a better fix arrives later and is used), and, if the first read fails, a
+// relaxed "network location" read. `force` skips cached positions.
+function tryAcquireLocation(force) {
   return new Promise(resolve => {
     if (!navigator.geolocation) { nav.geoErr = 2; return resolve(false); }
-    navigator.geolocation.getCurrentPosition(pos => { onPositionUpdate(pos); startLocationWatch(); resolve(true); }, err => { nav.geoErr = err.code; resolve(false); }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+    let done = false; const finish = ok => { if (!done) { done = true; resolve(ok); } };
+    locWaiters.push(() => finish(true)); setTimeout(() => finish(false), 20000);
+    const good = pos => { onPositionUpdate(pos); startLocationWatch(); finish(true); };
+    const fail = err => {
+      if (err.code === 1) { nav.geoErr = 1; return finish(false); }
+      navigator.geolocation.getCurrentPosition(good, e2 => { if (!nav.last) nav.geoErr = e2.code; setTimeout(() => finish(false), 4000); }, { enableHighAccuracy: false, timeout: 12000, maximumAge: force ? 0 : 600000 });
+    };
+    navigator.geolocation.getCurrentPosition(good, fail, { enableHighAccuracy: true, timeout: 8000, maximumAge: force ? 0 : 30000 });
+    startLocationWatch();
   });
 }
+const accText = a => a == null ? 'unknown' : a < 1000 ? '±' + Math.round(a) + ' m' : '±' + (a / 1000).toFixed(a < 10000 ? 1 : 0) + ' km';
+const accKind = a => a == null ? 'unknown' : a <= 100 ? 'GPS / precise' : a <= 2000 ? 'Wi-Fi / area' : 'approximate (network or IP guess)';
+nav.permState = 'unknown';
+try { if (navigator.permissions && navigator.permissions.query) navigator.permissions.query({ name: 'geolocation' }).then(r => { nav.permState = r.state; r.onchange = () => { nav.permState = r.state; if ($('settings-sheet').classList.contains('show')) renderSettings(); }; }).catch(() => { }); } catch { }
+function locationSettingsHtml() {
+  const l = nav.last, age = l ? Math.round((Date.now() - nav.lastFix) / 1000) : 0;
+  const line = l ? `${l.lat.toFixed(4)}, ${l.lon.toFixed(4)} · ${accText(l.accuracy)} · ${accKind(l.accuracy)} · ${age < 5 ? 'just now' : age < 90 ? age + ' s ago' : Math.round(age / 60) + ' min ago'}` : 'No fix yet';
+  return `<span class="label">Location</span><div class="group sync-box"><div class="sync-line"><b>Permission: ${escapeHtml(nav.permState)}</b><small>${escapeHtml(line)}</small></div>${l && (l.accuracy || 0) > 5000 ? '<p class="hint" style="color:var(--warn)">This is only an area-level guess (your provider\'s network location). Turn on Wi-Fi and device location, or allow precise location for this site, then re-check.</p>' : ''}<div class="form-actions"><button class="btn" id="loc-recheck">Re-check location</button></div></div>`;
+}
+$('settings-body').addEventListener('click', async e => {
+  if (!e.target.closest('#loc-recheck')) return;
+  showToast('Finding your location…'); state.centerOnFix = true; state.userPanned = false;
+  const ok = await tryAcquireLocation(true); if (!ok) { state.centerOnFix = false; showToast(nav.geoErr === 1 ? 'Location is blocked for this site.' : 'No location fix. Check Wi-Fi and device location.', true); }
+  renderSettings();
+});
 $('locate-btn').addEventListener('click', async () => {
-  if (state.userLoc) { map.flyTo({ center: [state.userLoc.lon, state.userLoc.lat], zoom: Math.max(map.getZoom(), 16), duration: 900, offset: isWide() && card.classList.contains('show') ? [railPx() / 2, 0] : [0, 0] }); return; }
-  state.centerOnFix = true;
-  const ok = await tryAcquireLocation();
-  if (!ok) { state.centerOnFix = false; showToast(nav.geoErr === 1 ? 'Location is blocked. Allow it in your browser or car settings.' : 'No GPS fix yet. Try again in a moment.', true); }
+  state.userPanned = false;
+  const fresh = state.userLoc && nav.last && Date.now() - nav.lastFix < 120000 && (nav.last.accuracy || 0) <= 2000;
+  if (fresh) { map.flyTo({ center: [state.userLoc.lon, state.userLoc.lat], zoom: Math.max(map.getZoom(), 16), duration: 900, offset: isWide() && card.classList.contains('show') ? [railPx() / 2, 0] : [0, 0] }); return; }
+  state.centerOnFix = true; showToast('Finding your location…');
+  const ok = await tryAcquireLocation(true);
+  if (!ok) { state.centerOnFix = false; showToast(nav.geoErr === 1 ? 'Location is blocked. Allow it in your browser or car settings.' : 'Could not get a location fix. Check that Wi-Fi and location services are on, then tap again.', true); }
 });
 $('compass-btn').addEventListener('click', () => map.easeTo({ bearing: 0, pitch: state.navigationActive ? map.getPitch() : 0, duration: 500 }));
 $('zoom-in').addEventListener('click', () => map.zoomIn());
@@ -1698,7 +1742,10 @@ const zoomForSpeed = v => state.routeProfile !== 'driving' ? 17.8 : v < 6 ? 17.4
 function onPositionUpdate(pos) {
   const { longitude: lon, latitude: lat, heading, speed, accuracy } = pos.coords, now = Date.now();
   const dt = nav.last ? (now - nav.lastFix) / 1000 : 1;
+  // an area-level guess (IP / cell tower) must never replace a real fix we already have
+  if (!state.navigationActive && nav.last && (accuracy || 0) > 5000 && (nav.last.accuracy || 0) < (accuracy || 0) && now - nav.lastFix < 180000) return;
   nav.last = { lon, lat, heading, speed, accuracy }; nav.lastFix = now; nav.geoErr = 0;
+  locWaiters.splice(0).forEach(f => f());
   state.userLoc = { lon, lat }; $('locate-btn').classList.remove('attn');
   if (nav.gpsLost) { nav.gpsLost = false; document.body.classList.remove('gps-lost'); }
   const moving = speed != null && speed > 1.5;
@@ -1707,8 +1754,13 @@ function onPositionUpdate(pos) {
 
   const route = state.routeData;
   if (!state.navigationActive || !route) {
-    updateUserMarker(lon, lat, hdg);
-    if (state.centerOnFix) { state.centerOnFix = false; map.flyTo({ center: [lon, lat], zoom: 15, duration: 1000, offset: isWide() && card.classList.contains('show') ? [railPx() / 2, 0] : [0, 0] }); }
+    updateUserMarker(lon, lat, hdg, accuracy);
+    if (state.centerOnFix && !state.userPanned) {
+      const acc = accuracy || 0, zoom = acc > 50000 ? 7 : acc > 10000 ? 9 : acc > 2000 ? 11 : acc > 300 ? 14 : 15;
+      if (acc <= 2000) { state.centerOnFix = false; if (nav.coarseShown) { nav.coarseShown = false; showToast('Got a precise location'); } }   // otherwise keep waiting for a better fix
+      else if (!nav.coarseShown) { nav.coarseShown = true; showToast(`Only an approximate location so far (${accText(acc)}). Waiting for a better fix…`, true); }
+      map.flyTo({ center: [lon, lat], zoom, duration: 1000, offset: isWide() && card.classList.contains('show') ? [railPx() / 2, 0] : [0, 0] });
+    }
     return;
   }
 
@@ -1718,7 +1770,7 @@ function onPositionUpdate(pos) {
   if (p.off < 600) nav.maxAlong = Math.max(nav.maxAlong, p.along);
   // draw the car on the road when we're clearly on it (GPS wobble would otherwise put it beside the road)
   const snap = p.off < Math.max(25, (accuracy || 0)) ? p.pt : [lon, lat];
-  updateUserMarker(snap[0], snap[1], hdg);
+  updateUserMarker(snap[0], snap[1], hdg, accuracy);
 
   if (speed != null && speed >= 0) {
     const d = kmhToDisplay(speed * 3.6); $('cur-speed-value').textContent = d.value; $('cur-speed-unit').textContent = d.unit; $('cur-speed').classList.add('show');
@@ -1924,7 +1976,7 @@ $('nav-overview-btn').addEventListener('click', () => {
   const c = r.geometry.coordinates.slice(Math.max(0, nav.progIdx)), b = c.reduce((bb, p) => bb.extend(p), new maplibregl.LngLatBounds(c[0], c[0]));
   map.fitBounds(b, { padding: isWide() ? { top: 90, bottom: 90, left: railPx() + 40, right: 110 } : { top: 200, bottom: 160, left: 40, right: 70 }, pitch: 0, bearing: 0, maxZoom: 16, duration: 800 });
 });
-map.on('dragstart', () => { if (state.navigationActive) { nav.followUser = false; $('recenter-btn').classList.add('show'); } });
+map.on('dragstart', () => { if (state.centerOnFix) state.userPanned = true; if (state.navigationActive) { nav.followUser = false; $('recenter-btn').classList.add('show'); } });
 map.on('rotatestart', e => { if (state.navigationActive && e.originalEvent) { nav.followUser = false; $('recenter-btn').classList.add('show'); } });
 map.on('zoomstart', e => { if (state.navigationActive && e.originalEvent) { nav.userZoom = true; } });
 
@@ -2509,6 +2561,7 @@ function renderSettings() {
     <div class="group">${tog('voice', 'Voice guidance')}${tog('lanes', 'Lane guidance')}${tog('speedLimit', 'Speed limit sign')}${tog('callouts', 'Traffic light and stop sign alerts')}${tog('cameraAlerts', 'Speed camera alerts')}${tog('speedAlert', 'Warn when over the limit')}${tog('roadEvents', 'Crash and road work alerts')}${tog('keepAwake', 'Keep the screen on while navigating')}</div>
     ${HAS_TTS ? `<span class="label">Voice</span>${seg('voiceRate', [['0.85', 'Slow'], ['0.96', 'Normal'], ['1.1', 'Fast']])}<div style="height:.625rem"></div><select class="field" id="voice-pick" aria-label="Voice"></select><div class="form-actions"><button class="btn" id="voice-test" style="height:2.75rem">Test voice</button></div>` : ''}
     ${TT_KEY_BUILTIN ? '' : `<span class="label">TomTom key</span><input class="field" id="tt-key" placeholder="Paste your TomTom API key" value="${escapeHtml(store.get(LS.key) || '')}" autocomplete="off" spellcheck="false"><div class="form-actions"><button class="btn" id="tt-save" style="height:2.75rem">Save and reload</button></div>`}
+    ${locationSettingsHtml()}
     ${cloudSettingsHtml()}<div class="group" style="margin-top:.625rem">${tog('tripLog', 'Keep a private trip log', 'Distance and time of trips you navigate. Visible only to you.')}</div>
     ${IS_IOS ? `<span class="label">iPhone / iPad</span><div class="group">${tog2('safariTab', 'Safari-tab mode', 'Floating navigation video does not work in Home Screen apps (an Apple bug). Turn this on, remove the Home Screen icon and add it again.', safariTabMode)}</div>` : ''}
     ${IS_CAR ? '' : '<div class="form-actions" style="margin-top:1.5rem"><button class="btn" id="install-app-btn">Install Wizard Maps</button></div>'}
