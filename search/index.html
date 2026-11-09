@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -961,6 +960,328 @@
         transition-duration: .01ms !important;
       }
     }
+
+    /* ═══════════ Wizard Search v2 ═══════════ */
+
+    input[type="search"]::-webkit-search-cancel-button,
+    input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; display: none; }
+    button { transition: background .18s, border-color .18s, color .18s, opacity .18s, transform .12s; }
+    ::selection { background: rgba(201,168,76,.32); color: #fff; }
+
+    .hero-title { transition: font-size .3s ease; }
+    .hero-glyph { filter: drop-shadow(0 0 40px rgba(201,168,76,.3)) drop-shadow(0 0 80px rgba(124,92,191,.2)); }
+    body.has-results .hero-glyph, body.has-results .hero-sub { display: none; }
+    body.has-results .search-hero { padding: 0 0 14px; }
+    body.has-results .hero-title { font-size: clamp(28px, 4vw, 36px); }
+    body.has-results .topnav { margin-bottom: 22px; }
+
+    .search-wrap { margin-bottom: 18px; }
+    body:not(.has-results) .search-wrap { margin-bottom: 26px; }
+    body.has-results .search-wrap { position: sticky; top: 0; padding: 10px 0; z-index: 40; }
+    body.has-results .search-wrap::before {
+      content: ""; position: absolute; top: -6px; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%); z-index: -1; pointer-events: none;
+      background: linear-gradient(180deg, rgba(8,6,18,.92) 70%, rgba(8,6,18,0));
+      backdrop-filter: blur(10px);
+    }
+    .search-field { background: rgba(14,11,30,.75); backdrop-filter: blur(12px); }
+    .search-clear {
+      background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1;
+      padding: 8px 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .search-clear:hover { color: var(--silver); background: rgba(255,255,255,.06); }
+    .search-clear[hidden] { display: none; }
+
+    /* suggestions dropdown */
+    .suggestions-dropdown { max-height: min(60vh, 420px); overflow-y: auto; }
+    .suggestion-row { display: flex; align-items: stretch; }
+    .suggestion-row .suggestion-item { flex: 1; min-width: 0; }
+    .suggestion-del {
+      background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 0 16px; font-size: 14px;
+    }
+    .suggestion-del:hover { color: var(--danger); }
+    .suggestion-foot {
+      display: block; width: 100%; text-align: left; padding: 10px 20px 13px; font-size: 12px; color: var(--muted);
+      background: none; border: none; border-top: 1px solid rgba(255,255,255,.05); cursor: pointer;
+    }
+    .suggestion-foot:hover { color: var(--danger); }
+    .suggestion-text mark { background: none; color: var(--gold-light); font-weight: 500; }
+
+    /* tabs + filter */
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .toolbar[hidden] { display: none; }
+    .tabs { display: flex; gap: 4px; padding: 4px; background: rgba(255,255,255,.035); border: 1px solid var(--border); border-radius: 100px; }
+    .tab {
+      border: none; background: transparent; color: var(--muted); padding: 8px 18px; border-radius: 100px;
+      font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+    }
+    .tab:hover { color: var(--silver); }
+    .tab[aria-selected="true"] { background: linear-gradient(135deg, rgba(201,168,76,.22), rgba(201,168,76,.08)); color: var(--gold-light); box-shadow: inset 0 0 0 1px var(--border-strong); }
+    .time-select {
+      background: rgba(255,255,255,.04); color: var(--silver-dim); border: 1px solid var(--border); border-radius: 100px;
+      padding: 8px 14px; font-size: 13px; cursor: pointer; outline: none;
+    }
+    .time-select option { background: var(--ink-2); color: var(--silver); }
+    .time-select[hidden] { display: none; }
+
+    /* home extras */
+    .home-extras { text-align: center; margin-top: -6px; animation: fade-up .5s ease both; }
+    body.has-results .home-extras { display: none; }
+    .home-label { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .chip-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 26px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; max-width: 260px; padding: 7px 14px; border-radius: 100px;
+      background: rgba(255,255,255,.035); border: 1px solid var(--border); color: var(--silver-dim); font-size: 13px; cursor: pointer;
+    }
+    .chip:hover { border-color: var(--border-strong); color: var(--gold-light); background: rgba(201,168,76,.07); }
+    .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tips { font-size: 13px; line-height: 2.1; color: var(--muted); max-width: 640px; margin: 0 auto; }
+    kbd {
+      font-family: ui-monospace, "JetBrains Mono", "DejaVu Sans Mono", monospace; font-size: 11.5px; padding: 2px 7px;
+      border: 1px solid rgba(212,208,232,.2); border-bottom-width: 2px; border-radius: 6px; background: rgba(255,255,255,.05); color: var(--silver-dim);
+    }
+    .tips code { font-family: ui-monospace, "JetBrains Mono", "DejaVu Sans Mono", monospace; font-size: 12px; color: var(--gold-light); }
+
+    /* instant answer */
+    .instant {
+      display: flex; align-items: center; gap: 18px; padding: 20px 26px; margin-bottom: 18px; border-radius: 20px;
+      background: linear-gradient(135deg, rgba(124,92,191,.14), rgba(201,168,76,.06)); border: 1px solid var(--border);
+    }
+    .instant-icon { font-size: 30px; }
+    .instant-label { font-size: 12px; color: var(--muted); margin-bottom: 2px; overflow-wrap: anywhere; }
+    .instant-value { font-family: "Cormorant Garamond", serif; font-size: 38px; line-height: 1.1; color: var(--gold-light); overflow-wrap: anywhere; }
+    .instant-copy { margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--silver-dim); border-radius: 100px; padding: 7px 14px; font-size: 12px; cursor: pointer; }
+    .instant-copy:hover { border-color: var(--border-strong); color: var(--gold-light); }
+
+    /* AI summary */
+    .summary-meta { margin-left: auto; font-size: 11px; letter-spacing: .06em; color: var(--muted); }
+    .summary-text .cite {
+      display: inline-block; vertical-align: super; font-size: 10px; line-height: 1; margin: 0 1px; padding: 3px 5px;
+      border-radius: 6px; border: 1px solid var(--border); background: var(--gold-dim); color: var(--gold-light); cursor: pointer;
+    }
+    .summary-text .cite:hover { background: var(--gold-glow); border-color: var(--border-strong); }
+    .skel { position: relative; overflow: hidden; background: rgba(255,255,255,.05); border-radius: 8px; }
+    .skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.07), transparent); animation: shimmer 1.4s infinite; }
+    @keyframes shimmer { to { transform: translateX(100%); } }
+    .skel-line { height: 12px; margin: 10px 0; }
+    .skel-card { border: 1px solid var(--border); border-radius: 18px; padding: 22px 24px; margin-bottom: 12px; background: rgba(255,255,255,.02); }
+
+    /* result cards */
+    .result-card { padding: 18px 22px 18px; }
+    .result-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; min-width: 0; font-size: 12px; color: var(--muted); }
+    .favi {
+      width: 22px; height: 22px; border-radius: 7px; flex-shrink: 0; display: grid; place-items: center;
+      font-size: 11px; font-weight: 600; color: #fff; text-transform: uppercase;
+    }
+    .site { color: var(--silver-dim); font-weight: 500; flex-shrink: 0; }
+    .crumbs { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .num { margin-left: auto; flex-shrink: 0; font-size: 11px; padding: 1px 8px; border-radius: 100px; border: 1px solid var(--border); color: var(--muted); }
+    .result-title { margin-bottom: 6px; font-size: 21px; }
+    .result-title a { color: var(--gold-light); text-decoration: none; }
+    .result-title a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .result-snippet mark { background: rgba(201,168,76,.18); color: var(--gold-light); border-radius: 3px; padding: 0 2px; }
+    .copy-btn {
+      position: absolute; right: 12px; bottom: 10px; opacity: 0; background: rgba(255,255,255,.05); border: 1px solid var(--border);
+      color: var(--silver-dim); border-radius: 100px; padding: 4px 11px; font-size: 11px; cursor: pointer;
+    }
+    .result-card:hover .copy-btn, .copy-btn:focus-visible { opacity: 1; }
+    .copy-btn:hover { color: var(--gold-light); border-color: var(--border-strong); }
+    .result-card.flash { animation: flash 1.4s ease; }
+    @keyframes flash { 0%, 60% { background: rgba(201,168,76,.16); border-color: var(--gold); } 100% { } }
+    .news-card { display: flex; gap: 18px; }
+    .news-body { flex: 1; min-width: 0; }
+    .news-thumb { width: 132px; height: 92px; object-fit: cover; border-radius: 12px; flex-shrink: 0; background: rgba(255,255,255,.05); align-self: center; }
+    .result-meta .dot { opacity: .5; }
+
+    .results-foot { margin-top: 26px; text-align: center; font-size: 13px; color: var(--muted); }
+    .results-foot a { color: var(--gold); text-decoration: none; margin: 0 6px; opacity: .85; }
+    .results-foot a:hover { opacity: 1; text-decoration: underline; }
+
+    /* images */
+    .image-grid { columns: 4 190px; column-gap: 12px; }
+    .image-tile {
+      display: block; width: 100%; break-inside: avoid; margin: 0 0 12px; padding: 0; border: 1px solid var(--border); border-radius: 14px;
+      overflow: hidden; background: rgba(255,255,255,.04); cursor: zoom-in; position: relative;
+    }
+    .image-tile img { display: block; width: 100%; height: auto; min-height: 60px; transition: transform .35s; }
+    .image-tile:hover img { transform: scale(1.04); }
+    .image-tile:hover { border-color: var(--border-strong); }
+    .image-tile .cap {
+      position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 10px 8px; font-size: 11px; text-align: left; color: #fff;
+      background: linear-gradient(0deg, rgba(0,0,0,.75), transparent); opacity: 0; transition: opacity .2s; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .image-tile:hover .cap, .image-tile:focus-visible .cap { opacity: 1; }
+    .lightbox {
+      position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: rgba(5,3,14,.94); backdrop-filter: blur(14px); padding: 20px;
+    }
+    .lightbox[hidden] { display: none; }
+    .lightbox img { max-width: min(94vw, 1200px); max-height: calc(100vh - 150px); object-fit: contain; border-radius: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+    .lb-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 16px; max-width: 94vw; }
+    .lb-title { font-size: 14px; color: var(--silver); max-width: 60ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-btn {
+      background: rgba(255,255,255,.06); border: 1px solid var(--border); color: var(--silver); border-radius: 100px;
+      padding: 8px 16px; font-size: 13px; cursor: pointer; text-decoration: none;
+    }
+    .lb-btn:hover { border-color: var(--border-strong); color: var(--gold-light); }
+    .lb-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 46px; height: 46px; border-radius: 50%; font-size: 20px; padding: 0; }
+    .lb-prev { left: 16px; } .lb-next { right: 16px; }
+    .lb-close { position: absolute; top: 16px; right: 16px; }
+
+    .msg-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+    .btn-gold { background: linear-gradient(135deg, var(--gold), #a8751e); color: var(--ink); border: none; border-radius: 100px; padding: 10px 24px; font-size: 13px; font-weight: 500; cursor: pointer; }
+    .btn-gold:hover { opacity: .88; }
+    .fallback-brave { background: #fb542b; }
+
+    @media (max-width: 700px) {
+      .toolbar { gap: 8px; }
+      .tab { padding: 8px 14px; }
+      .instant { padding: 16px; gap: 12px; flex-wrap: wrap; }
+      .instant-value { font-size: 30px; }
+      .news-thumb { width: 84px; height: 64px; }
+      .copy-btn { opacity: 1; position: static; margin-top: 8px; }
+      .image-grid { columns: 2 140px; column-gap: 8px; }
+      .lb-nav { top: auto; bottom: 20px; transform: none; }
+    }
+
+    /* ═══════════ Wizard Search v3 — the observatory ═══════════ */
+
+    .shell { max-width: 1240px; }
+    body { overflow-x: clip; }
+
+    /* home: astrolabe behind the search field */
+    .search-hero { position: relative; padding: 64px 0 28px; }
+    .orrery {
+      position: absolute; left: 50%; top: 68%; width: min(1040px, 150vw); aspect-ratio: 1; transform: translate(-50%, -50%);
+      pointer-events: none; z-index: -1;
+      -webkit-mask-image: radial-gradient(circle, #000 40%, transparent 72%); mask-image: radial-gradient(circle, #000 40%, transparent 72%);
+    }
+    .orrery svg { width: 100%; height: 100%; overflow: visible; }
+    .orrery .ln { fill: none; stroke: rgba(201,168,76,.42); stroke-width: .8; }
+    .orrery .ln.v { stroke: rgba(150,118,222,.5); }
+    .orrery .cross { stroke-dasharray: 2 6; stroke: rgba(201,168,76,.3); }
+    .orrery .tick { fill: none; stroke: rgba(232,201,122,.5); stroke-width: 9; stroke-dasharray: .9 11.4; }
+    .orrery .tick.fine { stroke: rgba(150,118,222,.5); stroke-width: 6; stroke-dasharray: .8 7.4; }
+    .orrery .dot { fill: var(--gold-light); filter: drop-shadow(0 0 6px rgba(232,201,122,.9)); }
+    .orrery .dot.v { fill: #b79cf0; filter: drop-shadow(0 0 6px rgba(150,118,222,.9)); }
+    .orrery .o { transform-origin: 300px 300px; animation: orbit 120s linear infinite; }
+    .orrery .o2 { animation-duration: 80s; animation-direction: reverse; }
+    .orrery .o3 { animation-duration: 55s; }
+    .orrery .o4 { animation-duration: 36s; animation-direction: reverse; }
+    @keyframes orbit { to { transform: rotate(360deg); } }
+    body.has-results .orrery { display: none; }
+
+    .hero-title { font-size: clamp(46px, 8vw, 92px); font-weight: 300; letter-spacing: -.03em; color: #efeafc; margin-bottom: 14px; }
+    .hero-sub { font-size: 16px; color: var(--silver-dim); }
+    body.has-results .search-hero { padding: 0 0 16px; }
+    body.has-results .hero-title { font-size: clamp(26px, 3.4vw, 32px); margin-bottom: 0; }
+
+    .search-wrap { max-width: 780px; }
+    .search-field { position: relative; padding: 8px 8px 8px 26px; background: rgba(10,8,24,.82); box-shadow: 0 18px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.02); }
+    .search-field input { font-size: 17px; padding: 15px 0; }
+    .search-ico { color: var(--gold-light); opacity: .7; }
+    .search-go { padding: 13px 30px; font-size: 15px; }
+
+    @property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+    .search-field:has(input[aria-busy="true"])::after {
+      content: ""; position: absolute; inset: -2px; border-radius: inherit; padding: 2px; pointer-events: none;
+      background: conic-gradient(from var(--ang), transparent 0 55%, var(--violet) 78%, var(--gold-light) 94%, transparent);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask-composite: exclude;
+      animation: sweep 1.1s linear infinite;
+    }
+    @keyframes sweep { to { --ang: 360deg; } }
+
+    /* home: three ways to use it */
+    .home-extras { margin-top: 0; }
+    .recipes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; max-width: 920px; margin: 44px auto 26px; text-align: left; }
+    .recipe { display: flex; flex-direction: column; gap: 6px; padding: 16px 0 0; background: none; border: 0; border-top: 1px solid var(--border); color: inherit; cursor: pointer; text-align: left; font: inherit; }
+    .recipe:hover { border-top-color: var(--gold); }
+    .rc-kind { font-size: 12px; color: var(--gold); }
+    .rc-q { font-family: "Cormorant Garamond", serif; font-size: 24px; line-height: 1.15; color: var(--silver); }
+    .recipe:hover .rc-q { color: var(--gold-light); }
+    .rc-hint { font-size: 13px; color: var(--muted); }
+    .tips { line-height: 1.6; }
+
+    /* results: answer rail + ruled list */
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: start; }
+    .col-main { min-width: 0; }
+    .col-rail { order: -1; display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .col-rail:empty { display: none; }
+    @media (min-width: 1040px) {
+      .layout:has(.col-rail > *) { grid-template-columns: minmax(0, 1fr) 380px; gap: 64px; }
+      .col-rail { order: 2; position: sticky; top: 96px; }
+    }
+    .layout:not(:has(.col-rail > *)) .col-main { width: 100%; max-width: 840px; margin: 0 auto; }
+    .layout[data-type="images"] .col-main { max-width: none; }
+    .layout:has(.col-rail > *) .col-main { max-width: 760px; }
+
+    .toolbar { margin-bottom: 14px; border-bottom: 1px solid rgba(212,208,232,.1); align-items: flex-end; }
+    .tabs { background: none; border: 0; border-radius: 0; padding: 0; gap: 26px; }
+    .tab { border-radius: 0; padding: 12px 2px; margin-bottom: -1px; border-bottom: 2px solid transparent; font-size: 14px; }
+    .tab[aria-selected="true"] { background: none; box-shadow: none; color: var(--gold-light); border-bottom-color: var(--gold); }
+    .time-select { margin-bottom: 8px; }
+
+    .source-badge { background: none; border: 0; padding: 0; margin: 0 0 4px; font-size: 13px; color: var(--muted); letter-spacing: 0; border-radius: 0; }
+
+    .result-card, .result-card:hover {
+      background: none; border: 0; border-radius: 0; box-shadow: none; transform: none; overflow: visible;
+    }
+    .result-card {
+      position: relative; margin: 0; padding: 22px 0 22px 46px; border-bottom: 1px solid rgba(212,208,232,.08);
+    }
+    .result-card::before { display: none; }
+    .result-card .num {
+      position: absolute; left: 0; top: 22px; margin: 0; width: 28px; height: 28px; padding: 0; display: grid; place-items: center;
+      border-radius: 50%; border: 1px solid var(--border-strong); color: var(--gold-light); font-size: 12px; background: var(--gold-dim);
+    }
+    .result-card:hover .num { background: var(--gold); color: var(--ink); }
+    .result-title { font-size: 24px; line-height: 1.2; margin-bottom: 8px; font-weight: 500; }
+    .result-title a { color: #efeafc; }
+    .result-title a:visited { color: #c0aef0; }
+    .result-title a:hover { color: var(--gold-light); text-decoration: none; background: linear-gradient(var(--gold), var(--gold)) 0 100% / 100% 1px no-repeat; }
+    .result-snippet { font-size: 15px; line-height: 1.65; color: rgba(212,208,232,.62); max-width: 66ch; }
+    .copy-btn { right: 0; bottom: 14px; background: none; border: 0; padding: 4px 0; font-size: 12px; color: var(--muted); }
+    .news-card { gap: 22px; padding-left: 0; }
+    .news-card .result-meta { margin-bottom: 8px; }
+    .news-thumb { width: 150px; height: 100px; border-radius: 6px; }
+    .result-card.flash { animation: flash2 1.6s ease; }
+    @keyframes flash2 { 0%, 55% { background: rgba(201,168,76,.12); } 100% { background: transparent; } }
+
+    /* answer rail */
+    .ai-summary {
+      margin: 0; padding: 24px 26px 22px; border-radius: 24px; border: 1px solid rgba(150,118,222,.35); border-left-width: 1px;
+      background: radial-gradient(120% 90% at 0% 0%, rgba(124,92,191,.22), transparent 60%), linear-gradient(180deg, rgba(20,16,44,.9), rgba(12,9,28,.9));
+      box-shadow: 0 24px 60px rgba(0,0,0,.4);
+    }
+    .ai-summary::before { height: 2px; opacity: .8; background: linear-gradient(90deg, var(--gold), var(--violet), transparent); }
+    .summary-icon { color: var(--gold-light); font-size: 15px; }
+    .summary-label { font-size: 20px; }
+    .summary-text { font-size: 16px; line-height: 1.7; color: var(--silver); font-weight: 300; }
+    .summary-sources { margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(212,208,232,.1); display: flex; flex-direction: column; gap: 2px; }
+    .sources-title { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .source-link { display: flex; align-items: center; gap: 10px; background: none; border: 0; color: var(--silver-dim); font-size: 13px; padding: 5px 0; cursor: pointer; text-align: left; font-family: inherit; }
+    .source-link:hover { color: var(--gold-light); }
+    .source-n { flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; border: 1px solid var(--border-strong); color: var(--gold-light); }
+    .source-host { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .instant { margin: 0; border-radius: 24px; }
+
+    .no-results { margin: 40px 0; }
+
+    @media (max-width: 700px) {
+      .search-hero { padding: 36px 0 18px; }
+      .recipes { grid-template-columns: 1fr; gap: 14px; margin-top: 28px; }
+      .rc-q { font-size: 21px; }
+      .search-field input { font-size: 16px; }
+      .result-card { padding: 18px 0 18px 38px; }
+      .result-card .num { width: 24px; height: 24px; top: 20px; font-size: 11px; }
+      .result-title { font-size: 21px; }
+      .news-thumb { width: 84px; height: 64px; }
+      .tabs { gap: 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .orrery .o { animation: none; } }
   </style>
 </head>
 
@@ -1004,10 +1325,19 @@
       </div>
     </nav>
 
-    <header class="search-hero">
-      <span class="hero-glyph" aria-hidden="true">🔍</span>
-      <h1 class="hero-title">Wizard <em>Search</em></h1>
-      <p class="hero-sub">AI-powered results — real, clickable, and intelligent</p>
+
+    <header class="search-hero" id="hero">
+      <div class="orrery" aria-hidden="true">
+        <svg viewBox="0 0 600 600" focusable="false">
+          <g class="o o1"><circle cx="300" cy="300" r="292" class="ln"/><circle cx="300" cy="300" r="284" class="tick"/></g>
+          <g class="o o2"><circle cx="300" cy="300" r="232" class="ln v"/><circle cx="300" cy="300" r="224" class="tick fine"/><circle cx="300" cy="82" r="5" class="dot"/><circle cx="498" cy="410" r="3.5" class="dot v"/></g>
+          <g class="o o3"><ellipse cx="300" cy="300" rx="176" ry="108" class="ln"/><circle cx="476" cy="300" r="4" class="dot"/><circle cx="124" cy="300" r="2.5" class="dot v"/></g>
+          <g class="o o4"><circle cx="300" cy="300" r="118" class="ln v"/><path d="M300 182v236M182 300h236" class="ln cross"/></g>
+          <circle cx="300" cy="300" r="3" class="dot"/>
+        </svg>
+      </div>
+      <h1 class="hero-title">Wizard Search</h1>
+      <p class="hero-sub">Ask anything. Get an answer with its sources.</p>
     </header>
 
     <div class="search-wrap" role="search">
@@ -1022,30 +1352,68 @@
           aria-controls="search-suggestions"
           aria-expanded="false"
           autocomplete="off"
+          autocapitalize="off"
           spellcheck="false"
+          enterkeyhint="search"
           maxlength="500"
         >
+        <button class="search-clear" id="search-clear" type="button" aria-label="Clear search" hidden>✕</button>
         <button class="search-go" id="search-btn" type="button">Search</button>
       </div>
 
-      <div
-        id="search-suggestions"
-        class="suggestions-dropdown"
-        role="listbox"
-        aria-label="Search suggestions"
-      ></div>
+      <div id="search-suggestions" class="suggestions-dropdown" role="listbox" aria-label="Search suggestions"></div>
     </div>
+
+    <div class="toolbar" id="toolbar" hidden>
+      <div class="tabs" role="tablist" aria-label="Result type">
+        <button class="tab" role="tab" type="button" data-type="web" aria-selected="true">🌐 All</button>
+        <button class="tab" role="tab" type="button" data-type="news" aria-selected="false">📰 News</button>
+        <button class="tab" role="tab" type="button" data-type="images" aria-selected="false">🖼️ Images</button>
+      </div>
+      <select class="time-select" id="time-filter" aria-label="Time range">
+        <option value="">Any time</option>
+        <option value="d">Past day</option>
+        <option value="w">Past week</option>
+        <option value="m">Past month</option>
+        <option value="y">Past year</option>
+      </select>
+    </div>
+
+    <section class="home-extras" id="home-extras">
+      <div id="recent-block" hidden>
+        <div class="home-label">Recent searches</div>
+        <div class="chip-row" id="recent-chips"></div>
+      </div>
+      <div class="recipes">
+        <button type="button" class="recipe" data-q="How do black holes form?"><span class="rc-kind">Ask</span><span class="rc-q">How do black holes form?</span><span class="rc-hint">A short summary with numbered sources</span></button>
+        <button type="button" class="recipe" data-q="72 °F to °C"><span class="rc-kind">Convert</span><span class="rc-q">72 °F to °C</span><span class="rc-hint">Math and units answer instantly</span></button>
+        <button type="button" class="recipe" data-q="!yt synthwave mix"><span class="rc-kind">Jump to a site</span><span class="rc-q">!yt synthwave mix</span><span class="rc-hint">Also !g, !w, !gh, !mdn, !so, !r</span></button>
+      </div>
+      <p class="tips">Press <kbd>/</kbd> or <kbd>Ctrl</kbd> <kbd>K</kbd> to search from anywhere</p>
+    </section>
 
     <main id="results" class="results-area" aria-live="polite" aria-label="Search results"></main>
 
     <footer>
       <p class="footer-brand">🧙 Wizard Search</p>
       <p class="footer-meta">
-        Results via DDG · Brave · Startpage &nbsp;·&nbsp;
-        AI summaries by Llama 4 &nbsp;·&nbsp;
+        Results via DuckDuckGo &amp; Tavily &nbsp;·&nbsp;
+        AI summaries by free-tier models &nbsp;·&nbsp;
         Built by <a href="https://wizardecosystem.dev" rel="author">Arnav Gupta</a>
       </p>
     </footer>
+  </div>
+
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Image preview" hidden>
+    <button class="lb-btn lb-close" id="lb-close" type="button" aria-label="Close preview">✕</button>
+    <button class="lb-btn lb-nav lb-prev" id="lb-prev" type="button" aria-label="Previous image">‹</button>
+    <img id="lb-img" alt="" referrerpolicy="no-referrer">
+    <div class="lb-bar">
+      <span class="lb-title" id="lb-title"></span>
+      <a class="lb-btn" id="lb-visit" target="_blank" rel="noopener noreferrer">Visit page ↗</a>
+      <a class="lb-btn" id="lb-open" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer">Open image ↗</a>
+    </div>
+    <button class="lb-btn lb-nav lb-next" id="lb-next" type="button" aria-label="Next image">›</button>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -1078,23 +1446,15 @@
       <button class="btn-ghost" id="cancel-auth" type="button">Cancel</button>
     </div>
   </div>
-
   <script>
   (() => {
     "use strict";
 
-    const API = "https://arnav0928.pythonanywhere.com";
+    const API = (window.WIZ_API_BASE || "https://arnav0928.pythonanywhere.com").replace(/\/$/, "");
     const $ = id => document.getElementById(id);
 
     let currentUser = null;
     let toastTimer = null;
-    let suggestionTimer = null;
-    let suggestionController = null;
-    let searchController = null;
-    let suggestionRequestId = 0;
-    let searchRequestId = 0;
-    let suggestions = [];
-    let activeSuggestion = -1;
     let authMode = "login";
     let pendingRegistrationId = null;
     let lastFocusedElement = null;
@@ -1102,6 +1462,7 @@
     const input = $("search-input");
     const suggestionBox = $("search-suggestions");
     const searchButton = $("search-btn");
+    const clearButton = $("search-clear");
     const resultsArea = $("results");
     const modal = $("modal-overlay");
 
@@ -1171,7 +1532,6 @@
         }
       });
     })();
-
     /* Helpers */
 
     function setText(id, value) {
@@ -1256,7 +1616,6 @@
         api: API
       });
     }
-
     /* Authentication */
 
     function updateAuthUI() {
@@ -1360,6 +1719,7 @@
         updateAuthUI();
         $("login-password").value = "";
         showToast("Welcome back!");
+        onSignedIn();
       } catch (error) {
         showApiError("Login failed", error);
         errorEl.textContent = error.status === 401
@@ -1447,6 +1807,7 @@
         $("auth-form").reset();
         pendingRegistrationId = null;
         showToast("Your account is ready!");
+        onSignedIn();
       } catch (error) {
         showApiError("Email verification failed", error);
         errorEl.textContent = error.message || "Verification failed.";
@@ -1532,485 +1893,649 @@
       }
     });
 
-    /* Autosuggest */
+    /* ───────────── Recent searches (this browser only) ───────────── */
 
-    function closeSuggestions() {
-      suggestionBox.classList.remove("open");
-      input.setAttribute("aria-expanded", "false");
-      input.removeAttribute("aria-activedescendant");
-      activeSuggestion = -1;
-    }
+    const HISTORY_KEY = "wizard_search_history_v1";
+    const HISTORY_MAX = 12;
 
-    function showSuggestionStatus(message, type = "") {
-      suggestions = [];
-      activeSuggestion = -1;
-      suggestionBox.replaceChildren();
-
-      const status = document.createElement("div");
-      status.className = `suggestion-status ${type}`.trim();
-      status.setAttribute("role", "status");
-      status.textContent = message;
-      suggestionBox.appendChild(status);
-
-      suggestionBox.classList.add("open");
-      input.setAttribute("aria-expanded", "true");
-    }
-
-    function normalizeSuggestions(data) {
-      if (!Array.isArray(data?.suggestions)) return [];
-
-      const seen = new Set();
-
-      return data.suggestions
-        .map(item => {
-          if (typeof item === "string") return item.trim();
-
-          if (item && typeof item === "object") {
-            return String(
-              item.query ?? item.text ?? item.title ?? item.suggestion ?? ""
-            ).trim();
-          }
-
-          return "";
-        })
-        .filter(item => {
-          if (!item) return false;
-
-          const key = item.toLocaleLowerCase();
-          if (seen.has(key)) return false;
-
-          seen.add(key);
-          return true;
-        })
-        .slice(0, 8);
-    }
-
-    function renderSuggestions(items) {
-      suggestions = items;
-      activeSuggestion = -1;
-      suggestionBox.replaceChildren();
-
-      if (!items.length) {
-        closeSuggestions();
-        return;
-      }
-
-      const heading = document.createElement("div");
-      heading.className = "suggestion-heading";
-      heading.textContent = "Suggested searches";
-      suggestionBox.appendChild(heading);
-
-      items.forEach((suggestion, index) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "suggestion-item";
-        button.id = `search-suggestion-${index}`;
-        button.setAttribute("role", "option");
-        button.setAttribute("aria-selected", "false");
-
-        const icon = document.createElement("span");
-        icon.className = "suggestion-icon";
-        icon.textContent = "⌕";
-        icon.setAttribute("aria-hidden", "true");
-
-        const text = document.createElement("span");
-        text.className = "suggestion-text";
-        text.textContent = suggestion;
-
-        button.append(icon, text);
-
-        button.addEventListener("pointerdown", event => {
-          // Prevent input blur before selection.
-          event.preventDefault();
-          selectSuggestion(index, true);
-        });
-
-        suggestionBox.appendChild(button);
-      });
-
-      suggestionBox.classList.add("open");
-      input.setAttribute("aria-expanded", "true");
-    }
-
-    function setActiveSuggestion(index) {
-      const buttons = suggestionBox.querySelectorAll(".suggestion-item");
-
-      buttons.forEach((button, i) => {
-        const active = i === index;
-        button.classList.toggle("active", active);
-        button.setAttribute("aria-selected", String(active));
-      });
-
-      activeSuggestion = index;
-
-      if (index >= 0 && buttons[index]) {
-        input.setAttribute("aria-activedescendant", buttons[index].id);
-        buttons[index].scrollIntoView({ block: "nearest" });
-      } else {
-        input.removeAttribute("aria-activedescendant");
-      }
-    }
-
-    function selectSuggestion(index, searchImmediately = false) {
-      if (index < 0 || index >= suggestions.length) return;
-
-      input.value = suggestions[index];
-      closeSuggestions();
-
-      if (searchImmediately) {
-        performSearch();
-      } else {
-        input.focus();
-      }
-    }
-
-    async function getSuggestions(rawQuery) {
-      const query = rawQuery.trim();
-      const requestId = ++suggestionRequestId;
-
-      if (suggestionController) {
-        suggestionController.abort();
-        suggestionController = null;
-      }
-
-      if (query.length < 2) {
-        closeSuggestions();
-        return;
-      }
-
-      const controller = new AbortController();
-      suggestionController = controller;
-
-      showSuggestionStatus("Looking for suggestions…");
-
-      console.debug("[Wizard Search] Autosuggest request:", query);
-
+    function loadHistory() {
       try {
-        const data = await apiRequest(
-          `/api/search/suggest?q=${encodeURIComponent(query)}`,
-          { signal: controller.signal }
-        );
+        const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+        return Array.isArray(list) ? list.filter(x => typeof x === "string").slice(0, HISTORY_MAX) : [];
+      } catch (e) { return []; }
+    }
+    function saveHistory(list) {
+      try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, HISTORY_MAX))); } catch (e) { /* storage blocked */ }
+    }
+    function addHistory(q) {
+      saveHistory([q, ...loadHistory().filter(x => x.toLowerCase() !== q.toLowerCase())]);
+      renderRecentChips();
+    }
+    function removeHistory(q) {
+      saveHistory(loadHistory().filter(x => x !== q));
+      renderRecentChips();
+    }
+    function clearHistory() { saveHistory([]); renderRecentChips(); }
 
-        if (requestId !== suggestionRequestId) return;
+    function renderRecentChips() {
+      const list = loadHistory().slice(0, 6);
+      $("recent-block").hidden = !list.length;
+      const row = $("recent-chips");
+      row.replaceChildren();
+      list.forEach(q => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "chip";
+        chip.title = q;
+        const icon = document.createElement("span");
+        icon.textContent = "🕘";
+        icon.setAttribute("aria-hidden", "true");
+        const label = document.createElement("span");
+        label.textContent = q;
+        chip.append(icon, label);
+        chip.addEventListener("click", () => { input.value = q; submitSearch(); });
+        row.appendChild(chip);
+      });
+    }
 
-        if (data.success === false) {
-          throw new Error(data.error || "The suggestion service returned an error.");
+    /* ───────────── Bangs: "!g cats" jumps straight to a site ───────────── */
+
+    const BANGS = {
+      g: ["Google", "https://www.google.com/search?q="],
+      ddg: ["DuckDuckGo", "https://duckduckgo.com/?q="],
+      b: ["Brave", "https://search.brave.com/search?q="],
+      w: ["Wikipedia", "https://en.wikipedia.org/w/index.php?search="],
+      yt: ["YouTube", "https://www.youtube.com/results?search_query="],
+      gh: ["GitHub", "https://github.com/search?q="],
+      mdn: ["MDN", "https://developer.mozilla.org/en-US/search?q="],
+      so: ["Stack Overflow", "https://stackoverflow.com/search?q="],
+      r: ["Reddit", "https://www.reddit.com/search/?q="],
+      npm: ["npm", "https://www.npmjs.com/search?q="],
+      a: ["Amazon", "https://www.amazon.com/s?k="]
+    };
+
+    function parseBang(raw) {
+      const m = raw.match(/^!(\w+)\s+(.+)$/) || raw.match(/^(.+?)\s+!(\w+)$/);
+      if (!m) return null;
+      const isLead = raw.startsWith("!");
+      const key = (isLead ? m[1] : m[2]).toLowerCase();
+      const term = (isLead ? m[2] : m[1]).trim();
+      const bang = BANGS[key];
+      if (!bang || !term) return null;
+      return { name: bang[0], url: bang[1] + encodeURIComponent(term) };
+    }
+
+    /* ───────────── Instant answers: math and unit conversion (no server needed) ───────────── */
+
+    function evalMath(source) {
+      const src = source.toLowerCase().replace(/×/g, "*").replace(/÷/g, "/").replace(/(\d),(?=\d{3}(\D|$))/g, "$1");
+      const tokens = [];
+      const re = /\s*(\d+\.?\d*(?:e[+-]?\d+)?|\.\d+|[a-z]+|[-+*\/^%(),])/y;
+      let pos = 0;
+      while (pos < src.trimEnd().length) {
+        re.lastIndex = pos;
+        const m = re.exec(src);
+        if (!m) return null;
+        tokens.push(m[1]);
+        pos = re.lastIndex;
+      }
+      let i = 0;
+      const FUNCS = {
+        sqrt: Math.sqrt, cbrt: Math.cbrt, abs: Math.abs, sin: Math.sin, cos: Math.cos, tan: Math.tan, asin: Math.asin,
+        acos: Math.acos, atan: Math.atan, ln: Math.log, log: Math.log10, exp: Math.exp, round: Math.round,
+        floor: Math.floor, ceil: Math.ceil, min: Math.min, max: Math.max, pow: Math.pow
+      };
+      const CONSTS = { pi: Math.PI, e: Math.E, tau: Math.PI * 2 };
+      const fail = () => { throw new Error("bad"); };
+      const peek = () => tokens[i];
+
+      function expr() {
+        let v = term();
+        while (peek() === "+" || peek() === "-") v = tokens[i++] === "+" ? v + term() : v - term();
+        return v;
+      }
+      function term() {
+        let v = unary();
+        while (peek() === "*" || peek() === "/" || peek() === "%") {
+          const op = tokens[i++];
+          const r = unary();
+          v = op === "*" ? v * r : op === "/" ? v / r : v % r;
         }
-
-        const items = normalizeSuggestions(data);
-
-        console.debug("[Wizard Search] Autosuggest response:", {
-          source: data.source || "unspecified",
-          count: items.length,
-          data
-        });
-
-        if (input.value.trim() !== query) return;
-
-        if (items.length) {
-          renderSuggestions(items);
-        } else {
-          showSuggestionStatus("No suggestions found. Keep typing or press Enter to search.");
+        return v;
+      }
+      function unary() {
+        if (peek() === "-") { i++; return -unary(); }
+        if (peek() === "+") { i++; return unary(); }
+        return power();
+      }
+      function power() {
+        const base = atom();
+        if (peek() === "^") { i++; return Math.pow(base, unary()); }
+        return base;
+      }
+      function atom() {
+        const t = tokens[i++];
+        if (t === undefined) fail();
+        if (/^[\d.]/.test(t)) { const n = parseFloat(t); if (Number.isNaN(n)) fail(); return n; }
+        if (t === "(") { const v = expr(); if (tokens[i++] !== ")") fail(); return v; }
+        if (t in CONSTS) return CONSTS[t];
+        if (t in FUNCS) {
+          if (tokens[i++] !== "(") fail();
+          const args = [expr()];
+          while (peek() === ",") { i++; args.push(expr()); }
+          if (tokens[i++] !== ")") fail();
+          return FUNCS[t](...args);
         }
-      } catch (error) {
-        if (error.name === "AbortError") return;
-        if (requestId !== suggestionRequestId) return;
+        return fail();
+      }
+      try {
+        const v = expr();
+        if (i !== tokens.length || typeof v !== "number" || !Number.isFinite(v)) return null;
+        return v;
+      } catch (e) { return null; }
+    }
 
-        showApiError("Autosuggest request failed", error);
+    const UNITS = {
+      length: { base: 1, u: { m: 1, meter: 1, meters: 1, metre: 1, metres: 1, km: 1000, kilometer: 1000, kilometers: 1000, cm: .01, mm: .001,
+        mi: 1609.344, mile: 1609.344, miles: 1609.344, ft: .3048, foot: .3048, feet: .3048, in: .0254, inch: .0254, inches: .0254, yd: .9144, yard: .9144, yards: .9144 } },
+      mass: { u: { kg: 1, kilogram: 1, kilograms: 1, g: .001, gram: .001, grams: .001, mg: 1e-6, lb: .45359237, lbs: .45359237, pound: .45359237, pounds: .45359237, oz: .028349523, ounce: .028349523, ounces: .028349523 } },
+      volume: { u: { l: 1, liter: 1, liters: 1, litre: 1, litres: 1, ml: .001, gal: 3.785411784, gallon: 3.785411784, gallons: 3.785411784, cup: .2365882365, cups: .2365882365, tbsp: .01478676478, tsp: .00492892159 } },
+      speed: { u: { mph: .44704, kph: .277778, kmh: .277778, knots: .514444, knot: .514444 } }
+    };
+    const TEMP = { c: "c", celsius: "c", "°c": "c", f: "f", fahrenheit: "f", "°f": "f", k: "k", kelvin: "k" };
 
-        if (error.status === 404) {
-          showSuggestionStatus(
-            "Autosuggest API route not found. Add and deploy GET /api/search/suggest in your Flask backend.",
-            "error"
-          );
-        } else if (error.status === 401) {
-          showSuggestionStatus(
-            "Suggestions require authentication. Sign in, or configure this endpoint to allow public suggestions.",
-            "error"
-          );
-        } else if (error instanceof TypeError) {
-          showSuggestionStatus(
-            "Could not reach the suggestion API. Check the network and backend CORS settings.",
-            "error"
-          );
-        } else {
-          showSuggestionStatus(
-            `Suggestions failed: ${error.message || "Unknown API error"}. You can still press Enter to search.`,
-            "error"
-          );
+    function fmtNum(n) {
+      const v = Number(n.toPrecision(10));
+      return Math.abs(v) >= 1e15 || (Math.abs(v) < 1e-6 && v !== 0) ? v.toExponential(6) : v.toLocaleString(undefined, { maximumFractionDigits: 8 });
+    }
+
+    function convertUnits(raw) {
+      const m = raw.trim().toLowerCase().match(/^(-?[\d.,]+)\s*([a-z°]+)\s*(?:to|in|into|->|→)\s*([a-z°]+)$/);
+      if (!m) return null;
+      const value = parseFloat(m[1].replace(/,/g, ""));
+      if (!Number.isFinite(value)) return null;
+      const from = m[2], to = m[3];
+      if (TEMP[from] && TEMP[to]) {
+        const f = TEMP[from], t = TEMP[to];
+        const c = f === "c" ? value : f === "f" ? (value - 32) * 5 / 9 : value - 273.15;
+        const out = t === "c" ? c : t === "f" ? c * 9 / 5 + 32 : c + 273.15;
+        return { label: `${fmtNum(value)} ${from.toUpperCase().replace("°", "°")} to ${to.toUpperCase()}`, value: `${fmtNum(out)} ${t === "k" ? "K" : "°" + t.toUpperCase()}`, copy: fmtNum(out) };
+      }
+      for (const group of Object.values(UNITS)) {
+        if (group.u[from] && group.u[to]) {
+          const out = value * group.u[from] / group.u[to];
+          return { label: `${fmtNum(value)} ${from} to ${to}`, value: `${fmtNum(out)} ${to}`, copy: fmtNum(out) };
         }
-      } finally {
-        if (suggestionController === controller) {
-          suggestionController = null;
+      }
+      return null;
+    }
+
+    function instantAnswer(raw) {
+      const q = raw.trim();
+      if (!q || q.length > 80) return null;
+
+      const pct = q.toLowerCase().match(/^(-?\d+(?:\.\d+)?)\s*%\s*of\s*(-?[\d,]+(?:\.\d+)?)$/);
+      if (pct) {
+        const out = parseFloat(pct[1]) / 100 * parseFloat(pct[2].replace(/,/g, ""));
+        return { icon: "🧮", label: `${pct[1]}% of ${pct[2]}`, value: fmtNum(out), copy: fmtNum(out) };
+      }
+
+      const conv = convertUnits(q);
+      if (conv) return { icon: "📏", label: conv.label, value: conv.value, copy: conv.copy };
+
+      if (!/^[0-9a-z+\-*\/^%().,\s×÷]+$/i.test(q) || !/\d/.test(q)) return null;
+      if (/\d{4}-\d{1,2}-\d{1,2}/.test(q)) return null;                       // a date, not subtraction
+      const hasOp = /[+\-*\/^%×÷]/.test(q.replace(/^-/, "")) || /\b(sqrt|cbrt|sin|cos|tan|ln|log|exp|abs|round|floor|ceil|min|max|pow)\s*\(/i.test(q);
+      if (!hasOp) return null;
+      const v = evalMath(q);
+      if (v === null) return null;
+      return { icon: "🧮", label: q, value: fmtNum(v), copy: fmtNum(v) };
+    }
+
+    /* ───────────── Small rendering helpers ───────────── */
+
+    function hostInfo(url) {
+      try {
+        const u = new URL(url);
+        const host = u.hostname.replace(/^www\./, "");
+        const path = u.pathname.replace(/\/$/, "").split("/").filter(Boolean).map(decodeURIComponentSafe).slice(0, 3);
+        let hue = 0;
+        for (const ch of host) hue = (hue * 31 + ch.charCodeAt(0)) % 360;
+        return { host, path, hue };
+      } catch (e) { return { host: "", path: [], hue: 260 }; }
+    }
+    function decodeURIComponentSafe(s) { try { return decodeURIComponent(s); } catch (e) { return s; } }
+
+    function queryTerms(q) {
+      return [...new Set((q.toLowerCase().match(/[\p{L}\p{N}]{2,}/gu) || []))].slice(0, 6);
+    }
+    function highlightInto(el, text, terms) {
+      if (!terms.length) { el.textContent = text; return; }
+      const re = new RegExp("(" + terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")", "giu");
+      text.split(re).forEach((part, idx) => {
+        if (idx % 2 === 1) {
+          const mark = document.createElement("mark");
+          mark.textContent = part;
+          el.appendChild(mark);
+        } else if (part) {
+          el.appendChild(document.createTextNode(part));
         }
+      });
+    }
+
+    function relativeDate(value) {
+      if (!value) return "";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return String(value).slice(0, 24);
+      const mins = Math.round((Date.now() - d.getTime()) / 60000);
+      if (mins < 1) return "just now";
+      if (mins < 60) return `${mins} min ago`;
+      if (mins < 1440) return `${Math.round(mins / 60)} h ago`;
+      if (mins < 10080) return `${Math.round(mins / 1440)} d ago`;
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: d.getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
+    }
+
+    function copyText(text, okMessage) {
+      const done = () => showToast(okMessage);
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(done, () => showToast("Couldn't copy.", "error"));
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); done(); } catch (e) { showToast("Couldn't copy.", "error"); }
+        ta.remove();
       }
     }
 
-    input.addEventListener("input", () => {
-      clearTimeout(suggestionTimer);
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    }
 
-      const query = input.value.trim();
+    /* ───────────── Search state ───────────── */
 
-      if (query.length < 2) {
-        suggestionRequestId++;
+    const state = { type: "web", time: "", query: "" };
+    let searchController = null;
+    let searchRequestId = 0;
+    let pendingSearch = null;
+    let imageList = [];
 
-        if (suggestionController) suggestionController.abort();
+    function setHasResults(on) { document.body.classList.toggle("has-results", on); $("toolbar").hidden = !on; }
 
-        closeSuggestions();
+    function syncControls() {
+      document.querySelectorAll(".tab").forEach(tab => tab.setAttribute("aria-selected", String(tab.dataset.type === state.type)));
+      const tf = $("time-filter");
+      tf.value = state.time;
+      tf.hidden = state.type === "images";
+    }
+
+    function urlFor(query) {
+      const url = new URL(window.location.href);
+      url.search = "";
+      if (query) {
+        url.searchParams.set("q", query);
+        if (state.type !== "web") url.searchParams.set("t", state.type);
+        if (state.time) url.searchParams.set("tl", state.time);
+      }
+      return url;
+    }
+
+    /* ───────────── Loading / error views ───────────── */
+
+    let mainCol = null, railCol = null;
+    function resetResults() {
+      const layout = el("div", "layout");
+      layout.dataset.type = state.type;
+      mainCol = el("div", "col-main");
+      railCol = el("aside", "col-rail");
+      layout.append(mainCol, railCol);
+      resultsArea.replaceChildren(layout);
+    }
+
+    function showSkeleton() {
+      resetResults();
+      if (state.type === "images") {
+        const grid = el("div", "image-grid");
+        [160, 220, 140, 200, 180, 240, 150, 210].forEach(h => {
+          const s = el("div", "skel"); s.style.height = h + "px"; s.style.marginBottom = "12px"; s.style.breakInside = "avoid";
+          grid.appendChild(s);
+        });
+        mainCol.appendChild(grid);
         return;
       }
-
-      suggestionTimer = setTimeout(() => getSuggestions(query), 250);
-    });
-
-    input.addEventListener("keydown", event => {
-      const isOpen = suggestionBox.classList.contains("open");
-
-      if (event.key === "ArrowDown" && suggestions.length) {
-        event.preventDefault();
-        if (!isOpen) {
-          suggestionBox.classList.add("open");
-          input.setAttribute("aria-expanded", "true");
-        }
-
-        setActiveSuggestion(
-          activeSuggestion >= suggestions.length - 1 ? 0 : activeSuggestion + 1
-        );
-      } else if (event.key === "ArrowUp" && suggestions.length) {
-        event.preventDefault();
-
-        setActiveSuggestion(
-          activeSuggestion <= 0 ? suggestions.length - 1 : activeSuggestion - 1
-        );
-      } else if (event.key === "Enter") {
-        event.preventDefault();
-
-        if (isOpen && activeSuggestion >= 0) {
-          selectSuggestion(activeSuggestion, true);
-        } else {
-          closeSuggestions();
-          performSearch();
-        }
-      } else if (event.key === "Escape" && isOpen) {
-        event.preventDefault();
-        closeSuggestions();
-      }
-    });
-
-    document.addEventListener("pointerdown", event => {
-      if (!event.target.closest(".search-wrap")) {
-        closeSuggestions();
-      }
-    });
-
-    /* Search results */
-
-    function showLoading() {
-      resultsArea.replaceChildren();
-
-      const container = document.createElement("div");
-      container.className = "loading-spinner";
-
-      const spinner = document.createElement("div");
-      spinner.className = "spinner-ring";
-      spinner.setAttribute("aria-hidden", "true");
-
-      const message = document.createElement("p");
-      message.className = "loading-text";
-      message.textContent = "Consulting the arcane archives…";
-
-      container.append(spinner, message);
-      resultsArea.appendChild(container);
-    }
-
-    function showMessage(icon, title, message, query, isError = false) {
-      resultsArea.replaceChildren();
-
-      const container = document.createElement("div");
-      container.className = "no-results";
-
-      const glyph = document.createElement("span");
-      glyph.className = "no-results-icon";
-      glyph.textContent = icon;
-
-      const heading = document.createElement("h3");
-      heading.textContent = title;
-
-      const paragraph = document.createElement("p");
-      paragraph.textContent = message;
-
-      const buttons = document.createElement("div");
-      buttons.className = "fallback-btns";
-
-      const google = document.createElement("button");
-      google.type = "button";
-      google.className = "fallback-btn fallback-google";
-      google.textContent = "🔍 Google";
-      google.addEventListener("click", () => {
-        openExternalUrl(searchEngineUrl("google", query));
-      });
-
-      const ddg = document.createElement("button");
-      ddg.type = "button";
-      ddg.className = "fallback-btn fallback-ddg";
-      ddg.textContent = "🦆 DuckDuckGo";
-      ddg.addEventListener("click", () => {
-        openExternalUrl(searchEngineUrl("duckduckgo", query));
-      });
-
-      buttons.append(google, ddg);
-      container.append(glyph, heading, paragraph, buttons);
-      resultsArea.appendChild(container);
-
-      if (isError) {
-        console.error("[Wizard Search] Search display error:", message);
+      for (let i = 0; i < 4; i++) {
+        const card = el("div", "skel-card");
+        [["38%", 16], ["92%", 12], ["80%", 12]].forEach(([w, h]) => {
+          const line = el("div", "skel skel-line"); line.style.width = w; line.style.height = h + "px"; card.appendChild(line);
+        });
+        mainCol.appendChild(card);
       }
     }
 
-    function createResultCard(result) {
-      const card = document.createElement("article");
-      card.className = "result-card";
-
-      const title = document.createElement("h2");
-      title.className = "result-title";
-      title.textContent = result.title || "Untitled result";
-
-      const url = safeExternalUrl(result.url || "");
-
-      const snippet = document.createElement("p");
-      snippet.className = "result-snippet";
-      snippet.textContent =
-        result.content || result.snippet || result.description || "";
-
-      if (url) {
-        const link = document.createElement("a");
-        link.className = "result-link";
-        link.href = url;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = result.url;
-        card.append(title, link, snippet);
-      } else {
-        const label = document.createElement("div");
-        label.className = "result-link";
-        label.textContent = result.is_answer ? "AI-generated summary" : "";
-        card.append(title, label, snippet);
+    function showMessage(icon, title, message, query, actions) {
+      resetResults();
+      const box = el("div", "no-results");
+      box.append(el("span", "no-results-icon", icon), el("h3", "", title), el("p", "", message));
+      const row = el("div", "fallback-btns");
+      (actions || []).forEach(a => {
+        const b = el("button", a.className || "fallback-btn", a.label);
+        b.type = "button";
+        b.addEventListener("click", a.onClick);
+        row.appendChild(b);
+      });
+      if (query) {
+        [["fallback-google", "🔍 Google", "g"], ["fallback-ddg", "🦆 DuckDuckGo", "ddg"], ["fallback-brave", "🦁 Brave", "b"]].forEach(([cls, label, key]) => {
+          const b = el("button", "fallback-btn " + cls, label);
+          b.type = "button";
+          b.addEventListener("click", () => openExternalUrl(BANGS[key][1] + encodeURIComponent(query)));
+          row.appendChild(b);
+        });
       }
+      box.appendChild(row);
+      mainCol.appendChild(box);
+    }
 
+    /* ───────────── Result renderers ───────────── */
+
+    function instantCard(answer) {
+      const card = el("section", "instant");
+      card.setAttribute("aria-label", "Instant answer");
+      card.appendChild(el("span", "instant-icon", answer.icon));
+      const body = el("div");
+      body.append(el("div", "instant-label", answer.label + " ="), el("div", "instant-value", answer.value));
+      const copy = el("button", "instant-copy", "Copy");
+      copy.type = "button";
+      copy.addEventListener("click", () => copyText(answer.copy, "Copied."));
+      card.append(body, copy);
       return card;
     }
 
-    function renderResults(data) {
-      resultsArea.replaceChildren();
-
-      const results = Array.isArray(data.results) ? data.results : [];
-      const answer = results.find(item => item && item.is_answer === true);
-
-      const summary =
-        data.summary ||
-        data.answer ||
-        (answer ? answer.content || answer.snippet : "");
-
-      const webResults = results.filter(item =>
-        item &&
-        item.is_answer !== true &&
-        safeExternalUrl(item.url || "") &&
-        (item.content || item.snippet || item.title)
-      );
-
-      if (summary) {
-        const summaryCard = document.createElement("section");
-        summaryCard.className = "ai-summary";
-        summaryCard.setAttribute("aria-label", "Search summary");
-
-        const header = document.createElement("div");
-        header.className = "summary-header";
-
-        const icon = document.createElement("span");
-        icon.className = "summary-icon";
-        icon.setAttribute("aria-hidden", "true");
-        icon.textContent = "🧙";
-
-        const label = document.createElement("span");
-        label.className = "summary-label";
-        label.textContent = `About "${data.query || ""}"`;
-
-        const text = document.createElement("p");
-        text.className = "summary-text";
-        text.textContent = summary;
-
-        header.append(icon, label);
-        summaryCard.append(header, text);
-        resultsArea.appendChild(summaryCard);
-      }
-
-      if (!webResults.length) {
-        if (!summary) {
-          showMessage(
-            "🔍",
-            `No results for "${data.query || ""}"`,
-            "Try another search term or search directly below.",
-            data.query || ""
-          );
-        } else {
-          const note = document.createElement("p");
-          note.className = "result-snippet";
-          note.textContent = "No individual web links were returned for this query.";
-          resultsArea.appendChild(note);
-        }
-        return;
-      }
-
-      const sourceNames = {
-        tavily: "Tavily",
-        duckduckgo: "DuckDuckGo",
-        fallback: "Web Search"
-      };
-
-      const sourceKey = String(data.source || "").toLowerCase();
-      const source = sourceNames[sourceKey] || data.source || "Web Search";
-
-      const badge = document.createElement("div");
-      badge.className = "source-badge";
-      badge.textContent = `✦ ${webResults.length} results · ${source}`;
-      resultsArea.appendChild(badge);
-
-      const fragment = document.createDocumentFragment();
-
-      webResults.forEach(result => {
-        fragment.appendChild(createResultCard(result));
-      });
-
-      resultsArea.appendChild(fragment);
+    function summaryCard() {
+      const card = el("section", "ai-summary");
+      card.id = "summary-card";
+      card.setAttribute("aria-label", "Search summary");
+      const header = el("div", "summary-header");
+      header.append(el("span", "summary-icon", "✦"), el("span", "summary-label", "Summary"), el("span", "summary-meta"));
+      header.firstChild.setAttribute("aria-hidden", "true");
+      card.append(header, el("div", "summary-text"));
+      return card;
     }
 
-    async function performSearch() {
+    function jumpToResult(n) {
+      const target = document.getElementById("r-" + n);
+      if (!target) return;
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      target.classList.remove("flash"); void target.offsetWidth; target.classList.add("flash");
+    }
+
+    function addSources(card, web) {
+      card.querySelector(".summary-sources")?.remove();
+      const list = el("div", "summary-sources");
+      list.appendChild(el("div", "sources-title", "Sources"));
+      web.slice(0, 5).forEach((r, i) => {
+        const info = hostInfo(r.url);
+        const b = el("button", "source-link");
+        b.type = "button";
+        const n = el("span", "source-n", String(i + 1));
+        b.append(n, el("span", "source-host", info.host));
+        b.addEventListener("click", () => jumpToResult(i + 1));
+        list.appendChild(b);
+      });
+      card.appendChild(list);
+    }
+
+    function fillSummary(card, text, source) {
+      const body = card.querySelector(".summary-text");
+      body.replaceChildren();
+      text.split(/(\[\d+\](?:\s*\[\d+\])*)/).forEach(part => {
+        const nums = part.match(/^\[\d+\](?:\s*\[\d+\])*$/) ? part.match(/\d+/g) : null;
+        if (!nums) { if (part) body.appendChild(document.createTextNode(part)); return; }
+        nums.forEach(n => {
+          if (!document.getElementById("r-" + n)) return;
+          const cite = el("button", "cite", n);
+          cite.type = "button";
+          cite.setAttribute("aria-label", "Jump to result " + n);
+          cite.addEventListener("click", () => jumpToResult(n));
+          body.appendChild(cite);
+        });
+      });
+      card.querySelector(".summary-meta").textContent = source === "tavily" ? "Tavily" : source === "ai" ? "AI summary" : (source || "");
+    }
+
+    function skeletonInto(card) {
+      const body = card.querySelector(".summary-text");
+      body.replaceChildren();
+      [["96%"], ["88%"], ["60%"]].forEach(([w]) => { const l = el("div", "skel skel-line"); l.style.width = w; body.appendChild(l); });
+      card.querySelector(".summary-meta").textContent = "Reading the results…";
+    }
+
+    function webCard(result, n, terms) {
+      const info = hostInfo(result.url);
+      const card = el("article", "result-card");
+      card.id = "r-" + n;
+
+      const meta = el("div", "result-meta");
+      const favi = el("span", "favi", (info.host[0] || "?"));
+      favi.style.background = `hsl(${info.hue} 45% 38%)`;
+      favi.setAttribute("aria-hidden", "true");
+      const crumbs = el("span", "crumbs", info.path.length ? "› " + info.path.join(" › ") : "");
+      meta.append(favi, el("span", "site", info.host), crumbs, el("span", "num", String(n)));
+
+      const title = el("h2", "result-title");
+      const link = el("a");
+      link.href = result.url; link.target = "_blank"; link.rel = "noopener noreferrer";
+      link.textContent = result.title || result.url;
+      title.appendChild(link);
+
+      const snippet = el("p", "result-snippet");
+      highlightInto(snippet, result.content || result.snippet || "", terms);
+
+      const copy = el("button", "copy-btn", "Copy link");
+      copy.type = "button";
+      copy.addEventListener("click", () => copyText(result.url, "Link copied."));
+
+      card.append(meta, title, snippet, copy);
+      return card;
+    }
+
+    function newsCard(result, n, terms) {
+      const info = hostInfo(result.url);
+      const card = el("article", "result-card news-card");
+      card.id = "r-" + n;
+      const body = el("div", "news-body");
+
+      const meta = el("div", "result-meta");
+      const favi = el("span", "favi", (result.source || info.host || "?")[0]);
+      favi.style.background = `hsl(${info.hue} 45% 38%)`;
+      favi.setAttribute("aria-hidden", "true");
+      meta.append(favi, el("span", "site", result.source || info.host));
+      const when = relativeDate(result.date);
+      if (when) meta.append(el("span", "dot", "·"), el("span", "", when));
+
+      const title = el("h2", "result-title");
+      const link = el("a");
+      link.href = result.url; link.target = "_blank"; link.rel = "noopener noreferrer";
+      link.textContent = result.title || result.url;
+      title.appendChild(link);
+
+      const snippet = el("p", "result-snippet");
+      highlightInto(snippet, result.content || "", terms);
+
+      body.append(meta, title, snippet);
+      card.appendChild(body);
+
+      if (result.image && safeExternalUrl(result.image)) {
+        const img = el("img", "news-thumb");
+        img.src = result.image; img.alt = ""; img.loading = "lazy"; img.referrerPolicy = "no-referrer";
+        img.addEventListener("error", () => img.remove());
+        card.appendChild(img);
+      }
+      return card;
+    }
+
+    function resultsFooter(query) {
+      const foot = el("div", "results-foot");
+      foot.append("Not finding it? Try ");
+      [["Google", "g"], ["DuckDuckGo", "ddg"], ["Brave", "b"]].forEach(([name, key]) => {
+        const a = el("a", "", name);
+        a.href = BANGS[key][1] + encodeURIComponent(query);
+        a.target = "_blank"; a.rel = "noopener noreferrer";
+        foot.appendChild(a);
+      });
+      return foot;
+    }
+
+    function renderWeb(data, requestId) {
+      const query = data.query;
+      const terms = queryTerms(query);
+      const web = (data.results || []).filter(r => r && !r.is_answer && safeExternalUrl(r.url || ""));
+      let card = null;
+
+      if (data.summary) {
+        card = summaryCard();
+        fillSummary(card, data.summary, data.summary_source);
+      } else if (data.summary_available && web.length) {
+        card = summaryCard();
+        skeletonInto(card);
+      }
+      if (card) railCol.appendChild(card);
+
+      if (!web.length) {
+        if (!card) showMessage("🔍", `No results for "${query}"`, "Try different words, or search another engine below.", query);
+        return;
+      }
+
+      const sourceNames = { tavily: "Tavily", duckduckgo: "DuckDuckGo" };
+      const secs = data.took_ms != null ? ` · ${(data.took_ms / 1000).toFixed(1)}s` : "";
+      mainCol.appendChild(el("div", "source-badge", `${web.length} results · ${sourceNames[data.source] || "Web"}${secs}`));
+
+      const frag = document.createDocumentFragment();
+      web.forEach((r, i) => frag.appendChild(webCard(r, i + 1, terms)));
+      mainCol.appendChild(frag);
+      mainCol.appendChild(resultsFooter(query));
+      if (card) addSources(card, web);
+
+      if (card && !data.summary) loadSummary(query, card, requestId);
+    }
+
+    async function loadSummary(query, card, requestId) {
+      try {
+        const data = await apiRequest("/api/search/summary", { method: "POST", body: JSON.stringify({ query }) });
+        if (requestId !== searchRequestId || !card.isConnected) return;
+        if (!data.summary) throw new Error("empty");
+        fillSummary(card, data.summary, data.summary_source);
+      } catch (error) {
+        if (error.name === "AbortError") return;
+        if (card.isConnected) card.remove();            // no summary is better than a broken one
+      }
+    }
+
+    function renderNews(data) {
+      const terms = queryTerms(data.query);
+      const items = (data.results || []).filter(r => r && safeExternalUrl(r.url || ""));
+      if (!items.length) { showMessage("📰", `No news for "${data.query}"`, "Try a broader time range or different words.", data.query); return; }
+      const secs = data.took_ms != null ? ` · ${(data.took_ms / 1000).toFixed(1)}s` : "";
+      mainCol.appendChild(el("div", "source-badge", `${items.length} stories${secs}`));
+      const frag = document.createDocumentFragment();
+      items.forEach((r, i) => frag.appendChild(newsCard(r, i + 1, terms)));
+      mainCol.appendChild(frag);
+      mainCol.appendChild(resultsFooter(data.query));
+    }
+
+    function renderImages(data) {
+      imageList = (data.results || []).filter(r => r && safeExternalUrl(r.image || "") && safeExternalUrl(r.thumbnail || ""));
+      if (!imageList.length) { showMessage("🖼️", `No images for "${data.query}"`, "Try different words.", data.query); return; }
+      const grid = el("div", "image-grid");
+      imageList.forEach((item, i) => {
+        const tile = el("button", "image-tile");
+        tile.type = "button";
+        tile.setAttribute("aria-label", "Open image: " + item.title);
+        const img = el("img");
+        img.src = item.thumbnail; img.alt = item.title || ""; img.loading = "lazy"; img.referrerPolicy = "no-referrer";
+        if (item.width > 0 && item.height > 0) img.style.aspectRatio = item.width + " / " + item.height;
+        img.addEventListener("error", () => tile.remove());
+        tile.append(img, el("span", "cap", item.source || item.title || ""));
+        tile.addEventListener("click", () => openLightbox(i));
+        grid.appendChild(tile);
+      });
+      mainCol.appendChild(grid);
+    }
+
+    /* Lightbox */
+
+    let lbIndex = -1;
+    let lbOpener = null;
+
+    function openLightbox(index) {
+      if (!imageList[index]) return;
+      if ($("lightbox").hidden) lbOpener = document.activeElement;
+      lbIndex = index;
+      const item = imageList[index];
+      const img = $("lb-img");
+      img.onerror = () => { if (img.src !== item.thumbnail) img.src = item.thumbnail; };
+      img.src = item.image;
+      img.alt = item.title || "";
+      $("lb-title").textContent = [item.title, item.source].filter(Boolean).join(" · ");
+      $("lb-visit").href = safeExternalUrl(item.url) || "#";
+      $("lb-open").href = safeExternalUrl(item.image) || "#";
+      $("lightbox").hidden = false;
+      $("lb-prev").hidden = index <= 0;
+      $("lb-next").hidden = index >= imageList.length - 1;
+      $("lb-close").focus();
+    }
+    function closeLightbox() {
+      $("lightbox").hidden = true;
+      $("lb-img").removeAttribute("src");
+      lbIndex = -1;
+      lbOpener?.focus?.();
+    }
+    $("lb-close").addEventListener("click", closeLightbox);
+    $("lb-prev").addEventListener("click", () => openLightbox(lbIndex - 1));
+    $("lb-next").addEventListener("click", () => openLightbox(lbIndex + 1));
+    $("lightbox").addEventListener("click", e => { if (e.target === $("lightbox")) closeLightbox(); });
+
+    /* ───────────── Running a search ───────────── */
+
+    function onSignedIn() {
+      if (pendingSearch) {
+        const p = pendingSearch;
+        pendingSearch = null;
+        input.value = p.query; state.type = p.type; state.time = p.time;
+        runSearch({ push: false });
+      }
+    }
+
+    async function runSearch({ push = true } = {}) {
       const query = input.value.trim();
-
-      if (!query) {
-        showToast("Enter a search term.", "error");
-        input.focus();
-        return;
-      }
-
-      if (query.length > 500) {
-        showToast("Search must be 500 characters or fewer.", "error");
-        return;
-      }
+      if (!query) { showToast("Enter a search term.", "error"); input.focus(); return; }
+      if (query.length > 500) { showToast("Search must be 500 characters or fewer.", "error"); return; }
 
       closeSuggestions();
+      state.query = query;
+      syncControls();
+
+      const url = urlFor(query);
+      if (push) window.history.pushState({ query, type: state.type, time: state.time }, "", url);
+      else window.history.replaceState({ query, type: state.type, time: state.time }, "", url);
+      document.title = `${query} — Wizard Search`;
+
+      addHistory(query);
+      setHasResults(true);
+      clearButton.hidden = false;
 
       if (searchController) searchController.abort();
-
       const controller = new AbortController();
       searchController = controller;
       const requestId = ++searchRequestId;
 
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set("q", query);
-      window.history.pushState({ query }, "", newUrl);
+      const answer = state.type === "web" ? instantAnswer(query) : null;
+      showSkeleton();
+      if (answer) railCol.prepend(instantCard(answer));
 
-      showLoading();
       searchButton.disabled = true;
       searchButton.textContent = "Searching…";
       input.setAttribute("aria-busy", "true");
@@ -2019,39 +2544,35 @@
         const data = await apiRequest("/api/search", {
           method: "POST",
           signal: controller.signal,
-          body: JSON.stringify({ query })
+          body: JSON.stringify({ query, type: state.type, timelimit: state.time || undefined })
         });
-
         if (requestId !== searchRequestId) return;
+        if (data.success === false) throw new Error(data.error || "Search failed.");
 
-        if (data.success === false) {
-          throw new Error(data.error || "Search failed.");
-        }
-
-        renderResults({ ...data, query: data.query || query });
+        resetResults();
+        if (answer) railCol.appendChild(instantCard(answer));
+        const payload = { ...data, query: data.query || query };
+        if (state.type === "news") renderNews(payload);
+        else if (state.type === "images") renderImages(payload);
+        else renderWeb(payload, requestId);
       } catch (error) {
         if (error.name === "AbortError") return;
         if (requestId !== searchRequestId) return;
-
         showApiError("Search request failed", error);
 
+        resetResults();
+        if (answer) railCol.appendChild(instantCard(answer));
+
         if (error.status === 401) {
-          showMessage(
-            "🔐",
-            "Sign in required",
-            "Please sign in to use Wizard Search.",
-            query,
-            true
-          );
-          showToast("Please sign in first.", "error");
+          pendingSearch = { query, type: state.type, time: state.time };
+          appendMessage("🔐", "Sign in to search", "Wizard Search is free for signed-in Wizard accounts. Your search will run as soon as you sign in.", query,
+            [{ label: "Sign in", className: "btn-gold", onClick: () => openModal("login") }]);
+        } else if (error.status === 429) {
+          appendMessage("⏳", "Slow down a little", error.message || "Too many searches. Try again in a moment.", query,
+            [{ label: "Try again", className: "btn-gold", onClick: () => runSearch({ push: false }) }]);
         } else {
-          showMessage(
-            "⚠️",
-            "Search Interrupted",
-            error.message || "Unable to connect to the search server.",
-            query,
-            true
-          );
+          appendMessage("⚠️", "Search interrupted", error.message || "Unable to reach the search server.", query,
+            [{ label: "Try again", className: "btn-gold", onClick: () => runSearch({ push: false }) }]);
         }
       } finally {
         if (requestId === searchRequestId) {
@@ -2063,36 +2584,286 @@
       }
     }
 
-    searchButton.addEventListener("click", performSearch);
+    // showMessage() replaces everything; this keeps an instant answer above the message.
+    function appendMessage(icon, title, message, query, actions) {
+      const keep = railCol && railCol.querySelector(".instant");
+      showMessage(icon, title, message, query, actions);
+      if (keep) railCol.prepend(keep);
+    }
+
+    function submitSearch() {
+      const raw = input.value.trim();
+      if (!raw) { showToast("Enter a search term.", "error"); input.focus(); return; }
+      const bang = parseBang(raw);
+      if (bang) {
+        closeSuggestions();
+        addHistory(raw);
+        openExternalUrl(bang.url);
+        showToast("Opened " + bang.name);
+        return;
+      }
+      state.type = state.type || "web";
+      runSearch({ push: true });
+    }
+
+    function resetToHome() {
+      if (searchController) searchController.abort();
+      searchRequestId++;
+      resultsArea.replaceChildren();
+      setHasResults(false);
+      input.value = "";
+      clearButton.hidden = true;
+      state.query = "";
+      document.title = "Wizard Search — AI-Powered Web Search";
+      renderRecentChips();
+    }
+
+    searchButton.addEventListener("click", submitSearch);
+    document.querySelectorAll(".recipe").forEach(b => b.addEventListener("click", () => {
+      input.value = b.dataset.q;
+      clearButton.hidden = false;
+      submitSearch();
+    }));
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        if (state.type === tab.dataset.type || !input.value.trim()) return;
+        state.type = tab.dataset.type;
+        runSearch({ push: true });
+      });
+    });
+    $("time-filter").addEventListener("change", e => {
+      state.time = e.target.value;
+      if (input.value.trim()) runSearch({ push: true });
+    });
+
+    clearButton.addEventListener("click", () => { input.value = ""; clearButton.hidden = true; input.focus(); openRecentDropdown(); });
 
     window.addEventListener("popstate", () => {
-      const query = new URLSearchParams(window.location.search).get("q") || "";
-      input.value = query;
+      const params = new URLSearchParams(window.location.search);
+      const q = (params.get("q") || "").trim();
+      state.type = ["web", "news", "images"].includes(params.get("t")) ? params.get("t") : "web";
+      state.time = ["d", "w", "m", "y"].includes(params.get("tl")) ? params.get("tl") : "";
+      if (q) { input.value = q; runSearch({ push: false }); } else resetToHome();
+    });
 
-      if (query.trim()) {
-        performSearch();
-      } else {
-        if (searchController) searchController.abort();
-        searchRequestId++;
-        resultsArea.replaceChildren();
+    /* ───────────── Suggestions dropdown ───────────── */
+
+    let suggestions = [];          // [{ text, recent }]
+    let activeSuggestion = -1;
+    let suggestionTimer = null;
+    let suggestionController = null;
+    let suggestionRequestId = 0;
+    const suggestCache = new Map();
+
+    function closeSuggestions() {
+      clearTimeout(suggestionTimer);
+      suggestionRequestId++;
+      if (suggestionController) { suggestionController.abort(); suggestionController = null; }
+      suggestionBox.classList.remove("open");
+      input.setAttribute("aria-expanded", "false");
+      input.removeAttribute("aria-activedescendant");
+      activeSuggestion = -1;
+    }
+
+    function boldMatch(node, text, typed) {
+      const i = typed ? text.toLowerCase().indexOf(typed.toLowerCase()) : -1;
+      if (i < 0) { node.textContent = text; return; }
+      node.append(document.createTextNode(text.slice(0, i)));
+      const m = document.createElement("mark");
+      m.textContent = text.slice(i, i + typed.length);
+      node.append(m, document.createTextNode(text.slice(i + typed.length)));
+    }
+
+    function renderDropdown(items, typed, showClear) {
+      suggestions = items;
+      activeSuggestion = -1;
+      suggestionBox.replaceChildren();
+      if (!items.length) { closeSuggestions(); return; }
+
+      suggestionBox.appendChild(el("div", "suggestion-heading", typed ? "Suggested searches" : "Recent searches"));
+
+      items.forEach((item, index) => {
+        const row = el("div", "suggestion-row");
+        const button = el("button", "suggestion-item");
+        button.type = "button";
+        button.id = `search-suggestion-${index}`;
+        button.setAttribute("role", "option");
+        button.setAttribute("aria-selected", "false");
+        const icon = el("span", "suggestion-icon", item.recent ? "🕘" : "⌕");
+        icon.setAttribute("aria-hidden", "true");
+        const text = el("span", "suggestion-text");
+        boldMatch(text, item.text, typed);
+        button.append(icon, text);
+        button.addEventListener("pointerdown", e => { e.preventDefault(); selectSuggestion(index, true); });
+        row.appendChild(button);
+        if (item.recent) {
+          const del = el("button", "suggestion-del", "✕");
+          del.type = "button";
+          del.setAttribute("aria-label", "Remove “" + item.text + "” from recent searches");
+          del.addEventListener("pointerdown", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            removeHistory(item.text);
+            if (typed) renderDropdown(items.filter(x => x !== item), typed, false);
+            else openRecentDropdown();
+          });
+          row.appendChild(del);
+        }
+        suggestionBox.appendChild(row);
+      });
+
+      if (showClear) {
+        const foot = el("button", "suggestion-foot", "Clear recent searches");
+        foot.type = "button";
+        foot.addEventListener("pointerdown", e => { e.preventDefault(); clearHistory(); closeSuggestions(); });
+        suggestionBox.appendChild(foot);
+      }
+      suggestionBox.classList.add("open");
+      input.setAttribute("aria-expanded", "true");
+    }
+
+    function openRecentDropdown() {
+      if (input.value.trim()) return;
+      renderDropdown(loadHistory().slice(0, 8).map(text => ({ text, recent: true })), "", true);
+    }
+
+    function setActiveSuggestion(index) {
+      const buttons = suggestionBox.querySelectorAll(".suggestion-item");
+      buttons.forEach((b, i) => { b.classList.toggle("active", i === index); b.setAttribute("aria-selected", String(i === index)); });
+      activeSuggestion = index;
+      if (index >= 0 && buttons[index]) {
+        input.setAttribute("aria-activedescendant", buttons[index].id);
+        buttons[index].scrollIntoView({ block: "nearest" });
+      } else input.removeAttribute("aria-activedescendant");
+    }
+
+    function selectSuggestion(index, go) {
+      if (index < 0 || index >= suggestions.length) return;
+      input.value = suggestions[index].text;
+      clearButton.hidden = false;
+      closeSuggestions();
+      if (go) submitSearch(); else input.focus();
+    }
+
+    function normalizeSuggestions(data) {
+      if (!Array.isArray(data?.suggestions)) return [];
+      const seen = new Set();
+      return data.suggestions
+        .map(item => typeof item === "string" ? item.trim() : String(item?.query ?? item?.text ?? item?.phrase ?? "").trim())
+        .filter(item => { if (!item) return false; const k = item.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; })
+        .slice(0, 8);
+    }
+
+    function mergeWithRecent(typed, fetched) {
+      const lower = typed.toLowerCase();
+      const recent = loadHistory().filter(h => h.toLowerCase().includes(lower) && h.toLowerCase() !== lower).slice(0, 3).map(text => ({ text, recent: true }));
+      const seen = new Set(recent.map(r => r.text.toLowerCase()));
+      const rest = fetched.filter(s => !seen.has(s.toLowerCase())).map(text => ({ text, recent: false }));
+      return [...recent, ...rest].slice(0, 8);
+    }
+
+    async function getSuggestions(typed) {
+      const requestId = ++suggestionRequestId;
+      if (suggestionController) { suggestionController.abort(); suggestionController = null; }
+
+      const key = typed.toLowerCase();
+      if (suggestCache.has(key)) { renderDropdown(mergeWithRecent(typed, suggestCache.get(key)), typed, false); return; }
+
+      const controller = new AbortController();
+      suggestionController = controller;
+      try {
+        const data = await apiRequest(`/api/search/suggest?q=${encodeURIComponent(typed)}`, { signal: controller.signal });
+        if (requestId !== suggestionRequestId || input.value.trim() !== typed) return;
+        if (data.success === false) throw new Error(data.error || "suggest failed");
+        const items = normalizeSuggestions(data);
+        suggestCache.set(key, items);
+        if (suggestCache.size > 100) suggestCache.delete(suggestCache.keys().next().value);
+        renderDropdown(mergeWithRecent(typed, items), typed, false);
+      } catch (error) {
+        if (error.name === "AbortError" || requestId !== suggestionRequestId) return;
+        showApiError("Autosuggest request failed", error);
+        renderDropdown(mergeWithRecent(typed, []), typed, false);       // still offer matching recent searches
+      } finally {
+        if (suggestionController === controller) suggestionController = null;
+      }
+    }
+
+    input.addEventListener("input", () => {
+      clearTimeout(suggestionTimer);
+      const typed = input.value.trim();
+      clearButton.hidden = !input.value;
+      if (!typed) { suggestionRequestId++; suggestionController?.abort(); openRecentDropdown(); return; }
+      if (typed.length < 2) { suggestionRequestId++; suggestionController?.abort(); closeSuggestions(); return; }
+      suggestionTimer = setTimeout(() => getSuggestions(typed), 220);
+    });
+
+    let skipFocusOpen = false;
+    input.addEventListener("focus", () => { if (skipFocusOpen) { skipFocusOpen = false; return; } if (!input.value.trim()) openRecentDropdown(); });
+    input.addEventListener("click", () => { if (!input.value.trim() && !suggestionBox.classList.contains("open")) openRecentDropdown(); });
+
+    input.addEventListener("keydown", event => {
+      const isOpen = suggestionBox.classList.contains("open");
+      if (event.key === "ArrowDown") {
+        if (!suggestions.length) return;
+        event.preventDefault();
+        if (!isOpen) { suggestionBox.classList.add("open"); input.setAttribute("aria-expanded", "true"); }
+        setActiveSuggestion(activeSuggestion >= suggestions.length - 1 ? 0 : activeSuggestion + 1);
+      } else if (event.key === "ArrowUp") {
+        if (!suggestions.length) return;
+        event.preventDefault();
+        setActiveSuggestion(activeSuggestion <= 0 ? suggestions.length - 1 : activeSuggestion - 1);
+      } else if (event.key === "Enter") {
+        event.preventDefault();
+        if (event.isComposing) return;
+        if (isOpen && activeSuggestion >= 0) selectSuggestion(activeSuggestion, true);
+        else { closeSuggestions(); submitSearch(); }
+      } else if (event.key === "Escape" && isOpen) {
+        event.preventDefault();
+        closeSuggestions();
       }
     });
 
-    /* Initialize */
+    document.addEventListener("pointerdown", event => {
+      if (!event.target.closest(".search-wrap")) closeSuggestions();
+    });
+
+    /* ───────────── Global shortcuts ───────────── */
+
+    document.addEventListener("keydown", event => {
+      if (!$("lightbox").hidden) {
+        if (event.key === "Escape") closeLightbox();
+        else if (event.key === "ArrowLeft") openLightbox(lbIndex - 1);
+        else if (event.key === "ArrowRight") openLightbox(lbIndex + 1);
+        return;
+      }
+      const typing = /^(input|textarea|select)$/i.test(event.target.tagName) || event.target.isContentEditable;
+      if (modal.classList.contains("show")) return;
+      if ((event.key === "/" && !typing && !event.ctrlKey && !event.metaKey && !event.altKey) ||
+          ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k")) {
+        event.preventDefault();
+        input.focus();
+        input.select();
+      }
+    });
+
+    /* ───────────── Start ───────────── */
 
     async function initialize() {
+      renderRecentChips();
       await checkAuth();
 
-      const query = new URLSearchParams(window.location.search).get("q");
+      const params = new URLSearchParams(window.location.search);
+      const query = (params.get("q") || "").trim();
       if (query) {
         input.value = query;
-        performSearch();
+        state.type = ["web", "news", "images"].includes(params.get("t")) ? params.get("t") : "web";
+        state.time = ["d", "w", "m", "y"].includes(params.get("tl")) ? params.get("tl") : "";
+        runSearch({ push: false });                       // replaceState: no duplicate history entry
+      } else {
+        skipFocusOpen = true;
+        input.focus();
       }
-
-      console.info("[Wizard Search] Initialized.", {
-        api: API,
-        autosuggestEndpoint: `${API}/api/search/suggest`
-      });
     }
 
     initialize();
