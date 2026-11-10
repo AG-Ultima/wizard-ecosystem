@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Wizard Chat — real-time messaging for Wizard Ecosystem users. Part of the Wizard Ecosystem by Arnav Gupta.">
     <meta name="author" content="Arnav Gupta">
     <meta name="robots" content="noindex">
@@ -21,410 +21,250 @@
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --ink:           #080612;
-            --ink-2:         #0e0b1e;
-            --ink-3:         #13102a;
-            --ink-4:         #1a1635;
-            --gold:          #c9a84c;
-            --gold-light:    #e8c97a;
-            --gold-dim:      rgba(201,168,76,0.1);
-            --gold-glow:     rgba(201,168,76,0.2);
-            --violet:        #7c5cbf;
-            --silver:        #d4d0e8;
-            --silver-dim:    rgba(212,208,232,0.55);
-            --muted:         rgba(212,208,232,0.32);
-            --border:        rgba(201,168,76,0.14);
-            --border-strong: rgba(201,168,76,0.4);
-            --own-bubble:    linear-gradient(135deg, #8b6520, #c9a84c);
-            --other-bubble:  rgba(255,255,255,0.05);
+            --ink: #080612;
+            --ink-2: #0e0b1e;
+            --ink-3: #13102a;
+            --ink-4: #1a1635;
+            --gold: #c9a84c;
+            --gold-light: #e8c97a;
+            --gold-dim: rgba(201,168,76,.1);
+            --gold-glow: rgba(201,168,76,.2);
+            --violet: #7c5cbf;
+            --silver: #d4d0e8;
+            --silver-dim: rgba(212,208,232,.62);
+            --muted: rgba(212,208,232,.4);
+            --border: rgba(201,168,76,.14);
+            --border-strong: rgba(201,168,76,.4);
+            --hair: rgba(212,208,232,.08);
+            --danger: #e07070;
         }
 
         html, body { height: 100%; overflow: hidden; }
-
         body {
-            font-family: 'DM Sans', sans-serif;
+            font-family: 'DM Sans', system-ui, sans-serif;
             background: var(--ink);
             color: var(--silver);
+            -webkit-font-smoothing: antialiased;
         }
+        button, input, textarea { font: inherit; color: inherit; }
+        button { cursor: pointer; }
+        :focus-visible { outline: 2px solid var(--gold-light); outline-offset: 2px; }
+        ::selection { background: rgba(201,168,76,.32); color: #fff; }
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-        /* ── Canvas ── */
-        #starfield {
-            position: fixed; inset: 0;
-            pointer-events: none; z-index: 0;
-        }
-        .amb {
-            position: fixed; border-radius: 50%;
-            filter: blur(130px); pointer-events: none; z-index: 0;
-            opacity: 0.3; animation: drift 20s ease-in-out infinite alternate;
-        }
+        /* ── Backdrop ── */
+        #starfield { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .amb { position: fixed; border-radius: 50%; filter: blur(130px); pointer-events: none; z-index: 0; opacity: .28; animation: drift 20s ease-in-out infinite alternate; }
         .amb-1 { width: 500px; height: 500px; top: -150px; left: -150px; background: radial-gradient(circle, #3a1f6e, transparent 70%); }
         .amb-2 { width: 450px; height: 450px; bottom: -100px; right: -100px; background: radial-gradient(circle, #5c3a1e, transparent 70%); animation-delay: -10s; }
         @keyframes drift { from { transform: translate(0,0); } to { transform: translate(35px,25px); } }
 
-        /* ── Layout ── */
-        .chat-shell {
-            position: relative; z-index: 10;
-            display: flex; height: 100vh;
+        .shell { position: relative; z-index: 10; display: flex; height: 100vh; height: 100dvh; }
+
+        /* ── Avatars ── */
+        .avatar {
+            --h: 262;
+            flex: none; display: grid; place-items: center; border-radius: 50%;
+            width: var(--s, 42px); height: var(--s, 42px);
+            font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: calc(var(--s, 42px) * .42);
+            color: var(--gold-light); letter-spacing: .02em;
+            background: radial-gradient(circle at 30% 25%, hsl(var(--h) 45% 34%), hsl(var(--h) 45% 14%));
+            border: 1px solid hsla(var(--h), 50%, 62%, .35);
         }
 
-        /* ─────────── SIDEBAR ─────────── */
+        /* ═══════ SIDEBAR ═══════ */
         .sidebar {
-            width: 320px; flex-shrink: 0;
-            background: rgba(13,10,26,0.92);
-            border-right: 1px solid var(--border);
-            display: flex; flex-direction: column;
-            backdrop-filter: blur(20px);
+            width: 344px; flex: none; display: flex; flex-direction: column;
+            background: rgba(11,8,24,.9); border-right: 1px solid var(--border); backdrop-filter: blur(20px);
         }
+        .side-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 20px 18px 12px; }
+        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; min-width: 0; }
+        .brand-glyph { font-size: 24px; filter: drop-shadow(0 0 10px rgba(201,168,76,.4)); }
+        .brand-name { font-family: 'Cormorant Garamond', serif; font-size: 23px; font-weight: 600; color: var(--gold-light); white-space: nowrap; }
+        .icon-btn {
+            width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 50%;
+            background: transparent; border: 1px solid var(--border); color: var(--silver-dim);
+            transition: background .18s, border-color .18s, color .18s;
+        }
+        .icon-btn:hover { border-color: var(--border-strong); color: var(--gold-light); background: var(--gold-dim); }
+        .icon-btn.gold { background: linear-gradient(135deg, var(--gold), #a8751e); border-color: transparent; color: var(--ink); }
+        .icon-btn.gold:hover { color: var(--ink); opacity: .9; box-shadow: 0 4px 18px rgba(201,168,76,.3); }
+        .icon-btn svg { width: 18px; height: 18px; }
 
-        .sidebar-head {
-            padding: 22px 20px 18px;
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0;
+        .side-search { padding: 0 18px 10px; }
+        .field {
+            width: 100%; background: rgba(255,255,255,.04); border: 1px solid var(--hair); border-radius: 12px;
+            padding: 10px 14px; font-size: 14px; font-weight: 300; outline: none; transition: border-color .2s, background .2s;
         }
+        .field::placeholder { color: var(--muted); }
+        .field:focus { border-color: rgba(201,168,76,.5); background: rgba(255,255,255,.06); }
+        input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 
-        /* Logo row */
-        .logo {
-            display: flex; align-items: center; gap: 10px;
-            text-decoration: none; margin-bottom: 18px;
-        }
-        .logo-glyph {
-            font-size: 26px;
-            filter: drop-shadow(0 0 10px rgba(201,168,76,0.4));
-            animation: lev 5s ease-in-out infinite;
-        }
-        @keyframes lev { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        .logo-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 19px; font-weight: 600;
-            background: linear-gradient(135deg, var(--gold-light), var(--gold));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        /* User card */
-        .user-card {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 12px;
-            background: var(--gold-dim);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            margin-bottom: 14px;
-        }
-        .user-avatar-lg {
-            width: 42px; height: 42px; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--violet), #3d2280);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
-            border: 1px solid var(--border);
-        }
-        .user-card-name {
-            font-size: 14px; font-weight: 500; color: var(--silver);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .user-card-email {
-            font-size: 11px; color: var(--muted);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
-        /* New chat button */
-        .new-chat-btn {
-            width: 100%;
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            border: none; border-radius: 100px;
-            padding: 10px 18px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px; font-weight: 500;
-            color: var(--ink); cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 7px;
-            transition: opacity 0.2s, box-shadow 0.2s;
-            letter-spacing: 0.02em;
-        }
-        .new-chat-btn:hover { opacity: 0.88; box-shadow: 0 4px 18px rgba(201,168,76,0.3); }
-
-        /* Conversation list */
-        .conv-list {
-            flex: 1; overflow-y: auto; padding: 10px 8px;
-            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-        }
-        .conv-list::-webkit-scrollbar { width: 4px; }
-        .conv-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
+        .conv-list { flex: 1; overflow-y: auto; padding: 4px 10px 10px; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
         .conv-item {
-            display: flex; align-items: center; gap: 11px;
-            padding: 11px 12px; border-radius: 14px;
-            cursor: pointer; margin-bottom: 2px;
-            transition: background 0.2s, border-color 0.2s;
-            border: 1px solid transparent;
-            position: relative;
+            position: relative; width: 100%; display: flex; align-items: center; gap: 12px; text-align: left;
+            padding: 11px 12px; margin-bottom: 2px; border-radius: 14px; border: 1px solid transparent; background: none;
+            transition: background .18s, border-color .18s;
         }
-        .conv-item:hover { background: rgba(255,255,255,0.04); border-color: var(--border); }
-        .conv-item.active {
-            background: var(--gold-dim);
-            border-color: var(--border-strong);
-        }
-        .conv-item.active::before {
-            content: '';
-            position: absolute; left: 0; top: 20%; bottom: 20%;
-            width: 2px; border-radius: 2px;
-            background: var(--gold);
-        }
-
-        .conv-avatar {
-            width: 42px; height: 42px; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--ink-4), var(--ink-3));
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 18px; font-weight: 600;
-            color: var(--gold-light);
-        }
+        .conv-item:hover { background: rgba(255,255,255,.04); }
+        .conv-item.active { background: var(--gold-dim); border-color: var(--border-strong); }
         .conv-info { flex: 1; min-width: 0; }
-        .conv-name {
-            font-size: 14px; font-weight: 500; color: var(--silver);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            margin-bottom: 3px;
+        .conv-name { font-size: 14.5px; font-weight: 500; color: var(--silver); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+        .conv-last { font-size: 12.5px; font-weight: 300; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .conv-item.unread .conv-name { color: #fff; }
+        .conv-item.unread .conv-last { color: var(--silver-dim); font-weight: 400; }
+        .conv-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex: none; }
+        .conv-time { font-size: 11px; color: var(--muted); }
+        .conv-item.unread .conv-time { color: var(--gold-light); }
+        .badge { min-width: 19px; height: 19px; padding: 0 6px; display: grid; place-items: center; border-radius: 100px; background: var(--gold); color: var(--ink); font-size: 11px; font-weight: 500; }
+        .list-note { padding: 34px 20px; text-align: center; font-size: 13px; font-weight: 300; color: var(--muted); line-height: 1.6; }
+
+        .side-foot { display: flex; align-items: center; gap: 11px; padding: 14px 18px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); }
+        .me-text { min-width: 0; flex: 1; }
+        .me-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .me-email { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .home-link { font-size: 12px; color: var(--gold); text-decoration: none; flex: none; }
+        .home-link:hover { text-decoration: underline; }
+
+        /* ═══════ MAIN PANE ═══════ */
+        .pane { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; background: rgba(8,6,18,.55); }
+
+        .pane-head {
+            display: flex; align-items: center; gap: 14px; flex: none; padding: 14px 24px;
+            border-bottom: 1px solid var(--border); background: rgba(13,10,26,.72); backdrop-filter: blur(12px);
         }
-        .conv-last {
-            font-size: 12px; font-weight: 300; color: var(--muted);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        .pane-head[hidden], .composer[hidden], .thread[hidden], .welcome[hidden], .banner[hidden], .jump[hidden], .gate[hidden] { display: none; }
+        .back-btn { display: none; }
+        .head-text { min-width: 0; }
+        .head-name { font-family: 'Cormorant Garamond', serif; font-size: 23px; font-weight: 600; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .head-status { font-size: 12.5px; font-weight: 300; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 18px; }
+        .head-status.typing { color: var(--gold-light); }
+
+        .banner { flex: none; padding: 8px 20px; text-align: center; font-size: 13px; background: rgba(224,112,112,.12); color: #f0b3b3; border-bottom: 1px solid rgba(224,112,112,.25); }
+
+        /* thread */
+        .thread {
+            flex: 1; overflow-y: auto; padding: 18px clamp(14px, 4vw, 44px) 10px; display: flex; flex-direction: column;
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent; overscroll-behavior: contain;
         }
-        .conv-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-        .conv-time { font-size: 10px; color: var(--muted); }
-        .unread-badge {
-            background: var(--gold); color: var(--ink);
-            border-radius: 100px; min-width: 18px; height: 18px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px; font-weight: 500; padding: 0 5px;
+        .thread > :first-child { margin-top: auto; }
+        .row { display: flex; align-items: flex-end; gap: 10px; width: 100%; max-width: 800px; margin: 0 auto; padding: 1px 0; }
+        .row.start { margin-top: 12px; }
+        .row.own { flex-direction: row-reverse; }
+        .row.enter .bubble { animation: pop .22s ease both; }
+        @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+        .slot { width: 32px; flex: none; }
+        .col { display: flex; flex-direction: column; min-width: 0; max-width: min(74%, 580px); }
+        .row.own .col { align-items: flex-end; }
+        .bubble {
+            padding: 9px 15px; border-radius: 18px; font-size: 15px; font-weight: 300; line-height: 1.55; color: var(--silver);
+            background: rgba(255,255,255,.065); border: 1px solid var(--border);
+            white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;
+        }
+        .row:not(.own):not(.start) .bubble { border-top-left-radius: 6px; }
+        .row:not(.own):not(.end) .bubble { border-bottom-left-radius: 6px; }
+        .row.own .bubble { background: linear-gradient(135deg, #dcb95c, #b98a2d); border-color: transparent; color: #1c1407; font-weight: 400; }
+        .row.own:not(.start) .bubble { border-top-right-radius: 6px; }
+        .row.own:not(.end) .bubble { border-bottom-right-radius: 6px; }
+        .row.pending .bubble { opacity: .6; }
+        .row.failed .bubble { background: rgba(224,112,112,.2); color: var(--silver); border: 1px solid rgba(224,112,112,.5); }
+        .bubble a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+        .row:not(.own) .bubble a { color: var(--gold-light); }
+        .meta { margin-top: 4px; padding: 0 4px; font-size: 11.5px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+        .meta .seen { color: var(--gold); }
+        .meta button { background: none; border: 0; padding: 0; color: var(--gold-light); font-size: 11.5px; text-decoration: underline; }
+        .meta .bad { color: #f0a0a0; }
+
+        .day, .newline { display: flex; align-items: center; gap: 14px; width: 100%; max-width: 800px; margin: 22px auto 8px; color: var(--muted); font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 15px; }
+        .day::before, .day::after, .newline::before, .newline::after { content: ""; flex: 1; height: 1px; background: var(--hair); }
+        .newline { color: var(--gold-light); font-family: 'DM Sans', sans-serif; font-style: normal; font-size: 12px; }
+        .newline::before, .newline::after { background: rgba(201,168,76,.35); }
+
+        .older { align-self: center; margin: 4px 0 8px; padding: 7px 16px; border-radius: 100px; border: 1px solid var(--border); background: rgba(255,255,255,.04); font-size: 13px; color: var(--silver-dim); }
+        .older:hover { border-color: var(--border-strong); color: var(--gold-light); }
+
+        .typing-row .bubble { display: flex; gap: 5px; padding: 13px 15px; }
+        .typing-row i { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: bounce 1.3s infinite; }
+        .typing-row i:nth-child(2) { animation-delay: .18s; } .typing-row i:nth-child(3) { animation-delay: .36s; }
+        @keyframes bounce { 0%, 60%, 100% { transform: none; opacity: .5; } 30% { transform: translateY(-5px); opacity: 1; } }
+
+        .skel-row { display: flex; width: 100%; max-width: 800px; margin: 8px auto; }
+        .skel-row.own { justify-content: flex-end; }
+        .skel { height: 40px; border-radius: 18px; background: rgba(255,255,255,.05); position: relative; overflow: hidden; }
+        .skel::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent); animation: shimmer 1.4s infinite; }
+        @keyframes shimmer { to { transform: translateX(100%); } }
+
+        .jump {
+            position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 5; padding: 8px 16px; border-radius: 100px;
+            background: var(--gold); color: var(--ink); border: 0; font-size: 13px; font-weight: 500; box-shadow: 0 8px 28px rgba(0,0,0,.45);
         }
 
-        /* Empty sidebar */
-        .empty-state {
-            text-align: center; padding: 50px 20px; color: var(--muted);
+        /* composer */
+        .composer { flex: none; padding: 8px clamp(14px, 4vw, 44px) calc(16px + env(safe-area-inset-bottom)); }
+        .composer-box {
+            max-width: 800px; margin: 0 auto; display: flex; align-items: flex-end; gap: 10px; padding: 7px 7px 7px 18px;
+            background: rgba(14,11,30,.86); border: 1px solid var(--border); border-radius: 24px;
+            box-shadow: 0 14px 40px rgba(0,0,0,.35); transition: border-color .2s;
         }
-        .empty-icon { font-size: 44px; margin-bottom: 12px; opacity: 0.35; display: block; }
-        .empty-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 18px; font-weight: 400; font-style: italic;
-            color: var(--silver-dim); margin-bottom: 6px;
-        }
-        .empty-sub { font-size: 12px; font-weight: 300; }
-
-        /* ─────────── CHAT AREA ─────────── */
-        .chat-area {
-            flex: 1; display: flex; flex-direction: column;
-            min-width: 0; overflow: hidden;
-            background: rgba(8,6,18,0.6);
-        }
-
-        /* Chat header */
-        .chat-header {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; gap: 14px;
-            background: rgba(13,10,26,0.7);
-            backdrop-filter: blur(12px);
-            flex-shrink: 0;
-        }
-        .chat-avatar {
-            width: 44px; height: 44px; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--ink-4), var(--ink-3));
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 20px; font-weight: 600;
-            color: var(--gold-light);
-        }
-        .chat-header-name {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 20px; font-weight: 600; color: var(--silver);
-        }
-        .chat-header-status { font-size: 12px; font-weight: 300; color: var(--muted); }
-        .status-dot {
-            display: inline-block; width: 6px; height: 6px;
-            background: #4ade80; border-radius: 50; margin-right: 5px;
-        }
-
-        /* Messages */
-        .messages-area {
-            flex: 1; overflow-y: auto; padding: 24px 28px;
-            display: flex; flex-direction: column; gap: 14px;
-            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-        }
-        .messages-area::-webkit-scrollbar { width: 4px; }
-        .messages-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-        .message {
-            display: flex; gap: 10px;
-            max-width: 68%;
-            animation: msg-in 0.25s ease both;
-        }
-        @keyframes msg-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .message.own { align-self: flex-end; flex-direction: row-reverse; }
-
-        .msg-avatar {
-            width: 32px; height: 32px; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--ink-4), var(--ink-3));
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 14px; color: var(--gold-light);
-        }
-        .message.own .msg-avatar { background: linear-gradient(135deg, #6b4c14, #9a7030); }
-
-        .msg-content { display: flex; flex-direction: column; }
-        .message.own .msg-content { align-items: flex-end; }
-
-        .msg-bubble {
-            background: var(--other-bubble);
-            border: 1px solid var(--border);
-            border-radius: 18px 18px 18px 4px;
-            padding: 10px 15px;
-            font-size: 14px; font-weight: 300;
-            line-height: 1.6; color: var(--silver);
-        }
-        .message.own .msg-bubble {
-            background: var(--own-bubble);
-            border-color: transparent;
-            border-radius: 18px 18px 4px 18px;
-            color: rgba(255,255,255,0.95);
-        }
-        .msg-time { font-size: 10px; color: var(--muted); margin-top: 4px; padding: 0 4px; }
-
-        /* Typing indicator */
-        .typing-indicator {
-            display: flex; align-items: center; gap: 5px;
-            padding: 10px 14px;
-            background: var(--other-bubble);
-            border: 1px solid var(--border);
-            border-radius: 18px 18px 18px 4px;
-            width: fit-content;
-        }
-        .typing-dot {
-            width: 6px; height: 6px;
-            background: var(--gold); border-radius: 50%;
-            animation: bounce 1.4s infinite;
-        }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-7px); } }
-
-        /* Input area */
-        .input-area {
-            padding: 14px 20px;
-            border-top: 1px solid var(--border);
-            display: flex; align-items: flex-end; gap: 10px;
-            background: rgba(13,10,26,0.7);
-            backdrop-filter: blur(12px);
-            flex-shrink: 0;
-        }
-        .msg-input {
-            flex: 1;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 11px 18px;
-            color: var(--silver);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px; font-weight: 300;
-            resize: none; outline: none;
-            line-height: 1.5;
-            max-height: 120px;
-            transition: border-color 0.2s;
-        }
+        .composer-box:focus-within { border-color: rgba(201,168,76,.5); }
+        .msg-input { flex: 1; min-width: 0; background: none; border: 0; outline: none; resize: none; padding: 9px 0; max-height: 140px; font-size: 15px; font-weight: 300; line-height: 1.5; }
         .msg-input::placeholder { color: var(--muted); }
-        .msg-input:focus { border-color: rgba(201,168,76,0.45); }
+        .send-btn { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border: 0; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #a8751e); color: var(--ink); transition: opacity .2s, transform .12s, background .2s; }
+        .send-btn:disabled { background: rgba(255,255,255,.08); color: var(--muted); cursor: default; }
+        .send-btn:not(:disabled):hover { opacity: .9; } .send-btn:not(:disabled):active { transform: scale(.93); }
+        .send-btn svg { width: 19px; height: 19px; }
+        .counter { max-width: 800px; margin: 4px auto 0; padding: 0 18px; text-align: right; font-size: 12px; color: var(--muted); }
+        .counter[hidden] { display: none; }
+        .counter.over { color: var(--danger); }
 
-        .send-btn {
-            background: linear-gradient(135deg, var(--gold), #a8751e);
-            border: none; border-radius: 100px;
-            width: 44px; height: 44px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 18px;
-            transition: opacity 0.2s, box-shadow 0.2s, transform 0.15s;
-        }
-        .send-btn:hover { opacity: 0.88; box-shadow: 0 4px 16px rgba(201,168,76,0.35); }
-        .send-btn:active { transform: scale(0.93); }
+        /* welcome */
+        .welcome { flex: 1; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 30px; text-align: center; }
+        .welcome svg { width: 150px; height: 150px; margin-bottom: 4px; }
+        .welcome h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 4vw, 44px); font-weight: 300; color: #efeafc; letter-spacing: -.01em; }
+        .welcome p { max-width: 36ch; font-size: 15px; font-weight: 300; line-height: 1.6; color: var(--silver-dim); }
+        .btn-gold { margin-top: 6px; padding: 11px 26px; border: 0; border-radius: 100px; background: linear-gradient(135deg, var(--gold), #a8751e); color: var(--ink); font-size: 14px; font-weight: 500; }
+        .btn-gold:hover { opacity: .9; box-shadow: 0 4px 18px rgba(201,168,76,.3); }
+        .hint { font-size: 12.5px; color: var(--muted); }
+        kbd { font-family: ui-monospace, "DejaVu Sans Mono", monospace; font-size: 11.5px; padding: 1px 6px; border: 1px solid rgba(212,208,232,.2); border-bottom-width: 2px; border-radius: 6px; background: rgba(255,255,255,.05); }
 
-        /* ─────────── MODAL ─────────── */
-        .modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(5,3,14,0.93);
-            backdrop-filter: blur(18px);
-            z-index: 9999;
-            align-items: center; justify-content: center;
-        }
-        .modal-overlay.show { display: flex; }
-        .modal-box {
-            background: linear-gradient(160deg, var(--ink-3), var(--ink-2));
-            border: 1px solid var(--border);
-            border-radius: 24px; padding: 36px 32px;
-            width: 400px; max-width: 92vw;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
-            animation: modal-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        @keyframes modal-in {
-            from { opacity: 0; transform: scale(0.9) translateY(16px); }
-            to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .modal-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 26px; font-weight: 400;
-            color: var(--silver); margin-bottom: 20px;
-        }
-        .modal-field {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px; padding: 12px 16px;
-            color: var(--silver);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 14px; outline: none;
-            margin-bottom: 14px;
-            transition: border-color 0.2s;
-        }
-        .modal-field:focus { border-color: rgba(201,168,76,0.5); }
-        .modal-field::placeholder { color: var(--muted); }
+        /* modal + gate */
+        .overlay { position: fixed; inset: 0; z-index: 9999; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(5,3,14,.9); backdrop-filter: blur(16px); }
+        .overlay.show { display: flex; }
+        .modal { width: 440px; max-width: 100%; max-height: min(640px, 90dvh); display: flex; flex-direction: column; padding: 28px 24px 22px; background: linear-gradient(160deg, var(--ink-3), var(--ink-2)); border: 1px solid var(--border); border-radius: 24px; box-shadow: 0 40px 100px rgba(0,0,0,.6); animation: modal-in .26s cubic-bezier(.34,1.4,.64,1); }
+        @keyframes modal-in { from { opacity: 0; transform: scale(.94) translateY(12px); } to { opacity: 1; transform: none; } }
+        .modal h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 400; margin-bottom: 14px; }
+        .results { overflow-y: auto; margin: 10px -6px 0; padding: 0 6px; min-height: 60px; }
+        .result { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 10px; border-radius: 12px; border: 1px solid transparent; background: none; text-align: left; }
+        .result:hover, .result.active { background: var(--gold-dim); border-color: var(--border); }
+        .result-name { font-size: 14.5px; font-weight: 500; }
+        .result-email { font-size: 12px; color: var(--muted); }
+        .result-tag { margin-left: auto; font-size: 12px; color: var(--gold); flex: none; }
+        .btn-ghost { margin-top: 14px; padding: 11px; border-radius: 14px; border: 1px solid var(--border); background: rgba(255,255,255,.04); font-size: 13.5px; color: var(--silver-dim); }
+        .btn-ghost:hover { color: var(--silver); background: rgba(255,255,255,.07); }
+        .gate { position: fixed; inset: 0; z-index: 10000; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 24px; text-align: center; background: rgba(5,3,14,.96); }
+        .gate h2 { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 300; }
+        .gate p { max-width: 38ch; color: var(--silver-dim); font-weight: 300; line-height: 1.6; }
+        .gate a { text-decoration: none; display: inline-block; }
 
-        .search-result-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 12px; border-radius: 12px; cursor: pointer;
-            border: 1px solid transparent;
-            transition: background 0.2s, border-color 0.2s;
-        }
-        .search-result-item:hover { background: var(--gold-dim); border-color: var(--border); }
-        .search-result-avatar {
-            width: 36px; height: 36px; flex-shrink: 0;
-            background: linear-gradient(135deg, var(--ink-4), var(--ink-3));
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 16px; color: var(--gold-light);
-        }
-        .result-name { font-size: 14px; font-weight: 500; color: var(--silver); }
-        .result-email { font-size: 11px; color: var(--muted); }
+        .toast { position: fixed; left: 50%; bottom: 28px; z-index: 11000; transform: translate(-50%, 20px); padding: 10px 20px; border-radius: 100px; background: var(--ink-4); border: 1px solid var(--border-strong); font-size: 13.5px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; max-width: 90vw; }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .toast.error { border-color: rgba(224,112,112,.6); color: #f4c0c0; }
 
-        .btn-cancel {
-            width: 100%; background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border); border-radius: 14px;
-            padding: 11px; margin-top: 12px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 13px; color: var(--muted);
-            cursor: pointer; transition: background 0.2s, color 0.2s;
+        /* ═══════ MOBILE ═══════ */
+        @media (max-width: 760px) {
+            .sidebar, .pane { position: absolute; inset: 0; width: 100%; transition: transform .28s cubic-bezier(.4,0,.2,1); }
+            .sidebar { z-index: 5; }
+            .pane { transform: translateX(100%); }
+            .shell.chat-open .sidebar { transform: translateX(-100%); }
+            .shell.chat-open .pane { transform: none; }
+            .back-btn { display: grid; }
+            .pane-head { padding: 10px 14px; gap: 10px; }
+            .col { max-width: 82%; }
+            .slot { width: 28px; }
+            .jump { bottom: 90px; }
         }
-        .btn-cancel:hover { background: rgba(255,255,255,0.07); color: var(--silver); }
-
-        /* ─────────── RESPONSIVE ─────────── */
-        @media (max-width: 680px) {
-            .sidebar { width: 100%; position: absolute; z-index: 100; height: 100%; transform: translateX(-100%); transition: transform 0.3s ease; }
-            .sidebar.open { transform: translateX(0); }
-            .chat-area { width: 100%; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
         }
     </style>
 </head>
@@ -433,387 +273,864 @@
     <div class="amb amb-1" aria-hidden="true"></div>
     <div class="amb amb-2" aria-hidden="true"></div>
 
-    <div class="chat-shell">
-        <!-- ── Sidebar ── -->
+    <div class="shell" id="shell">
         <aside class="sidebar" aria-label="Conversations">
-            <div class="sidebar-head">
-                <a class="logo" href="https://wizardecosystem.dev" aria-label="Back to Wizard Ecosystem">
-                    <span class="logo-glyph" aria-hidden="true">🧙</span>
-                    <span class="logo-name">Wizard Chat</span>
+            <div class="side-top">
+                <a class="brand" href="https://wizardecosystem.dev" aria-label="Back to Wizard Ecosystem">
+                    <span class="brand-glyph" aria-hidden="true">🧙</span>
+                    <span class="brand-name">Wizard Chat</span>
                 </a>
-
-                <div class="user-card" role="status">
-                    <div class="user-avatar-lg" aria-hidden="true">🧙</div>
-                    <div style="min-width:0;">
-                        <div class="user-card-name" id="user-name">Loading…</div>
-                        <div class="user-card-email" id="user-email">Loading…</div>
-                    </div>
-                </div>
-
-                <button class="new-chat-btn" id="new-chat-btn" aria-label="Start a new conversation">
-                    <span aria-hidden="true">✦</span> New Conversation
+                <button class="icon-btn gold" id="new-chat-btn" type="button" aria-label="New conversation" title="New conversation (Ctrl+K)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                 </button>
             </div>
-
-            <div class="conv-list" id="conv-list" role="list" aria-label="Conversation list">
-                <div class="empty-state">
-                    <span class="empty-icon" aria-hidden="true">💬</span>
-                    <p class="empty-title">No conversations yet</p>
-                    <p class="empty-sub">Start one with the button above</p>
+            <div class="side-search">
+                <input class="field" id="conv-filter" type="search" placeholder="Search conversations" aria-label="Search conversations" autocomplete="off">
+            </div>
+            <div class="conv-list" id="conv-list" role="list" aria-label="Conversation list"></div>
+            <div class="side-foot">
+                <div class="avatar" id="me-avatar" style="--s:38px" aria-hidden="true">?</div>
+                <div class="me-text">
+                    <div class="me-name" id="me-name">Loading…</div>
+                    <div class="me-email" id="me-email"></div>
                 </div>
+                <a class="home-link" href="https://wizardecosystem.dev">Ecosystem</a>
             </div>
         </aside>
 
-        <!-- ── Chat Area ── -->
-        <main class="chat-area" aria-label="Chat">
-            <header class="chat-header">
-                <div class="chat-avatar" id="chat-avatar" aria-hidden="true">✦</div>
-                <div>
-                    <div class="chat-header-name" id="chat-name">Select a conversation</div>
-                    <div class="chat-header-status" id="chat-status">Choose from the sidebar to begin</div>
+        <main class="pane" aria-label="Chat">
+            <header class="pane-head" id="pane-head" hidden>
+                <button class="icon-btn back-btn" id="back-btn" type="button" aria-label="Back to conversations">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+                </button>
+                <div class="avatar" id="head-avatar" style="--s:44px" aria-hidden="true"></div>
+                <div class="head-text">
+                    <div class="head-name" id="head-name"></div>
+                    <div class="head-status" id="head-status"></div>
                 </div>
             </header>
 
-            <div class="messages-area" id="messages-area" role="log" aria-live="polite" aria-label="Messages">
-                <div class="empty-state" style="margin: auto;">
-                    <span class="empty-icon" aria-hidden="true">💬</span>
-                    <p class="empty-title">Select a conversation</p>
-                    <p class="empty-sub">Your messages will appear here</p>
-                </div>
-            </div>
+            <div class="banner" id="banner" role="status" hidden>You're offline. Trying to reconnect…</div>
 
-            <div class="input-area">
-                <textarea
-                    class="msg-input"
-                    id="message-input"
-                    placeholder="Write a message…"
-                    rows="1"
-                    aria-label="Message input"
-                ></textarea>
-                <button class="send-btn" id="send-btn" aria-label="Send message">➤</button>
-            </div>
+            <div class="thread" id="thread" role="log" aria-label="Messages" hidden></div>
+            <button class="jump" id="jump" type="button" hidden>↓ New messages</button>
+
+            <form class="composer" id="composer" hidden>
+                <div class="composer-box">
+                    <textarea class="msg-input" id="message-input" rows="1" placeholder="Write a message…" aria-label="Message" maxlength="4000"></textarea>
+                    <button class="send-btn" id="send-btn" type="submit" aria-label="Send message" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                    </button>
+                </div>
+                <div class="counter" id="counter" hidden></div>
+            </form>
+
+            <section class="welcome" id="welcome">
+                <svg viewBox="0 0 160 160" fill="none" aria-hidden="true">
+                    <circle cx="80" cy="80" r="74" stroke="rgba(201,168,76,.35)" stroke-width="1"/>
+                    <circle cx="80" cy="80" r="56" stroke="rgba(150,118,222,.45)" stroke-width="1" stroke-dasharray="2 5"/>
+                    <path d="M40 62l40 28 40-28v40a6 6 0 0 1-6 6H46a6 6 0 0 1-6-6V62z" fill="rgba(124,92,191,.18)" stroke="#c9a84c" stroke-width="1.4" stroke-linejoin="round"/>
+                    <path d="M40 62a6 6 0 0 1 6-6h68a6 6 0 0 1 6 6l-40 28-40-28z" stroke="#e8c97a" stroke-width="1.4" stroke-linejoin="round"/>
+                    <circle cx="124" cy="38" r="3.5" fill="#e8c97a"/><circle cx="34" cy="118" r="2.5" fill="#b79cf0"/>
+                </svg>
+                <h2 id="welcome-title">Start a conversation</h2>
+                <p id="welcome-text">Message anyone with a Wizard account. Conversations stay in sync across all your devices.</p>
+                <button class="btn-gold" id="welcome-cta" type="button">New conversation</button>
+                <span class="hint">Press <kbd>Ctrl</kbd> <kbd>K</kbd> anytime</span>
+            </section>
         </main>
     </div>
 
-    <!-- ── New Chat Modal ── -->
-    <div id="new-chat-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
-        <div class="modal-box">
-            <h2 class="modal-title" id="modal-heading">New Conversation</h2>
-            <input
-                class="modal-field"
-                type="search"
-                id="search-users"
-                placeholder="Search by name or email…"
-                autocomplete="off"
-                aria-label="Search users"
-            >
-            <div id="search-results" role="list" aria-label="User search results"></div>
-            <button class="btn-cancel" id="close-modal">Cancel</button>
+    <div class="sr-only" id="announcer" aria-live="polite"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <div class="overlay" id="new-chat-modal" role="dialog" aria-modal="true" aria-labelledby="modal-heading">
+        <div class="modal">
+            <h2 id="modal-heading">New conversation</h2>
+            <input class="field" type="search" id="search-users" placeholder="Search by name or email" autocomplete="off" aria-label="Search users" aria-controls="search-results">
+            <div class="results" id="search-results" role="listbox" aria-label="People"></div>
+            <button class="btn-ghost" id="close-modal" type="button">Cancel</button>
         </div>
     </div>
 
+    <div class="gate" id="gate" role="alertdialog" aria-labelledby="gate-title" hidden>
+        <div style="font-size:44px" aria-hidden="true">🧙</div>
+        <h2 id="gate-title">Sign in to chat</h2>
+        <p>Wizard Chat uses your Wizard Ecosystem account. Sign in there, then come back.</p>
+        <a class="btn-gold" href="https://wizardecosystem.dev">Go to Wizard Ecosystem</a>
+    </div>
+
     <script>
-        /* ── Starfield ── */
-        (function() {
-            const canvas = document.getElementById('starfield');
-            const ctx = canvas.getContext('2d');
-            let W, H;
-            const stars = Array.from({ length: 180 }, () => ({
-                x: Math.random(), y: Math.random(),
-                r: Math.random() * 1.2 + 0.2,
-                phase: Math.random() * Math.PI * 2,
-                speed: Math.random() * 0.8 + 0.3
-            }));
-            function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
-            resize(); window.addEventListener('resize', resize);
-            (function draw() {
-                ctx.clearRect(0, 0, W, H);
-                const t = Date.now() / 1000;
-                stars.forEach(s => {
-                    const a = 0.2 + 0.45 * (Math.sin(t * s.speed + s.phase) * 0.5 + 0.5);
-                    ctx.beginPath();
-                    ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(212,208,232,${a})`;
-                    ctx.fill();
-                });
-                requestAnimationFrame(draw);
-            })();
-        })();
+    (() => {
+        "use strict";
 
-        /* ── App Logic ── */
-        const API = 'https://arnav0928.pythonanywhere.com';
-        let currentUser = null;
-        let conversations = [];
-        let currentConvId = null;
-        let messages = [];
-        let pollingInterval = null;
-        let typingTimeout = null;
-        let isTyping = false;
+        const API = (window.WIZ_API_BASE || "https://arnav0928.pythonanywhere.com").replace(/\/$/, "");
+        const $ = id => document.getElementById(id);
+        const MAX_LEN = 4000;
+        const PAGE = 50;
+        const GROUP_GAP = 5 * 60 * 1000;
+        const HUES = [262, 280, 38, 205, 160, 330, 20];
 
-        function esc(str) {
-            if (!str) return '';
-            const d = document.createElement('div');
-            d.textContent = str;
-            return d.innerHTML;
+        const S = {
+            me: null, convs: [], active: null, msgs: [], hasMore: false, readUpTo: 0, typing: false,
+            firstUnreadId: null, unseenBelow: 0, online: true, polling: false, pollTimer: null,
+            loadingOlder: false, tempSeq: 0, seen: new Set(), animate: false, filter: "", convSig: ""
+        };
+
+        /* ───────────── tiny helpers ───────────── */
+
+        function el(tag, className, text) {
+            const n = document.createElement(tag);
+            if (className) n.className = className;
+            if (text !== undefined) n.textContent = text;
+            return n;
         }
 
-        function formatTime(ts) {
-            if (!ts) return '';
-            const d = new Date(ts), now = new Date(), diff = now - d;
-            if (diff < 86400000 && d.getDate() === now.getDate())
-                return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            if (diff < 604800000)
-                return d.toLocaleDateString([], { weekday: 'short' });
-            return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        async function api(path, opts = {}) {
+            const init = { credentials: "include", ...opts };
+            if (opts.body) init.headers = { "Content-Type": "application/json" };
+            const res = await fetch(API + path, init);
+            let data = null;
+            try { data = await res.json(); } catch (e) { /* not JSON */ }
+            if (!res.ok) {
+                const err = new Error((data && data.error) || "Request failed (" + res.status + ")");
+                err.status = res.status;
+                throw err;
+            }
+            return data || {};
+        }
+
+        function parseTs(ts) {
+            if (!ts) return null;
+            let s = String(ts);
+            if (!/[zZ]|[+-]\d\d:?\d\d$/.test(s)) s += "Z";           // server times are UTC
+            const d = new Date(s);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+        const clock = d => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+        function listTime(ts) {
+            const d = parseTs(ts);
+            if (!d) return "";
+            const now = new Date();
+            if (sameDay(d, now)) return clock(d);
+            const days = (now - d) / 86400000;
+            if (days < 6) return d.toLocaleDateString([], { weekday: "short" });
+            return d.toLocaleDateString([], { month: "short", day: "numeric" });
+        }
+        function dayLabel(d) {
+            const now = new Date();
+            if (sameDay(d, now)) return "Today";
+            const y = new Date(now); y.setDate(now.getDate() - 1);
+            if (sameDay(d, y)) return "Yesterday";
+            return d.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: d.getFullYear() === now.getFullYear() ? undefined : "numeric" });
         }
 
         function initials(name) {
-            if (!name) return '?';
-            return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            const parts = String(name || "?").replace(/@.*/, "").split(/[\s._-]+/).filter(Boolean);
+            return (parts.map(w => w[0]).join("").slice(0, 2) || "?").toUpperCase();
+        }
+        function avatar(name, size) {
+            let h = 0;
+            for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+            const a = el("div", "avatar", initials(name));
+            a.style.setProperty("--h", HUES[h % HUES.length]);
+            if (size) a.style.setProperty("--s", size + "px");
+            a.setAttribute("aria-hidden", "true");
+            return a;
         }
 
-        /* ── Auth ── */
-        async function checkAuth() {
+        let toastTimer = null;
+        function toast(message, type) {
+            const t = $("toast");
+            t.textContent = message;
+            t.className = "toast show" + (type === "error" ? " error" : "");
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => { t.className = "toast"; }, 3400);
+        }
+
+        const isMobile = () => window.matchMedia("(max-width: 760px)").matches;
+        const attentive = () => document.visibilityState === "visible" && document.hasFocus();
+        const myId = () => S.me && S.me.id;
+        const activeConv = () => S.convs.find(c => c.id === S.active) || null;
+
+        /* Message text: escaped by construction (textContent), links only for http(s). */
+        function renderText(container, text) {
+            const re = /https?:\/\/[^\s<>"']+/g;
+            let last = 0, m;
+            while ((m = re.exec(text))) {
+                let url = m[0];
+                const trail = url.match(/[.,!?;:)\]]+$/);
+                if (trail) url = url.slice(0, -trail[0].length);
+                let ok = false;
+                try { const u = new URL(url); ok = u.protocol === "http:" || u.protocol === "https:"; } catch (e) { /* not a URL */ }
+                if (!ok) continue;
+                if (m.index > last) container.appendChild(document.createTextNode(text.slice(last, m.index)));
+                const a = el("a", "", url);
+                a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer nofollow";
+                container.appendChild(a);
+                last = m.index + url.length;
+                re.lastIndex = last;
+            }
+            if (last < text.length) container.appendChild(document.createTextNode(text.slice(last)));
+        }
+
+        /* ───────────── starfield (pauses when the tab is hidden) ───────────── */
+
+        (function starfield() {
+            const canvas = $("starfield"), ctx = canvas.getContext("2d");
+            const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            const stars = Array.from({ length: 120 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.1 + .2, p: Math.random() * 6.28, s: Math.random() * .8 + .3 }));
+            let W = 0, H = 0, raf = 0;
+            function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; if (reduce) draw(); }
+            function draw() {
+                ctx.clearRect(0, 0, W, H);
+                const t = Date.now() / 1000;
+                for (const s of stars) {
+                    ctx.beginPath();
+                    ctx.arc(s.x * W, s.y * H, s.r, 0, 6.283);
+                    ctx.fillStyle = "rgba(212,208,232," + (.18 + .4 * (Math.sin(t * s.s + s.p) * .5 + .5)) + ")";
+                    ctx.fill();
+                }
+                if (!reduce) raf = requestAnimationFrame(draw);
+            }
+            resize(); addEventListener("resize", resize);
+            if (!reduce) {
+                draw();
+                document.addEventListener("visibilitychange", () => {
+                    cancelAnimationFrame(raf);
+                    if (!document.hidden) draw();
+                });
+            }
+        })();
+
+        /* ───────────── conversation list ───────────── */
+
+        function convSignature() {
+            return JSON.stringify([S.convs, S.active, S.filter, myId()]);
+        }
+
+        function renderConvs(force) {
+            const sig = convSignature();
+            if (!force && sig === S.convSig) return;
+            S.convSig = sig;
+
+            const list = $("conv-list");
+            const q = S.filter.trim().toLowerCase();
+            const shown = q ? S.convs.filter(c => (c.name + " " + c.email).toLowerCase().includes(q)) : S.convs;
+            const frag = document.createDocumentFragment();
+
+            if (!S.convs.length) {
+                frag.appendChild(el("p", "list-note", "No conversations yet. Press the + button to start one."));
+            } else if (!shown.length) {
+                frag.appendChild(el("p", "list-note", "No conversation matches “" + S.filter.trim() + "”."));
+            }
+            shown.forEach(c => {
+                const item = el("button", "conv-item" + (c.id === S.active ? " active" : "") + (c.unread_count ? " unread" : ""));
+                item.type = "button";
+                item.setAttribute("role", "listitem");
+                item.dataset.id = c.id;
+                item.setAttribute("aria-label", "Conversation with " + c.name + (c.unread_count ? ", " + c.unread_count + " unread" : ""));
+                if (c.id === S.active) item.setAttribute("aria-current", "true");
+
+                const info = el("div", "conv-info");
+                info.appendChild(el("div", "conv-name", c.name));
+                const preview = c.last_message ? (c.last_sender_id === myId() ? "You: " : "") + c.last_message : "No messages yet";
+                info.appendChild(el("div", "conv-last", preview));
+
+                const meta = el("div", "conv-meta");
+                meta.appendChild(el("div", "conv-time", c.last_message_time ? listTime(c.last_message_time) : ""));
+                if (c.unread_count > 0) meta.appendChild(el("div", "badge", c.unread_count > 99 ? "99+" : String(c.unread_count)));
+
+                item.append(avatar(c.name, 44), info, meta);
+                item.addEventListener("click", () => openConv(c.id));
+                frag.appendChild(item);
+            });
+            list.replaceChildren(frag);
+        }
+
+        function updateTitle() {
+            const total = S.convs.reduce((n, c) => n + (c.unread_count || 0), 0);
+            document.title = (total ? "(" + total + ") " : "") + "Wizard Chat — Magical Messaging";
+        }
+
+        function setConvs(list) {
+            S.convs = Array.isArray(list) ? list : [];
+            renderConvs();
+            updateTitle();
+            const welcomeTitle = $("welcome-title"), text = $("welcome-text");
+            if (S.convs.length) { welcomeTitle.textContent = "Pick up a thread"; text.textContent = "Choose a conversation on the left, or start a new one."; }
+            else { welcomeTitle.textContent = "Start a conversation"; text.textContent = "Message anyone with a Wizard account. Conversations stay in sync across all your devices."; }
+        }
+
+        async function loadConvs() {
+            const d = await api("/api/chat/conversations");
+            setConvs(d.conversations);
+        }
+
+        /* ───────────── thread ───────────── */
+
+        function serverMsgs() { return S.msgs.filter(m => !m.pending && !m.failed); }
+        function lastServerId() { return serverMsgs().reduce((n, m) => Math.max(n, m.id || 0), 0); }
+        function firstServerId() { const s = serverMsgs(); return s.length ? s[0].id : 0; }
+
+        function normalizeMsgs() {
+            const real = S.msgs.filter(m => m.id && !m.tempId).sort((a, b) => a.id - b.id);
+            const temp = S.msgs.filter(m => m.tempId);
+            S.msgs = real.concat(temp);
+        }
+
+        function atBottom() {
+            const t = $("thread");
+            return t.scrollHeight - t.scrollTop - t.clientHeight < 90;
+        }
+
+        function buildThread() {
+            const frag = document.createDocumentFragment();
+            const me = myId();
+            const conv = activeConv();
+            const otherName = conv ? conv.name : "?";
+
+            if (S.hasMore) {
+                const b = el("button", "older", S.loadingOlder ? "Loading…" : "Load earlier messages");
+                b.type = "button";
+                b.addEventListener("click", loadOlder);
+                frag.appendChild(b);
+            }
+
+            let lastOwnIdx = -1;
+            S.msgs.forEach((m, i) => { if (m.sender_id === me) lastOwnIdx = i; });
+
+            S.msgs.forEach((m, i) => {
+                const d = parseTs(m.created_at) || new Date();
+                const prev = S.msgs[i - 1], next = S.msgs[i + 1];
+                const pd = prev && (parseTs(prev.created_at) || d), nd = next && (parseTs(next.created_at) || d);
+                const newDay = !prev || !sameDay(pd, d);
+                const marker = m.id && m.id === S.firstUnreadId;
+                if (newDay) frag.appendChild(el("div", "day", dayLabel(d)));
+                if (marker) frag.appendChild(el("div", "newline", "New messages"));
+
+                const own = m.sender_id === me;
+                const start = newDay || marker || !prev || prev.sender_id !== m.sender_id || d - pd > GROUP_GAP;
+                const nextMarker = next && next.id && next.id === S.firstUnreadId;
+                const end = !next || nextMarker || next.sender_id !== m.sender_id || !sameDay(nd, d) || nd - d > GROUP_GAP;
+
+                const key = m.tempId || m.id;
+                const row = el("div", "row" + (own ? " own" : "") + (start ? " start" : "") + (end ? " end" : "") + (m.pending ? " pending" : "") + (m.failed ? " failed" : ""));
+                if (S.animate && !S.seen.has(key)) row.classList.add("enter");
+                S.seen.add(key);
+
+                if (!own) row.appendChild(end ? avatar(otherName, 32) : el("div", "slot"));
+
+                const col = el("div", "col");
+                const bubble = el("div", "bubble");
+                renderText(bubble, m.content);
+                col.appendChild(bubble);
+
+                const meta = el("div", "meta");
+                if (m.failed) {
+                    meta.appendChild(el("span", "bad", "Not sent"));
+                    const retry = el("button", "", "Retry");
+                    retry.type = "button";
+                    retry.addEventListener("click", () => retrySend(m.tempId));
+                    const del = el("button", "", "Delete");
+                    del.type = "button";
+                    del.addEventListener("click", () => { S.msgs = S.msgs.filter(x => x.tempId !== m.tempId); renderThread(); });
+                    meta.append(retry, del);
+                } else if (m.pending) {
+                    meta.appendChild(el("span", "", "Sending…"));
+                } else if (end) {
+                    const t = el("span", "", clock(d));
+                    t.title = d.toLocaleString();
+                    meta.appendChild(t);
+                    if (own && i === lastOwnIdx) meta.appendChild(el("span", m.id <= S.readUpTo ? "seen" : "", m.id <= S.readUpTo ? "Seen" : "Sent"));
+                }
+                if (meta.childNodes.length) col.appendChild(meta);
+
+                row.appendChild(col);
+                frag.appendChild(row);
+            });
+
+            if (S.typing) {
+                const row = el("div", "row typing-row start end");
+                row.appendChild(avatar(otherName, 32));
+                const bubble = el("div", "bubble");
+                bubble.setAttribute("aria-label", otherName + " is typing");
+                bubble.append(el("i"), el("i"), el("i"));
+                const col = el("div", "col");
+                col.appendChild(bubble);
+                row.appendChild(col);
+                frag.appendChild(row);
+            }
+            return frag;
+        }
+
+        function renderThread(opts = {}) {
+            const t = $("thread");
+            const wasBottom = atBottom();
+            const prevH = t.scrollHeight, prevTop = t.scrollTop;
+            t.replaceChildren(buildThread());
+            if (opts.stick || (wasBottom && !opts.keepAnchor)) t.scrollTop = t.scrollHeight;
+            else if (opts.keepAnchor) t.scrollTop = prevTop + (t.scrollHeight - prevH);
+            else t.scrollTop = prevTop;
+            if (atBottom()) { S.unseenBelow = 0; $("jump").hidden = true; }
+        }
+
+        function showThreadSkeleton() {
+            const t = $("thread");
+            t.replaceChildren();
+            [[56, 0], [34, 1], [64, 0], [42, 1]].forEach(([w, own]) => {
+                const row = el("div", "skel-row" + (own ? " own" : ""));
+                const s = el("div", "skel");
+                s.style.width = w + "%";
+                row.appendChild(s);
+                t.appendChild(row);
+            });
+        }
+
+        async function loadOlder() {
+            if (S.loadingOlder || !S.hasMore || !S.active) return;
+            const convId = S.active;
+            S.loadingOlder = true;
+            renderThread({ keepAnchor: true });
             try {
-                const res = await fetch(`${API}/api/check-auth`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.authenticated && data.user) {
-                        currentUser = data.user;
-                        const name = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || currentUser.email;
-                        document.getElementById('user-name').textContent = name;
-                        document.getElementById('user-email').textContent = currentUser.email;
-                        await loadConversations();
-                        startPolling();
-                        return;
+                const d = await api("/api/chat/messages/" + convId + "?limit=" + PAGE + "&before=" + firstServerId() + "&mark_read=0");
+                if (S.active !== convId) return;
+                const have = new Set(S.msgs.map(m => m.id));
+                S.msgs = (d.messages || []).filter(m => !have.has(m.id)).concat(S.msgs);
+                S.hasMore = !!d.has_more;
+            } catch (e) {
+                if (e.status === 401) return showGate();
+                toast("Couldn't load earlier messages.", "error");
+            } finally {
+                S.loadingOlder = false;
+                if (S.active === convId) renderThread({ keepAnchor: true });
+            }
+        }
+
+        /* ───────────── opening a conversation ───────────── */
+
+        function setView(open) {
+            $("shell").classList.toggle("chat-open", open);
+            $("pane-head").hidden = !open;
+            $("thread").hidden = !open;
+            $("composer").hidden = !open;
+            $("welcome").hidden = open;
+            if (!open) $("jump").hidden = true;
+        }
+
+        const draftKey = id => "wizchat_draft_" + myId() + "_" + id;
+        function saveDraft() {
+            if (!S.active) return;
+            try {
+                const v = $("message-input").value;
+                if (v) localStorage.setItem(draftKey(S.active), v); else localStorage.removeItem(draftKey(S.active));
+            } catch (e) { /* storage blocked */ }
+        }
+        function loadDraft(id) {
+            try { return localStorage.getItem(draftKey(id)) || ""; } catch (e) { return ""; }
+        }
+
+        function setHeader() {
+            const conv = activeConv();
+            if (!conv) return;
+            $("head-name").textContent = conv.name;
+            const holder = $("head-avatar");
+            holder.replaceWith(Object.assign(avatar(conv.name, 44), { id: "head-avatar" }));
+            updateStatus();
+        }
+        function updateStatus() {
+            const conv = activeConv(), st = $("head-status");
+            if (!conv) return;
+            st.textContent = S.typing ? "typing…" : conv.email;
+            st.classList.toggle("typing", S.typing);
+        }
+
+        async function openConv(id, opts = {}) {
+            const conv = S.convs.find(c => c.id === id);
+            if (!conv) return;
+            if (S.active === id && !$("thread").hidden) { if (!isMobile()) $("message-input").focus(); setView(true); return; }
+
+            saveDraft();
+            S.active = id; S.msgs = []; S.hasMore = false; S.readUpTo = 0; S.typing = false;
+            S.firstUnreadId = null; S.unseenBelow = 0; S.seen.clear(); S.animate = false;
+            const unread = conv.unread_count || 0;
+
+            setView(true);
+            setHeader();
+            const input = $("message-input");
+            input.value = loadDraft(id);
+            autosize();
+            showThreadSkeleton();
+            renderConvs(true);
+
+            if (opts.push !== false) {
+                const url = "#c=" + id;
+                if (isMobile()) history.pushState({ c: id }, "", url); else history.replaceState({ c: id }, "", url);
+            }
+
+            try {
+                const d = await api("/api/chat/messages/" + id + "?limit=" + PAGE);
+                if (S.active !== id) return;
+                S.msgs = d.messages || [];
+                S.hasMore = !!d.has_more;
+                S.readUpTo = d.read_up_to || 0;
+                if (unread > 0) {
+                    const incoming = S.msgs.filter(m => m.sender_id !== myId());
+                    if (incoming.length >= unread) S.firstUnreadId = incoming[incoming.length - unread].id;
+                }
+                conv.unread_count = 0;
+                renderConvs(true);
+                updateTitle();
+                renderThread({ stick: true });
+                S.animate = true;
+                if (!isMobile()) input.focus();
+                schedulePoll(1500);
+            } catch (e) {
+                if (S.active !== id) return;
+                if (e.status === 401) return showGate();
+                const t = $("thread");
+                t.replaceChildren();
+                const box = el("div", "list-note", "Couldn't load this conversation. ");
+                const b = el("button", "older", "Try again");
+                b.type = "button";
+                b.addEventListener("click", () => { S.active = null; openConv(id, { push: false }); });
+                box.appendChild(b);
+                t.appendChild(box);
+            }
+        }
+
+        function closeConv() {
+            saveDraft();
+            S.active = null; S.msgs = []; S.typing = false;
+            setView(false);
+            renderConvs(true);
+            if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+        }
+
+        /* ───────────── sending ───────────── */
+
+        function autosize() {
+            const input = $("message-input");
+            input.style.height = "auto";
+            input.style.height = Math.min(input.scrollHeight, 140) + "px";
+            const len = input.value.length, hasText = input.value.trim().length > 0;
+            $("send-btn").disabled = !hasText || len > MAX_LEN;
+            const counter = $("counter");
+            counter.hidden = len < MAX_LEN - 500;
+            counter.textContent = len + " / " + MAX_LEN;
+            counter.classList.toggle("over", len > MAX_LEN);
+        }
+
+        function submitComposer() {
+            const input = $("message-input");
+            const content = input.value.trim();
+            if (!content || !S.active) return;
+            if (content.length > MAX_LEN) { toast("Messages can be up to " + MAX_LEN + " characters.", "error"); return; }
+
+            const temp = { tempId: "t" + (++S.tempSeq), conv: S.active, sender_id: myId(), content, created_at: new Date().toISOString(), pending: true };
+            S.msgs.push(temp);
+            input.value = "";
+            try { localStorage.removeItem(draftKey(S.active)); } catch (e) { /* ignore */ }
+            autosize();
+            renderThread({ stick: true });
+            deliver(temp);
+            api("/api/chat/typing/" + temp.conv, { method: "DELETE" }).catch(() => {});
+        }
+
+        async function deliver(temp) {
+            temp.pending = true; temp.failed = false;
+            try {
+                const d = await api("/api/chat/messages", {
+                    method: "POST",
+                    body: JSON.stringify({ conversation_id: temp.conv, content: temp.content, client_id: temp.tempId })
+                });
+                setOnline(true);
+                if (S.active === temp.conv) {
+                    S.msgs = S.msgs.filter(m => m.tempId !== temp.tempId);
+                    if (!S.msgs.some(m => m.id === d.id)) S.msgs.push({ id: d.id, conversation_id: d.conversation_id, sender_id: d.sender_id, content: d.content, is_read: d.is_read, created_at: d.created_at });
+                    normalizeMsgs();
+                    renderThread({ stick: true });
+                }
+                schedulePoll(400);
+            } catch (e) {
+                if (e.status === 401) { showGate(); return; }
+                temp.pending = false; temp.failed = true;
+                if (e.status === 429) toast("Too many messages. Wait a moment and retry.", "error");
+                else if (e.status === 403) toast("You can't message this conversation.", "error");
+                else if (e.status === undefined) setOnline(false);
+                else toast(e.message, "error");
+                if (S.active === temp.conv) renderThread({ stick: true });
+            }
+        }
+
+        function retrySend(tempId) {
+            const temp = S.msgs.find(m => m.tempId === tempId);
+            if (!temp) return;
+            temp.pending = true; temp.failed = false;
+            renderThread();
+            deliver(temp);
+        }
+
+        let lastPing = 0;
+        function onInput() {
+            autosize();
+            saveDraft();
+            if (S.active && $("message-input").value.trim() && Date.now() - lastPing > 2000) {
+                lastPing = Date.now();
+                api("/api/chat/typing/" + S.active, { method: "POST" }).catch(() => {});
+            }
+        }
+
+        /* ───────────── polling ───────────── */
+
+        function setOnline(on) {
+            if (S.online === on) return;
+            S.online = on;
+            $("banner").hidden = on;
+        }
+
+        function pollDelay() {
+            if (!S.online) return 5000;
+            if (document.hidden) return 15000;
+            if (!document.hasFocus()) return 6000;
+            return S.active ? 2000 : 4000;
+        }
+        function schedulePoll(delay) {
+            clearTimeout(S.pollTimer);
+            S.pollTimer = setTimeout(poll, delay === undefined ? pollDelay() : delay);
+        }
+
+        async function poll() {
+            if (S.polling || !S.me) { schedulePoll(); return; }
+            S.polling = true;
+            const convId = S.active;
+            try {
+                const q = new URLSearchParams();
+                if (convId) {
+                    q.set("conv", convId);
+                    q.set("after", lastServerId());
+                    if (attentive()) q.set("mark_read", "1");
+                }
+                const d = await api("/api/chat/poll?" + q.toString());
+                setOnline(true);
+                applyPoll(d, convId);
+            } catch (e) {
+                if (e.status === 401) { showGate(); return; }
+                if (e.status === undefined) setOnline(false);
+            } finally {
+                S.polling = false;
+                if (!$("gate").hidden) return;
+                schedulePoll();
+            }
+        }
+
+        function applyPoll(d, convId) {
+            // New messages in other conversations: let the user know without stealing focus.
+            setConvs(d.conversations);
+
+            if (convId !== S.active) return;
+            let changed = false;
+
+            const have = new Set(S.msgs.filter(m => m.id).map(m => m.id));
+            const fresh = (d.messages || []).filter(m => !have.has(m.id));
+            if (fresh.length) {
+                const wasBottom = atBottom();
+                fresh.forEach(m => {
+                    if (m.sender_id === myId()) {                        // my own message arrived before its POST reply
+                        const i = S.msgs.findIndex(x => x.tempId && x.content === m.content);
+                        if (i >= 0) S.msgs.splice(i, 1);
+                    }
+                    S.msgs.push(m);
+                });
+                normalizeMsgs();
+                changed = true;
+                const incoming = fresh.filter(m => m.sender_id !== myId());
+                if (incoming.length) {
+                    const conv = activeConv();
+                    if (!attentive()) $("announcer").textContent = "New message from " + (conv ? conv.name : "your contact") + ": " + incoming[incoming.length - 1].content.slice(0, 120);
+                    if (!wasBottom) {
+                        S.unseenBelow += incoming.length;
+                        const jump = $("jump");
+                        jump.hidden = false;
+                        jump.textContent = "↓ " + S.unseenBelow + " new message" + (S.unseenBelow === 1 ? "" : "s");
                     }
                 }
-            } catch(e) {}
-            window.location.href = 'https://wizardecosystem.dev';
-        }
-
-        /* ── Conversations ── */
-        async function loadConversations() {
-            try {
-                const res = await fetch(`${API}/api/chat/conversations`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    conversations = data.conversations || [];
-                    renderConversations();
-                }
-            } catch(e) {}
-        }
-
-        function renderConversations() {
-            const el = document.getElementById('conv-list');
-            if (!conversations.length) {
-                el.innerHTML = `
-                    <div class="empty-state">
-                        <span class="empty-icon" aria-hidden="true">💬</span>
-                        <p class="empty-title">No conversations yet</p>
-                        <p class="empty-sub">Start one with the button above</p>
-                    </div>`;
-                return;
             }
-            el.innerHTML = conversations.map(c => `
-                <div class="conv-item ${currentConvId === c.id ? 'active' : ''}" data-id="${c.id}" role="listitem" tabindex="0" aria-label="Conversation with ${esc(c.name)}">
-                    <div class="conv-avatar" aria-hidden="true">${esc(initials(c.name))}</div>
-                    <div class="conv-info">
-                        <div class="conv-name">${esc(c.name)}</div>
-                        <div class="conv-last">${esc(c.last_message || 'No messages yet')}</div>
-                    </div>
-                    <div class="conv-meta">
-                        <div class="conv-time">${c.last_message_time ? formatTime(c.last_message_time) : ''}</div>
-                        ${c.unread_count > 0 ? `<div class="unread-badge" aria-label="${c.unread_count} unread">${c.unread_count}</div>` : ''}
-                    </div>
-                </div>`).join('');
+            if (!!d.typing !== S.typing) { S.typing = !!d.typing; changed = true; updateStatus(); }
+            if ((d.read_up_to || 0) !== S.readUpTo) { S.readUpTo = d.read_up_to || 0; changed = true; }
+            if (changed) renderThread();
+        }
 
-            el.querySelectorAll('.conv-item').forEach(item => {
-                item.addEventListener('click', () => openConversation(parseInt(item.dataset.id)));
-                item.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openConversation(parseInt(item.dataset.id)); } });
+        /* ───────────── new conversation modal ───────────── */
+
+        let searchSeq = 0, searchTimer = null, results = [], activeResult = -1, modalOpener = null;
+
+        function openModal() {
+            modalOpener = document.activeElement;
+            $("new-chat-modal").classList.add("show");
+            $("search-users").value = "";
+            showResultsMessage("Type at least two letters of a name or email.");
+            setTimeout(() => $("search-users").focus(), 30);
+        }
+        function closeModal() {
+            $("new-chat-modal").classList.remove("show");
+            searchSeq++;
+            if (modalOpener && modalOpener.focus) modalOpener.focus();
+        }
+        const modalOpen = () => $("new-chat-modal").classList.contains("show");
+
+        function showResultsMessage(text) {
+            results = []; activeResult = -1;
+            $("search-results").replaceChildren(el("p", "list-note", text));
+        }
+
+        function renderResults() {
+            const box = $("search-results");
+            if (!results.length) { showResultsMessage("No one found. Check the spelling or try their email."); return; }
+            const existing = new Set(S.convs.map(c => c.other_user_id));
+            const frag = document.createDocumentFragment();
+            results.forEach((u, i) => {
+                const b = el("button", "result" + (i === activeResult ? " active" : ""));
+                b.type = "button";
+                b.setAttribute("role", "option");
+                b.id = "result-" + i;
+                const info = el("div");
+                info.append(el("div", "result-name", u.name || u.email), el("div", "result-email", u.email));
+                b.append(avatar(u.name || u.email, 38), info);
+                if (existing.has(u.id)) b.appendChild(el("span", "result-tag", "Open chat"));
+                b.addEventListener("click", () => startWith(u));
+                frag.appendChild(b);
             });
+            box.replaceChildren(frag);
         }
 
-        /* ── Messages ── */
-        async function loadMessages(convId) {
+        function setActiveResult(i) {
+            activeResult = i;
+            document.querySelectorAll("#search-results .result").forEach((b, n) => b.classList.toggle("active", n === i));
+            const b = $("result-" + i);
+            if (b) { b.scrollIntoView({ block: "nearest" }); $("search-users").setAttribute("aria-activedescendant", b.id); }
+        }
+
+        async function doSearch(q) {
+            const seq = ++searchSeq;
+            showResultsMessage("Searching…");
             try {
-                const res = await fetch(`${API}/api/chat/messages/${convId}`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    messages = data.messages || [];
-                    renderMessages();
-                    fetch(`${API}/api/chat/mark-read/${convId}`, { method: 'POST', credentials: 'include' }).catch(()=>{});
-                }
-            } catch(e) {}
-        }
-
-        function renderMessages() {
-            const el = document.getElementById('messages-area');
-            if (!messages.length) {
-                el.innerHTML = `
-                    <div class="empty-state" style="margin: auto;">
-                        <span class="empty-icon" aria-hidden="true">💬</span>
-                        <p class="empty-title">No messages yet</p>
-                        <p class="empty-sub">Send a message to begin the conversation</p>
-                    </div>`;
-                return;
+                const d = await api("/api/chat/users/search?q=" + encodeURIComponent(q));
+                if (seq !== searchSeq) return;
+                results = d.users || [];
+                activeResult = results.length ? 0 : -1;
+                renderResults();
+            } catch (e) {
+                if (seq !== searchSeq) return;
+                if (e.status === 401) { closeModal(); return showGate(); }
+                showResultsMessage(e.status === 429 ? "Too many searches. Wait a moment." : "Couldn't search right now. Try again.");
             }
-            const conv = conversations.find(c => c.id === currentConvId);
-            const otherInitials = conv ? initials(conv.name) : '?';
-            const myInitials = currentUser ? initials(`${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || currentUser.email) : 'Me';
-
-            el.innerHTML = messages.map(m => {
-                const isOwn = m.sender_id === currentUser?.id;
-                return `
-                    <div class="message ${isOwn ? 'own' : ''}" role="article">
-                        <div class="msg-avatar" aria-hidden="true">${isOwn ? esc(myInitials) : esc(otherInitials)}</div>
-                        <div class="msg-content">
-                            <div class="msg-bubble">${esc(m.content)}</div>
-                            <div class="msg-time">${formatTime(m.created_at)}</div>
-                        </div>
-                    </div>`;
-            }).join('');
-
-            el.scrollTop = el.scrollHeight;
         }
 
-        async function sendMessage() {
-            const content = document.getElementById('message-input').value.trim();
-            if (!content || !currentConvId) return;
-            if (typingTimeout) clearTimeout(typingTimeout);
-            document.getElementById('message-input').value = '';
-            autoResize(document.getElementById('message-input'));
+        async function startWith(user) {
             try {
-                const res = await fetch(`${API}/api/chat/messages`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ conversation_id: currentConvId, content })
-                });
-                if (res.ok) {
-                    await loadMessages(currentConvId);
-                    await loadConversations();
-                }
-            } catch(e) {}
-        }
-
-        function openConversation(convId) {
-            currentConvId = convId;
-            const conv = conversations.find(c => c.id === convId);
-            if (conv) {
-                document.getElementById('chat-name').textContent = conv.name;
-                document.getElementById('chat-avatar').textContent = initials(conv.name);
-                document.getElementById('chat-status').innerHTML = `<span class="status-dot"></span>Online`;
+                const d = await api("/api/chat/conversations", { method: "POST", body: JSON.stringify({ participant_id: user.id }) });
+                await loadConvs();
+                closeModal();
+                openConv(d.conversation.id);
+            } catch (e) {
+                if (e.status === 401) { closeModal(); return showGate(); }
+                toast(e.message || "Couldn't start the conversation.", "error");
             }
-            loadMessages(convId);
-            renderConversations();
         }
 
-        /* ── User Search ── */
-        async function searchUsers(q) {
-            const el = document.getElementById('search-results');
-            if (!q || q.length < 2) { el.innerHTML = ''; return; }
-            try {
-                const res = await fetch(`${API}/api/chat/users/search?q=${encodeURIComponent(q)}`, { credentials: 'include' });
-                if (res.ok) {
-                    const data = await res.json();
-                    renderSearchResults(data.users);
+        /* ───────────── auth gate + boot ───────────── */
+
+        function showGate() {
+            clearTimeout(S.pollTimer);
+            $("gate").hidden = false;
+        }
+
+        function fromHash() {
+            const m = location.hash.match(/^#c=(\d+)$/);
+            return m ? parseInt(m[1], 10) : null;
+        }
+
+        async function boot() {
+            let data;
+            for (let attempt = 0; ; attempt++) {
+                try { data = await api("/api/check-auth"); break; }
+                catch (e) {
+                    if (e.status === 401) { showGate(); return; }
+                    setOnline(false);
+                    await new Promise(r => setTimeout(r, Math.min(1000 * (attempt + 1), 6000)));
                 }
-            } catch(e) {}
-        }
-
-        function renderSearchResults(users) {
-            const el = document.getElementById('search-results');
-            if (!users || !users.length) {
-                el.innerHTML = '<div style="text-align:center;padding:18px;font-size:13px;color:var(--muted);">No users found</div>';
-                return;
             }
-            el.innerHTML = users.map(u => `
-                <div class="search-result-item" data-id="${u.id}" role="listitem" tabindex="0" aria-label="Start conversation with ${esc(u.name || u.email)}">
-                    <div class="search-result-avatar" aria-hidden="true">${esc(initials(u.name || u.email))}</div>
-                    <div>
-                        <div class="result-name">${esc(u.name || u.email)}</div>
-                        <div class="result-email">${esc(u.email)}</div>
-                    </div>
-                </div>`).join('');
+            setOnline(true);
+            if (!data.authenticated || !data.user) { showGate(); return; }
 
-            el.querySelectorAll('.search-result-item').forEach(r => {
-                r.addEventListener('click', () => createConversation(parseInt(r.dataset.id)));
-                r.addEventListener('keydown', e => { if (e.key === 'Enter') createConversation(parseInt(r.dataset.id)); });
-            });
+            S.me = data.user;
+            const name = ((S.me.first_name || "") + " " + (S.me.last_name || "")).trim() || S.me.email;
+            $("me-name").textContent = name;
+            $("me-email").textContent = S.me.email;
+            $("me-avatar").replaceWith(Object.assign(avatar(name, 38), { id: "me-avatar" }));
+
+            renderConvs(true);
+            try { await loadConvs(); } catch (e) { if (e.status === 401) { showGate(); return; } }
+            const id = fromHash();
+            if (id && S.convs.some(c => c.id === id)) openConv(id, { push: false });
+            schedulePoll();
         }
 
-        async function createConversation(userId) {
-            try {
-                const res = await fetch(`${API}/api/chat/conversations`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ participant_id: userId })
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    await loadConversations();
-                    openConversation(data.conversation.id);
-                    closeModal();
-                    document.getElementById('search-users').value = '';
-                    document.getElementById('search-results').innerHTML = '';
-                }
-            } catch(e) {}
-        }
+        /* ───────────── events ───────────── */
 
-        /* ── Polling ── */
-        function startPolling() {
-            if (pollingInterval) clearInterval(pollingInterval);
-            pollingInterval = setInterval(async () => {
-                if (!document.hasFocus()) return;
-                const prevCount = messages.length;
-                await loadConversations();
-                if (currentConvId) {
-                    await loadMessages(currentConvId);
-                    if (messages.length > prevCount) {
-                        document.getElementById('messages-area').scrollTop = document.getElementById('messages-area').scrollHeight;
-                    }
-                }
-            }, 2000);
-        }
+        $("new-chat-btn").addEventListener("click", openModal);
+        $("welcome-cta").addEventListener("click", openModal);
+        $("close-modal").addEventListener("click", closeModal);
+        $("new-chat-modal").addEventListener("click", e => { if (e.target === $("new-chat-modal")) closeModal(); });
+        $("back-btn").addEventListener("click", () => { if (isMobile() && history.state && history.state.c) history.back(); else closeConv(); });
+        $("conv-filter").addEventListener("input", e => { S.filter = e.target.value; renderConvs(); });
+        $("composer").addEventListener("submit", e => { e.preventDefault(); submitComposer(); });
+        $("message-input").addEventListener("input", onInput);
+        $("message-input").addEventListener("keydown", e => {
+            if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); submitComposer(); }
+        });
+        $("jump").addEventListener("click", () => { const t = $("thread"); t.scrollTo({ top: t.scrollHeight, behavior: "smooth" }); });
+        $("thread").addEventListener("scroll", () => {
+            if (atBottom()) { S.unseenBelow = 0; $("jump").hidden = true; }
+            if ($("thread").scrollTop < 60 && S.hasMore && !S.loadingOlder) loadOlder();
+        }, { passive: true });
 
-        /* ── Typing ── */
-        function setupTyping() {
-            const input = document.getElementById('message-input');
-            input.addEventListener('input', () => {
-                autoResize(input);
-                if (typingTimeout) clearTimeout(typingTimeout);
-                if (!isTyping && currentConvId) {
-                    isTyping = true;
-                    fetch(`${API}/api/chat/typing/${currentConvId}`, { method: 'POST', credentials: 'include' }).catch(()=>{});
-                }
-                typingTimeout = setTimeout(() => {
-                    isTyping = false;
-                    if (currentConvId) fetch(`${API}/api/chat/typing/${currentConvId}`, { method: 'DELETE', credentials: 'include' }).catch(()=>{});
-                }, 1000);
-            });
-        }
-
-        function autoResize(el) {
-            el.style.height = 'auto';
-            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-        }
-
-        /* ── Modal ── */
-        function openModal()  { document.getElementById('new-chat-modal').classList.add('show'); setTimeout(() => document.getElementById('search-users').focus(), 100); }
-        function closeModal() { document.getElementById('new-chat-modal').classList.remove('show'); }
-
-        /* ── Events ── */
-        document.getElementById('new-chat-btn').addEventListener('click', openModal);
-        document.getElementById('close-modal').addEventListener('click', closeModal);
-        document.getElementById('new-chat-modal').addEventListener('click', e => { if (e.target === document.getElementById('new-chat-modal')) closeModal(); });
-        document.getElementById('search-users').addEventListener('input', e => searchUsers(e.target.value));
-        document.getElementById('send-btn').addEventListener('click', sendMessage);
-        document.getElementById('message-input').addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        $("search-users").addEventListener("input", e => {
+            clearTimeout(searchTimer);
+            const q = e.target.value.trim();
+            if (q.length < 2) { searchSeq++; showResultsMessage("Type at least two letters of a name or email."); return; }
+            searchTimer = setTimeout(() => doSearch(q), 250);
+        });
+        $("search-users").addEventListener("keydown", e => {
+            if (e.key === "ArrowDown" && results.length) { e.preventDefault(); setActiveResult((activeResult + 1) % results.length); }
+            else if (e.key === "ArrowUp" && results.length) { e.preventDefault(); setActiveResult((activeResult - 1 + results.length) % results.length); }
+            else if (e.key === "Enter" && results[activeResult]) { e.preventDefault(); startWith(results[activeResult]); }
         });
 
-        checkAuth();
-        setupTyping();
+        document.addEventListener("keydown", e => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); if (S.me && !modalOpen()) openModal(); return; }
+            if (e.key === "Escape") {
+                if (modalOpen()) closeModal();
+                else if (S.active && isMobile()) $("back-btn").click();
+            }
+        });
+
+        window.addEventListener("popstate", () => {
+            const id = fromHash();
+            if (id && S.convs.some(c => c.id === id)) openConv(id, { push: false });
+            else closeConv();
+        });
+        window.addEventListener("beforeunload", saveDraft);
+        document.addEventListener("visibilitychange", () => { if (!document.hidden && S.me) schedulePoll(150); });
+        window.addEventListener("focus", () => { if (S.me) schedulePoll(150); });
+        window.addEventListener("online", () => { if (S.me) schedulePoll(0); });
+
+        setView(false);
+        boot();
+    })();
     </script>
 </body>
 </html>
