@@ -1,7 +1,0 @@
-flask
-flask-cors
-pyautogui
-psutil
-groq
-pygetwindow
-pillow
