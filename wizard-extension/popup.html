@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <div class="header">
+            <span class="icon">🧙</span>
+            <h2>Wizard.AI</h2>
+        </div>
+        
+        <div class="quick-actions">
+            <button id="summarizeBtn" class="action-btn">
+                <span>📄</span> Summarize Page
+            </button>
+            <button id="askWizardBtn" class="action-btn">
+                <span>🤖</span> Ask Wizard
+            </button>
+            <button id="openSidebarBtn" class="action-btn">
+                <span>📌</span> Open Sidebar
+            </button>
+        </div>
+        
+        <div class="ask-section">
+            <input type="text" id="questionInput" placeholder="Ask anything about this page...">
+            <button id="askBtn">Ask</button>
+        </div>
+        
+        <div id="responseArea" class="response-area">
+            <p class="placeholder">✨ Ask me anything about this webpage</p>
+        </div>
+        
+        <div class="footer">
+            <a href="https://www.wizardai.dpdns.org" target="_blank">Open Full App →</a>
+        </div>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>

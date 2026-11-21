@@ -1,0 +1,102 @@
+{
+  "name": "wizard-browser",
+  "version": "11.1.0",
+  "description": "Wizard Browser - workspaces with isolated sessions, built-in ad blocking, Chrome Web Store extensions and Wizard Ecosystem integration",
+  "main": "main.js",
+  "homepage": "https://wizardecosystem.dev",
+  "author": {
+    "name": "Arnav Gupta",
+    "email": "arnavgupta@wizardecosystem.dev"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "start:safe": "WIZBROWSER_SAFE=1 electron .",
+    "build": "electron-builder",
+    "build:linux": "electron-builder --linux AppImage",
+    "build:win": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "github:castlabs/electron-releases#v39.8.10+wvcus",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "dev.wizardecosystem.browser",
+    "productName": "Wizard Browser",
+    "executableName": "wizard-browser",
+    "copyright": "Copyright © Arnav Gupta",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "webview-preload.js",
+      "index.html",
+      "lib/**/*",
+      "icons/**/*",
+      "package.json",
+      "!**/*.map"
+    ],
+    "artifactName": "Wizard-Browser-${version}-${arch}.${ext}",
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icons",
+      "category": "Network;WebBrowser",
+      "synopsis": "Browser with workspaces and Wizard Ecosystem integration",
+      "maintainer": "Arnav Gupta <arnavgupta@wizardecosystem.dev>",
+      "desktop": {
+        "entry": {
+          "Name": "Wizard Browser",
+          "GenericName": "Web Browser",
+          "Comment": "Workspaces, ad blocking and Wizard Ecosystem integration",
+          "MimeType": "text/html;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https",
+          "StartupWMClass": "Wizard Browser",
+          "StartupNotify": "true"
+        }
+      },
+      "syncDesktopName": true
+    },
+    "appImage": {
+      "artifactName": "Wizard-Browser-${version}-x86_64.AppImage"
+    },
+    "electronVersion": "39.8.10",
+    "electronDist": "node_modules/electron/dist",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "Wizard-Browser-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "include": "build/installer.nsh",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Wizard Browser",
+      "deleteAppDataOnUninstall": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
+    }
+  },
+  "desktopName": "wizard-browser.desktop",
+  "allowScripts": {
+    "github:castlabs/electron-releases#62e98b31d8bbfbc70bdc971c6e24b0339e6826d3": true,
+    "electron-winstaller@5.4.0": true
+  }
+}

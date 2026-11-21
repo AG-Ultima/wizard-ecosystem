@@ -1,0 +1,75 @@
+{
+  "name": "wizard-autopilot",
+  "version": "3.0.0",
+  "description": "Wizard Autopilot v3.0 — Mistral ministral-14b-2512, full filesystem control, Claude/Muse-tier local agent",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "@nut-tree-fork/nut-js": "^4.2.6",
+    "docx": "^9.6.1",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.7.0",
+    "dotenv": "^16.4.5"
+  },
+  "build": {
+    "appId": "com.wizard.autopilot",
+    "productName": "Wizard Autopilot",
+    "copyright": "Copyright © 2026 Wizard Ecosystem — Arnav Gupta",
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "vault.js",
+      "vault_actions.js",
+      "account.js",
+      "index.html",
+      "overlay.html",
+      "assets/**/*",
+      "!*.env",
+      "!.env.*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico",
+      "artifactName": "${productName}-${version}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Wizard Autopilot"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "assets/icon.png",
+      "category": "Utility"
+    }
+  }
+}

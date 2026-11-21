@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+src/wizard/__init__.py
+src/wizard/client.py
+src/wizard/errors.py
+src/wizard_ai_pro.egg-info/PKG-INFO
+src/wizard_ai_pro.egg-info/SOURCES.txt
+src/wizard_ai_pro.egg-info/dependency_links.txt
+src/wizard_ai_pro.egg-info/requires.txt
+src/wizard_ai_pro.egg-info/top_level.txt

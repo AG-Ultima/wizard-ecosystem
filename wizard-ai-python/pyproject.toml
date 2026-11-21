@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wizard-ai-pro"
+version = "0.1.8"
+description = "Official Python SDK for Wizard.AI API - Chat with JARVIS, ORACLE, and more!"
+readme = "README.md"
+requires-python = ">=3.7"
+license = { text = "MIT" }  # Keep the table format but remove classifiers
+authors = [
+    { name = "Arnav Gupta", email = "ag@wizardecosystem.dpdns.org" },
+]
+keywords = ["ai", "chatbot", "wizard", "jarvis", "oracle", "llm", "api"]
+
+# REMOVE ALL CLASSIFIERS - they're causing the error
+# The license classifiers are conflicting with license expression
+
+dependencies = [
+    "requests>=2.25.0",
+]
+
+[project.urls]
+Homepage = "https://wizardai.dpdns.org"
+Repository = "https://github.com/ag-ultima/"
+Documentation = "https://github.com/ag-ultima/wizard-ai/README.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]

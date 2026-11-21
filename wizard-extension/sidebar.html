@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+    <div class="sidebar-container">
+        <div class="header">
+            <span class="icon">🧙</span>
+            <h2>Wizard.AI</h2>
+            <button id="closeSidebarBtn" class="close-btn">✕</button>
+        </div>
+        
+        <!-- Login Section -->
+        <div id="loginSection" class="login-section">
+            <div class="login-header">
+                <span class="login-icon">🔐</span>
+                <h3>Login to Wizard.AI</h3>
+            </div>
+            <input type="email" id="loginEmail" placeholder="Email" class="login-input">
+            <input type="password" id="loginPassword" placeholder="Password" class="login-input">
+            <button id="loginBtn" class="login-action-btn">Login</button>
+            <div class="login-divider">or</div>
+            <button id="signupBtn" class="signup-action-btn">Create Account</button>
+            <div id="loginError" class="login-error"></div>
+        </div>
+        
+        <!-- Chat Section (hidden until login) -->
+        <div id="chatSection" class="chat-section" style="display: none;">
+            <div class="user-info">
+                <span id="userEmailDisplay" class="user-email"></span>
+                <button id="logoutBtn" class="logout-icon">🚪</button>
+            </div>
+            <div class="chat-area" id="chatArea">
+                <div class="message assistant">
+                    <div class="avatar">🧙</div>
+                    <div class="content">Hello! I'm Wizard.AI. Ask me anything about this page!</div>
+                </div>
+            </div>
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Ask about this page...">
+                <button id="sendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+    <script src="sidebar.js"></script>
+</body>
+</html>
